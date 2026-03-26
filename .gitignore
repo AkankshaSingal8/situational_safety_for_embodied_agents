@@ -1,0 +1,7 @@
+*.pth
+__pycache__/
+*.pyc
+*.json
+*.jpeg
+*.png
+*.html
