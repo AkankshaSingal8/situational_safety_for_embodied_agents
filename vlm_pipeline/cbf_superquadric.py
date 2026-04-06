@@ -547,7 +547,8 @@ def vis_rgb_overlay(constraints, rgb_path, intrinsic, extrinsic, save_path):
     for idx, c in enumerate(constraints):
         color = np.array(colors_list[idx % len(colors_list)]) / 255.0
         ax.plot([], [], color=color, linewidth=4,
-                label=f'{c["object"]} / {c["relationship"]}')
+                label=f'{c["object"]} /
+                 {c["relationship"]}')
     ax.legend(fontsize=7, loc="upper right")
 
     fig.tight_layout()
