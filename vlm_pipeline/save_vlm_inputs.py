@@ -26,11 +26,42 @@ from robosuite.utils.camera_utils import (
     get_real_depth_map,
 )
 
+# Canonical camera order for collection.
+DEFAULT_CAMERA_NAMES = ["agentview", "robot0_eye_in_hand", "backview"]
+
 
 # ─── Environment construction ────────────────────────────────────────────────
 
-def create_observation_env(task, resolution=512):
-    """Create an OffScreenRenderEnv with depth and segmentation enabled."""
+def camera_name_to_prefix(camera_name):
+    """Map robosuite camera name to output file prefix."""
+    return "eye_in_hand" if camera_name == "robot0_eye_in_hand" else camera_name
+
+
+def get_camera_specs(camera_names):
+    """Build camera specs used by save/load functions."""
+    specs = []
+    for cam_name in camera_names:
+        prefix = camera_name_to_prefix(cam_name)
+        specs.append(
+            {
+                "name": cam_name,
+                "prefix": prefix,
+                "image_key": f"{cam_name}_image",
+                "depth_key": f"{cam_name}_depth",
+                "seg_key": f"{cam_name}_segmentation_instance",
+            }
+        )
+    return specs
+
+
+def create_observation_env(task, resolution=512, camera_names=None):
+    """Create an OffScreenRenderEnv with depth and segmentation enabled.
+
+    If a requested camera (e.g., backview) is unavailable in the current
+    task XML, we gracefully fall back to the default two-view setup.
+    """
+    if camera_names is None:
+        camera_names = list(DEFAULT_CAMERA_NAMES)
     task_bddl_file = os.path.join(
         get_libero_path("bddl_files"),
         task.problem_folder,
@@ -42,45 +73,67 @@ def create_observation_env(task, resolution=512):
         "camera_widths": resolution,
         "camera_depths": True,
         "camera_segmentations": "instance",
-        "camera_names": ["agentview", "robot0_eye_in_hand"],
+        "camera_names": camera_names,
     }
-    env = OffScreenRenderEnv(**env_args)
+    try:
+        env = OffScreenRenderEnv(**env_args)
+    except Exception as exc:
+        fallback = [c for c in camera_names if c != "backview"]
+        if "backview" in camera_names and fallback:
+            print(f"[warn] Failed to initialize with backview: {exc}")
+            print(f"[warn] Falling back to cameras: {fallback}")
+            env_args["camera_names"] = fallback
+            env = OffScreenRenderEnv(**env_args)
+            camera_names = fallback
+        else:
+            raise
     return env, task.language
 
 
 # ─── Save functions ───────────────────────────────────────────────────────────
 
-def save_rgb(obs, save_dir):
+def save_rgb(obs, save_dir, camera_specs):
     """Save RGB images from both cameras."""
-    for cam, key in [("agentview", "agentview_image"),
-                     ("eye_in_hand", "robot0_eye_in_hand_image")]:
+    for spec in camera_specs:
+        key = spec["image_key"]
+        if key not in obs:
+            continue
         img = obs[key]
         # robosuite returns images upside-down; flip vertically
         img = np.flip(img, axis=0).copy()
-        Image.fromarray(img).save(save_dir / f"{cam}_rgb.png")
+        Image.fromarray(img).save(save_dir / f"{spec['prefix']}_rgb.png")
 
 
-def save_depth(obs, sim, save_dir):
+def save_depth(obs, sim, save_dir, camera_specs):
     """Convert raw z-buffer depth to metric depth and save."""
-    for cam, key in [("agentview", "agentview_depth"),
-                     ("eye_in_hand", "robot0_eye_in_hand_depth")]:
+    for spec in camera_specs:
+        key = spec["depth_key"]
+        if key not in obs:
+            continue
         raw = obs[key]
         real_depth = get_real_depth_map(sim, raw)
-        np.save(save_dir / f"{cam}_depth.npy", real_depth.astype(np.float32))
+        # Keep pixel alignment consistent with flipped RGB.
+        real_depth = np.flip(real_depth, axis=0).copy()
+        np.save(save_dir / f"{spec['prefix']}_depth.npy", real_depth.astype(np.float32))
 
 
-def save_segmentation(obs, save_dir):
+def save_segmentation(obs, save_dir, camera_specs):
     """Save instance segmentation masks."""
-    for cam, key in [("agentview", "agentview_segmentation_instance"),
-                     ("eye_in_hand", "robot0_eye_in_hand_segmentation_instance")]:
+    for spec in camera_specs:
+        key = spec["seg_key"]
+        if key not in obs:
+            continue
         seg = obs[key].squeeze(-1)  # (H,W,1) → (H,W)
-        np.save(save_dir / f"{cam}_seg.npy", seg.astype(np.int32))
+        # Keep pixel alignment consistent with flipped RGB.
+        seg = np.flip(seg, axis=0).copy()
+        np.save(save_dir / f"{spec['prefix']}_seg.npy", seg.astype(np.int32))
 
 
-def save_camera_params(sim, save_dir, resolution):
+def save_camera_params(sim, save_dir, resolution, camera_specs):
     """Save intrinsic and extrinsic camera matrices."""
     params = {}
-    for cam in ["agentview", "robot0_eye_in_hand"]:
+    for spec in camera_specs:
+        cam = spec["name"]
         intrinsic = get_camera_intrinsic_matrix(sim, cam, resolution, resolution)
         extrinsic = get_camera_extrinsic_matrix(sim, cam)
         params[cam] = {
@@ -145,6 +198,9 @@ def save_metadata(obs, env, task_id, episode_idx, safety_level, task_description
         "objects": objects,
         "obstacle": active_obstacle,
         "geom_id_to_name": geom_id_to_name,
+        # Explicitly record saved image orientation policy so downstream
+        # scripts can align legacy and new captures robustly.
+        "image_alignment": {"rgb": True, "depth": True, "seg": True},
     }
     with open(save_dir / "metadata.json", "w") as f:
         json.dump(metadata, f, indent=2)
@@ -161,7 +217,13 @@ def main(output_dir="vlm_inputs/safelibero_spatial", resolution=512):
 
         for task_id in range(task_suite.n_tasks):
             task = task_suite.get_task(task_id)
-            env, task_description = create_observation_env(task, resolution)
+            env, task_description = create_observation_env(
+                task,
+                resolution,
+                camera_names=list(DEFAULT_CAMERA_NAMES),
+            )
+            camera_names = list(getattr(env, "camera_names", DEFAULT_CAMERA_NAMES))
+            camera_specs = get_camera_specs(camera_names)
             initial_states = task_suite.get_task_init_states(task_id)
 
             for episode_idx in range(50):
@@ -178,10 +240,10 @@ def main(output_dir="vlm_inputs/safelibero_spatial", resolution=512):
                 save_dir.mkdir(parents=True, exist_ok=True)
 
                 # Save all VLM inputs
-                save_rgb(obs, save_dir)
-                save_depth(obs, env.sim, save_dir)
-                save_segmentation(obs, save_dir)
-                save_camera_params(env.sim, save_dir, resolution)
+                save_rgb(obs, save_dir, camera_specs)
+                save_depth(obs, env.sim, save_dir, camera_specs)
+                save_segmentation(obs, save_dir, camera_specs)
+                save_camera_params(env.sim, save_dir, resolution, camera_specs)
                 save_metadata(obs, env, task_id, episode_idx, safety_level, task_description, save_dir)
 
                 print(f"[{safety_level}] task {task_id} ep {episode_idx:02d} done")

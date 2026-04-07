@@ -18,6 +18,32 @@ from PIL import Image
 import plotly.graph_objects as go
 
 
+def align_modalities(rgb, depth, seg, metadata):
+    """Ensure RGB / depth / seg all use OpenCV pixel layout (row 0 = top).
+
+    Robosuite renders in OpenGL convention (row 0 = bottom).
+    The intrinsic / extrinsic matrices assume OpenCV convention,
+    so all pixel data must be flipped to match.
+
+    Legacy captures flipped only RGB; newer captures flip all modalities.
+    """
+    align = metadata.get("image_alignment")
+    if align is None:
+        # Legacy: RGB already flipped to OpenCV, depth/seg still OpenGL.
+        depth = np.flip(depth, axis=0).copy()
+        seg = np.flip(seg, axis=0).copy()
+    else:
+        rgb_flipped = bool(align.get("rgb", False))
+        depth_flipped = bool(align.get("depth", False))
+        if rgb_flipped and not depth_flipped:
+            depth = np.flip(depth, axis=0).copy()
+            seg = np.flip(seg, axis=0).copy()
+        elif depth_flipped and not rgb_flipped:
+            rgb = np.flip(rgb, axis=0).copy()
+
+    return rgb, depth, seg
+
+
 def load_episode(folder):
     """Load all data from an episode folder."""
     with open(os.path.join(folder, "metadata.json")) as f:
@@ -26,21 +52,46 @@ def load_episode(folder):
         cam_params = json.load(f)
 
     data = {}
-    for cam_prefix, cam_key in [("agentview", "agentview"), ("eye_in_hand", "robot0_eye_in_hand")]:
-        rgb = np.array(Image.open(os.path.join(folder, f"{cam_prefix}_rgb.png")))
-        depth = np.load(os.path.join(folder, f"{cam_prefix}_depth.npy")).squeeze()
-        seg = np.load(os.path.join(folder, f"{cam_prefix}_seg.npy"))
-        intrinsic = np.array(cam_params[cam_key]["intrinsic"])
-        extrinsic = np.array(cam_params[cam_key]["extrinsic"])
-        data[cam_prefix] = dict(rgb=rgb, depth=depth, seg=seg,
-                                intrinsic=intrinsic, extrinsic=extrinsic)
+    for cam_key, params in cam_params.items():
+        cam_prefix = "eye_in_hand" if cam_key == "robot0_eye_in_hand" else cam_key
+        rgb_path = os.path.join(folder, f"{cam_prefix}_rgb.png")
+        depth_path = os.path.join(folder, f"{cam_prefix}_depth.npy")
+        seg_path = os.path.join(folder, f"{cam_prefix}_seg.npy")
+        if not (os.path.exists(rgb_path) and os.path.exists(depth_path) and os.path.exists(seg_path)):
+            continue
+        rgb = np.array(Image.open(rgb_path))
+        depth = np.load(depth_path).squeeze()
+        seg = np.load(seg_path)
+        if seg.ndim == 3 and seg.shape[-1] == 1:
+            seg = seg.squeeze(-1)
+        rgb, depth, seg = align_modalities(rgb, depth, seg, metadata)
+        intrinsic = np.array(params["intrinsic"])
+        extrinsic = np.array(params["extrinsic"])
+        data[cam_prefix] = dict(
+            rgb=rgb,
+            depth=depth,
+            seg=seg,
+            intrinsic=intrinsic,
+            extrinsic=extrinsic,
+            camera_key=cam_key,
+        )
     return metadata, data
 
 
-def depth_to_pointcloud(rgb, depth, intrinsic, extrinsic, downsample=4, max_depth=5.0):
-    """Back-project depth image to 3D world-frame point cloud with colors."""
+def depth_to_pointcloud(
+    rgb,
+    depth,
+    intrinsic,
+    extrinsic,
+    downsample=4,
+    max_depth=2.0,
+):
+    """Back-project depth image to 3D world-frame point cloud with colors.
+
+    All pixel data (rgb, depth) must be in OpenCV convention (row 0 = top)
+    to match the intrinsic / extrinsic matrices from robosuite.
+    """
     h, w = depth.shape
-    # Create pixel grid (downsampled)
     ys = np.arange(0, h, downsample)
     xs = np.arange(0, w, downsample)
     xs, ys = np.meshgrid(xs, ys)
@@ -48,29 +99,33 @@ def depth_to_pointcloud(rgb, depth, intrinsic, extrinsic, downsample=4, max_dept
     ys = ys.flatten()
 
     d = depth[ys, xs]
-    # Filter invalid depths
     valid = (d > 0) & (d < max_depth)
     xs, ys, d = xs[valid], ys[valid], d[valid]
 
-    # Unproject to camera frame
+    # Unproject to OpenCV camera frame (X right, Y down, Z forward)
     fx, fy = intrinsic[0, 0], intrinsic[1, 1]
     cx, cy = intrinsic[0, 2], intrinsic[1, 2]
-    z = d
-    x = (xs - cx) * z / fx
-    y = (ys - cy) * z / fy
+    x = (xs - cx) * d / fx
+    y = (ys - cy) * d / fy
+    pts_cam = np.stack([x, y, d], axis=-1)
 
-    # Points in camera frame (N, 3)
-    pts_cam = np.stack([x, y, z], axis=-1)
-
-    # Transform to world frame: p_world = R_inv @ (p_cam - t)
-    # extrinsic is [R|t; 0 1] mapping world->camera: p_cam = R @ p_world + t
+    # Robosuite's get_camera_extrinsic_matrix returns camera→world pose
+    # (make_pose @ axis_correction).  p_world = R @ p_cam + t
+    # In row-vector form: pts_world = pts_cam @ R^T + t
     R = extrinsic[:3, :3]
     t = extrinsic[:3, 3]
-    pts_world = (pts_cam - t) @ R  # equivalent to R^T @ (p - t) for each point
+    pts_world = pts_cam @ R.T + t
 
-    # Get colors
+    # Workspace crop: keep points near the tabletop workspace
+    in_ws = (
+        (pts_world[:, 0] > -1.0) & (pts_world[:, 0] < 1.0) &
+        (pts_world[:, 1] > -1.0) & (pts_world[:, 1] < 1.0) &
+        (pts_world[:, 2] > 0.5) & (pts_world[:, 2] < 2.0)
+    )
+    pts_world = pts_world[in_ws]
+    xs, ys = xs[in_ws], ys[in_ws]
+
     colors = rgb[ys, xs, :3]
-
     return pts_world, colors
 
 
@@ -109,7 +164,7 @@ def build_3d_map(folder, output_html=None):
         pts, colors = depth_to_pointcloud(
             cam_data["rgb"], cam_data["depth"],
             cam_data["intrinsic"], cam_data["extrinsic"],
-            downsample=3, max_depth=5.0
+            downsample=3, max_depth=2.0,
         )
         # Convert colors to plotly format
         color_strs = [f"rgb({r},{g},{b})" for r, g, b in colors]
@@ -180,9 +235,7 @@ def build_3d_map(folder, output_html=None):
     # --- Camera position markers ---
     for cam_name, cam_data in cameras.items():
         ext = cam_data["extrinsic"]
-        R = ext[:3, :3]
-        t = ext[:3, 3]
-        cam_pos = -R.T @ t  # camera position in world frame
+        cam_pos = ext[:3, 3]  # camera-to-world: translation IS the camera position
         fig.add_trace(go.Scatter3d(
             x=[cam_pos[0]], y=[cam_pos[1]], z=[cam_pos[2]],
             mode="markers+text",

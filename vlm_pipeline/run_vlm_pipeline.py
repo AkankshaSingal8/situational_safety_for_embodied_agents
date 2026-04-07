@@ -112,6 +112,7 @@ class EpisodeData:
     task_description: str
     agentview_rgb_path: str
     eye_in_hand_rgb_path: str
+    backview_rgb_path: Optional[str]
     metadata: dict
     visible_objects: List[str] = field(default_factory=list)
 
@@ -177,6 +178,7 @@ def discover_episodes(input_dir: Path, level: str = None,
                 metadata_path = ep_dir / "metadata.json"
                 agentview_path = ep_dir / "agentview_rgb.png"
                 eye_in_hand_path = ep_dir / "eye_in_hand_rgb.png"
+                backview_path = ep_dir / "backview_rgb.png"
 
                 if not metadata_path.exists() or not agentview_path.exists():
                     logger.warning(f"Skipping incomplete episode: {ep_dir}")
@@ -195,6 +197,7 @@ def discover_episodes(input_dir: Path, level: str = None,
                     task_description=metadata.get("task_description", ""),
                     agentview_rgb_path=str(agentview_path),
                     eye_in_hand_rgb_path=str(eye_in_hand_path),
+                    backview_rgb_path=str(backview_path) if backview_path.exists() else None,
                     metadata=metadata,
                     visible_objects=visible,
                 ))
@@ -482,6 +485,8 @@ def run_episode(vlm: VLMInterface, episode: EpisodeData,
 
     description = SCENE_DESCRIPTION.format(end_object=held_object)
     image_paths = [episode.agentview_rgb_path, episode.eye_in_hand_rgb_path]
+    if episode.backview_rgb_path is not None:
+        image_paths.append(episode.backview_rgb_path)
     raw_responses = {"spatial": [], "caution": [], "rotation": []}
 
     logger.info(f"Processing episode {episode.episode_idx} | "
