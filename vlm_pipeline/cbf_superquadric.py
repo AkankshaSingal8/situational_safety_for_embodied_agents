@@ -14,6 +14,7 @@ Outputs:
 import argparse
 import json
 import os
+import time
 
 import matplotlib
 matplotlib.use("Agg")
@@ -21,6 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from scipy.optimize import minimize
+from scipy.special import betaln
 
 # ---------------------------------------------------------------------------
 # Workspace constants
@@ -33,9 +35,11 @@ WORKSPACE_BOUNDS = {
 }
 EXTENSION_DISTANCE = 0.12
 DEFAULT_OBJECT_RADIUS = 0.05
-SAFETY_MARGIN = 1.3
+SAFETY_MARGIN = 1.0
 MASK_ERODE_PIXELS = 1
 MIN_ERODED_PIXELS = 30
+ENCLOSURE_PENALTY = 1e6
+MAX_FIT_POINTS = 8000
 
 
 def align_modalities(rgb, depth, seg, metadata):
@@ -207,28 +211,61 @@ def _superquadric_inside_outside(points, params):
     return term_xy + term_z
 
 
+def _superquadric_log_volume(params):
+    """Log volume of a superquadric / superellipsoid."""
+    _, _, _, ax, ay, az, e1, e2 = params
+    ax = max(ax, 1e-9)
+    ay = max(ay, 1e-9)
+    az = max(az, 1e-9)
+    e1 = np.clip(e1, 0.2, 2.0)
+    e2 = np.clip(e2, 0.2, 2.0)
+
+    # V = 2 a b c e1 e2 B(e1/2 + 1, e1) B(e2/2, e2/2)
+    return (
+        np.log(2.0)
+        + np.log(ax) + np.log(ay) + np.log(az)
+        + np.log(e1) + np.log(e2)
+        + betaln(e1 / 2.0 + 1.0, e1)
+        + betaln(e2 / 2.0, e2 / 2.0)
+    )
+
+
 def fit_superquadric(points, safety_margin=SAFETY_MARGIN):
     """
-    Fit a superquadric to a point cloud.
+    Fit a minimum-volume enclosing superquadric to a point cloud.
 
-    Optimises center (cx,cy,cz), scales (ax,ay,az), and shape (ε1,ε2).
-    The objective minimises Σ(g(p_i) - 1)² so that the surface passes
-    through the point cloud, then inflates scales by safety_margin.
+    Optimizes center (cx,cy,cz), scales (ax,ay,az), and shape (ε1,ε2)
+    by minimizing superquadric volume while enforcing enclosure:
+
+      g(p_i; theta) <= 1 for all points p_i
+
+    We use an L-BFGS-B objective with a strong hinge penalty on any
+    outside points. Large clouds are subsampled during optimization for
+    speed, then the full cloud is enclosed via the smallest uniform
+    dilation needed to guarantee enclosure numerically.
 
     Returns: (cx, cy, cz, ax, ay, az, e1, e2)
     """
-    center_init = points.mean(axis=0)
-    scales_init = points.std(axis=0) * 2.0
+    fit_points = points
+    if len(points) > MAX_FIT_POINTS:
+        rng = np.random.default_rng(0)
+        idx = rng.choice(len(points), MAX_FIT_POINTS, replace=False)
+        fit_points = points[idx]
+
+    center_init = fit_points.mean(axis=0)
+    scales_init = fit_points.std(axis=0) * 2.0
     scales_init = np.maximum(scales_init, 0.03)
     x0 = np.array([*center_init, *scales_init, 1.0, 1.0])
 
     def objective(params):
         params = np.array(params)
-        g = _superquadric_inside_outside(points, params)
-        return np.sum((g - 1.0) ** 2)
+        g = _superquadric_inside_outside(fit_points, params)
+        violations = np.maximum(g - 1.0, 0.0)
+        enclosure_penalty = np.mean(violations ** 2)
+        return _superquadric_log_volume(params) + ENCLOSURE_PENALTY * enclosure_penalty
 
-    data_min = points.min(axis=0)
-    data_max = points.max(axis=0)
+    data_min = fit_points.min(axis=0)
+    data_max = fit_points.max(axis=0)
     data_extent = data_max - data_min
     margin = np.maximum(data_extent * 0.5, 0.05)
 
@@ -242,6 +279,12 @@ def fit_superquadric(points, safety_margin=SAFETY_MARGIN):
                       options={"maxiter": 500, "ftol": 1e-10})
 
     params = result.x.copy()
+    g_final = _superquadric_inside_outside(points, params)
+    g_max = float(np.max(g_final))
+    if g_max > 1.0:
+        e1 = np.clip(params[6], 0.2, 2.0)
+        params[3:6] *= g_max ** (e1 / 2.0)
+
     params[3:6] *= safety_margin
     return params
 
@@ -367,6 +410,8 @@ def build_constraints(vlm_json, obs_folder, camera_keys=None):
     constraints = []
     behavioral = {"caution": False, "alpha_scale": 1.0}
     pose = {"rotation_lock": False, "w_rot": 0.0}
+    sq_fit_total_seconds = 0.0
+    sq_fit_count = 0
 
     for obj_name, relationships in objects_data:
         if obj_name == "end_effector":
@@ -407,7 +452,10 @@ def build_constraints(vlm_json, obs_folder, camera_keys=None):
 
         for rel in relationships:
             ext_pc = extend_point_cloud(pc, rel)
+            sq_fit_start = time.perf_counter()
             sq_params = fit_superquadric(ext_pc)
+            sq_fit_total_seconds += time.perf_counter() - sq_fit_start
+            sq_fit_count += 1
             h_val = evaluate_cbf(eef_pos, sq_params)
             grad = cbf_gradient(eef_pos, sq_params)
 
@@ -421,6 +469,7 @@ def build_constraints(vlm_json, obs_folder, camera_keys=None):
                 "gradient_at_eef": grad.tolist(),
             })
 
+    print(f"  [timing] total SQ fitting time: {sq_fit_total_seconds:.3f}s for {sq_fit_count} superquadrics")
     return constraints, behavioral, pose, eef_pos
 
 
@@ -823,8 +872,11 @@ def main():
     os.makedirs(out, exist_ok=True)
 
     print("Building superquadric CBF constraints ...")
+    constraint_build_start = time.perf_counter()
     constraints, behavioral, pose, eef_pos = build_constraints(
         vlm, obs, camera_keys=None)
+    constraint_build_seconds = time.perf_counter() - constraint_build_start
+    print(f"  [timing] constraint construction total: {constraint_build_seconds:.3f}s")
     print(f"  {len(constraints)} spatial constraints, "
           f"caution={behavioral['caution']}, "
           f"rotation_lock={pose['rotation_lock']}")
