@@ -34,6 +34,33 @@ WORKSPACE_BOUNDS = {
 EXTENSION_DISTANCE = 0.12
 DEFAULT_OBJECT_RADIUS = 0.05
 SAFETY_MARGIN = 1.3
+MASK_ERODE_PIXELS = 1
+MIN_ERODED_PIXELS = 30
+
+
+def align_modalities(rgb, depth, seg, metadata):
+    """Ensure RGB / depth / seg all use OpenCV pixel layout (row 0 = top).
+
+    Robosuite renders in OpenGL convention (row 0 = bottom).
+    The intrinsic / extrinsic matrices assume OpenCV convention,
+    so all pixel data must be flipped to match.
+
+    Legacy captures flipped only RGB; newer captures flip all modalities.
+    """
+    align = metadata.get("image_alignment")
+    if align is None:
+        depth = np.flip(depth, axis=0).copy()
+        seg = np.flip(seg, axis=0).copy()
+    else:
+        rgb_flipped = bool(align.get("rgb", False))
+        depth_flipped = bool(align.get("depth", False))
+        if rgb_flipped and not depth_flipped:
+            depth = np.flip(depth, axis=0).copy()
+            seg = np.flip(seg, axis=0).copy()
+        elif depth_flipped and not rgb_flipped:
+            rgb = np.flip(rgb, axis=0).copy()
+
+    return rgb, depth, seg
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +77,24 @@ def _geom_ids_for_object(object_name, geom_id_to_name):
     return ids
 
 
+def _binary_erosion_square(mask, radius=1):
+    """Binary erosion with a square kernel implemented in NumPy."""
+    if radius <= 0:
+        return mask
+    if mask.ndim != 2:
+        raise ValueError("mask must be 2D")
+
+    padded = np.pad(mask.astype(bool), radius, mode="constant", constant_values=False)
+    h, w = mask.shape
+    out = np.ones((h, w), dtype=bool)
+
+    # Keep a pixel only if all neighbors in the kernel are True.
+    for dy in range(2 * radius + 1):
+        for dx in range(2 * radius + 1):
+            out &= padded[dy:dy + h, dx:dx + w]
+    return out
+
+
 def build_object_point_cloud(seg, depth, geom_ids, intrinsic, extrinsic):
     """Back-project masked depth pixels to 3D world coordinates."""
     fx, fy = intrinsic[0][0], intrinsic[1][1]
@@ -59,7 +104,14 @@ def build_object_point_cloud(seg, depth, geom_ids, intrinsic, extrinsic):
     depth = np.squeeze(depth)
     seg = np.squeeze(seg)
 
-    mask = np.isin(seg, list(geom_ids))
+    raw_mask = np.isin(seg, list(geom_ids))
+    if MASK_ERODE_PIXELS > 0:
+        eroded_mask = _binary_erosion_square(raw_mask, radius=MASK_ERODE_PIXELS)
+        # Avoid wiping out tiny masks; keep raw mask when erosion is too aggressive.
+        mask = eroded_mask if np.count_nonzero(eroded_mask) >= MIN_ERODED_PIXELS else raw_mask
+    else:
+        mask = raw_mask
+
     vs, us = np.where(mask)
     if len(vs) == 0:
         return None
@@ -74,10 +126,11 @@ def build_object_point_cloud(seg, depth, geom_ids, intrinsic, extrinsic):
     ys_cam = (vs - cy) * zs / fy
     pts_cam = np.stack([xs_cam, ys_cam, zs], axis=1)
 
+    # Robosuite extrinsic is camera→world: p_world = R @ p_cam + t
     T = np.array(extrinsic)
     R = T[:3, :3]
     t = T[:3, 3]
-    pts_world = (R.T @ (pts_cam - t).T).T
+    pts_world = pts_cam @ R.T + t
     return pts_world
 
 
@@ -145,9 +198,8 @@ def _superquadric_inside_outside(points, params):
     cx, cy, cz, ax, ay, az, e1, e2 = params
     local = points - np.array([cx, cy, cz])
 
-    # Clamp exponents to avoid numerical issues
-    e1 = np.clip(e1, 0.05, 2.0)
-    e2 = np.clip(e2, 0.05, 2.0)
+    e1 = np.clip(e1, 0.2, 2.0)
+    e2 = np.clip(e2, 0.2, 2.0)
 
     term_xy = (np.abs(local[:, 0] / ax) ** (2.0 / e2) +
                np.abs(local[:, 1] / ay) ** (2.0 / e2)) ** (e2 / e1)
@@ -175,17 +227,21 @@ def fit_superquadric(points, safety_margin=SAFETY_MARGIN):
         g = _superquadric_inside_outside(points, params)
         return np.sum((g - 1.0) ** 2)
 
+    data_min = points.min(axis=0)
+    data_max = points.max(axis=0)
+    data_extent = data_max - data_min
+    margin = np.maximum(data_extent * 0.5, 0.05)
+
     bounds = (
-        [(None, None)] * 3 +       # center: unconstrained
-        [(0.01, None)] * 3 +        # scales: positive
-        [(0.05, 2.0), (0.05, 2.0)]  # shape exponents
+        [(lo, hi) for lo, hi in zip(data_min - margin, data_max + margin)] +
+        [(0.01, np.max(data_extent) * 5.0 + 0.1)] * 3 +
+        [(0.2, 2.0), (0.2, 2.0)]
     )
 
     result = minimize(objective, x0, bounds=bounds, method="L-BFGS-B",
                       options={"maxiter": 500, "ftol": 1e-10})
 
     params = result.x.copy()
-    # Inflate scales by safety margin
     params[3:6] *= safety_margin
     return params
 
@@ -254,17 +310,55 @@ def cbf_gradient(x_ee, sq_params):
 # 5. Full pipeline: parse VLM JSON → build constraints
 # ---------------------------------------------------------------------------
 
-def build_constraints(vlm_json, obs_folder, camera_key="agentview"):
-    """Return list of constraint dicts and behavioral flags."""
+def build_constraints(vlm_json, obs_folder, camera_keys=None):
+    """Return list of constraint dicts and behavioral flags.
+
+    Object point clouds are fused across all requested cameras.
+    """
     with open(os.path.join(obs_folder, "metadata.json")) as f:
         meta = json.load(f)
     with open(os.path.join(obs_folder, "camera_params.json")) as f:
         cam = json.load(f)
 
-    seg = np.load(os.path.join(obs_folder, f"{camera_key}_seg.npy"))
-    depth = np.load(os.path.join(obs_folder, f"{camera_key}_depth.npy"))
-    intrinsic = cam[camera_key]["intrinsic"]
-    extrinsic = cam[camera_key]["extrinsic"]
+    preferred_order = ["agentview", "robot0_eye_in_hand", "backview"]
+    if camera_keys is None:
+        camera_keys = [k for k in preferred_order if k in cam]
+        camera_keys += [k for k in cam.keys() if k not in camera_keys]
+    else:
+        camera_keys = [k for k in camera_keys if k in cam]
+
+    valid_cameras = []
+    camera_data = {}
+    for camera_key in camera_keys:
+        cam_prefix = "eye_in_hand" if camera_key == "robot0_eye_in_hand" else camera_key
+        depth_path = os.path.join(obs_folder, f"{cam_prefix}_depth.npy")
+        rgb_path = os.path.join(obs_folder, f"{cam_prefix}_rgb.png")
+        seg_element_path = os.path.join(obs_folder, f"{cam_prefix}_seg_element.npy")
+        seg_default_path = os.path.join(obs_folder, f"{cam_prefix}_seg.npy")
+        seg_path = seg_element_path if os.path.exists(seg_element_path) else seg_default_path
+        if not (os.path.exists(depth_path) and os.path.exists(rgb_path) and os.path.exists(seg_path)):
+            continue
+
+        seg = np.load(seg_path)
+        depth = np.squeeze(np.load(depth_path))
+        if seg.ndim == 3 and seg.shape[-1] == 1:
+            seg = seg.squeeze(-1)
+        rgb = np.array(Image.open(rgb_path))
+        rgb, depth, seg = align_modalities(rgb, depth, seg, meta)
+
+        camera_data[camera_key] = {
+            "seg": seg,
+            "depth": depth,
+            "intrinsic": cam[camera_key]["intrinsic"],
+            "extrinsic": cam[camera_key]["extrinsic"],
+            "seg_name": os.path.basename(seg_path),
+        }
+        valid_cameras.append(camera_key)
+        print(f"  [build_constraints] {camera_key}: using {os.path.basename(seg_path)}")
+
+    if not valid_cameras:
+        raise RuntimeError("No valid camera data found for constraint construction.")
+
     geom_id_to_name = meta["geom_id_to_name"]
     eef_pos = np.array(meta["robot_state"]["eef_pos"])
 
@@ -290,10 +384,20 @@ def build_constraints(vlm_json, obs_folder, camera_key="agentview"):
                 continue
 
         geom_ids = _geom_ids_for_object(obj_name, geom_id_to_name)
+        pc_parts = []
         if geom_ids:
-            pc = build_object_point_cloud(seg, depth, geom_ids, intrinsic, extrinsic)
-        else:
-            pc = None
+            for camera_key in valid_cameras:
+                d = camera_data[camera_key]
+                pc_cam = build_object_point_cloud(
+                    d["seg"], d["depth"], geom_ids, d["intrinsic"], d["extrinsic"]
+                )
+                if pc_cam is not None and len(pc_cam) > 0:
+                    # Keep fitting stable and balanced across views.
+                    if len(pc_cam) > 12000:
+                        idx = np.random.choice(len(pc_cam), 12000, replace=False)
+                        pc_cam = pc_cam[idx]
+                    pc_parts.append(pc_cam)
+        pc = np.vstack(pc_parts) if pc_parts else None
 
         if pc is None or len(pc) < 10:
             if obj_name in meta["objects"]:
@@ -362,17 +466,27 @@ def _build_scene_point_cloud(obs_folder, camera_keys, cam_params,
 
     Returns (pts_world, colors_rgb) where colors_rgb is in [0,255] uint8.
     """
+    with open(os.path.join(obs_folder, "metadata.json")) as f:
+        meta = json.load(f)
+
     all_pts = []
     all_colors = []
 
     for cam_key in camera_keys:
-        depth_path = os.path.join(obs_folder, f"{cam_key}_depth.npy")
-        rgb_path = os.path.join(obs_folder, f"{cam_key}_rgb.png")
+        cam_prefix = "eye_in_hand" if cam_key == "robot0_eye_in_hand" else cam_key
+        depth_path = os.path.join(obs_folder, f"{cam_prefix}_depth.npy")
+        rgb_path = os.path.join(obs_folder, f"{cam_prefix}_rgb.png")
+        seg_path = os.path.join(obs_folder, f"{cam_prefix}_seg.npy")
         if not os.path.exists(depth_path) or not os.path.exists(rgb_path):
             continue
 
         depth = np.squeeze(np.load(depth_path))
         rgb = np.array(Image.open(rgb_path))
+        seg = np.load(seg_path) if os.path.exists(seg_path) else np.zeros_like(depth, dtype=np.int32)
+        if seg.ndim == 3 and seg.shape[-1] == 1:
+            seg = seg.squeeze(-1)
+        rgb, depth, seg = align_modalities(rgb, depth, seg, meta)
+
         intrinsic = np.array(cam_params[cam_key]["intrinsic"])
         extrinsic = np.array(cam_params[cam_key]["extrinsic"])
 
@@ -380,10 +494,10 @@ def _build_scene_point_cloud(obs_folder, camera_keys, cam_params,
         cx, cy = intrinsic[0, 2], intrinsic[1, 2]
 
         h, w = depth.shape[:2]
-        vs, us = np.where(depth > 0)
+        valid_mask = (depth > 0) & (depth < 2.0)
+        vs, us = np.where(valid_mask)
         zs = depth[vs, us]
 
-        # Subsample if too many points
         if len(zs) > max_points_per_cam:
             idx = np.random.choice(len(zs), max_points_per_cam, replace=False)
             vs, us, zs = vs[idx], us[idx], zs[idx]
@@ -392,11 +506,21 @@ def _build_scene_point_cloud(obs_folder, camera_keys, cam_params,
         ys_cam = (vs - cy) * zs / fy
         pts_cam = np.stack([xs_cam, ys_cam, zs], axis=1)
 
+        # Robosuite extrinsic is camera→world: p_world = R @ p_cam + t
         R = extrinsic[:3, :3]
         t = extrinsic[:3, 3]
-        pts_world = (R.T @ (pts_cam - t).T).T
+        pts_world = pts_cam @ R.T + t
 
-        colors = rgb[vs, us, :3]  # grab RGB per point
+        # Workspace crop: discard points far from the tabletop area
+        in_ws = (
+            (pts_world[:, 0] > -1.0) & (pts_world[:, 0] < 1.0) &
+            (pts_world[:, 1] > -1.0) & (pts_world[:, 1] < 1.0) &
+            (pts_world[:, 2] > 0.5) & (pts_world[:, 2] < 2.0)
+        )
+        pts_world = pts_world[in_ws]
+        vs, us = vs[in_ws], us[in_ws]
+
+        colors = rgb[vs, us, :3]
 
         all_pts.append(pts_world)
         all_colors.append(colors)
@@ -407,7 +531,7 @@ def _build_scene_point_cloud(obs_folder, camera_keys, cam_params,
 
 
 def _make_scene_fig(obs_folder, cam_params, eef_pos):
-    """Build a plotly Figure with just the scene point cloud and EEF marker."""
+    """Build a plotly Figure with scene point cloud, GT object markers, and EEF."""
     import plotly.graph_objects as go
 
     fig = go.Figure()
@@ -426,11 +550,40 @@ def _make_scene_fig(obs_folder, cam_params, eef_pos):
                 hoverinfo="skip",
             ))
 
+    # GT object markers from metadata
+    if obs_folder is not None:
+        meta_path = os.path.join(obs_folder, "metadata.json")
+        if os.path.exists(meta_path):
+            with open(meta_path) as f:
+                meta = json.load(f)
+            objects = meta.get("objects", {})
+            obj_names, obj_pos = [], []
+            for name, data in objects.items():
+                pos = data["position"]
+                if all(abs(p) < 5.0 for p in pos):
+                    obj_names.append(name.replace("_", " ").title())
+                    obj_pos.append(pos)
+            if obj_pos:
+                obj_pos = np.array(obj_pos)
+                fig.add_trace(go.Scatter3d(
+                    x=obj_pos[:, 0], y=obj_pos[:, 1], z=obj_pos[:, 2],
+                    mode="markers+text",
+                    marker=dict(size=6, color="orange", symbol="diamond",
+                                line=dict(width=1, color="white")),
+                    text=obj_names,
+                    textposition="top center",
+                    textfont=dict(size=9, color="white"),
+                    name="Objects (GT)",
+                    hovertext=[f"{n}<br>({p[0]:.3f}, {p[1]:.3f}, {p[2]:.3f})"
+                               for n, p in zip(obj_names, obj_pos)],
+                    hoverinfo="text",
+                ))
+
     # End-effector marker
     fig.add_trace(go.Scatter3d(
         x=[eef_pos[0]], y=[eef_pos[1]], z=[eef_pos[2]],
         mode="markers",
-        marker=dict(size=10, color="blue", symbol="diamond"),
+        marker=dict(size=10, color="cyan", symbol="cross"),
         name="End-effector",
     ))
 
@@ -438,9 +591,11 @@ def _make_scene_fig(obs_folder, cam_params, eef_pos):
         scene=dict(
             xaxis_title="X (m)", yaxis_title="Y (m)", zaxis_title="Z (m)",
             aspectmode="data",
+            bgcolor="rgb(15,15,15)",
         ),
+        paper_bgcolor="rgb(10,10,10)",
         width=1100, height=900,
-        legend=dict(font=dict(size=10)),
+        legend=dict(font=dict(size=10, color="white")),
     )
     return fig
 
@@ -453,9 +608,59 @@ def vis_scene_html(eef_pos, save_path, obs_folder=None, cam_params=None):
     print(f"  Saved {save_path}")
 
 
+def vis_pointcloud_only_html(constraints, eef_pos, save_path, obs_folder=None,
+                             cam_params=None):
+    """Save point-cloud-only visualization (no superquadric surfaces)."""
+    import plotly.graph_objects as go
+
+    fig = _make_scene_fig(obs_folder, cam_params, eef_pos)
+
+    colors = [
+        "rgb(255,50,50)", "rgb(50,50,255)",
+        "rgb(50,200,50)", "rgb(255,165,0)",
+        "rgb(200,50,200)", "rgb(0,200,200)",
+    ]
+
+    # Keep one "object seg cloud" trace per object to avoid duplicate legend items.
+    added_object_names = set()
+
+    for idx, c in enumerate(constraints):
+        lc = colors[idx % len(colors)]
+        obj_name = c["object"]
+        rel_name = c["relationship"]
+
+        obj_pts = c.get("object_points")
+        if obj_pts is not None and len(obj_pts) > 0 and obj_name not in added_object_names:
+            obj_pts = np.asarray(obj_pts)
+            fig.add_trace(go.Scatter3d(
+                x=obj_pts[:, 0], y=obj_pts[:, 1], z=obj_pts[:, 2],
+                mode="markers",
+                marker=dict(size=3, color=lc, opacity=0.9),
+                name=f"Object seg cloud: {obj_name}",
+                hoverinfo="name",
+            ))
+            added_object_names.add(obj_name)
+
+        ext_pts = c.get("extended_points")
+        if ext_pts is not None and len(ext_pts) > 0:
+            ext_pts = np.asarray(ext_pts)
+            fig.add_trace(go.Scatter3d(
+                x=ext_pts[:, 0], y=ext_pts[:, 1], z=ext_pts[:, 2],
+                mode="markers",
+                marker=dict(size=2, color=lc, opacity=0.25),
+                name=f"Constraint cloud: {obj_name} ({rel_name})",
+                visible="legendonly",
+                hoverinfo="name",
+            ))
+
+    fig.update_layout(title="Point Cloud Only (No Superquadrics)")
+    fig.write_html(save_path)
+    print(f"  Saved {save_path}")
+
+
 def vis_3d_html(constraints, eef_pos, save_path, obs_folder=None,
                 cam_params=None):
-    """Scene point cloud + superquadric overlays, saved as HTML."""
+    """Scene point cloud + object point clouds + superquadric overlays as HTML."""
     import plotly.graph_objects as go
 
     fig = _make_scene_fig(obs_folder, cam_params, eef_pos)
@@ -463,11 +668,9 @@ def vis_3d_html(constraints, eef_pos, save_path, obs_folder=None,
     # Update EEF color based on constraint status
     h_min = min(c["h_at_eef"] for c in constraints) if constraints else 1.0
     eef_color = "green" if h_min > 0 else "red"
-    # Update the EEF trace (last trace added by _make_scene_fig)
     fig.data[-1].marker.color = eef_color
     fig.data[-1].name = f"EEF (h_min={h_min:.2f})"
 
-    # --- Superquadric constraint surfaces ---
     line_colors = [
         "rgb(255,50,50)", "rgb(50,50,255)",
         "rgb(50,200,50)", "rgb(255,165,0)",
@@ -478,25 +681,63 @@ def vis_3d_html(constraints, eef_pos, save_path, obs_folder=None,
         sq = np.array(c["sq_params"])
         X, Y, Z = superquadric_surface(sq, n_u=50, n_v=25)
         lc = line_colors[idx % len(line_colors)]
+        obj_name = c["object"]
+        rel_name = c["relationship"]
+        group_name = f"{obj_name} ({rel_name})"
 
+        # Object point cloud (if available)
+        obj_pts = c.get("object_points")
+        if obj_pts is not None and len(obj_pts) > 0:
+            obj_pts = np.asarray(obj_pts)
+            fig.add_trace(go.Scatter3d(
+                x=obj_pts[:, 0], y=obj_pts[:, 1], z=obj_pts[:, 2],
+                mode="markers",
+                marker=dict(size=3, color=lc, opacity=0.8),
+                name=f"Object points: {obj_name}",
+                legendgroup=group_name,
+                showlegend=False,
+            ))
+
+        # Extended point cloud (constraint region)
+        ext_pts = c.get("extended_points")
+        if ext_pts is not None and len(ext_pts) > 0:
+            ext_pts = np.asarray(ext_pts)
+            fig.add_trace(go.Scatter3d(
+                x=ext_pts[:, 0], y=ext_pts[:, 1], z=ext_pts[:, 2],
+                mode="markers",
+                marker=dict(size=2, color=lc, opacity=0.3),
+                name=f"Extended points: {obj_name} ({rel_name})",
+                visible="legendonly",
+                legendgroup=group_name,
+                showlegend=False,
+            ))
+
+        # Superquadric surface
         fig.add_trace(go.Surface(
             x=X, y=Y, z=Z,
             opacity=0.25,
             colorscale=[[0, lc], [1, lc]],
             showscale=False,
-            name=f'{c["object"]} / {c["relationship"]}',
+            name=f"SQ surface: {obj_name} ({rel_name})",
             hoverinfo="name",
+            legendgroup=group_name,
+            showlegend=True,
         ))
 
+        # Superquadric center marker
         fig.add_trace(go.Scatter3d(
             x=[sq[0]], y=[sq[1]], z=[sq[2]],
             mode="markers",
             marker=dict(size=5, color=lc),
             name=f'{c["object"]} center',
+            legendgroup=group_name,
             showlegend=False,
         ))
 
-    fig.update_layout(title="CBF Superquadric Constraints — 3D Scene")
+    fig.update_layout(
+        title="CBF Superquadric Constraints — 3D Scene",
+        legend=dict(groupclick="togglegroup"),
+    )
     fig.write_html(save_path)
     print(f"  Saved {save_path}")
 
@@ -508,6 +749,9 @@ def vis_rgb_overlay(constraints, rgb_path, intrinsic, extrinsic, save_path):
 
     K = np.array(intrinsic)
     T = np.array(extrinsic)
+    # Extrinsic is camera→world; invert for world→camera projection
+    R = T[:3, :3]
+    t_vec = T[:3, 3]
 
     colors_list = [
         [255, 50, 50], [50, 50, 255], [50, 200, 50],
@@ -519,9 +763,8 @@ def vis_rgb_overlay(constraints, rgb_path, intrinsic, extrinsic, save_path):
         X, Y, Z = superquadric_surface(sq, n_u=80, n_v=40)
         pts_3d = np.stack([X.ravel(), Y.ravel(), Z.ravel()], axis=1)
 
-        # World to camera
-        ones = np.ones((pts_3d.shape[0], 1))
-        pts_cam = (T @ np.hstack([pts_3d, ones]).T).T[:, :3]
+        # World to camera: p_cam = R^T @ (p_world - t)
+        pts_cam = (pts_3d - t_vec) @ R
 
         mask = pts_cam[:, 2] > 0.01
         pts_cam = pts_cam[mask]
@@ -581,7 +824,7 @@ def main():
 
     print("Building superquadric CBF constraints ...")
     constraints, behavioral, pose, eef_pos = build_constraints(
-        vlm, obs, camera_key="agentview")
+        vlm, obs, camera_keys=None)
     print(f"  {len(constraints)} spatial constraints, "
           f"caution={behavioral['caution']}, "
           f"rotation_lock={pose['rotation_lock']}")
@@ -627,11 +870,11 @@ def main():
         json.dump(cbf_json, f, indent=2)
     print(f"\n  Saved {params_path}")
 
-    # Strip point clouds for visualization dicts
-    vis_constraints = []
+    # For 2D overlay vis, strip large arrays; for 3D vis, keep them
+    vis_constraints_2d = []
     for c in constraints:
-        vis_constraints.append({k: v for k, v in c.items()
-                                if k not in ("extended_points", "object_points")})
+        vis_constraints_2d.append({k: v for k, v in c.items()
+                                   if k not in ("extended_points", "object_points")})
 
     # --- Visualizations ---
     print("\nGenerating visualizations ...")
@@ -640,23 +883,36 @@ def main():
     vis_scene_html(eef_pos, os.path.join(out, "vis_scene_3d.html"),
                    obs_folder=obs, cam_params=cam)
 
-    # 3D scene + superquadric overlays
-    vis_3d_html(vis_constraints, eef_pos, os.path.join(out, "vis_3d.html"),
+    # 3D point-cloud-only map with per-object legend (no superquadrics)
+    vis_pointcloud_only_html(constraints, eef_pos,
+                             os.path.join(out, "vis_pointcloud_only.html"),
+                             obs_folder=obs, cam_params=cam)
+
+    # 3D scene + object point clouds + superquadric overlays
+    vis_3d_html(constraints, eef_pos, os.path.join(out, "vis_3d.html"),
                 obs_folder=obs, cam_params=cam)
 
     # RGB overlay — agentview
     agentview_rgb = os.path.join(obs, "agentview_rgb.png")
-    vis_rgb_overlay(vis_constraints, agentview_rgb,
+    vis_rgb_overlay(vis_constraints_2d, agentview_rgb,
                     cam["agentview"]["intrinsic"],
                     cam["agentview"]["extrinsic"],
                     os.path.join(out, "vis_agentview_overlay.png"))
 
     # RGB overlay — eye in hand
     eih_rgb = os.path.join(obs, "eye_in_hand_rgb.png")
-    vis_rgb_overlay(vis_constraints, eih_rgb,
+    vis_rgb_overlay(vis_constraints_2d, eih_rgb,
                     cam["robot0_eye_in_hand"]["intrinsic"],
                     cam["robot0_eye_in_hand"]["extrinsic"],
                     os.path.join(out, "vis_eye_in_hand_overlay.png"))
+
+    # RGB overlay — backview (if available)
+    backview_rgb = os.path.join(obs, "backview_rgb.png")
+    if "backview" in cam and os.path.exists(backview_rgb):
+        vis_rgb_overlay(vis_constraints_2d, backview_rgb,
+                        cam["backview"]["intrinsic"],
+                        cam["backview"]["extrinsic"],
+                        os.path.join(out, "vis_backview_overlay.png"))
 
     print("\nDone. All outputs saved to:", out)
 

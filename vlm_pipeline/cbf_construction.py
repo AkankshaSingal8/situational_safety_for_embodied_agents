@@ -35,6 +35,31 @@ DEFAULT_OBJECT_RADIUS = 0.05  # fallback sphere radius
 SAFETY_MARGIN = 1.3
 
 
+def align_modalities(rgb, depth, seg, metadata):
+    """Ensure RGB / depth / seg all use OpenCV pixel layout (row 0 = top).
+
+    Robosuite renders in OpenGL convention (row 0 = bottom).
+    The intrinsic / extrinsic matrices assume OpenCV convention,
+    so all pixel data must be flipped to match.
+
+    Legacy captures flipped only RGB; newer captures flip all modalities.
+    """
+    align = metadata.get("image_alignment")
+    if align is None:
+        depth = np.flip(depth, axis=0).copy()
+        seg = np.flip(seg, axis=0).copy()
+    else:
+        rgb_flipped = bool(align.get("rgb", False))
+        depth_flipped = bool(align.get("depth", False))
+        if rgb_flipped and not depth_flipped:
+            depth = np.flip(depth, axis=0).copy()
+            seg = np.flip(seg, axis=0).copy()
+        elif depth_flipped and not rgb_flipped:
+            rgb = np.flip(rgb, axis=0).copy()
+
+    return rgb, depth, seg
+
+
 # ---------------------------------------------------------------------------
 # 1. Build per-object point clouds from depth + segmentation
 # ---------------------------------------------------------------------------
@@ -72,11 +97,11 @@ def build_object_point_cloud(seg, depth, geom_ids, intrinsic, extrinsic):
     ys_cam = (vs - cy) * zs / fy
     pts_cam = np.stack([xs_cam, ys_cam, zs], axis=1)  # Nx3
 
-    # Camera-to-world: extrinsic is world-to-camera, so invert
+    # Robosuite extrinsic is camera→world: p_world = R @ p_cam + t
     T = np.array(extrinsic)
     R = T[:3, :3]
     t = T[:3, 3]
-    pts_world = (R.T @ (pts_cam - t).T).T
+    pts_world = pts_cam @ R.T + t
     return pts_world
 
 
@@ -177,8 +202,21 @@ def build_constraints(vlm_json, obs_folder, camera_key="agentview"):
     with open(os.path.join(obs_folder, "camera_params.json")) as f:
         cam = json.load(f)
 
-    seg = np.load(os.path.join(obs_folder, f"{camera_key}_seg.npy"))
-    depth = np.load(os.path.join(obs_folder, f"{camera_key}_depth.npy"))
+    cam_prefix = "eye_in_hand" if camera_key == "robot0_eye_in_hand" else camera_key
+    seg_element_path = os.path.join(obs_folder, f"{cam_prefix}_seg_element.npy")
+    seg_default_path = os.path.join(obs_folder, f"{cam_prefix}_seg.npy")
+    seg_path = seg_element_path if os.path.exists(seg_element_path) else seg_default_path
+    print(f"  [build_constraints] using segmentation: {os.path.basename(seg_path)}")
+    seg = np.load(seg_path)
+    depth = np.load(os.path.join(obs_folder, f"{cam_prefix}_depth.npy"))
+    depth = np.squeeze(depth)
+    if seg.ndim == 3 and seg.shape[-1] == 1:
+        seg = seg.squeeze(-1)
+
+    rgb_path = os.path.join(obs_folder, f"{cam_prefix}_rgb.png")
+    rgb = np.array(Image.open(rgb_path))
+    rgb, depth, seg = align_modalities(rgb, depth, seg, meta)
+
     intrinsic = cam[camera_key]["intrinsic"]
     extrinsic = cam[camera_key]["extrinsic"]
     geom_id_to_name = meta["geom_id_to_name"]
@@ -334,6 +372,9 @@ def vis_rgb_overlay(constraints, rgb_path, intrinsic, extrinsic, save_path):
 
     K = np.array(intrinsic)
     T = np.array(extrinsic)
+    # Extrinsic is camera→world; invert for world→camera projection
+    R = T[:3, :3]
+    t_vec = T[:3, 3]
 
     colors_list = [
         [255, 50, 50],
@@ -347,7 +388,6 @@ def vis_rgb_overlay(constraints, rgb_path, intrinsic, extrinsic, save_path):
     for idx, c in enumerate(constraints):
         center = np.array(c["center"])
         scales = np.array(c["scales"])
-        # Generate surface points
         u = np.linspace(0, 2 * np.pi, 80)
         v = np.linspace(0, np.pi, 40)
         U, V = np.meshgrid(u, v)
@@ -357,10 +397,8 @@ def vis_rgb_overlay(constraints, rgb_path, intrinsic, extrinsic, save_path):
             center[2] + scales[2] * np.cos(V),
         ], axis=-1).reshape(-1, 3)
 
-        # World to camera
-        ones = np.ones((pts_3d.shape[0], 1))
-        pts_h = np.hstack([pts_3d, ones])
-        pts_cam = (T @ pts_h.T).T[:, :3]
+        # World to camera: p_cam = R^T @ (p_world - t)
+        pts_cam = (pts_3d - t_vec) @ R
 
         # Keep only in front of camera
         mask = pts_cam[:, 2] > 0.01
@@ -407,6 +445,9 @@ def vis_dashboard(constraints, behavioral, pose, eef_pos, rgb_path,
     img = np.array(Image.open(rgb_path))
     K = np.array(intrinsic)
     T = np.array(extrinsic)
+    # Extrinsic is camera→world; invert for world→camera projection
+    R_dash = T[:3, :3]
+    t_dash = T[:3, 3]
     overlay = img.copy().astype(np.float64)
     colors_list = [[255, 50, 50], [50, 50, 255], [50, 200, 50],
                    [255, 165, 0], [200, 50, 200], [0, 200, 200]]
@@ -421,8 +462,8 @@ def vis_dashboard(constraints, behavioral, pose, eef_pos, rgb_path,
             center[1] + scales[1] * np.sin(U) * np.sin(V),
             center[2] + scales[2] * np.cos(V),
         ], axis=-1).reshape(-1, 3)
-        ones = np.ones((pts_3d.shape[0], 1))
-        pts_cam = (T @ np.hstack([pts_3d, ones]).T).T[:, :3]
+        # World to camera: p_cam = R^T @ (p_world - t)
+        pts_cam = (pts_3d - t_dash) @ R_dash
         mask = pts_cam[:, 2] > 0.01
         pts_cam = pts_cam[mask]
         if len(pts_cam) == 0:

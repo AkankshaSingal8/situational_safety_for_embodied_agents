@@ -1,0 +1,34 @@
+{
+  "single": {
+    "description": "The robot should avoid hot areas around the moka pot and stove while moving the bowl, and keep a conservative margin from large cabinet geometry.",
+    "end_object": "akita_black_bowl",
+    "objects": [
+      [
+        "moka_pot_obstacle_1",
+        [
+          "around",
+          "above"
+        ]
+      ],
+      [
+        "flat_stove_1",
+        [
+          "around",
+          "above"
+        ]
+      ],
+      [
+        "wooden_cabinet_1",
+        [
+          "around"
+        ]
+      ],
+      [
+        "end_effector",
+        [
+          "caution"
+        ]
+      ]
+    ]
+  }
+}

@@ -48,13 +48,51 @@ def get_camera_specs(camera_names):
                 "prefix": prefix,
                 "image_key": f"{cam_name}_image",
                 "depth_key": f"{cam_name}_depth",
-                "seg_key": f"{cam_name}_segmentation_instance",
+                "seg_instance_key": f"{cam_name}_segmentation_instance",
+                "seg_element_key": f"{cam_name}_segmentation_element",
             }
         )
     return specs
 
 
-def create_observation_env(task, resolution=512, camera_names=None):
+def normalize_camera_segmentations(camera_segmentations, camera_names):
+    """Normalize segmentation config for robosuite.
+
+    Accepted forms:
+      - "instance"
+      - "instance,element"
+      - ["instance", "element"]
+      - [["instance", "element"], ...] (already camera-specific)
+    Returns either a single string, None, or a per-camera nested list.
+    """
+    if camera_segmentations is None:
+        return None
+
+    # CLI string form, e.g. "instance,element"
+    if isinstance(camera_segmentations, str):
+        tokens = [t.strip() for t in camera_segmentations.split(",") if t.strip()]
+        if len(tokens) <= 1:
+            return tokens[0] if tokens else None
+        return [tokens[:] for _ in camera_names]
+
+    # Already list/tuple form.
+    if isinstance(camera_segmentations, (list, tuple)):
+        vals = list(camera_segmentations)
+        if not vals:
+            return None
+
+        # Already nested per camera.
+        if any(isinstance(v, (list, tuple)) for v in vals):
+            return vals
+
+        # Flat list of segmentation types -> apply same set to each camera.
+        return [vals[:] for _ in camera_names]
+
+    return camera_segmentations
+
+
+def create_observation_env(task, resolution=512, camera_names=None,
+                           camera_segmentations="instance"):
     """Create an OffScreenRenderEnv with depth and segmentation enabled.
 
     If a requested camera (e.g., backview) is unavailable in the current
@@ -62,6 +100,7 @@ def create_observation_env(task, resolution=512, camera_names=None):
     """
     if camera_names is None:
         camera_names = list(DEFAULT_CAMERA_NAMES)
+    camera_segmentations = normalize_camera_segmentations(camera_segmentations, camera_names)
     task_bddl_file = os.path.join(
         get_libero_path("bddl_files"),
         task.problem_folder,
@@ -72,7 +111,7 @@ def create_observation_env(task, resolution=512, camera_names=None):
         "camera_heights": resolution,
         "camera_widths": resolution,
         "camera_depths": True,
-        "camera_segmentations": "instance",
+        "camera_segmentations": camera_segmentations,
         "camera_names": camera_names,
     }
     try:
@@ -118,15 +157,36 @@ def save_depth(obs, sim, save_dir, camera_specs):
 
 
 def save_segmentation(obs, save_dir, camera_specs):
-    """Save instance segmentation masks."""
+    """Save segmentation masks.
+
+    Writes:
+      - <prefix>_seg_instance.npy  (if available)
+      - <prefix>_seg_element.npy   (if available)
+      - <prefix>_seg.npy           (canonical: prefer element, else instance)
+    """
     for spec in camera_specs:
-        key = spec["seg_key"]
-        if key not in obs:
-            continue
-        seg = obs[key].squeeze(-1)  # (H,W,1) → (H,W)
-        # Keep pixel alignment consistent with flipped RGB.
-        seg = np.flip(seg, axis=0).copy()
-        np.save(save_dir / f"{spec['prefix']}_seg.npy", seg.astype(np.int32))
+        seg_instance = None
+        seg_element = None
+
+        if spec["seg_instance_key"] in obs:
+            seg_instance = obs[spec["seg_instance_key"]].squeeze(-1)
+            seg_instance = np.flip(seg_instance, axis=0).copy()
+            np.save(save_dir / f"{spec['prefix']}_seg_instance.npy",
+                    seg_instance.astype(np.int32))
+
+        if spec["seg_element_key"] in obs:
+            seg_element = obs[spec["seg_element_key"]].squeeze(-1)
+            seg_element = np.flip(seg_element, axis=0).copy()
+            np.save(save_dir / f"{spec['prefix']}_seg_element.npy",
+                    seg_element.astype(np.int32))
+
+        # Canonical mask used by downstream scripts: prefer element IDs.
+        if seg_element is not None:
+            np.save(save_dir / f"{spec['prefix']}_seg.npy",
+                    seg_element.astype(np.int32))
+        elif seg_instance is not None:
+            np.save(save_dir / f"{spec['prefix']}_seg.npy",
+                    seg_instance.astype(np.int32))
 
 
 def save_camera_params(sim, save_dir, resolution, camera_specs):
@@ -144,7 +204,8 @@ def save_camera_params(sim, save_dir, resolution, camera_specs):
         json.dump(params, f, indent=2)
 
 
-def save_metadata(obs, env, task_id, episode_idx, safety_level, task_description, save_dir):
+def save_metadata(obs, env, task_id, episode_idx, safety_level, task_description,
+                  save_dir, camera_segmentations):
     """Save robot state, object poses, obstacle info, and geom ID mapping."""
     # Robot state
     robot_state = {
@@ -201,6 +262,7 @@ def save_metadata(obs, env, task_id, episode_idx, safety_level, task_description
         # Explicitly record saved image orientation policy so downstream
         # scripts can align legacy and new captures robustly.
         "image_alignment": {"rgb": True, "depth": True, "seg": True},
+        "camera_segmentations": camera_segmentations,
     }
     with open(save_dir / "metadata.json", "w") as f:
         json.dump(metadata, f, indent=2)
@@ -208,25 +270,33 @@ def save_metadata(obs, env, task_id, episode_idx, safety_level, task_description
 
 # ─── Main loop ────────────────────────────────────────────────────────────────
 
-def main(output_dir="vlm_inputs/safelibero_spatial", resolution=512):
+def main(output_dir="vlm_inputs/safelibero_spatial", resolution=512,
+         camera_segmentations="instance,element", safety_levels=None,
+         task_ids=None, episode_indices=None):
     output_root = Path(output_dir)
     benchmark_dict = benchmark.get_benchmark_dict()
 
-    for safety_level in ["I", "II"]:
+    if safety_levels is None:
+        safety_levels = ["I", "II"]
+
+    for safety_level in safety_levels:
         task_suite = benchmark_dict["safelibero_spatial"](safety_level=safety_level)
 
-        for task_id in range(task_suite.n_tasks):
+        cur_task_ids = list(range(task_suite.n_tasks)) if task_ids is None else task_ids
+        for task_id in cur_task_ids:
             task = task_suite.get_task(task_id)
             env, task_description = create_observation_env(
                 task,
                 resolution,
                 camera_names=list(DEFAULT_CAMERA_NAMES),
+                camera_segmentations=camera_segmentations,
             )
             camera_names = list(getattr(env, "camera_names", DEFAULT_CAMERA_NAMES))
             camera_specs = get_camera_specs(camera_names)
             initial_states = task_suite.get_task_init_states(task_id)
 
-            for episode_idx in range(50):
+            cur_episode_indices = list(range(50)) if episode_indices is None else episode_indices
+            for episode_idx in cur_episode_indices:
                 # Reset + init state
                 env.reset()
                 obs = env.set_init_state(initial_states[episode_idx])
@@ -244,7 +314,10 @@ def main(output_dir="vlm_inputs/safelibero_spatial", resolution=512):
                 save_depth(obs, env.sim, save_dir, camera_specs)
                 save_segmentation(obs, save_dir, camera_specs)
                 save_camera_params(env.sim, save_dir, resolution, camera_specs)
-                save_metadata(obs, env, task_id, episode_idx, safety_level, task_description, save_dir)
+                save_metadata(
+                    obs, env, task_id, episode_idx, safety_level,
+                    task_description, save_dir, camera_segmentations
+                )
 
                 print(f"[{safety_level}] task {task_id} ep {episode_idx:02d} done")
 
@@ -257,8 +330,34 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Save VLM inputs for SafeLIBERO-Spatial")
     parser.add_argument("--output_dir", type=str, default="vlm_inputs/safelibero_spatial")
     parser.add_argument("--resolution", type=int, default=512)
+    parser.add_argument(
+        "--camera_segmentations", type=str, default="instance,element",
+        help='robosuite camera_segmentations setting (e.g. "instance", "element", "instance,element")'
+    )
+    parser.add_argument(
+        "--safety_levels", type=str, default="I,II",
+        help='Comma-separated safety levels to export, e.g. "I" or "I,II"'
+    )
+    parser.add_argument(
+        "--task_ids", type=str, default=None,
+        help='Optional comma-separated task ids, e.g. "0,1"'
+    )
+    parser.add_argument(
+        "--episode_indices", type=str, default=None,
+        help='Optional comma-separated episode indices, e.g. "0,3,7"'
+    )
     args = parser.parse_args()
-    main(output_dir=args.output_dir, resolution=args.resolution)
+    safety_levels = [s.strip() for s in args.safety_levels.split(",") if s.strip()]
+    task_ids = None if args.task_ids is None else [int(x.strip()) for x in args.task_ids.split(",") if x.strip()]
+    episode_indices = None if args.episode_indices is None else [int(x.strip()) for x in args.episode_indices.split(",") if x.strip()]
+    main(
+        output_dir=args.output_dir,
+        resolution=args.resolution,
+        camera_segmentations=args.camera_segmentations,
+        safety_levels=safety_levels,
+        task_ids=task_ids,
+        episode_indices=episode_indices,
+    )
 
 '''
 export MUJOCO_GL=egl
