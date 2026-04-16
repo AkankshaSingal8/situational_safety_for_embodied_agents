@@ -339,7 +339,8 @@ def process_m1(episode: dict, model, processor, num_votes: int,
                                          max_new_tokens=max_new_tokens)
                 votes.append(resp)
                 vlm_log.append({"type": "spatial", "object": obj_name,
-                                "relation": rel, "vote": v, "response": resp})
+                                "relation": rel, "vote": v,
+                                "prompt": prompt, "response": resp})
 
             unsafe_votes = sum(parse_spatial_response(r) for r in votes)
             if unsafe_votes > num_votes / 2:
@@ -362,7 +363,7 @@ def process_m1(episode: dict, model, processor, num_votes: int,
                                      max_new_tokens=max_new_tokens)
             votes.append(resp)
             vlm_log.append({"type": "caution", "object": obj_name,
-                            "vote": v, "response": resp})
+                            "vote": v, "prompt": prompt, "response": resp})
 
         caution_votes = sum(parse_caution_response(r) for r in votes)
         if caution_votes > num_votes / 2:
@@ -382,7 +383,8 @@ def process_m1(episode: dict, model, processor, num_votes: int,
                                  image_paths=[episode["eye_in_hand"]],
                                  max_new_tokens=max_new_tokens)
         votes.append(resp)
-        vlm_log.append({"type": "rotation", "vote": v, "response": resp})
+        vlm_log.append({"type": "rotation", "vote": v,
+                        "prompt": prompt, "response": resp})
 
     rot_votes = sum(parse_rotation_response(r) for r in votes)
     if rot_votes > num_votes / 2:
@@ -393,6 +395,7 @@ def process_m1(episode: dict, model, processor, num_votes: int,
     return {
         "description": task_desc,
         "end_object": manip,
+        "scene_objects": scene_objects,
         "objects": objects_out,
         "_vlm_log": vlm_log,
     }
@@ -464,7 +467,8 @@ def process_m2(episode: dict, model, processor, num_votes: int,
                                  image_paths=images,
                                  max_new_tokens=max_new_tokens)
 
-        vlm_log.append({"type": "discovery", "vote": v, "response": resp})
+        vlm_log.append({"type": "discovery", "vote": v,
+                        "prompt": prompt, "response": resp})
         parsed = parse_m2_object_discovery(resp)
         all_discoveries.append(parsed)
 
@@ -507,7 +511,8 @@ def process_m2(episode: dict, model, processor, num_votes: int,
                                  image_paths=images,
                                  max_new_tokens=max_new_tokens)
         votes.append(resp)
-        vlm_log.append({"type": "caution", "vote": v, "response": resp})
+        vlm_log.append({"type": "caution", "vote": v,
+                        "prompt": prompt, "response": resp})
 
     if sum(parse_caution_response(r) for r in votes) > threshold:
         ee_constraints.append("caution")
@@ -523,7 +528,8 @@ def process_m2(episode: dict, model, processor, num_votes: int,
                                  image_paths=[episode["eye_in_hand"]],
                                  max_new_tokens=max_new_tokens)
         votes.append(resp)
-        vlm_log.append({"type": "rotation", "vote": v, "response": resp})
+        vlm_log.append({"type": "rotation", "vote": v,
+                        "prompt": prompt, "response": resp})
 
     if sum(parse_rotation_response(r) for r in votes) > threshold:
         ee_constraints.append("rotation lock")
@@ -627,7 +633,8 @@ def process_m3(episode: dict, model, processor, num_votes: int,
                                          max_new_tokens=max_new_tokens)
                 votes.append(resp)
                 vlm_log.append({"type": "spatial", "object": obj_name,
-                                "relation": rel, "vote": v, "response": resp})
+                                "relation": rel, "vote": v,
+                                "prompt": prompt, "response": resp})
 
             if sum(parse_spatial_response(r) for r in votes) > num_votes / 2:
                 constraints.append(rel)
@@ -650,7 +657,8 @@ def process_m3(episode: dict, model, processor, num_votes: int,
                                  image_paths=images,
                                  max_new_tokens=max_new_tokens)
         votes.append(resp)
-        vlm_log.append({"type": "caution", "vote": v, "response": resp})
+        vlm_log.append({"type": "caution", "vote": v,
+                        "prompt": prompt, "response": resp})
 
     if sum(parse_caution_response(r) for r in votes) > num_votes / 2:
         ee_constraints.append("caution")
@@ -666,7 +674,8 @@ def process_m3(episode: dict, model, processor, num_votes: int,
                                  image_paths=[episode["eye_in_hand"]],
                                  max_new_tokens=max_new_tokens)
         votes.append(resp)
-        vlm_log.append({"type": "rotation", "vote": v, "response": resp})
+        vlm_log.append({"type": "rotation", "vote": v,
+                        "prompt": prompt, "response": resp})
 
     if sum(parse_rotation_response(r) for r in votes) > num_votes / 2:
         ee_constraints.append("rotation lock")
@@ -676,6 +685,7 @@ def process_m3(episode: dict, model, processor, num_votes: int,
     return {
         "description": task_desc,
         "end_object": manip,
+        "scene_objects": scene_objects,
         "objects": objects_out,
         "_vlm_log": vlm_log,
     }

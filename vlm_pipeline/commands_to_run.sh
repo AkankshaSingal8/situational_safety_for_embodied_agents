@@ -1,0 +1,1 @@
+python qwen_vlm_worker.py --method m2 --input_folder vlm_inputs/safelibero_spatial/level_I/task_0/episode_00 --output_json results/m2_task0_ep00.json --save_vlm_log
