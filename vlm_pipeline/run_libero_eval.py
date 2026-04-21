@@ -14,15 +14,64 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, Union
 
+
+def _prepend_safelibero_path():
+    """Prefer the local SafeLIBERO source tree over vanilla LIBERO.
+
+    The editable install of SafeLIBERO is sometimes broken (empty MAPPING /
+    empty top_level.txt), so a bare ``import libero`` fails. Manually prepend
+    the source tree to ``sys.path`` before the ``from libero.libero import ...``
+    line below.
+    """
+    candidates = [
+        os.environ.get("SAFELIBERO_ROOT", ""),
+        "/ocean/projects/cis250185p/jqian8/src/vlsa-aegis/safelibero",
+        "/ocean/projects/cis250185p/jqian8/src/vlsa-aegis/safelibero/libero",
+    ]
+    for raw in candidates:
+        if not raw:
+            continue
+        candidate = Path(raw).expanduser().resolve()
+        if (candidate / "libero" / "libero" / "benchmark" / "__init__.py").is_file():
+            sys.path.insert(0, str(candidate))
+            return str(candidate)
+        if (candidate / "libero" / "benchmark" / "__init__.py").is_file() and candidate.parent.exists():
+            sys.path.insert(0, str(candidate.parent))
+            return str(candidate.parent)
+    return None
+
+
+def _prepend_openvla_path():
+    """Add the OpenVLA-OFT repo root that provides experiments/ and prismatic/."""
+    candidates = [
+        os.environ.get("OPENVLA_OFT_REPO", ""),
+        os.environ.get("OPENVLA_ROOT", ""),
+        "/ocean/projects/cis250185p/jqian8/openvla-oft",
+    ]
+    for raw in candidates:
+        if not raw:
+            continue
+        candidate = Path(raw).expanduser().resolve()
+        if (candidate / "experiments" / "robot" / "openvla_utils.py").is_file() and \
+                (candidate / "prismatic" / "vla" / "constants.py").is_file():
+            sys.path.insert(0, str(candidate))
+            return str(candidate)
+    return None
+
+
+_PREPENDED_SAFELIBERO_ROOT = _prepend_safelibero_path()
+_PREPENDED_OPENVLA_ROOT = _prepend_openvla_path()
+
 import draccus
 import numpy as np
 import tqdm
 from libero.libero import benchmark
 
-import wandb
+try:
+    import wandb
+except ImportError:
+    wandb = None
 
-# Append openvla-oft repo so that interpreter can find experiments.robot and prismatic
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "openvla-oft"))
 from experiments.robot.libero.libero_utils import (
     get_libero_dummy_action,
     get_libero_env,
@@ -110,6 +159,9 @@ class GenerateConfig:
     safety_level: str = "I"
     num_steps_wait: int = 20                         # Number of steps to wait for objects to stabilize in sim
     num_trials_per_task: int = 50                    # Number of rollouts per task
+    # Comma-separated list of task indices to evaluate (e.g. "0" or "0,1,2"),
+    # or "all" for every task in the suite.
+    task_ids: str = "0"
     initial_states_path: str = "DEFAULT"             # "DEFAULT", or path to initial states JSON file
     env_img_res: int = 1024                           # Resolution for environment images (not policy input resolution)
 
@@ -444,8 +496,7 @@ def run_task(
     # Start episodes
     task_episodes, task_successes, task_collides, task_safesuccesses = 0, 0, 0, 0
     total_time_task = []
-    # for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
-    for episode_idx in range(50):
+    for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
 
         log_message(f"\nTask: {task_description}", log_file)
 
@@ -558,8 +609,17 @@ def eval_libero(cfg: GenerateConfig) -> float:
 
     # Start evaluation
     total_episodes, total_successes = 0, 0
-    # for task_id in tqdm.tqdm(range(num_tasks)):
-    for task_id in [2]:
+    if cfg.task_ids.strip().lower() == "all":
+        task_ids_list = list(range(num_tasks))
+    else:
+        task_ids_list = [int(s) for s in cfg.task_ids.split(",") if s.strip() != ""]
+        invalid = [t for t in task_ids_list if t < 0 or t >= num_tasks]
+        if invalid:
+            raise ValueError(
+                f"--task_ids contains out-of-range indices {invalid} "
+                f"(suite '{cfg.task_suite_name}' has {num_tasks} tasks)")
+    log_message(f"Task IDs to evaluate: {task_ids_list}", log_file)
+    for task_id in task_ids_list:
         total_episodes, total_successes = run_task(
             cfg,
             task_suite,

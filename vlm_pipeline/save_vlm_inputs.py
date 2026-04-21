@@ -13,10 +13,42 @@ Usage:
 import argparse
 import json
 import os
+import sys
 
 import numpy as np
 from pathlib import Path
 from PIL import Image
+
+
+def _prepend_safelibero_path():
+    """Prefer the local SafeLIBERO source tree over vanilla LIBERO.
+
+    The `safelibero-vlm` conda env editable-installs `libero` from the
+    SafeLIBERO source, but the .pth finder is empty in some setups, so
+    `import libero` fails. Fall back to prepending the source tree to
+    sys.path so that `from libero.libero import ...` resolves to
+    SafeLIBERO (NOT vanilla LIBERO).
+    """
+    candidates = [
+        os.environ.get("SAFELIBERO_ROOT", ""),
+        "/ocean/projects/cis250185p/jqian8/src/vlsa-aegis/safelibero",
+        "/ocean/projects/cis250185p/jqian8/src/vlsa-aegis/safelibero/libero",
+    ]
+
+    for raw in candidates:
+        if not raw:
+            continue
+        candidate = Path(raw).expanduser().resolve()
+        if (candidate / "libero" / "libero" / "benchmark" / "__init__.py").is_file():
+            sys.path.insert(0, str(candidate))
+            return str(candidate)
+        if (candidate / "libero" / "benchmark" / "__init__.py").is_file() and candidate.parent.exists():
+            sys.path.insert(0, str(candidate.parent))
+            return str(candidate.parent)
+    return None
+
+
+_PREPENDED_SAFELIBERO_ROOT = _prepend_safelibero_path()
 
 from libero.libero import benchmark, get_libero_path
 from libero.libero.envs import OffScreenRenderEnv
@@ -248,6 +280,74 @@ def save_metadata(obs, env, task_id, episode_idx, safety_level, task_description
         if gname:
             geom_id_to_name[str(i)] = gname
 
+    # Robot arm + gripper collision geometry (world-frame) so downstream CBF
+    # code can reason about the actual arm/gripper volume rather than a single
+    # EEF point. MuJoCo geom_type codes:
+    #   0 plane, 2 sphere, 3 capsule, 4 ellipsoid, 5 cylinder, 6 box, 7 mesh.
+    GEOM_TYPE_NAMES = {
+        0: "plane", 1: "hfield", 2: "sphere", 3: "capsule",
+        4: "ellipsoid", 5: "cylinder", 6: "box", 7: "mesh",
+    }
+    robot_geoms = []
+    for gid in range(env.sim.model.ngeom):
+        gname = env.sim.model.geom_id2name(gid)
+        if not gname:
+            continue
+        is_arm = gname.startswith("robot0_link") and gname.endswith("_collision")
+        is_gripper = gname.startswith("gripper0_") and gname.endswith("_collision")
+        if not (is_arm or is_gripper):
+            continue
+        bid = int(env.sim.model.geom_bodyid[gid])
+        bname = env.sim.model.body_id2name(bid)
+        gtype = int(env.sim.model.geom_type[gid])
+        entry = {
+            "name": gname,
+            "body": bname,
+            "part": "gripper" if is_gripper else "arm",
+            "type": gtype,
+            "type_name": GEOM_TYPE_NAMES.get(gtype, f"type_{gtype}"),
+            "size": env.sim.model.geom_size[gid].tolist(),
+            "pos_local": env.sim.model.geom_pos[gid].tolist(),
+            "quat_local": env.sim.model.geom_quat[gid].tolist(),
+            "pos_world": env.sim.data.geom_xpos[gid].tolist(),
+            "xmat_world": env.sim.data.geom_xmat[gid].reshape(3, 3).tolist(),
+        }
+        # For mesh geoms, record the AABB of the underlying mesh vertices so
+        # the CBF side can approximate each link with a box/capsule without
+        # needing the raw mesh. MuJoCo stores mesh verts in model.mesh_vert.
+        if gtype == 7:
+            did = int(env.sim.model.geom_dataid[gid])
+            if did >= 0:
+                vadr = int(env.sim.model.mesh_vertadr[did])
+                vnum = int(env.sim.model.mesh_vertnum[did])
+                verts = env.sim.model.mesh_vert[vadr:vadr + vnum]
+                if len(verts) > 0:
+                    entry["mesh_id"] = did
+                    entry["mesh_num_verts"] = vnum
+                    entry["mesh_aabb_min"] = verts.min(axis=0).tolist()
+                    entry["mesh_aabb_max"] = verts.max(axis=0).tolist()
+        robot_geoms.append(entry)
+
+    # Per-link world pose for the Panda arm + Panda gripper.
+    robot_link_names = [
+        "robot0_base",
+        "robot0_link0", "robot0_link1", "robot0_link2", "robot0_link3",
+        "robot0_link4", "robot0_link5", "robot0_link6", "robot0_link7",
+        "gripper0_right_hand", "gripper0_eef",
+        "gripper0_leftfinger", "gripper0_rightfinger",
+    ]
+    robot_links = []
+    for bname in robot_link_names:
+        try:
+            bid = env.sim.model.body_name2id(bname)
+        except (ValueError, KeyError):
+            continue
+        robot_links.append({
+            "name": bname,
+            "pos": env.sim.data.body_xpos[bid].tolist(),
+            "quat": env.sim.data.body_xquat[bid].tolist(),
+        })
+
     metadata = {
         "task_suite": "safelibero_spatial",
         "safety_level": safety_level,
@@ -256,6 +356,8 @@ def save_metadata(obs, env, task_id, episode_idx, safety_level, task_description
         "task_description": task_description,
         "image_resolution": 512,
         "robot_state": robot_state,
+        "robot_geoms": robot_geoms,
+        "robot_links": robot_links,
         "objects": objects,
         "obstacle": active_obstacle,
         "geom_id_to_name": geom_id_to_name,

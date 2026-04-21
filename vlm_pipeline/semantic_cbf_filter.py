@@ -31,6 +31,20 @@ from scipy.spatial.transform import Rotation
 
 logger = logging.getLogger(__name__)
 
+GRIPPER_SPHERE_CENTER_OFFSET = np.array([0.0, 0.0, -0.08], dtype=np.float64)
+
+
+def offset_gripper_sphere_center(eef_pos, eef_quat=None, offset=GRIPPER_SPHERE_CENTER_OFFSET):
+    """Place the gripper sphere using an offset in the end-effector frame."""
+    center = np.asarray(eef_pos, dtype=np.float64).copy()
+    offset = np.asarray(offset, dtype=np.float64)
+    if eef_quat is not None:
+        quat = np.asarray(eef_quat, dtype=np.float64)
+        if quat.shape == (4,) and np.all(np.isfinite(quat)):
+            offset = Rotation.from_quat(quat).apply(offset)
+    center += offset
+    return center
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # 1. Data Structures
@@ -408,22 +422,56 @@ def sq_grad(pt, sq):
     return g
 
 
+def sq_radial_clearance(pt, sq):
+    """Signed radial clearance from pt to the SQ surface along the center ray."""
+    p = sq.rotation.T @ (pt - sq.position)
+    dist = np.linalg.norm(p)
+    if dist < 1e-12:
+        return -min(sq.a1, sq.a2, sq.a3)
+
+    e1, e2 = max(sq.e1, 0.05), max(sq.e2, 0.05)
+    eps = 1e-12
+    tx = np.abs(p[0] / sq.a1 + eps) ** (2.0 / e2)
+    ty = np.abs(p[1] / sq.a2 + eps) ** (2.0 / e2)
+    g = (tx + ty + eps) ** (e2 / e1) + np.abs(p[2] / sq.a3 + eps) ** (2.0 / e1)
+    g = max(float(g), eps)
+    surface_scale = g ** (-0.5 * e1)
+    return dist * (1.0 - surface_scale)
+
+
+def sq_margin_value(pt, sq, margin):
+    return sq_radial_clearance(pt, sq) - max(float(margin), 0.0)
+
+
+def sq_margin_grad(pt, sq, margin):
+    eps = 1e-6
+    g = np.zeros(3, dtype=np.float64)
+    for i in range(3):
+        pp = pt.copy(); pp[i] += eps
+        pm = pt.copy(); pm[i] -= eps
+        g[i] = (sq_margin_value(pp, sq, margin) - sq_margin_value(pm, sq, margin)) / (2.0 * eps)
+    if np.linalg.norm(g) < 1e-10:
+        d = pt - sq.position
+        n = np.linalg.norm(d)
+        g = d / n if n > 1e-10 else np.array([0.0, 0.0, 1.0])
+    return g
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # 5. Spatial CBF Envelope
 # ═══════════════════════════════════════════════════════════════════════
 
-def build_cbf_envelope(obj, relation, z_max=1.5):
-    sq=obj.superquadric; m=0.05
+def build_cbf_envelope(obj, relation, z_max=1.5, inflation=0.0):
+    sq=obj.superquadric
     if relation=="above":
         a3=(z_max-sq.position[2])/2+sq.a3; c=sq.position.copy(); c[2]+=(z_max-sq.position[2])/2
-        return SuperquadricParams(sq.a1+m,sq.a2+m,max(a3,sq.a3+m),sq.e1,sq.e2,c,sq.rotation.copy())
+        return SuperquadricParams(sq.a1, sq.a2, max(a3, sq.a3), sq.e1, sq.e2, c, sq.rotation.copy())
     elif relation=="under":
         a3=(sq.position[2]+0.1)/2+sq.a3; c=sq.position.copy(); c[2]-=(sq.position[2]+0.1)/2
-        return SuperquadricParams(sq.a1+m,sq.a2+m,max(a3,sq.a3+m),sq.e1,sq.e2,c,sq.rotation.copy())
+        return SuperquadricParams(sq.a1, sq.a2, max(a3, sq.a3), sq.e1, sq.e2, c, sq.rotation.copy())
     elif relation=="around":
-        e=0.08
-        return SuperquadricParams(sq.a1+e,sq.a2+e,sq.a3+e,sq.e1,sq.e2,sq.position.copy(),sq.rotation.copy())
-    return SuperquadricParams(sq.a1+m,sq.a2+m,sq.a3+m,sq.e1,sq.e2,sq.position.copy(),sq.rotation.copy())
+        return SuperquadricParams(sq.a1, sq.a2, sq.a3, sq.e1, sq.e2, sq.position.copy(), sq.rotation.copy())
+    return SuperquadricParams(sq.a1, sq.a2, sq.a3, sq.e1, sq.e2, sq.position.copy(), sq.rotation.copy())
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -434,13 +482,21 @@ class SemanticSafetyFilter:
     """CBF-QP: u_cert = argmin ||u-u_cmd||² + w_rot·L_rot  s.t. CBF constraints"""
 
     def __init__(self, dt=0.05, alpha_default=1.0, alpha_caution=0.25,
-                 safety_margin=0.01, workspace_z_max=1.2):
+                 safety_margin=0.10, workspace_z_max=1.2,
+                 action_pos_scale=None):
         self.dt=dt; self.alpha_default=alpha_default; self.alpha_caution=alpha_caution
         self.safety_margin=safety_margin; self.workspace_z_max=workspace_z_max
-        self.semantic_envelopes: List[Tuple[SuperquadricParams,float]] = []
-        self.collision_envelopes: List[Tuple[SuperquadricParams,float]] = []
+        self.semantic_envelopes: List[Tuple[SuperquadricParams,float,float]] = []
+        self.collision_envelopes: List[Tuple[SuperquadricParams,float,float]] = []
+        self.gripper_center_offset = GRIPPER_SPHERE_CENTER_OFFSET.copy()
         self.pose_constrained=False; self.desired_orientation=None
-        self._init=False; self._t=0
+        # Maps normalized policy action [-1,1] to world-frame position delta [m].
+        # Default matches robosuite OSC_POSE output_max=0.05. Override via env
+        # CBF_ACTION_POS_SCALE or constructor arg.
+        if action_pos_scale is None:
+            action_pos_scale = float(os.environ.get("CBF_ACTION_POS_SCALE", 0.05))
+        self.action_pos_scale = float(action_pos_scale)
+        self._init=False; self._t=0; self.last_trace={}
 
     def initialize(self, objs, ctx):
         """[Step 4/4] Build CBF envelopes."""
@@ -448,26 +504,38 @@ class SemanticSafetyFilter:
         logger.info("  Building semantic CBF envelopes:")
         for c in ctx.spatial_constraints:
             if c.object_idx<len(objs):
-                o=objs[c.object_idx]; env=build_cbf_envelope(o,c.spatial_relation,self.workspace_z_max)
+                o=objs[c.object_idx]
+                env=build_cbf_envelope(o, c.spatial_relation, self.workspace_z_max)
                 a=self.alpha_default
                 for bc in ctx.behavioral_constraints:
                     if bc.object_idx==c.object_idx and bc.caution_level=="caution": a=self.alpha_caution
-                self.semantic_envelopes.append((env,a))
+                self.semantic_envelopes.append((env, a, self.safety_margin))
                 logger.info(f"    h_sem[{len(self.semantic_envelopes)-1}]: '{o.label}' "
                              f"{c.spatial_relation} SQ(a=[{env.a1:.3f},{env.a2:.3f},{env.a3:.3f}]) α={a}")
 
         logger.info("  Building collision CBF envelopes:")
         for o in objs:
-            sq=o.superquadric; sm=self.safety_margin
-            csq=SuperquadricParams(sq.a1+sm,sq.a2+sm,sq.a3+sm,sq.e1,sq.e2,sq.position.copy(),sq.rotation.copy())
+            sq=o.superquadric
             a=self.alpha_default
             for bc in ctx.behavioral_constraints:
                 if bc.object_label==o.label and bc.caution_level=="caution": a=self.alpha_caution
-            self.collision_envelopes.append((csq,a))
-            logger.info(f"    h_env[{len(self.collision_envelopes)-1}]: '{o.label}' α={a}")
+            self.collision_envelopes.append((sq, a, self.safety_margin))
+            logger.info(f"    h_env[{len(self.collision_envelopes)-1}]: '{o.label}' α={a} margin={self.safety_margin:.3f}")
 
         self.pose_constrained = ctx.pose_constraint=="constrained_rotation"
         self._init=True
+        logger.info(f"  Summary: {len(self.semantic_envelopes)} sem, "
+                     f"{len(self.collision_envelopes)} col, rot={self.pose_constrained}")
+
+    def initialize_from_precomputed(self, semantic_envelopes,
+                                    pose_constrained=False,
+                                    collision_envelopes=None):
+        """Initialize directly from precomputed superquadrics and explicit margins."""
+        self.semantic_envelopes = list(semantic_envelopes)
+        self.collision_envelopes = list(collision_envelopes or [])
+        self.pose_constrained = pose_constrained
+        self.desired_orientation = None
+        self._init = True
         logger.info(f"  Summary: {len(self.semantic_envelopes)} sem, "
                      f"{len(self.collision_envelopes)} col, rot={self.pose_constrained}")
 
@@ -475,18 +543,49 @@ class SemanticSafetyFilter:
         """u_nominal → u_safe. Called every timestep."""
         if not self._init: return u_cmd.copy()
         self._t += 1
-        u = u_cmd.copy(); dp = u[:3].copy(); dr = u[3:6].copy()
+        u = u_cmd.copy(); dp_act = u[:3].copy(); dr = u[3:6].copy()
         grip = u[6] if len(u)>6 else 0.0
+        gripper_center = offset_gripper_sphere_center(ee_pos, ee_quat, self.gripper_center_offset)
 
-        dp, si = self._cbf_sem(ee_pos, dp)
-        dp, ci = self._cbf_col(ee_pos, dp)
+        # Convert policy action [-1,1] to world-frame position delta [m] so that
+        # CBF linear-extrapolation (h(ee+dp)) uses a geometrically correct step.
+        scale = self.action_pos_scale
+        dp = dp_act * scale
+
+        # Pre-filter per-constraint h (physical space)
+        pre_h_sem = [
+            float(sq_margin_value(gripper_center, env, margin))
+            for (env, a, margin) in self.semantic_envelopes
+        ]
+        pre_h_col = [
+            float(sq_margin_value(gripper_center, env, margin))
+            for (env, a, margin) in self.collision_envelopes
+        ]
+        dp_cmd_act = dp_act.copy()       # original action-space delta
+        dp_cmd_phys = dp.copy()           # nominal physical-space delta
+
+        dp, si = self._cbf_sem(gripper_center, dp)
+        dp, ci = self._cbf_col(gripper_center, dp)
         ri = False
         if self.pose_constrained:
             dr0=dr.copy(); dr=self._cbf_rot(ee_quat,dr); ri=np.linalg.norm(dr-dr0)>1e-6
-        dp, wi = self._cbf_ws(ee_pos, dp)
+        dp, wi = self._cbf_ws(gripper_center, dp)
 
-        u[:3]=dp; u[3:6]=dr
+        # Convert physical delta back to action space and clip to [-1,1].
+        dp_act_safe = np.clip(dp / scale, -1.0, 1.0) if scale > 1e-9 else dp
+        u[:3]=dp_act_safe; u[3:6]=dr
         if len(u)>6: u[6]=grip
+
+        # Post-filter per-constraint h for diagnostic trace (physical)
+        new_center = gripper_center + dp
+        post_h_sem = [
+            float(sq_margin_value(new_center, env, margin))
+            for (env, a, margin) in self.semantic_envelopes
+        ]
+        post_h_col = [
+            float(sq_margin_value(new_center, env, margin))
+            for (env, a, margin) in self.collision_envelopes
+        ]
 
         if si or ci or ri or wi:
             parts=[]
@@ -496,36 +595,81 @@ class SemanticSafetyFilter:
             if wi: parts.append("workspace")
             logger.info(f"[CBF-QP t={self._t}] INTERVENTION: {'+'.join(parts)} "
                          f"ee=[{ee_pos[0]:.3f},{ee_pos[1]:.3f},{ee_pos[2]:.3f}] "
+                         f"sphere_center=[{gripper_center[0]:.3f},{gripper_center[1]:.3f},{gripper_center[2]:.3f}] "
                          f"|Δu|={np.linalg.norm(u[:6]-u_cmd[:6]):.5f}")
         elif self._t%50==0:
             logger.debug(f"[CBF-QP t={self._t}] no intervention")
+
+        self.last_trace = {
+            "filter_step": int(self._t),
+            "intervened": bool(si or ci or ri or wi),
+            "intervention_types": [name for flag, name in (
+                (si, "semantic"),
+                (ci, "collision"),
+                (ri, "rotation"),
+                (wi, "workspace"),
+            ) if flag],
+            "semantic_intervened": bool(si),
+            "collision_intervened": bool(ci),
+            "rotation_intervened": bool(ri),
+            "workspace_intervened": bool(wi),
+            "ee_pos": ee_pos.astype(float).tolist(),
+            "gripper_center": gripper_center.astype(float).tolist(),
+            "gripper_center_offset": self.gripper_center_offset.astype(float).tolist(),
+            "ee_quat": ee_quat.astype(float).tolist(),
+            "delta_norm": float(np.linalg.norm(u[:6] - u_cmd[:6])),
+            "action_pos_scale": float(self.action_pos_scale),
+            "dp_cmd_action": dp_cmd_act.astype(float).tolist(),
+            "dp_cmd_phys": dp_cmd_phys.astype(float).tolist(),
+            "dp_safe_action": np.asarray(dp_act_safe, dtype=float).tolist(),
+            "dp_safe_phys": dp.astype(float).tolist(),
+            "h_sem_pre": pre_h_sem,
+            "h_sem_post": post_h_sem,
+            "h_col_pre": pre_h_col,
+            "h_col_post": post_h_col,
+        }
+
+        # Optional per-step dump to a jsonl file (enable with env var).
+        debug_path = os.environ.get("CBF_TRACE_JSONL", "")
+        if debug_path:
+            try:
+                with open(debug_path, "a") as f:
+                    f.write(json.dumps(self.last_trace) + "\n")
+            except Exception as e:  # pragma: no cover
+                logger.warning(f"CBF trace write failed: {e}")
+
         return u
 
     def _cbf_sem(self, ee, dp) -> Tuple[np.ndarray,bool]:
         hit=False
-        for i,(env,a) in enumerate(self.semantic_envelopes):
-            h=max(sq_implicit(ee,env)-1, -0.5)
-            hn=sq_implicit(ee+dp*self.dt,env)-1; hd=(hn-h)/self.dt
-            ah=a*(h**2) if h>0 else a*0.01
-            if hd < -ah:
-                g=sq_grad(ee,env); gn=g@g
+        for i,(env,a,margin) in enumerate(self.semantic_envelopes):
+            h=max(sq_margin_value(ee, env, margin), -0.5)
+            hn=sq_margin_value(ee+dp, env, margin)
+            dh=hn-h
+            # Linear class-K: ah=a*h on BOTH sides (no floor).
+            # h>0: ah>0 -> dh>=-ah (class-K throttle as we approach the boundary).
+            # h<0: ah<0 -> dh>=|ah| (forced recovery, h must grow each step).
+            ah=a*h
+            if dh < -ah:
+                g=sq_margin_grad(ee, env, margin); gn=g@g
                 if gn>1e-10:
-                    v=-ah-hd; c=(v*self.dt)*g/gn; dp=dp+c; hit=True
-                    logger.info(f"[CBF-QP t={self._t}] h_sem[{i}]: h={h:.4f} ḣ={hd:.4f} "
+                    v=-ah-dh; c=v*g/gn; dp=dp+c; hit=True
+                    logger.info(f"[CBF-QP t={self._t}] h_sem[{i}]: h={h:.4f} Δh={dh:.4f} "
                                  f"-α={-ah:.4f} |c|={np.linalg.norm(c):.5f}")
         return dp, hit
 
     def _cbf_col(self, ee, dp) -> Tuple[np.ndarray,bool]:
         hit=False
-        for i,(env,a) in enumerate(self.collision_envelopes):
-            h=sq_implicit(ee,env)-1
-            hn=sq_implicit(ee+dp*self.dt,env)-1; hd=(hn-h)/self.dt
-            ah=a*max(h,0.001)
-            if hd < -ah:
-                g=sq_grad(ee,env); gn=g@g
+        for i,(env,a,margin) in enumerate(self.collision_envelopes):
+            h=max(sq_margin_value(ee, env, margin), -0.5)
+            hn=sq_margin_value(ee+dp, env, margin)
+            dh=hn-h
+            ah=a*h
+            if dh < -ah:
+                g=sq_margin_grad(ee, env, margin); gn=g@g
                 if gn>1e-10:
-                    v=-ah-hd; c=(v*self.dt)*g/gn; dp=dp+c; hit=True
-                    logger.info(f"[CBF-QP t={self._t}] h_env[{i}]: h={h:.4f} ḣ={hd:.4f} "
+                    v=-ah-dh; c=v*g/gn; dp=dp+c; hit=True
+                    logger.info(f"[CBF-QP t={self._t}] h_env[{i}]: h={h:.4f} Δh={dh:.4f} "
                                  f"-α={-ah:.4f} |c|={np.linalg.norm(c):.5f}")
         return dp, hit
 
@@ -548,19 +692,20 @@ class SemanticSafetyFilter:
         return dr
 
     def _cbf_ws(self, ee, dp) -> Tuple[np.ndarray,bool]:
-        d0=dp.copy(); en=ee+dp*self.dt
-        if en[2]<0: dp[2]=max(dp[2],(0-ee[2])/self.dt+0.01)
-        if en[2]>self.workspace_z_max: dp[2]=min(dp[2],(self.workspace_z_max-ee[2])/self.dt-0.01)
+        d0=dp.copy(); en=ee+dp
+        if en[2]<0: dp[2]=max(dp[2],-ee[2]+0.01)
+        if en[2]>self.workspace_z_max: dp[2]=min(dp[2],self.workspace_z_max-ee[2]-0.01)
         for i in range(2):
             if abs(en[i])>0.8:
-                dp[i]=np.clip(dp[i],(-0.8-ee[i])/self.dt+0.01,(0.8-ee[i])/self.dt-0.01)
+                dp[i]=np.clip(dp[i],-0.8-ee[i]+0.01,0.8-ee[i]-0.01)
         hit=np.linalg.norm(dp-d0)>1e-8
         if hit:
             ax=["xyz"[j] for j in range(3) if abs(dp[j]-d0[j])>1e-8]
             logger.info(f"[CBF-QP t={self._t}] workspace clamped: {','.join(ax)}")
         return dp, hit
 
-    def reset(self): self.desired_orientation=None; self._t=0
+    def reset(self):
+        self.desired_orientation=None; self._t=0; self.last_trace={}
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -575,7 +720,7 @@ class SemanticCBFPipeline:
                  vlm_conda_env="qwen", vlm_device="auto", vlm_load_in_4bit=False,
                  vlm_worker_script="qwen_vlm_worker.py", vlm_num_votes=3,
                  dt=0.05, alpha_default=1.0, alpha_caution=0.25,
-                 safety_margin=0.01, workspace_z_max=1.2):
+                 safety_margin=0.10, workspace_z_max=1.2):
         self.perception = PerceptionModule(env=env)
         self.constraint_synth = SemanticConstraintSynthesizer(
             use_vlm=use_vlm, vlm_model=vlm_model, vlm_conda_env=vlm_conda_env,
@@ -585,6 +730,126 @@ class SemanticCBFPipeline:
             dt=dt, alpha_default=alpha_default, alpha_caution=alpha_caution,
             safety_margin=safety_margin, workspace_z_max=workspace_z_max)
         self.scene_objects=[]; self.semantic_context=None; self._built=False
+
+    @staticmethod
+    def _resolve_cbf_json_path(cbf_json_path):
+        path = os.path.abspath(os.path.expanduser(cbf_json_path))
+        if os.path.isdir(path):
+            path = os.path.join(path, "cbf_params.json")
+        return path
+
+    def setup_from_cbf_json(self, cbf_json_path, task_description="", manipulated_object=""):
+        """Load precomputed superquadric CBFs exported by cbf_superquadric.py."""
+        path = self._resolve_cbf_json_path(cbf_json_path)
+        if not os.path.isfile(path):
+            raise FileNotFoundError(f"Precomputed CBF file not found: {path}")
+
+        logger.info(""); logger.info("#"*70)
+        logger.info("#  SEMANTIC CBF SAFETY FILTER — PRECOMPUTED LOAD")
+        logger.info(f"#  Task: {task_description}")
+        logger.info(f"#  Source: {path}")
+        logger.info("#"*70)
+
+        with open(path) as f:
+            cbf_data = json.load(f)
+
+        constraints = cbf_data.get("constraints", [])
+        behavioral = cbf_data.get("behavioral", {})
+        pose = cbf_data.get("pose", {})
+
+        alpha = behavioral.get("alpha_scale", self.safety_filter.alpha_default)
+        try:
+            alpha = float(alpha)
+        except (TypeError, ValueError):
+            alpha = self.safety_filter.alpha_default
+        if not np.isfinite(alpha) or alpha <= 0:
+            alpha = self.safety_filter.alpha_default
+
+        gripper_cfg = cbf_data.get("gripper", {})
+        center_offset = np.asarray(
+            gripper_cfg.get("center_offset", GRIPPER_SPHERE_CENTER_OFFSET),
+            dtype=np.float64,
+        )
+        if center_offset.shape != (3,) or not np.all(np.isfinite(center_offset)):
+            center_offset = GRIPPER_SPHERE_CENTER_OFFSET.copy()
+        self.safety_filter.gripper_center_offset = center_offset.copy()
+
+        gripper_radius = gripper_cfg.get("radius", self.safety_filter.safety_margin)
+        try:
+            gripper_radius = float(gripper_radius)
+        except (TypeError, ValueError):
+            gripper_radius = self.safety_filter.safety_margin
+        if not np.isfinite(gripper_radius) or gripper_radius < 0:
+            gripper_radius = self.safety_filter.safety_margin
+
+        semantic_envelopes = []
+        collision_envelopes = []
+        objects_by_name = {}
+        self.scene_objects = []
+        self.semantic_context = SemanticContext(
+            manipulated_object=manipulated_object or "object",
+            pose_constraint="constrained_rotation" if pose.get("rotation_lock", False) else "free_rotation",
+        )
+
+        for idx, entry in enumerate(constraints):
+            params = entry.get("params", {})
+            center = np.asarray(params.get("center", []), dtype=np.float64)
+            scales = np.asarray(params.get("scales", []), dtype=np.float64)
+            if center.shape != (3,) or scales.shape != (3,):
+                raise ValueError(f"Invalid superquadric params at constraint {idx}: {entry}")
+
+            sq = SuperquadricParams(
+                a1=float(scales[0]),
+                a2=float(scales[1]),
+                a3=float(scales[2]),
+                e1=float(params.get("epsilon1", 1.0)),
+                e2=float(params.get("epsilon2", 1.0)),
+                position=center.copy(),
+                rotation=np.eye(3),
+            )
+            semantic_envelopes.append((sq, alpha, gripper_radius))
+
+            obj_name = str(entry.get("object", f"object_{idx}"))
+            relation = str(entry.get("relationship", "around"))
+            if obj_name not in objects_by_name:
+                obj_idx = len(self.scene_objects)
+                objects_by_name[obj_name] = obj_idx
+                self.scene_objects.append(SemanticObject(
+                    label=obj_name,
+                    position=center.copy(),
+                    point_cloud=np.empty((0, 3), dtype=np.float64),
+                    superquadric=sq,
+                    bbox_min=center - scales,
+                    bbox_max=center + scales,
+                ))
+                collision_envelopes.append((sq, alpha, gripper_radius))
+                logger.info(f"  Loaded h_env[{len(collision_envelopes)-1}]: '{obj_name}' "
+                            f"SQ(a=[{sq.a1:.3f},{sq.a2:.3f},{sq.a3:.3f}] "
+                            f"e=[{sq.e1:.2f},{sq.e2:.2f}]) α={alpha:.3f} margin={gripper_radius:.3f}")
+                if behavioral.get("caution", False):
+                    self.semantic_context.behavioral_constraints.append(
+                        SemanticConstraint(obj_name, obj_idx, "behavioral", caution_level="caution")
+                    )
+            self.semantic_context.spatial_constraints.append(
+                SemanticConstraint(obj_name, objects_by_name[obj_name], "spatial", spatial_relation=relation)
+            )
+            logger.info(f"  Loaded h_sem[{idx}]: '{obj_name}' {relation} "
+                        f"SQ(a=[{sq.a1:.3f},{sq.a2:.3f},{sq.a3:.3f}] "
+                        f"e=[{sq.e1:.2f},{sq.e2:.2f}]) α={alpha:.3f}")
+
+        self.safety_filter.initialize_from_precomputed(
+            semantic_envelopes=semantic_envelopes,
+            pose_constrained=bool(pose.get("rotation_lock", False)),
+            collision_envelopes=collision_envelopes,
+        )
+        self._built = True
+
+        logger.info(""); logger.info("#"*70)
+        logger.info("#  PRECOMPUTED LOAD COMPLETE — Safety filter active")
+        logger.info(f"#  Semantic CBFs: {len(self.safety_filter.semantic_envelopes)}")
+        logger.info(f"#  Collision CBFs: {len(self.safety_filter.collision_envelopes)}")
+        logger.info(f"#  Rotation constrained: {self.safety_filter.pose_constrained}")
+        logger.info("#"*70); logger.info("")
 
     def setup_scene(self, obs, task_description="", manipulated_object="",
                     camera_images=None, depth_images=None):
@@ -633,6 +898,9 @@ class SemanticCBFPipeline:
         ee_pos = np.array(obs.get("robot0_eef_pos",np.zeros(3)), dtype=np.float64)
         ee_quat = np.array(obs.get("robot0_eef_quat",[0,0,0,1]), dtype=np.float64)
         return self.safety_filter.certify_action(action, ee_pos, ee_quat)
+
+    def get_last_trace(self):
+        return dict(self.safety_filter.last_trace)
 
     def reset(self): self.safety_filter.reset(); self._built=False
 

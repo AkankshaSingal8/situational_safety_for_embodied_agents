@@ -9,6 +9,10 @@ Outputs:
   - vis_3d.html              : interactive 3D plotly visualization
   - vis_agentview_overlay.png: h=0 boundary projected on agentview image
   - vis_eye_in_hand_overlay.png: h=0 boundary projected on eye-in-hand image
+
+The gripper is approximated as a sphere by inflating each obstacle
+superquadric during CBF evaluation, while visualization keeps the raw
+obstacle surface and renders the gripper sphere explicitly.
 """
 
 import argparse
@@ -34,12 +38,28 @@ WORKSPACE_BOUNDS = {
     "z_max": 1.4,
 }
 EXTENSION_DISTANCE = 0.12
+AROUND_DUPLICATE_DISTANCE = 0.0
 DEFAULT_OBJECT_RADIUS = 0.05
 SAFETY_MARGIN = 1.0
+GRIPPER_SPHERE_RADIUS = 0.12
+GRIPPER_SPHERE_CENTER_OFFSET = np.array([0.0, 0.0, -0.08], dtype=np.float64)
 MASK_ERODE_PIXELS = 1
 MIN_ERODED_PIXELS = 30
 ENCLOSURE_PENALTY = 1e6
 MAX_FIT_POINTS = 8000
+
+
+def _quat_to_rotation_matrix(quat):
+    """Return a 3x3 rotation matrix for an (x, y, z, w) quaternion."""
+    x, y, z, w = np.asarray(quat, dtype=np.float64)
+    xx, yy, zz = x * x, y * y, z * z
+    xy, xz, yz = x * y, x * z, y * z
+    wx, wy, wz = w * x, w * y, w * z
+    return np.array([
+        [1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy)],
+        [2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx)],
+        [2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy)],
+    ], dtype=np.float64)
 
 
 def align_modalities(rgb, depth, seg, metadata):
@@ -65,6 +85,18 @@ def align_modalities(rgb, depth, seg, metadata):
             rgb = np.flip(rgb, axis=0).copy()
 
     return rgb, depth, seg
+
+
+def offset_gripper_sphere_center(eef_pos, eef_quat=None, offset=GRIPPER_SPHERE_CENTER_OFFSET):
+    """Place the gripper sphere using an offset in the end-effector frame."""
+    center = np.asarray(eef_pos, dtype=np.float64).copy()
+    offset = np.asarray(offset, dtype=np.float64)
+    if eef_quat is not None:
+        quat = np.asarray(eef_quat, dtype=np.float64)
+        if quat.shape == (4,) and np.all(np.isfinite(quat)):
+            offset = _quat_to_rotation_matrix(quat).dot(offset)
+    center += offset
+    return center
 
 
 # ---------------------------------------------------------------------------
@@ -178,10 +210,10 @@ def extend_point_cloud(points, relationship, ws=WORKSPACE_BOUNDS):
         ext = np.vstack([points, behind])
     elif relationship == "around":
         offsets = [
-            [EXTENSION_DISTANCE, 0, 0],
-            [-EXTENSION_DISTANCE, 0, 0],
-            [0, EXTENSION_DISTANCE, 0],
-            [0, -EXTENSION_DISTANCE, 0],
+            [AROUND_DUPLICATE_DISTANCE, 0, 0],
+            [-AROUND_DUPLICATE_DISTANCE, 0, 0],
+            [0, AROUND_DUPLICATE_DISTANCE, 0],
+            [0, -AROUND_DUPLICATE_DISTANCE, 0],
         ]
         parts = [points]
         for off in offsets:
@@ -293,60 +325,46 @@ def fit_superquadric(points, safety_margin=SAFETY_MARGIN):
 # 4. CBF evaluation and gradient (superquadric)
 # ---------------------------------------------------------------------------
 
-def evaluate_cbf(x_ee, sq_params):
-    """
-    h(x) = g(x; θ) - 1.
-    h > 0 → safe (outside), h < 0 → violated (inside).
-    """
-    cx, cy, cz, ax, ay, az, e1, e2 = sq_params
-    dx = x_ee[0] - cx
-    dy = x_ee[1] - cy
-    dz = x_ee[2] - cz
+def _superquadric_radial_clearance(x_ee, sq_params):
+    """Signed radial clearance from x_ee to the SQ surface along the center ray."""
+    cx, cy, cz, ax, ay, az, e1, e2 = np.array(sq_params, dtype=np.float64)
+    local = np.array([x_ee[0] - cx, x_ee[1] - cy, x_ee[2] - cz], dtype=np.float64)
+    dist = np.linalg.norm(local)
+    if dist < 1e-12:
+        return -min(ax, ay, az)
 
     e1 = np.clip(e1, 0.05, 2.0)
     e2 = np.clip(e2, 0.05, 2.0)
+    eps = 1e-12
+    tx = np.abs(local[0] / ax + eps) ** (2.0 / e2)
+    ty = np.abs(local[1] / ay + eps) ** (2.0 / e2)
+    g = (tx + ty + eps) ** (e2 / e1) + np.abs(local[2] / az + eps) ** (2.0 / e1)
+    g = max(float(g), eps)
+    surface_scale = g ** (-0.5 * e1)
+    return dist * (1.0 - surface_scale)
 
-    term_xy = (np.abs(dx / ax) ** (2.0 / e2) +
-               np.abs(dy / ay) ** (2.0 / e2)) ** (e2 / e1)
-    term_z = np.abs(dz / az) ** (2.0 / e1)
-    g = term_xy + term_z
-    return g - 1.0
+
+def evaluate_cbf(x_ee, sq_params, gripper_radius=GRIPPER_SPHERE_RADIUS):
+    """Approximate sphere-vs-SQ safety as radial clearance minus sphere radius."""
+    return _superquadric_radial_clearance(x_ee, sq_params) - max(float(gripper_radius), 0.0)
 
 
-def cbf_gradient(x_ee, sq_params):
-    """
-    Compute ∂h/∂x_ee analytically for the superquadric.
-    Uses chain rule through g(x; θ).
-    """
-    cx, cy, cz, ax, ay, az, e1, e2 = sq_params
-    dx = x_ee[0] - cx
-    dy = x_ee[1] - cy
-    dz = x_ee[2] - cz
-
-    e1 = np.clip(e1, 0.05, 2.0)
-    e2 = np.clip(e2, 0.05, 2.0)
-
-    eps = 1e-12  # avoid division by zero
-
-    # Intermediate terms
-    abs_x = np.abs(dx / ax) + eps
-    abs_y = np.abs(dy / ay) + eps
-    abs_z = np.abs(dz / az) + eps
-
-    pow_x = abs_x ** (2.0 / e2)
-    pow_y = abs_y ** (2.0 / e2)
-    sum_xy = pow_x + pow_y + eps
-
-    pow_xy = sum_xy ** (e2 / e1)
-
-    # ∂g/∂x
-    dg_dx = (pow_xy / sum_xy) * (2.0 / e1) * pow_x / (abs_x * ax) * np.sign(dx)
-    # ∂g/∂y
-    dg_dy = (pow_xy / sum_xy) * (2.0 / e1) * pow_y / (abs_y * ay) * np.sign(dy)
-    # ∂g/∂z
-    dg_dz = (2.0 / e1) * abs_z ** (2.0 / e1 - 1.0) / az * np.sign(dz)
-
-    return np.array([dg_dx, dg_dy, dg_dz])
+def cbf_gradient(x_ee, sq_params, gripper_radius=GRIPPER_SPHERE_RADIUS):
+    """Finite-difference gradient of the radial-clearance CBF."""
+    eps = 1e-6
+    grad = np.zeros(3, dtype=np.float64)
+    for i in range(3):
+        pp = np.array(x_ee, dtype=np.float64); pp[i] += eps
+        pm = np.array(x_ee, dtype=np.float64); pm[i] -= eps
+        grad[i] = (
+            evaluate_cbf(pp, sq_params, gripper_radius)
+            - evaluate_cbf(pm, sq_params, gripper_radius)
+        ) / (2.0 * eps)
+    if np.linalg.norm(grad) < 1e-10:
+        delta = np.array(x_ee, dtype=np.float64) - np.array(sq_params[:3], dtype=np.float64)
+        norm = np.linalg.norm(delta)
+        grad = delta / norm if norm > 1e-10 else np.array([0.0, 0.0, 1.0])
+    return grad
 
 
 # ---------------------------------------------------------------------------
@@ -403,7 +421,10 @@ def build_constraints(vlm_json, obs_folder, camera_keys=None):
         raise RuntimeError("No valid camera data found for constraint construction.")
 
     geom_id_to_name = meta["geom_id_to_name"]
-    eef_pos = np.array(meta["robot_state"]["eef_pos"])
+    eef_state = meta["robot_state"]
+    eef_pos = np.array(eef_state["eef_pos"], dtype=np.float64)
+    eef_quat = np.array(eef_state.get("eef_quat", [0.0, 0.0, 0.0, 1.0]), dtype=np.float64)
+    gripper_center = offset_gripper_sphere_center(eef_pos, eef_quat)
 
     objects_data = vlm_json["single"]["objects"]
 
@@ -456,8 +477,8 @@ def build_constraints(vlm_json, obs_folder, camera_keys=None):
             sq_params = fit_superquadric(ext_pc)
             sq_fit_total_seconds += time.perf_counter() - sq_fit_start
             sq_fit_count += 1
-            h_val = evaluate_cbf(eef_pos, sq_params)
-            grad = cbf_gradient(eef_pos, sq_params)
+            h_val = evaluate_cbf(gripper_center, sq_params)
+            grad = cbf_gradient(gripper_center, sq_params)
 
             constraints.append({
                 "object": obj_name,
@@ -502,6 +523,21 @@ def superquadric_surface(sq_params, n_u=60, n_v=30):
     Y = cy + ay * signed_pow(cos_eta, e1) * signed_pow(sin_omega, e2)
     Z = cz + az * signed_pow(sin_eta, e1)
 
+    return X, Y, Z
+
+
+def sphere_surface(center, radius, n_u=50, n_v=25):
+    """Generate a parametric sphere surface for gripper visualization."""
+    center = np.asarray(center, dtype=np.float64)
+    radius = max(float(radius), 1e-6)
+
+    u = np.linspace(0.0, 2.0 * np.pi, n_u)
+    v = np.linspace(0.0, np.pi, n_v)
+    U, V = np.meshgrid(u, v, indexing="xy")
+
+    X = center[0] + radius * np.cos(U) * np.sin(V)
+    Y = center[1] + radius * np.sin(U) * np.sin(V)
+    Z = center[2] + radius * np.cos(V)
     return X, Y, Z
 
 
@@ -579,8 +615,10 @@ def _build_scene_point_cloud(obs_folder, camera_keys, cam_params,
     return np.empty((0, 3)), np.empty((0, 3), dtype=np.uint8)
 
 
-def _make_scene_fig(obs_folder, cam_params, eef_pos):
-    """Build a plotly Figure with scene point cloud, GT object markers, and EEF."""
+def _make_scene_fig(obs_folder, cam_params, eef_pos,
+                    gripper_radius=GRIPPER_SPHERE_RADIUS,
+                    gripper_color="cyan", gripper_name="Gripper sphere"):
+    """Build a plotly Figure with scene point cloud, GT object markers, and gripper."""
     import plotly.graph_objects as go
 
     fig = go.Figure()
@@ -628,12 +666,23 @@ def _make_scene_fig(obs_folder, cam_params, eef_pos):
                     hoverinfo="text",
                 ))
 
-    # End-effector marker
+    # Gripper sphere plus center marker
+    gripper_center = offset_gripper_sphere_center(eef_pos)
+    Xg, Yg, Zg = sphere_surface(gripper_center, gripper_radius, n_u=40, n_v=20)
+    fig.add_trace(go.Surface(
+        x=Xg, y=Yg, z=Zg,
+        opacity=0.45,
+        colorscale=[[0, gripper_color], [1, gripper_color]],
+        showscale=False,
+        name=gripper_name,
+        hoverinfo="name",
+    ))
     fig.add_trace(go.Scatter3d(
-        x=[eef_pos[0]], y=[eef_pos[1]], z=[eef_pos[2]],
+        x=[gripper_center[0]], y=[gripper_center[1]], z=[gripper_center[2]],
         mode="markers",
-        marker=dict(size=10, color="cyan", symbol="cross"),
-        name="End-effector",
+        marker=dict(size=5, color=gripper_color, symbol="cross"),
+        name="Gripper center",
+        showlegend=False,
     ))
 
     fig.update_layout(
@@ -712,13 +761,13 @@ def vis_3d_html(constraints, eef_pos, save_path, obs_folder=None,
     """Scene point cloud + object point clouds + superquadric overlays as HTML."""
     import plotly.graph_objects as go
 
-    fig = _make_scene_fig(obs_folder, cam_params, eef_pos)
-
-    # Update EEF color based on constraint status
     h_min = min(c["h_at_eef"] for c in constraints) if constraints else 1.0
-    eef_color = "green" if h_min > 0 else "red"
-    fig.data[-1].marker.color = eef_color
-    fig.data[-1].name = f"EEF (h_min={h_min:.2f})"
+    gripper_color = "green" if h_min > 0 else "red"
+    fig = _make_scene_fig(
+        obs_folder, cam_params, eef_pos,
+        gripper_color=gripper_color,
+        gripper_name=f"Gripper sphere (h_min={h_min:.2f})",
+    )
 
     line_colors = [
         "rgb(255,50,50)", "rgb(50,50,255)",
@@ -916,6 +965,12 @@ def main():
         ],
         "behavioral": behavioral,
         "pose": pose,
+        "gripper": {
+            "type": "sphere",
+            "radius": GRIPPER_SPHERE_RADIUS,
+            "center_offset": GRIPPER_SPHERE_CENTER_OFFSET.tolist(),
+            "approximation": "radial_clearance_minus_sphere_radius",
+        },
     }
     params_path = os.path.join(out, "cbf_params.json")
     with open(params_path, "w") as f:
