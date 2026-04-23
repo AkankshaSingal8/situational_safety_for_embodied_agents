@@ -31,15 +31,15 @@ import wandb
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "openvla-oft"))
 from experiments.robot.libero.libero_utils import (
     get_libero_dummy_action,
-    get_libero_wrist_image,  # Still needed for policy observation dict
     quat2axisangle,
-    save_rollout_video,
 )
 
 # Use SafeLIBERO-specific functions to avoid camera view contamination
 from safelibero_utils import (
     get_safelibero_env,
     get_safelibero_image,
+    get_safelibero_wrist_image,
+    save_rollout_video,
 )
 from experiments.robot.openvla_utils import (
     get_action_head,
@@ -295,9 +295,7 @@ def prepare_observation(obs, resize_size, validate_images=True):
     """
     # Get preprocessed images
     img = get_safelibero_image(obs, validate=validate_images)
-    # NOTE: Wrist image disabled since environment only renders agentview
-    # Create dummy wrist image to maintain policy interface compatibility
-    wrist_img = img  # Policy gets same view for both (policy may not use wrist anyway)
+    wrist_img = get_safelibero_wrist_image(obs, validate=validate_images)
 
     # Resize images to size expected by model
     img_resized = resize_image_for_policy(img, resize_size)
@@ -332,7 +330,7 @@ def process_action(action, model_family):
 # CBF SAFETY FILTER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════
 
-def load_ellipsoids(task_id: int, cbf_outputs_dir: str = "cbf_outputs") -> List[Dict]:
+def load_ellipsoids(task_id: int, cbf_outputs_dir: str = "cbf_outputs/gt") -> List[Dict]:
     """
     Load pre-computed CBF ellipsoids for a task.
 
@@ -458,14 +456,18 @@ def certify_action_simple(
                         "h_dot_before": float(h_dot),
                     })
 
-            h_values.append({
-                "object": ellipsoid["object"],
-                "relationship": ellipsoid["relationship"],
-                "h": float(h_current)
-            })
-
         if not modified_this_iter:
             break
+
+    # Capture final h-values once after convergence
+    for ellipsoid in ellipsoids:
+        center = np.array(ellipsoid["center"])
+        semi_axes = np.array(ellipsoid["semi_axes"])
+        h_values.append({
+            "object": ellipsoid["object"],
+            "relationship": ellipsoid["relationship"],
+            "h": float(evaluate_cbf(ee_pos, center, semi_axes))
+        })
 
     # Update certified action
     u_cert[:3] = dp
@@ -750,7 +752,7 @@ def run_task(
 
     # Initialize environment and get task description
     # Use SafeLIBERO-specific function to avoid multi-camera buffer conflicts
-    env, task_description = get_safelibero_env(task, cfg.model_family, resolution=cfg.env_img_res)
+    env, task_description = get_safelibero_env(task, cfg.model_family, resolution=cfg.env_img_res, include_wrist_camera=True)
 
     # Start episodes
     task_episodes, task_successes, task_collides, task_safesuccesses = 0, 0, 0, 0

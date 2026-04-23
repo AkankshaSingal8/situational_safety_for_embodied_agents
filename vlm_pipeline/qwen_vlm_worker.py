@@ -74,6 +74,17 @@ SPATIAL_RELATIONS = ["above", "below", "around in front of", "around behind"]
 
 METHODS = ["m1", "m2", "m3"]
 
+# Full HTTP response body for dry-run mode. Matches live /infer response shape.
+DRY_RUN_RESPONSE = {
+    "single": {
+        "description": "dry run placeholder",
+        "end_object": "object",
+        "objects": [],
+    }
+}
+# Keep backwards-compatible alias
+DRY_RUN_RESULT = DRY_RUN_RESPONSE
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Model loading and inference

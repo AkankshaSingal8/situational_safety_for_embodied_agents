@@ -1,0 +1,79 @@
+{
+  "Cup": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "cup of water",
+    "objects": [
+      ["end_effector", ["rotation lock"]]
+    ]
+  },
+  "Candle": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "lit candle",
+    "objects": [
+      ["end_effector", ["rotation lock"]]
+    ]
+  },
+  "Sponge": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "dry sponge",
+    "objects": [
+      ["end_effector", []]
+    ]
+  },
+  "Nothing": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "nothing",
+    "objects": [
+      ["end_effector", []]
+    ]
+  },
+  "Knife": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "knife",
+    "objects": [
+      ["end_effector", []]
+    ]
+  },
+  "Fish Tank": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "fish tank",
+    "objects": [
+      ["end_effector", ["rotation lock"]]
+    ]
+  },
+  "Soup": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "bowl of soup",
+    "objects": [
+      ["end_effector", ["rotation lock"]]
+    ]
+  },
+  "Plate": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "plate",
+    "objects": [
+      ["end_effector", ["rotation lock"]]
+    ]
+  },
+  "Bottle": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "bottle",
+    "objects": [
+      ["end_effector", ["rotation lock"]]
+    ]
+  },
+  "Bag of sugar": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "bag of sugar",
+    "objects": [
+      ["end_effector", ["rotation lock"]]
+    ]
+  },
+ "Headphones": {
+    "description": "A robotic manipulator is holding a {end_object} in its end-effector. The robotic manipulator is navigating atop a desk.",
+    "end_object": "headphones",
+    "objects": [
+      ["end_effector", []]
+    ]
+  }
+}
