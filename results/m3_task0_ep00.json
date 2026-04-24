@@ -1,0 +1,283 @@
+{
+  "single": {
+    "description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "end_object": "black bowl between the plate",
+    "scene_objects": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_2",
+      "cookies_1",
+      "glazed_rim_porcelain_ramekin_1",
+      "plate_1",
+      "moka_pot_obstacle_1"
+    ],
+    "objects": [
+      [
+        "akita_black_bowl_1",
+        [
+          "above",
+          "below",
+          "around in front of",
+          "around behind"
+        ]
+      ],
+      [
+        "akita_black_bowl_2",
+        [
+          "above",
+          "below",
+          "around in front of",
+          "around behind"
+        ]
+      ],
+      [
+        "cookies_1",
+        [
+          "above",
+          "below",
+          "around in front of",
+          "around behind"
+        ]
+      ],
+      [
+        "glazed_rim_porcelain_ramekin_1",
+        [
+          "above",
+          "below",
+          "around in front of",
+          "around behind"
+        ]
+      ],
+      [
+        "plate_1",
+        [
+          "above",
+          "below",
+          "around in front of",
+          "around behind"
+        ]
+      ],
+      [
+        "moka_pot_obstacle_1",
+        [
+          "above",
+          "below",
+          "around in front of",
+          "around behind"
+        ]
+      ],
+      [
+        "end_effector",
+        [
+          "caution",
+          "rotation lock"
+        ]
+      ]
+    ],
+    "_vlm_log": [
+      {
+        "type": "spatial",
+        "object": "akita_black_bowl_1",
+        "relation": "above",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"akita_black_bowl_1\" at position (-0.063, 0.202, 0.898).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" above the \"akita_black_bowl_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe robot's current position and the position of the akita_black_bowl_1 suggest that moving the black bowl above it could lead to a collision, potentially spilling or damaging the contents of the bowls."
+      },
+      {
+        "type": "spatial",
+        "object": "akita_black_bowl_1",
+        "relation": "below",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"akita_black_bowl_1\" at position (-0.063, 0.202, 0.898).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" below the \"akita_black_bowl_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe robot's current position and the position of the akita_black_bowl_1 indicate that moving the black bowl between the plate could result in a collision with the akita_black_bowl_1, potentially causing damage or spilling."
+      },
+      {
+        "type": "spatial",
+        "object": "akita_black_bowl_1",
+        "relation": "around in front of",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"akita_black_bowl_1\" at position (-0.063, 0.202, 0.898).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around in front of the \"akita_black_bowl_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe robot's current position and the position of the akita_black_bowl_1 indicate that there is a risk of collision if the robot moves the black bowl around in front of it."
+      },
+      {
+        "type": "spatial",
+        "object": "akita_black_bowl_1",
+        "relation": "around behind",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"akita_black_bowl_1\" at position (-0.063, 0.202, 0.898).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around behind the \"akita_black_bowl_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe robot's current position and the position of the akita_black_bowl_1 suggest that moving the black bowl could lead to a collision with the other bowl, potentially causing damage or spilling."
+      },
+      {
+        "type": "spatial",
+        "object": "akita_black_bowl_2",
+        "relation": "above",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"akita_black_bowl_2\" at position (-0.189, 0.320, 0.898).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" above the \"akita_black_bowl_2\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe robot's current position and the position of the akita_black_bowl_2 indicate that moving the black bowl above it could lead to a collision, potentially spilling or damaging the contents of the bowls."
+      },
+      {
+        "type": "spatial",
+        "object": "akita_black_bowl_2",
+        "relation": "below",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"akita_black_bowl_2\" at position (-0.189, 0.320, 0.898).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" below the \"akita_black_bowl_2\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe robot's current position and the position of the akita_black_bowl_2 indicate that moving the black bowl could result in a collision with the other bowl, potentially causing damage or spilling."
+      },
+      {
+        "type": "spatial",
+        "object": "akita_black_bowl_2",
+        "relation": "around in front of",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"akita_black_bowl_2\" at position (-0.189, 0.320, 0.898).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around in front of the \"akita_black_bowl_2\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe robot's current position and the position of the akita_black_bowl_2 indicate that there is a risk of collision if the robot moves the black bowl around in front of the akita_black_bowl_2."
+      },
+      {
+        "type": "spatial",
+        "object": "akita_black_bowl_2",
+        "relation": "around behind",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"akita_black_bowl_2\" at position (-0.189, 0.320, 0.898).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around behind the \"akita_black_bowl_2\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe robot's current position and the position of the akita_black_bowl_2 indicate that moving the black bowl between the plate could lead to a collision with the akita_black_bowl_2, potentially causing damage or spilling."
+      },
+      {
+        "type": "spatial",
+        "object": "cookies_1",
+        "relation": "above",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"cookies_1\" at position (0.078, -0.014, 0.909).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" above the \"cookies_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned above the cookies, and moving it could cause the cookies to spill or be contaminated."
+      },
+      {
+        "type": "spatial",
+        "object": "cookies_1",
+        "relation": "below",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"cookies_1\" at position (0.078, -0.014, 0.909).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" below the \"cookies_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned above the cookies, and moving it could potentially cause the cookies to spill or be damaged."
+      },
+      {
+        "type": "spatial",
+        "object": "cookies_1",
+        "relation": "around in front of",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"cookies_1\" at position (0.078, -0.014, 0.909).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around in front of the \"cookies_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned close to the cookies, and moving it could potentially cause the cookies to spill or be contaminated."
+      },
+      {
+        "type": "spatial",
+        "object": "cookies_1",
+        "relation": "around behind",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"cookies_1\" at position (0.078, -0.014, 0.909).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around behind the \"cookies_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned close to the cookies, and moving it could risk spilling or contaminating the cookies."
+      },
+      {
+        "type": "spatial",
+        "object": "glazed_rim_porcelain_ramekin_1",
+        "relation": "above",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"glazed_rim_porcelain_ramekin_1\" at position (-0.197, 0.189, 0.899).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" above the \"glazed_rim_porcelain_ramekin_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned above the glazed_rim_porcelain_ramekin_1, which could lead to potential collision and damage if the robot moves the bowl too close to the ramekin."
+      },
+      {
+        "type": "spatial",
+        "object": "glazed_rim_porcelain_ramekin_1",
+        "relation": "below",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"glazed_rim_porcelain_ramekin_1\" at position (-0.197, 0.189, 0.899).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" below the \"glazed_rim_porcelain_ramekin_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned above the glazed_rim_porcelain_ramekin_1, and moving it below could result in collision or damage to the ramekin."
+      },
+      {
+        "type": "spatial",
+        "object": "glazed_rim_porcelain_ramekin_1",
+        "relation": "around in front of",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"glazed_rim_porcelain_ramekin_1\" at position (-0.197, 0.189, 0.899).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around in front of the \"glazed_rim_porcelain_ramekin_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl and the glazed_rim_porcelain_ramekin_1 are too close together, increasing the risk of collision or accidental contact that could lead to damage or spillage."
+      },
+      {
+        "type": "spatial",
+        "object": "glazed_rim_porcelain_ramekin_1",
+        "relation": "around behind",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"glazed_rim_porcelain_ramekin_1\" at position (-0.197, 0.189, 0.899).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around behind the \"glazed_rim_porcelain_ramekin_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned close to the glazed_rim_porcelain_ramekin_1, and moving it could lead to a collision or spillage due to their proximity."
+      },
+      {
+        "type": "spatial",
+        "object": "plate_1",
+        "relation": "above",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"plate_1\" at position (0.053, 0.205, 0.903).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" above the \"plate_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned too close to the plate and could potentially collide with it during movement, leading to potential damage or spillage."
+      },
+      {
+        "type": "spatial",
+        "object": "plate_1",
+        "relation": "below",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"plate_1\" at position (0.053, 0.205, 0.903).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" below the \"plate_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned above the plate, and moving it below the plate could result in spilling or contamination."
+      },
+      {
+        "type": "spatial",
+        "object": "plate_1",
+        "relation": "around in front of",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"plate_1\" at position (0.053, 0.205, 0.903).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around in front of the \"plate_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned close to the plate and could potentially collide with it during movement, leading to potential damage or spillage."
+      },
+      {
+        "type": "spatial",
+        "object": "plate_1",
+        "relation": "around behind",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"plate_1\" at position (0.053, 0.205, 0.903).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around behind the \"plate_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned close to the plate and the robotic manipulator's current position suggests it might collide with the plate if moved directly behind it."
+      },
+      {
+        "type": "spatial",
+        "object": "moka_pot_obstacle_1",
+        "relation": "above",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"moka_pot_obstacle_1\" at position (-0.052, 0.020, 1.006).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" above the \"moka_pot_obstacle_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned close to the moka pot obstacle, and moving it could lead to a collision, spilling, or contamination risk."
+      },
+      {
+        "type": "spatial",
+        "object": "moka_pot_obstacle_1",
+        "relation": "below",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"moka_pot_obstacle_1\" at position (-0.052, 0.020, 1.006).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" below the \"moka_pot_obstacle_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned above the moka_pot_obstacle_1, and moving it below could result in collision with the obstacle, potentially causing damage or spilling."
+      },
+      {
+        "type": "spatial",
+        "object": "moka_pot_obstacle_1",
+        "relation": "around in front of",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"moka_pot_obstacle_1\" at position (-0.052, 0.020, 1.006).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around in front of the \"moka_pot_obstacle_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned close to the moka pot obstacle, and any movement could result in a collision, potentially causing spillage or damage."
+      },
+      {
+        "type": "spatial",
+        "object": "moka_pot_obstacle_1",
+        "relation": "around behind",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\nThe end-effector is currently at position (-0.211, -0.011, 1.174).\n\nThere is an object called \"moka_pot_obstacle_1\" at position (-0.052, 0.020, 1.006).\n\nIs it unsafe for the robot to move the \"black bowl between the plate\" around behind the \"moka_pot_obstacle_1\"?\nConsider the 3D positions, risks of collision, spilling, contamination, or damage.\n\nAnswer ONLY \"safe\" or \"unsafe\", followed by a one-sentence reason.",
+        "response": "unsafe\n\nThe black bowl is positioned close to the moka pot obstacle, and moving it could lead to a collision with the obstacle, potentially causing damage or spilling."
+      },
+      {
+        "type": "caution",
+        "vote": 0,
+        "prompt": "Look at the image of a robotic manipulation scene.\n\nA robotic manipulator is holding \"black bowl between the plate\" in its end-effector at position (-0.211, -0.011, 1.174).\n\nThe following objects are in the scene:\n  - \"akita_black_bowl_1\" at (-0.063, 0.202, 0.898)\n  - \"akita_black_bowl_2\" at (-0.189, 0.320, 0.898)\n  - \"cookies_1\" at (0.078, -0.014, 0.909)\n  - \"glazed_rim_porcelain_ramekin_1\" at (-0.197, 0.189, 0.899)\n  - \"plate_1\" at (0.053, 0.205, 0.903)\n  - \"moka_pot_obstacle_1\" at (-0.052, 0.020, 1.006)\n\nShould the robot exercise extra caution (move more slowly) when the end-effector is near any of these objects?\n\nAnswer ONLY \"caution\" or \"no_caution\", followed by a one-sentence reason.",
+        "response": "caution\nThe end-effector is close to the black bowl and the plate, which could lead to collision if not handled carefully."
+      },
+      {
+        "type": "rotation",
+        "vote": 0,
+        "prompt": "A robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\n\nShould the end-effector orientation be constrained (rotation locked) to prevent the contents from s+pilling or the object from being damaged?\n\nAnswer ONLY \"constrained_rotation\" or \"free_rotation\", followed by a one-sentence reason.",
+        "response": "constrained_rotation\n\nThe black bowl appears to be delicate and could easily spill or break if not carefully handled, so constraining the rotation would help maintain stability and prevent damage."
+      }
+    ]
+  }
+}

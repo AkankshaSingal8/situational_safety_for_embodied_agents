@@ -1,0 +1,8 @@
+Job 40144783: Suite=safelibero_spatial Level=I Trials=50
+VLM model: qwen2.5-vl-7b | Port: 5001 | Votes: 3
+VLM tmp dir: /ocean/projects/cis250185p/asingal/tmp/vlm_live_40144783
+Starting Qwen server on GPU 1...
+Qwen server PID: 55249
+Waiting for Qwen server to load model...
+ERROR: Qwen server failed to start within 90s
+Cleanup: stopping Qwen server (PID 55249)

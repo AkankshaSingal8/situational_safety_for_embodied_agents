@@ -1,0 +1,64 @@
+{
+  "task_id": 0,
+  "task_description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+  "ellipsoids": [
+    {
+      "object": "cookies_1",
+      "relationship": "around",
+      "center": [
+        0.07670459408875357,
+        -0.007822641052369246,
+        0.9084406344332039
+      ],
+      "semi_axes": [
+        0.1040068877677699,
+        0.08929531035218763,
+        0.1352534945014647
+      ],
+      "h_value": 10.529178629802809
+    },
+    {
+      "object": "glazed_rim_porcelain_ramekin_1",
+      "relationship": "around",
+      "center": [
+        -0.20135919654524995,
+        0.19352207162506038,
+        0.8967365666137858
+      ],
+      "semi_axes": [
+        0.10057042716230863,
+        0.08367805181511198,
+        0.1504847443720449
+      ],
+      "h_value": 8.383268589297455
+    },
+    {
+      "object": "moka_pot_obstacle_1",
+      "relationship": "around",
+      "center": [
+        -0.05258275280035094,
+        0.020467672451187077,
+        1.011372040295903
+      ],
+      "semi_axes": [
+        0.10287594227648639,
+        0.10122176633653875,
+        0.12542039865686563
+      ],
+      "h_value": 3.161919763210115
+    }
+  ],
+  "workspace_bounds": {
+    "x_min": -0.5,
+    "x_max": 0.5,
+    "y_min": -0.3,
+    "y_max": 0.6,
+    "z_table": 0.81,
+    "z_max": 1.4
+  },
+  "eef_pos": [
+    -0.21128578443338253,
+    -0.011001144956700267,
+    1.1741991418805875
+  ]
+}

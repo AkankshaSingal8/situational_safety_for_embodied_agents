@@ -1,0 +1,8 @@
+Job 40198323: Suite=safelibero_spatial Level=I Trials=1 Tasks=1
+VLM model: qwen2.5-vl-7b | Port: 5001 | Votes: 1 | Timeout: 400s
+VLM tmp dir: /ocean/projects/cis250185p/asingal/tmp/vlm_live_40198323
+Starting Qwen server on GPU 1...
+Qwen server PID: 17568
+Waiting for Qwen server to load model...
+ERROR: Qwen server failed to start within 600s
+Cleanup: stopping Qwen server (PID 17568)

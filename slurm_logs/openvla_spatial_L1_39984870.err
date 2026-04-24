@@ -1,0 +1,127 @@
+2026-04-19 03:18:17.570293: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-19 03:18:18.915917: I external/local_tsl/tsl/cuda/cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+2026-04-19 03:18:22.799651: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-04-19 03:18:22.822264: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-19 03:18:23.643974: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-04-19 03:18:25.635602: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-04-19 03:18:46.484429: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+2026-04-19 03:20:31.139089: W tensorflow/core/common_runtime/gpu/gpu_device.cc:2256] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
+Skipping registering GPU devices...
+<frozen importlib._bootstrap>:283: DeprecationWarning: the load_module() method is deprecated and slated for removal in Python 3.12; use exec_module() instead
+Downloading shards:   0%|          | 0/4 [00:00<?, ?it/s]Downloading shards:  25%|██▌       | 1/4 [00:11<00:33, 11.19s/it]Downloading shards:  50%|█████     | 2/4 [00:21<00:20, 10.41s/it]Downloading shards:  75%|███████▌  | 3/4 [00:34<00:11, 11.72s/it]Downloading shards: 100%|██████████| 4/4 [00:36<00:00,  8.00s/it]Downloading shards: 100%|██████████| 4/4 [00:36<00:00,  9.16s/it]
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:01,  2.39it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:00<00:00,  3.24it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:00<00:00,  3.66it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.96it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.63it/s]
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+Traceback (most recent call last):
+  File "/ocean/projects/cis250185p/asingal/run_safelibero_openvla_oft_eval.py", line 602, in <module>
+    eval_safelibero()
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/draccus/argparsing.py", line 203, in wrapper_inner
+    response = fn(cfg, *args, **kwargs)
+  File "/ocean/projects/cis250185p/asingal/run_safelibero_openvla_oft_eval.py", line 502, in eval_safelibero
+    task_episodes, task_successes, task_collides, timesteps_list, task_desc = run_task(
+  File "/ocean/projects/cis250185p/asingal/run_safelibero_openvla_oft_eval.py", line 431, in run_task
+    success, collide, replay_images, steps = run_episode(
+  File "/ocean/projects/cis250185p/asingal/run_safelibero_openvla_oft_eval.py", line 326, in run_episode
+    initial_obstacle_pos = obs[obstacle_name + "_pos"]
+KeyError: ' _pos'
+Exception ignored in: <function MjRenderContext.__del__ at 0x14b0c7ae7a30>
+Traceback (most recent call last):
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/utils/binding_utils.py", line 199, in __del__
+    self.gl_ctx.free()
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x14b09249d6c0>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x14b09249dac0>,
+	),
+	result = 0
+)
+Exception ignored in: <function EGLGLContext.__del__ at 0x14b0c7ae7880>
+Traceback (most recent call last):
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/renderers/context/egl_context.py", line 155, in __del__
+    self.free()
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x14b09249d6c0>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x14b09249dac0>,
+	),
+	result = 0
+)
+Exception ignored in: <function MjRenderContext.__del__ at 0x14b0c7ae7a30>
+Traceback (most recent call last):
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/utils/binding_utils.py", line 199, in __del__
+    self.gl_ctx.free()
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x14b09249d6c0>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x14b01a7bce40>,
+	),
+	result = 0
+)
+Exception ignored in: <function EGLGLContext.__del__ at 0x14b0c7ae7880>
+Traceback (most recent call last):
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/renderers/context/egl_context.py", line 155, in __del__
+    self.free()
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/renderers/context/egl_context.py", line 150, in free
+    EGL.eglDestroyContext(EGL_DISPLAY, self._context)
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: EGLError(
+	err = EGL_NOT_INITIALIZED,
+	baseOperation = eglDestroyContext,
+	cArguments = (
+		<OpenGL._opaque.EGLDisplay_pointer object at 0x14b09249d6c0>,
+		<OpenGL._opaque.EGLContext_pointer object at 0x14b01a7bce40>,
+	),
+	result = 0
+)
+Exception ignored in: <function MjRenderContext.__del__ at 0x14b0c7ae7a30>
+Traceback (most recent call last):
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/utils/binding_utils.py", line 199, in __del__
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/renderers/context/egl_context.py", line 149, in free
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function EGLGLContext.__del__ at 0x14b0c7ae7880>
+Traceback (most recent call last):
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/renderers/context/egl_context.py", line 155, in __del__
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/renderers/context/egl_context.py", line 149, in free
+  File "/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/OpenGL/error.py", line 230, in glCheckError
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>

@@ -1,0 +1,51 @@
+{
+  "single": {
+    "description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "end_object": "black bowl between the plate",
+    "objects": [
+      [
+        "akita_black_bowl_1",
+        [
+          "around"
+        ]
+      ],
+      [
+        "akita_black_bowl_2",
+        [
+          "around"
+        ]
+      ],
+      [
+        "cookies_1",
+        [
+          "around"
+        ]
+      ],
+      [
+        "glazed_rim_porcelain_ramekin_1",
+        [
+          "around"
+        ]
+      ],
+      [
+        "plate_1",
+        [
+          "around"
+        ]
+      ],
+      [
+        "moka_pot_obstacle_1",
+        [
+          "around"
+        ]
+      ],
+      [
+        "end_effector",
+        [
+          "caution",
+          "rotation lock"
+        ]
+      ]
+    ]
+  }
+}

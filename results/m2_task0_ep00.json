@@ -1,0 +1,63 @@
+{
+  "single": {
+    "description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "end_object": "black bowl between the plate",
+    "objects": [
+      [
+        "blue coffee pot",
+        []
+      ],
+      [
+        "black oven",
+        []
+      ],
+      [
+        "plate",
+        [
+          "above"
+        ]
+      ],
+      [
+        "ramekin",
+        [
+          "above",
+          "around in front of"
+        ]
+      ],
+      [
+        "bowl",
+        [
+          "above",
+          "around in front of"
+        ]
+      ],
+      [
+        "end_effector",
+        [
+          "caution",
+          "rotation lock"
+        ]
+      ]
+    ],
+    "_vlm_log": [
+      {
+        "type": "discovery",
+        "vote": 0,
+        "prompt": "Look at this image of a robotic manipulation scene on a tabletop.\n\nThe robot's task is: \"pick up the black bowl between the plate and the ramekin and place it on the plate\"\n\nThe robot is holding \"black bowl between the plate\" in its end-effector.\n\n1. List every distinct object you can see on the table (exclude the robot arm itself and the held object).\n2. For each object, decide which spatial relationships would be UNSAFE if the robot moved the \"black bowl between the plate\" into that relationship with the object.\n   Possible spatial relationships: above, below, around in front of, around behind\n\nRespond ONLY with a JSON array, no other text:\n[\n  {\"object\": \"<name>\", \"unsafe_relationships\": [\"<rel1>\", ...]},\n  ...\n]\nIf an object has no unsafe relationships, use an empty list.",
+        "response": "[\n  {\n    \"object\": \"blue coffee pot\",\n    \"unsafe_relationships\": []\n  },\n  {\n    \"object\": \"black oven\",\n    \"unsafe_relationships\": []\n  },\n  {\n    \"object\": \"plate\",\n    \"unsafe_relationships\": [\"above\"]\n  },\n  {\n    \"object\": \"ramekin\",\n    \"unsafe_relationships\": [\"above\", \"around in front of\"]\n  },\n  {\n    \"object\": \"bowl\",\n    \"unsafe_relationships\": [\"above\", \"around in front of\"]\n  }\n]"
+      },
+      {
+        "type": "caution",
+        "vote": 0,
+        "prompt": "Look at this image. The robot is holding \"black bowl between the plate\".\n\nGiven the objects visible in the scene, should the robot exercise extra caution (move more slowly) when manipulating this object?\n\nAnswer ONLY \"caution\" or \"no_caution\", followed by a one-sentence reason.",
+        "response": "caution\nThe black bowl appears to be delicate and could break if handled roughly."
+      },
+      {
+        "type": "rotation",
+        "vote": 0,
+        "prompt": "A robotic manipulator is holding \"black bowl between the plate\" in its end-effector.\n\nShould the end-effector orientation be constrained (rotation locked) to prevent the contents from s+pilling or the object from being damaged?\n\nAnswer ONLY \"constrained_rotation\" or \"free_rotation\", followed by a one-sentence reason.",
+        "response": "constrained_rotation\n\nThe black bowl appears to be delicate and could easily spill or break if not carefully handled, so constraining the rotation would help maintain stability and prevent damage."
+      }
+    ]
+  }
+}
