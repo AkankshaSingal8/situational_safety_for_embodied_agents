@@ -28,4 +28,9 @@ tmp/
 # Generated visualization / data artifacts
 vlm_pipeline/test_inputs/
 vlm_inputs/
-
+rollouts/
+experiments/
+vlm_pipeline/cbf_sq_outputs_mves_gripper_sphere/
+vlm_pipeline/vlm_inputs/
+vlm_pipeline/vlm_outputs/
+.tmp_cbf_trace_analyze.py

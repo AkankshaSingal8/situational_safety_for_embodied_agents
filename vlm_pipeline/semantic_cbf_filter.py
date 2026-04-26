@@ -78,6 +78,16 @@ class SemanticContext:
     pose_constraint: str = "free_rotation"
 
 
+@dataclass
+class PositionLinearConstraint:
+    """Linearized position-space constraint: gradient^T dp >= rhs."""
+    label: str
+    family: str
+    gradient: np.ndarray
+    rhs: float
+    h_value: Optional[float] = None
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # 2. Perception: Segmentation → 3D Map
 # ═══════════════════════════════════════════════════════════════════════
@@ -483,9 +493,10 @@ class SemanticSafetyFilter:
 
     def __init__(self, dt=0.05, alpha_default=1.0, alpha_caution=0.25,
                  safety_margin=0.10, workspace_z_max=1.2,
-                 action_pos_scale=None):
+                 action_pos_scale=None, enable_collision=False):
         self.dt=dt; self.alpha_default=alpha_default; self.alpha_caution=alpha_caution
         self.safety_margin=safety_margin; self.workspace_z_max=workspace_z_max
+        self.enable_collision = bool(enable_collision)
         self.semantic_envelopes: List[Tuple[SuperquadricParams,float,float]] = []
         self.collision_envelopes: List[Tuple[SuperquadricParams,float,float]] = []
         self.gripper_center_offset = GRIPPER_SPHERE_CENTER_OFFSET.copy()
@@ -513,14 +524,17 @@ class SemanticSafetyFilter:
                 logger.info(f"    h_sem[{len(self.semantic_envelopes)-1}]: '{o.label}' "
                              f"{c.spatial_relation} SQ(a=[{env.a1:.3f},{env.a2:.3f},{env.a3:.3f}]) α={a}")
 
-        logger.info("  Building collision CBF envelopes:")
-        for o in objs:
-            sq=o.superquadric
-            a=self.alpha_default
-            for bc in ctx.behavioral_constraints:
-                if bc.object_label==o.label and bc.caution_level=="caution": a=self.alpha_caution
-            self.collision_envelopes.append((sq, a, self.safety_margin))
-            logger.info(f"    h_env[{len(self.collision_envelopes)-1}]: '{o.label}' α={a} margin={self.safety_margin:.3f}")
+        if self.enable_collision:
+            logger.info("  Building collision CBF envelopes:")
+            for o in objs:
+                sq=o.superquadric
+                a=self.alpha_default
+                for bc in ctx.behavioral_constraints:
+                    if bc.object_label==o.label and bc.caution_level=="caution": a=self.alpha_caution
+                self.collision_envelopes.append((sq, a, self.safety_margin))
+                logger.info(f"    h_env[{len(self.collision_envelopes)-1}]: '{o.label}' α={a} margin={self.safety_margin:.3f}")
+        else:
+            logger.info("  Collision CBF envelopes disabled")
 
         self.pose_constrained = ctx.pose_constraint=="constrained_rotation"
         self._init=True
@@ -532,7 +546,7 @@ class SemanticSafetyFilter:
                                     collision_envelopes=None):
         """Initialize directly from precomputed superquadrics and explicit margins."""
         self.semantic_envelopes = list(semantic_envelopes)
-        self.collision_envelopes = list(collision_envelopes or [])
+        self.collision_envelopes = list(collision_envelopes or []) if self.enable_collision else []
         self.pose_constrained = pose_constrained
         self.desired_orientation = None
         self._init = True
@@ -548,7 +562,8 @@ class SemanticSafetyFilter:
         gripper_center = offset_gripper_sphere_center(ee_pos, ee_quat, self.gripper_center_offset)
 
         # Convert policy action [-1,1] to world-frame position delta [m] so that
-        # CBF linear-extrapolation (h(ee+dp)) uses a geometrically correct step.
+        # the first-order CBF linearization ∇h(ee)^T dp uses a geometrically
+        # correct step in physical space.
         scale = self.action_pos_scale
         dp = dp_act * scale
 
@@ -564,12 +579,42 @@ class SemanticSafetyFilter:
         dp_cmd_act = dp_act.copy()       # original action-space delta
         dp_cmd_phys = dp.copy()           # nominal physical-space delta
 
-        dp, si = self._cbf_sem(gripper_center, dp)
-        dp, ci = self._cbf_col(gripper_center, dp)
+        qp_constraints = self._build_position_constraints(gripper_center)
+        dp_qp, qp_meta = self._solve_joint_position_qp(dp_cmd_phys, qp_constraints)
+        if dp_qp is None:
+            logger.warning(
+                f"[CBF-QP t={self._t}] joint position QP failed "
+                f"({qp_meta.get('reason', 'unknown')}); falling back to sequential projection"
+            )
+            dp, si, ci, wi = self._filter_position_sequential(gripper_center, dp_cmd_phys)
+        else:
+            dp = dp_qp
+            bind_tol = float(qp_meta.get("bind_tol", 1e-7))
+            margins = np.asarray(qp_meta.get("margins", []), dtype=np.float64)
+            nominal_margins = np.asarray(qp_meta.get("nominal_margins", []), dtype=np.float64)
+            delta_dp = float(np.linalg.norm(dp - dp_cmd_phys))
+            active_labels = []
+            si = ci = wi = False
+            if delta_dp > 1e-8 and margins.size == len(qp_constraints):
+                binding = margins <= bind_tol
+                nominal_violated = nominal_margins < -bind_tol
+                for idx, constraint in enumerate(qp_constraints):
+                    if binding[idx] or nominal_violated[idx]:
+                        active_labels.append(constraint.label)
+                        if constraint.family == "semantic":
+                            si = True
+                        elif constraint.family == "collision":
+                            ci = True
+                        elif constraint.family == "workspace":
+                            wi = True
+                if active_labels:
+                    logger.info(
+                        f"[CBF-QP t={self._t}] joint position QP active: "
+                        + ", ".join(active_labels[:8])
+                    )
         ri = False
         if self.pose_constrained:
             dr0=dr.copy(); dr=self._cbf_rot(ee_quat,dr); ri=np.linalg.norm(dr-dr0)>1e-6
-        dp, wi = self._cbf_ws(gripper_center, dp)
 
         # Convert physical delta back to action space and clip to [-1,1].
         dp_act_safe = np.clip(dp / scale, -1.0, 1.0) if scale > 1e-9 else dp
@@ -640,38 +685,180 @@ class SemanticSafetyFilter:
 
         return u
 
-    def _cbf_sem(self, ee, dp) -> Tuple[np.ndarray,bool]:
-        hit=False
-        for i,(env,a,margin) in enumerate(self.semantic_envelopes):
-            h=max(sq_margin_value(ee, env, margin), -0.5)
-            hn=sq_margin_value(ee+dp, env, margin)
-            dh=hn-h
+    def _workspace_dp_bounds(self, ee):
+        lower = np.array([
+            -0.8 - ee[0] + 0.01,
+            -0.8 - ee[1] + 0.01,
+            -ee[2] + 0.01,
+        ], dtype=np.float64)
+        upper = np.array([
+            0.8 - ee[0] - 0.01,
+            0.8 - ee[1] - 0.01,
+            self.workspace_z_max - ee[2] - 0.01,
+        ], dtype=np.float64)
+        return lower, upper
+
+    def _build_position_constraints(self, ee) -> List[PositionLinearConstraint]:
+        constraints: List[PositionLinearConstraint] = []
+        envelope_specs = [("semantic", "h_sem", self.semantic_envelopes)]
+        if self.enable_collision and self.collision_envelopes:
+            envelope_specs.append(("collision", "h_env", self.collision_envelopes))
+
+        for family, prefix, envelopes in envelope_specs:
+            for idx, (env, a, margin) in enumerate(envelopes):
+                h = max(sq_margin_value(ee, env, margin), -0.5)
+                grad = sq_margin_grad(ee, env, margin)
+                if not np.all(np.isfinite(grad)) or float(grad @ grad) <= 1e-10:
+                    logger.warning(f"[CBF-QP t={self._t}] skipping degenerate {prefix}[{idx}]")
+                    continue
+                constraints.append(PositionLinearConstraint(
+                    label=f"{prefix}[{idx}]",
+                    family=family,
+                    gradient=np.asarray(grad, dtype=np.float64),
+                    rhs=float(-a * h),
+                    h_value=float(h),
+                ))
+
+        lower, upper = self._workspace_dp_bounds(ee)
+        axes = "xyz"
+        eye = np.eye(3, dtype=np.float64)
+        for axis_idx, axis in enumerate(axes):
+            constraints.append(PositionLinearConstraint(
+                label=f"workspace_{axis}_min",
+                family="workspace",
+                gradient=eye[axis_idx].copy(),
+                rhs=float(lower[axis_idx]),
+            ))
+            constraints.append(PositionLinearConstraint(
+                label=f"workspace_{axis}_max",
+                family="workspace",
+                gradient=(-eye[axis_idx]).copy(),
+                rhs=float(-upper[axis_idx]),
+            ))
+        return constraints
+
+    def _project_with_active_constraints(self, g_mat, rhs, x0, active_idx):
+        if not active_idx:
+            return x0.copy(), np.zeros(0, dtype=np.float64)
+        g_active = g_mat[active_idx]
+        rhs_active = rhs[active_idx]
+        system = g_active @ g_active.T
+        target = rhs_active - g_active @ x0
+        try:
+            multipliers, *_ = np.linalg.lstsq(system, target, rcond=None)
+        except np.linalg.LinAlgError:
+            return None, None
+        x = x0 + g_active.T @ multipliers
+        if not np.all(np.isfinite(x)):
+            return None, None
+        return x, multipliers
+
+    def _solve_joint_position_qp(self, dp_cmd, constraints):
+        """Project dp_cmd onto the intersection of all linearized constraints."""
+        dp_cmd = np.asarray(dp_cmd, dtype=np.float64)
+        if not constraints:
+            return dp_cmd.copy(), {
+                "success": True,
+                "margins": np.zeros(0, dtype=np.float64),
+                "nominal_margins": np.zeros(0, dtype=np.float64),
+                "bind_tol": 1e-7,
+            }
+
+        g_mat = np.vstack([c.gradient for c in constraints]).astype(np.float64)
+        rhs = np.asarray([c.rhs for c in constraints], dtype=np.float64)
+        if not np.all(np.isfinite(g_mat)) or not np.all(np.isfinite(rhs)):
+            return None, {"success": False, "reason": "non-finite constraints"}
+
+        bind_tol = 1e-7
+        drop_tol = 1e-9
+        active_idx: List[int] = []
+        x = dp_cmd.copy()
+        max_outer = max(20, 4 * len(constraints))
+
+        for _ in range(max_outer):
+            margins = g_mat @ x - rhs
+            worst = float(np.min(margins))
+            if worst >= -bind_tol:
+                if active_idx:
+                    _, multipliers = self._project_with_active_constraints(g_mat, rhs, dp_cmd, active_idx)
+                    if multipliers is None:
+                        return None, {"success": False, "reason": "active solve failed"}
+                    if multipliers.size and float(np.min(multipliers)) < -drop_tol:
+                        drop_at = int(np.argmin(multipliers))
+                        del active_idx[drop_at]
+                        x = dp_cmd.copy() if not active_idx else self._project_with_active_constraints(
+                            g_mat, rhs, dp_cmd, active_idx
+                        )[0]
+                        if x is None:
+                            return None, {"success": False, "reason": "active update failed"}
+                        continue
+                return x, {
+                    "success": True,
+                    "margins": margins,
+                    "nominal_margins": g_mat @ dp_cmd - rhs,
+                    "bind_tol": bind_tol,
+                    "active_idx": active_idx.copy(),
+                }
+
+            add_idx = int(np.argmin(margins))
+            if add_idx not in active_idx:
+                active_idx.append(add_idx)
+
+            solved = False
+            for _ in range(max(10, len(active_idx) + 2)):
+                x_candidate, multipliers = self._project_with_active_constraints(g_mat, rhs, dp_cmd, active_idx)
+                if x_candidate is None or multipliers is None:
+                    return None, {"success": False, "reason": "projection solve failed"}
+                if multipliers.size and float(np.min(multipliers)) < -drop_tol:
+                    drop_at = int(np.argmin(multipliers))
+                    del active_idx[drop_at]
+                    continue
+                x = x_candidate
+                solved = True
+                break
+            if not solved:
+                return None, {"success": False, "reason": "active-set did not stabilize"}
+
+        return None, {"success": False, "reason": "active-set max iterations"}
+
+    def _filter_position_sequential(self, ee, dp):
+        dp, si = self._cbf_sem(ee, dp)
+        ci = False
+        if self.enable_collision and self.collision_envelopes:
+            dp, ci = self._cbf_col(ee, dp)
+        dp, wi = self._cbf_ws(ee, dp)
+        return dp, si, ci, wi
+
+    def _linearized_barrier_delta(self, ee, dp, env, margin):
+        """First-order SQ margin barrier change: Δh ≈ ∇h(ee)^T dp."""
+        grad = sq_margin_grad(ee, env, margin)
+        return grad, float(grad @ dp)
+
+    def _apply_linearized_cbf(self, ee, dp, envelopes, label):
+        hit = False
+        for i, (env, a, margin) in enumerate(envelopes):
+            h = max(sq_margin_value(ee, env, margin), -0.5)
+            grad, dh_lin = self._linearized_barrier_delta(ee, dp, env, margin)
             # Linear class-K: ah=a*h on BOTH sides (no floor).
             # h>0: ah>0 -> dh>=-ah (class-K throttle as we approach the boundary).
             # h<0: ah<0 -> dh>=|ah| (forced recovery, h must grow each step).
-            ah=a*h
-            if dh < -ah:
-                g=sq_margin_grad(ee, env, margin); gn=g@g
-                if gn>1e-10:
-                    v=-ah-dh; c=v*g/gn; dp=dp+c; hit=True
-                    logger.info(f"[CBF-QP t={self._t}] h_sem[{i}]: h={h:.4f} Δh={dh:.4f} "
-                                 f"-α={-ah:.4f} |c|={np.linalg.norm(c):.5f}")
+            ah = a * h
+            grad_norm_sq = float(grad @ grad)
+            if dh_lin < -ah and grad_norm_sq > 1e-10:
+                correction = ((-ah - dh_lin) / grad_norm_sq) * grad
+                dp = dp + correction
+                hit = True
+                logger.info(
+                    f"[CBF-QP t={self._t}] {label}[{i}]: h={h:.4f} "
+                    f"Δh_lin={dh_lin:.4f} -α={-ah:.4f} |c|={np.linalg.norm(correction):.5f}"
+                )
         return dp, hit
 
+    def _cbf_sem(self, ee, dp) -> Tuple[np.ndarray,bool]:
+        return self._apply_linearized_cbf(ee, dp, self.semantic_envelopes, "h_sem")
+
     def _cbf_col(self, ee, dp) -> Tuple[np.ndarray,bool]:
-        hit=False
-        for i,(env,a,margin) in enumerate(self.collision_envelopes):
-            h=max(sq_margin_value(ee, env, margin), -0.5)
-            hn=sq_margin_value(ee+dp, env, margin)
-            dh=hn-h
-            ah=a*h
-            if dh < -ah:
-                g=sq_margin_grad(ee, env, margin); gn=g@g
-                if gn>1e-10:
-                    v=-ah-dh; c=v*g/gn; dp=dp+c; hit=True
-                    logger.info(f"[CBF-QP t={self._t}] h_env[{i}]: h={h:.4f} Δh={dh:.4f} "
-                                 f"-α={-ah:.4f} |c|={np.linalg.norm(c):.5f}")
-        return dp, hit
+        return self._apply_linearized_cbf(ee, dp, self.collision_envelopes, "h_env")
 
     def _cbf_rot(self, eq, dr):
         if self.desired_orientation is None:
@@ -720,7 +907,8 @@ class SemanticCBFPipeline:
                  vlm_conda_env="qwen", vlm_device="auto", vlm_load_in_4bit=False,
                  vlm_worker_script="qwen_vlm_worker.py", vlm_num_votes=3,
                  dt=0.05, alpha_default=1.0, alpha_caution=0.25,
-                 safety_margin=0.10, workspace_z_max=1.2):
+                 safety_margin=0.10, workspace_z_max=1.2,
+                 enable_collision=False):
         self.perception = PerceptionModule(env=env)
         self.constraint_synth = SemanticConstraintSynthesizer(
             use_vlm=use_vlm, vlm_model=vlm_model, vlm_conda_env=vlm_conda_env,
@@ -728,7 +916,8 @@ class SemanticCBFPipeline:
             vlm_worker_script=vlm_worker_script, num_votes=vlm_num_votes)
         self.safety_filter = SemanticSafetyFilter(
             dt=dt, alpha_default=alpha_default, alpha_caution=alpha_caution,
-            safety_margin=safety_margin, workspace_z_max=workspace_z_max)
+            safety_margin=safety_margin, workspace_z_max=workspace_z_max,
+            enable_collision=enable_collision)
         self.scene_objects=[]; self.semantic_context=None; self._built=False
 
     @staticmethod
@@ -822,10 +1011,11 @@ class SemanticCBFPipeline:
                     bbox_min=center - scales,
                     bbox_max=center + scales,
                 ))
-                collision_envelopes.append((sq, alpha, gripper_radius))
-                logger.info(f"  Loaded h_env[{len(collision_envelopes)-1}]: '{obj_name}' "
-                            f"SQ(a=[{sq.a1:.3f},{sq.a2:.3f},{sq.a3:.3f}] "
-                            f"e=[{sq.e1:.2f},{sq.e2:.2f}]) α={alpha:.3f} margin={gripper_radius:.3f}")
+                if self.safety_filter.enable_collision:
+                    collision_envelopes.append((sq, alpha, gripper_radius))
+                    logger.info(f"  Loaded h_env[{len(collision_envelopes)-1}]: '{obj_name}' "
+                                f"SQ(a=[{sq.a1:.3f},{sq.a2:.3f},{sq.a3:.3f}] "
+                                f"e=[{sq.e1:.2f},{sq.e2:.2f}]) α={alpha:.3f} margin={gripper_radius:.3f}")
                 if behavioral.get("caution", False):
                     self.semantic_context.behavioral_constraints.append(
                         SemanticConstraint(obj_name, obj_idx, "behavioral", caution_level="caution")

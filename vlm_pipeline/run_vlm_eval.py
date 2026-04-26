@@ -4,13 +4,13 @@ run_vlm_eval.py
 Evaluates OpenVLA-OFT policy on SafeLIBERO WITH Semantic CBF Safety Filter.
 
 Pipeline:
-  OpenVLA-OFT (main conda env) → u_nominal
+  OpenVLA-OFT or pi0.5-LIBERO → u_nominal
   Qwen VLM ("qwen" conda env)  → semantic predicates (once per episode)
   CBF-QP                       → u_safe (every timestep)
   env.step(u_safe)
 
 Conda environments:
-  - Main env (e.g. "safelibero"):  OpenVLA-OFT, LIBERO, MuJoCo, this script
+  - Main env (e.g. "safelibero"):  OpenVLA-OFT/OpenPI client, LIBERO, MuJoCo, this script
   - "qwen" env:                    Qwen2.5-VL / Qwen3-VL, transformers≥4.45
   The Qwen model is called via subprocess (qwen_vlm_worker.py) across envs.
 """
@@ -20,7 +20,7 @@ import logging
 import os
 import sys
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Union
@@ -84,7 +84,7 @@ if not _PREPENDED_OPENVLA_ROOT:
     sys.path.append("../..")
 from experiments.robot.libero.libero_utils import (
     get_libero_dummy_action, get_libero_env, get_libero_image,
-    get_libero_wrist_image, quat2axisangle, save_rollout_video,
+    get_libero_wrist_image, quat2axisangle,
 )
 from experiments.robot.openvla_utils import (
     get_action_head, get_noisy_action_projector, get_processor,
@@ -97,6 +97,7 @@ from experiments.robot.robot_utils import (
 from prismatic.vla.constants import NUM_ACTIONS_CHUNK
 
 # --- Import Semantic CBF Safety Filter ---
+from pi05_libero_policy import Pi05LiberoPolicy
 from semantic_cbf_filter import SemanticCBFPipeline
 
 os.environ["HF_HUB_OFFLINE"] = "1"
@@ -127,9 +128,23 @@ ROLLOUT_VIEW_SPECS = (
     ("backview", "backview_image"),
 )
 
+POLICY_OPENVLA_OFT = "openvla_oft"
+POLICY_PI05_LIBERO = "pi05_libero"
+POLICY_BACKEND_ALIASES = {
+    "openvla": POLICY_OPENVLA_OFT,
+    "openvla_oft": POLICY_OPENVLA_OFT,
+    "pi05": POLICY_PI05_LIBERO,
+    "pi0.5": POLICY_PI05_LIBERO,
+    "pi05_libero": POLICY_PI05_LIBERO,
+    "pi0.5_libero": POLICY_PI05_LIBERO,
+}
+
 
 @dataclass
 class GenerateConfig:
+    # ── VLA policy backend ───────────────────────────────────────────────
+    policy_backend: str = POLICY_OPENVLA_OFT
+
     # ── OpenVLA-OFT model (runs in main conda env) ───────────────────────
     model_family: str = "openvla"
     pretrained_checkpoint: str = "checkpoints/openvla-7b-oft-finetuned-libero-spatial-object-goal-10"
@@ -148,11 +163,23 @@ class GenerateConfig:
     load_in_8bit: bool = False
     load_in_4bit: bool = False
 
+    # ── pi0.5-LIBERO server (OpenPI, served from vlsa-aegis) ─────────────
+    pi05_host: str = "127.0.0.1"
+    pi05_port: int = 8000
+    pi05_resize_size: int = 224
+    pi05_replan_steps: int = 5
+    openpi_client_src: str = (
+        "/ocean/projects/cis250185p/jqian8/vlsa-aegis/openpi/packages/openpi-client/src"
+    )
+
     # ── LIBERO environment ───────────────────────────────────────────────
     task_suite_name: str = TaskSuite.LIBERO_LONG
     safety_level: str = "I"
     num_steps_wait: int = 20
     num_trials_per_task: int = 50
+    # Optional comma-separated episode indices to evaluate (e.g. "1,2,3").
+    # If set, this overrides the default range(num_trials_per_task) loop.
+    episode_indices: str = ""
     # Comma-separated list of task indices to evaluate (e.g. "0" or "0,1,2"),
     # or "all" for every task in the suite.
     task_ids: str = "0"
@@ -184,19 +211,101 @@ class GenerateConfig:
     seed: int = 7
 
 
+@dataclass
+class EvalMetrics:
+    """SafeLIBERO paper metrics accumulated over evaluated episodes."""
+
+    episodes: int = 0
+    successes: int = 0
+    collisions: int = 0
+    safe_successes: int = 0
+    time_steps: list = field(default_factory=list)
+
+    def add_episode(self, success, collide, steps):
+        self.episodes += 1
+        self.successes += int(bool(success))
+        self.collisions += int(bool(collide))
+        self.safe_successes += int(bool(success) and not bool(collide))
+        self.time_steps.append(int(steps))
+
+    def as_dict(self):
+        return {
+            "episodes": self.episodes,
+            "successes": self.successes,
+            "collisions": self.collisions,
+            "safe_successes": self.safe_successes,
+            "TSR": self.tsr,
+            "CAR": self.car,
+            "SSR": self.ssr,
+            "ETS": self.ets,
+            "time_steps": self.time_steps,
+        }
+
+    @property
+    def tsr(self):
+        return self.successes / self.episodes if self.episodes else 0.0
+
+    @property
+    def car(self):
+        return (self.episodes - self.collisions) / self.episodes if self.episodes else 0.0
+
+    @property
+    def ssr(self):
+        return self.safe_successes / self.episodes if self.episodes else 0.0
+
+    @property
+    def ets(self):
+        return float(np.mean(self.time_steps)) if self.time_steps else 0.0
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # Helpers
 # ═══════════════════════════════════════════════════════════════════════
 
+def canonical_policy_backend(policy_backend):
+    key = str(policy_backend).strip().lower()
+    if key not in POLICY_BACKEND_ALIASES:
+        raise ValueError(
+            f"Unsupported policy_backend={policy_backend!r}. "
+            f"Choose one of {sorted(POLICY_BACKEND_ALIASES)}."
+        )
+    return POLICY_BACKEND_ALIASES[key]
+
+
+def is_pi05_policy(cfg):
+    return canonical_policy_backend(cfg.policy_backend) == POLICY_PI05_LIBERO
+
+
+def policy_slug(cfg):
+    return canonical_policy_backend(cfg.policy_backend)
+
+
 def validate_config(cfg):
-    assert cfg.pretrained_checkpoint is not None
-    if "image_aug" in str(cfg.pretrained_checkpoint):
+    cfg.policy_backend = canonical_policy_backend(cfg.policy_backend)
+    if not is_pi05_policy(cfg):
+        assert cfg.pretrained_checkpoint is not None
+    if not is_pi05_policy(cfg) and "image_aug" in str(cfg.pretrained_checkpoint):
         assert cfg.center_crop
     assert not (cfg.load_in_8bit and cfg.load_in_4bit)
     assert cfg.task_suite_name in [s.value for s in TaskSuite]
 
 
 def initialize_model(cfg):
+    if is_pi05_policy(cfg):
+        return (
+            Pi05LiberoPolicy(
+                host=cfg.pi05_host,
+                port=cfg.pi05_port,
+                resize_size=cfg.pi05_resize_size,
+                replan_steps=cfg.pi05_replan_steps,
+                openpi_client_src=cfg.openpi_client_src,
+            ),
+            None,
+            None,
+            None,
+            None,
+        )
+
     model = get_model(cfg)
     proprio_projector = get_proprio_projector(cfg, model.llm_dim, proprio_dim=8) if cfg.use_proprio else None
     action_head = get_action_head(cfg, model.llm_dim) if (cfg.use_l1_regression or cfg.use_diffusion) else None
@@ -219,7 +328,7 @@ def check_unnorm_key(cfg, model):
 
 
 def setup_logging(cfg):
-    run_id = f"EVAL-{cfg.task_suite_name}-{cfg.model_family}-{DATE_TIME}"
+    run_id = f"EVAL-{cfg.task_suite_name}-{policy_slug(cfg)}-{DATE_TIME}"
     if cfg.use_cbf_safety_filter: run_id += "-CBF"
     if cfg.cbf_use_vlm: run_id += f"-{cfg.cbf_vlm_model}"
     if cfg.run_id_note: run_id += f"--{cfg.run_id_note}"
@@ -235,6 +344,26 @@ def setup_logging(cfg):
 def log_msg(msg, log_file=None):
     logger.info(msg)
     if log_file: log_file.write(msg + "\n"); log_file.flush()
+
+
+def log_eval_metrics(prefix, metrics, log_file=None):
+    log_msg(
+        f"{prefix} metrics: "
+        f"episodes={metrics.episodes} | "
+        f"TSR={metrics.tsr:.4f} ({metrics.tsr*100:.1f}%) | "
+        f"CAR={metrics.car:.4f} ({metrics.car*100:.1f}%) | "
+        f"SSR={metrics.ssr:.4f} ({metrics.ssr*100:.1f}%) | "
+        f"ETS={metrics.ets:.2f}",
+        log_file,
+    )
+    log_msg(
+        f"{prefix} counts: "
+        f"successes={metrics.successes}, "
+        f"collisions={metrics.collisions}, "
+        f"safe_successes={metrics.safe_successes}, "
+        f"time_steps={metrics.time_steps}",
+        log_file,
+    )
 
 
 def load_initial_states(cfg, task_suite, task_id, log_file=None):
@@ -267,9 +396,14 @@ def collect_rollout_frames(obs):
     return frames
 
 
-def process_action(action, model_family):
+def process_action(action, cfg):
+    action = np.asarray(action)
+    if is_pi05_policy(cfg):
+        # OpenPI LIBERO outputs are already in the SafeLIBERO action convention.
+        return action
+
     action = normalize_gripper_action(action, binarize=True)
-    if model_family == "openvla":
+    if cfg.model_family == "openvla":
         action = invert_gripper_action(action)
     return action
 
@@ -292,18 +426,44 @@ def resolve_precomputed_cbf_json(cfg, task_id, episode_idx):
     return resolved
 
 
-def _save_rollout_video_with_view(rollout_images, idx, success, task_description,
-                                  view_name, safety_level=None, log_file=None):
-    """Save a non-default rollout view with a distinct filename suffix."""
-    rollout_dir = f"./rollouts/{DATE}"
+def resolve_episode_indices(cfg, num_available_episodes):
+    """Return the actual episode indices to evaluate for each task."""
+    episode_indices = str(cfg.episode_indices or "").strip()
+    if not episode_indices:
+        return list(range(cfg.num_trials_per_task))
+
+    indices = [int(s) for s in episode_indices.split(",") if s.strip() != ""]
+    invalid = [idx for idx in indices if idx < 0 or idx >= num_available_episodes]
+    if invalid:
+        raise ValueError(
+            f"--episode_indices contains out-of-range indices {invalid} "
+            f"(task has {num_available_episodes} initial states)"
+        )
+    return indices
+
+
+def _rollout_dir_for_policy(cfg):
+    rollout_dir = os.path.join("./rollouts", DATE, policy_slug(cfg))
     os.makedirs(rollout_dir, exist_ok=True)
+    return rollout_dir
+
+
+def _processed_task_description(task_description):
+    return task_description.lower().replace(" ", "_").replace("\n", "_").replace(".", "_")[:50]
+
+
+def _save_rollout_video_for_policy(cfg, rollout_images, idx, success, task_description,
+                                   view_name=None, safety_level=None, log_file=None):
+    """Save rollout videos under a backend-specific directory/name."""
+    rollout_dir = _rollout_dir_for_policy(cfg)
     processed_task_description = (
-        task_description.lower().replace(" ", "_").replace("\n", "_").replace(".", "_")[:50]
+        _processed_task_description(task_description)
     )
     safety_suffix = f"--safety={safety_level}" if safety_level is not None else ""
+    view_suffix = f"--view={view_name}" if view_name is not None else ""
     mp4_path = (
-        f"{rollout_dir}/{DATE_TIME}--openvla_oft--episode={idx}"
-        f"--success={success}{safety_suffix}--view={view_name}"
+        f"{rollout_dir}/{DATE_TIME}--{policy_slug(cfg)}--episode={idx}"
+        f"--success={success}{safety_suffix}{view_suffix}"
         f"--task={processed_task_description}.mp4"
     )
     video_writer = imageio.get_writer(mp4_path, fps=30)
@@ -317,12 +477,13 @@ def _save_rollout_video_with_view(rollout_images, idx, success, task_description
     return mp4_path
 
 
-def save_rollout_videos(rollout_frames_by_view, idx, success, task_description,
+def save_rollout_videos(cfg, rollout_frames_by_view, idx, success, task_description,
                         safety_level=None, log_file=None):
     """Save the default agentview plus any extra available camera views."""
     agentview_frames = rollout_frames_by_view.get("agentview", [])
     if agentview_frames:
-        save_rollout_video(
+        _save_rollout_video_for_policy(
+            cfg,
             agentview_frames,
             idx,
             success=success,
@@ -334,7 +495,8 @@ def save_rollout_videos(rollout_frames_by_view, idx, success, task_description,
     for view_name, frames in rollout_frames_by_view.items():
         if view_name == "agentview" or not frames:
             continue
-        _save_rollout_video_with_view(
+        _save_rollout_video_for_policy(
+            cfg,
             frames,
             idx,
             success=success,
@@ -382,12 +544,14 @@ def run_episode(cfg, env, task_desc, model, resize_size,
                 processor=None, action_head=None, proprio_projector=None,
                 noisy_action_projector=None, initial_state=None, log_file=None,
                 cbf_pipeline=None, cbf_json_path=None):
-    """Run one episode: OpenVLA → u_nominal → CBF → u_safe → env.step()"""
+    """Run one episode: VLA → u_nominal → CBF → u_safe → env.step()"""
 
     env.reset()
     obs = env.set_init_state(initial_state) if initial_state is not None else env.get_observation()
 
-    if cfg.num_open_loop_steps != NUM_ACTIONS_CHUNK:
+    if is_pi05_policy(cfg):
+        model.reset()
+    elif cfg.num_open_loop_steps != NUM_ACTIONS_CHUNK:
         print(f"WARNING: num_open_loop_steps={cfg.num_open_loop_steps} != NUM_ACTIONS_CHUNK={NUM_ACTIONS_CHUNK}")
     action_queue = deque(maxlen=cfg.num_open_loop_steps)
 
@@ -421,27 +585,34 @@ def run_episode(cfg, env, task_desc, model, resize_size,
     # ── Run episode ──
     replay_imgs = {view_name: [] for view_name, _ in ROLLOUT_VIEW_SPECS}
     max_steps = TASK_MAX_STEPS[cfg.task_suite_name]; t = 0; success = False
+    steps_executed = 0
     try:
         while t < max_steps:
-            observation, img = prepare_obs(obs, resize_size)
+            if is_pi05_policy(cfg):
+                observation = None
+                img = get_libero_image(obs)
+            else:
+                observation, img = prepare_obs(obs, resize_size)
             replay_imgs["agentview"].append(img)
             for view_name, frame in collect_rollout_frames(obs).items():
                 if view_name == "agentview":
                     continue
                 replay_imgs.setdefault(view_name, []).append(frame)
 
-            # Query OpenVLA-OFT for u_nominal (action chunk)
-            if len(action_queue) == 0:
-                actions = get_action(cfg, model, observation, task_desc,
-                    processor=processor, action_head=action_head,
-                    proprio_projector=proprio_projector,
-                    noisy_action_projector=noisy_action_projector,
-                    use_film=cfg.use_film)
-                action_queue.extend(actions)
+            # Query selected VLA backend for u_nominal.
+            if is_pi05_policy(cfg):
+                action = model.get_action(obs, task_desc, quat2axisangle)
+            else:
+                if len(action_queue) == 0:
+                    actions = get_action(cfg, model, observation, task_desc,
+                        processor=processor, action_head=action_head,
+                        proprio_projector=proprio_projector,
+                        noisy_action_projector=noisy_action_projector,
+                        use_film=cfg.use_film)
+                    action_queue.extend(actions)
+                action = action_queue.popleft()
 
-            # Get one u_nominal from chunk
-            action = action_queue.popleft()
-            action = process_action(action, cfg.model_family)
+            action = process_action(action, cfg)
 
             # ── CBF: u_nominal → u_safe ──
             if cbf_pipeline is not None:
@@ -453,6 +624,7 @@ def run_episode(cfg, env, task_desc, model, resize_size,
 
             # Step environment with u_safe
             obs, reward, done, info = env.step(action.tolist())
+            steps_executed = t + 1
 
             # Collision tracking
             if not collide_flag:
@@ -470,7 +642,7 @@ def run_episode(cfg, env, task_desc, model, resize_size,
         rate = cbf_interventions / cbf_total * 100
         log_msg(f"[CBF] Interventions: {cbf_interventions}/{cbf_total} ({rate:.1f}%)", log_file)
 
-    return success, collide_flag, replay_imgs, t
+    return success, collide_flag, replay_imgs, steps_executed
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -479,7 +651,7 @@ def run_episode(cfg, env, task_desc, model, resize_size,
 
 def run_task(cfg, task_suite, task_id, model, resize_size,
              processor=None, action_head=None, proprio_projector=None,
-             noisy_action_projector=None, total_ep=0, total_suc=0, log_file=None):
+             noisy_action_projector=None, total_metrics=None, log_file=None):
 
     task = task_suite.get_task(task_id)
     init_states, all_init = load_initial_states(cfg, task_suite, task_id, log_file)
@@ -487,8 +659,12 @@ def run_task(cfg, task_suite, task_id, model, resize_size,
 
     cbf = init_cbf(cfg, env)
 
-    t_ep, t_suc, t_col, t_ss = 0, 0, 0, 0; times = []
-    for ep_idx in range(cfg.num_trials_per_task):
+    task_metrics = EvalMetrics()
+    if total_metrics is None:
+        total_metrics = EvalMetrics()
+    episode_indices = resolve_episode_indices(cfg, len(init_states))
+    log_msg(f"Episode indices to evaluate: {episode_indices}", log_file)
+    for ep_idx in episode_indices:
         log_msg(f"\nTask: {task_desc}", log_file)
         cbf_json_path = resolve_precomputed_cbf_json(cfg, task_id, ep_idx)
 
@@ -499,31 +675,43 @@ def run_task(cfg, task_suite, task_id, model, resize_size,
             if not all_init[tkey][ekey]["success"]: continue
             init_state = np.array(all_init[tkey][ekey]["initial_state"])
 
-        log_msg(f"Episode {t_ep+1}...", log_file)
+        log_msg(f"Episode index {ep_idx} ({task_metrics.episodes+1}/{len(episode_indices)})...", log_file)
         success, collide, replay, total_time = run_episode(
             cfg, env, task_desc, model, resize_size,
             processor, action_head, proprio_projector, noisy_action_projector,
             init_state, log_file, cbf_pipeline=cbf, cbf_json_path=cbf_json_path)
-        times.append(total_time)
 
-        t_ep += 1; total_ep += 1
-        if success: t_suc += 1; total_suc += 1
-        if collide: t_col += 1
+        task_metrics.add_episode(success, collide, total_time)
+        total_metrics.add_episode(success, collide, total_time)
         ss = success and not collide
-        if ss: t_ss += 1
 
-        save_rollout_videos(replay, total_ep, success=success,
+        save_rollout_videos(cfg, replay, total_metrics.episodes, success=success,
                             task_description=task_desc, safety_level=cfg.safety_level, log_file=log_file)
 
         log_msg(f"Success: {success} | Collide: {collide} | SS: {ss}", log_file)
-        log_msg(f"Episodes: {total_ep} | Successes: {total_suc} ({total_suc/total_ep*100:.1f}%)", log_file)
-        log_msg(f"Collides: {t_col} | SafeSuccesses: {t_ss}", log_file)
+        log_msg(
+            f"Episodes: {total_metrics.episodes} | "
+            f"Successes: {total_metrics.successes} ({total_metrics.tsr*100:.1f}%) | "
+            f"CAR: {total_metrics.car*100:.1f}% | ETS: {total_metrics.ets:.2f}",
+            log_file,
+        )
+        log_msg(
+            f"Task collides: {task_metrics.collisions} | "
+            f"Task safe_successes: {task_metrics.safe_successes}",
+            log_file,
+        )
 
-    sr = t_suc/t_ep if t_ep>0 else 0
-    log_msg(f"Task SR: {sr:.3f} | Total SR: {total_suc/total_ep:.3f}", log_file)
+    log_eval_metrics(f"Task {task_id}", task_metrics, log_file)
+    log_eval_metrics("Running total", total_metrics, log_file)
     if cfg.use_wandb:
-        wandb.log({f"success_rate/{task_desc}": sr, f"num_episodes/{task_desc}": t_ep})
-    return total_ep, total_suc
+        wandb.log({
+            f"TSR/{task_desc}": task_metrics.tsr,
+            f"CAR/{task_desc}": task_metrics.car,
+            f"SSR/{task_desc}": task_metrics.ssr,
+            f"ETS/{task_desc}": task_metrics.ets,
+            f"num_episodes/{task_desc}": task_metrics.episodes,
+        })
+    return total_metrics, task_metrics
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -536,7 +724,12 @@ def eval_libero(cfg: GenerateConfig) -> float:
     set_seed_everywhere(cfg.seed)
 
     print("=" * 60)
-    print("Loading OpenVLA-OFT model (main conda env)...")
+    if is_pi05_policy(cfg):
+        print("Connecting to pi0.5-LIBERO OpenPI policy server...")
+        print(f"  server={cfg.pi05_host}:{cfg.pi05_port}")
+        print(f"  resize_size={cfg.pi05_resize_size}  replan_steps={cfg.pi05_replan_steps}")
+    else:
+        print("Loading OpenVLA-OFT model (main conda env)...")
     print("=" * 60)
     model, action_head, proprio_proj, noisy_proj, processor = initialize_model(cfg)
 
@@ -556,16 +749,17 @@ def eval_libero(cfg: GenerateConfig) -> float:
         print("CBF Safety Filter: DISABLED")
     print("=" * 60)
 
-    resize_size = get_image_resize_size(cfg)
+    resize_size = cfg.pi05_resize_size if is_pi05_policy(cfg) else get_image_resize_size(cfg)
     log_file, log_path, run_id = setup_logging(cfg)
 
     bench = benchmark.get_benchmark_dict()
     task_suite = bench[cfg.task_suite_name](safety_level=cfg.safety_level)
 
     log_msg(f"Suite: {cfg.task_suite_name} | Safety: {cfg.safety_level}", log_file)
+    log_msg(f"Policy backend: {policy_slug(cfg)}", log_file)
     log_msg(f"CBF: {'ON ('+cfg.cbf_vlm_model+')' if cfg.use_cbf_safety_filter and cfg.cbf_use_vlm else 'ON (rules)' if cfg.use_cbf_safety_filter else 'OFF'}", log_file)
 
-    total_ep, total_suc = 0, 0
+    total_metrics = EvalMetrics()
     num_tasks = task_suite.n_tasks
     if cfg.task_ids.strip().lower() == "all":
         task_ids_list = list(range(num_tasks))
@@ -577,20 +771,37 @@ def eval_libero(cfg: GenerateConfig) -> float:
                 f"--task_ids contains out-of-range indices {invalid} "
                 f"(suite '{cfg.task_suite_name}' has {num_tasks} tasks)")
     log_msg(f"Task IDs to evaluate: {task_ids_list}", log_file)
+    task_summaries = {}
     for task_id in task_ids_list:
-        total_ep, total_suc = run_task(
+        total_metrics, task_metrics = run_task(
             cfg, task_suite, task_id, model, resize_size,
             processor, action_head, proprio_proj, noisy_proj,
-            total_ep, total_suc, log_file)
+            total_metrics, log_file)
+        task_summaries[str(task_id)] = task_metrics.as_dict()
 
-    sr = total_suc / total_ep if total_ep > 0 else 0
-    log_msg(f"\nFinal: {total_ep} episodes, {total_suc} successes, SR={sr:.4f} ({sr*100:.1f}%)", log_file)
+    log_msg("\nFinal results:", log_file)
+    log_eval_metrics("Final", total_metrics, log_file)
+    metrics_path = str(Path(log_path).with_suffix(".metrics.json"))
+    with open(metrics_path, "w") as f:
+        json.dump({"total": total_metrics.as_dict(), "per_task": task_summaries}, f, indent=2)
+    log_msg(f"Metrics JSON: {metrics_path}", log_file)
 
     if cfg.use_wandb:
-        wandb.log({"success_rate/total": sr, "num_episodes/total": total_ep})
+        wandb.log({
+            "TSR/total": total_metrics.tsr,
+            "CAR/total": total_metrics.car,
+            "SSR/total": total_metrics.ssr,
+            "ETS/total": total_metrics.ets,
+            "num_episodes/total": total_metrics.episodes,
+            # Backward-compatible aliases for old dashboards.
+            "success_rate/total": total_metrics.tsr,
+            "safe_success_rate/total": total_metrics.ssr,
+            "collision_rate/total": 1.0 - total_metrics.car,
+        })
         wandb.save(log_path)
+        wandb.save(metrics_path)
     if log_file: log_file.close()
-    return sr
+    return total_metrics.tsr
 
 
 if __name__ == "__main__":

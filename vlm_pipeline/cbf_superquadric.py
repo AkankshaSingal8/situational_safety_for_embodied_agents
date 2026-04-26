@@ -615,7 +615,7 @@ def _build_scene_point_cloud(obs_folder, camera_keys, cam_params,
     return np.empty((0, 3)), np.empty((0, 3), dtype=np.uint8)
 
 
-def _make_scene_fig(obs_folder, cam_params, eef_pos,
+def _make_scene_fig(obs_folder, cam_params, eef_pos, eef_quat=None,
                     gripper_radius=GRIPPER_SPHERE_RADIUS,
                     gripper_color="cyan", gripper_name="Gripper sphere"):
     """Build a plotly Figure with scene point cloud, GT object markers, and gripper."""
@@ -643,6 +643,8 @@ def _make_scene_fig(obs_folder, cam_params, eef_pos,
         if os.path.exists(meta_path):
             with open(meta_path) as f:
                 meta = json.load(f)
+            if eef_quat is None:
+                eef_quat = meta.get("robot_state", {}).get("eef_quat")
             objects = meta.get("objects", {})
             obj_names, obj_pos = [], []
             for name, data in objects.items():
@@ -667,7 +669,7 @@ def _make_scene_fig(obs_folder, cam_params, eef_pos,
                 ))
 
     # Gripper sphere plus center marker
-    gripper_center = offset_gripper_sphere_center(eef_pos)
+    gripper_center = offset_gripper_sphere_center(eef_pos, eef_quat)
     Xg, Yg, Zg = sphere_surface(gripper_center, gripper_radius, n_u=40, n_v=20)
     fig.add_trace(go.Surface(
         x=Xg, y=Yg, z=Zg,

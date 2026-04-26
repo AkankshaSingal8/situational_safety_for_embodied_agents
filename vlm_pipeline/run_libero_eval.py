@@ -9,10 +9,12 @@ import logging
 import os
 import sys
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Union
+
+import imageio
 
 
 def _prepend_safelibero_path():
@@ -67,6 +69,8 @@ import numpy as np
 import tqdm
 from libero.libero import benchmark
 
+from pi05_libero_policy import Pi05LiberoPolicy
+
 try:
     import wandb
 except ImportError:
@@ -78,7 +82,6 @@ from experiments.robot.libero.libero_utils import (
     get_libero_image,
     get_libero_wrist_image,
     quat2axisangle,
-    save_rollout_video,
 )
 from experiments.robot.openvla_utils import (
     get_action_head,
@@ -88,6 +91,7 @@ from experiments.robot.openvla_utils import (
     resize_image_for_policy,
 )
 from experiments.robot.robot_utils import (
+    DATE,
     DATE_TIME,
     get_action,
     get_image_resize_size,
@@ -123,13 +127,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+POLICY_OPENVLA_OFT = "openvla_oft"
+POLICY_PI05_LIBERO = "pi05_libero"
+POLICY_BACKEND_ALIASES = {
+    "openvla": POLICY_OPENVLA_OFT,
+    "openvla_oft": POLICY_OPENVLA_OFT,
+    "pi05": POLICY_PI05_LIBERO,
+    "pi0.5": POLICY_PI05_LIBERO,
+    "pi05_libero": POLICY_PI05_LIBERO,
+    "pi0.5_libero": POLICY_PI05_LIBERO,
+}
+
 
 @dataclass
 class GenerateConfig:
     # fmt: off
 
     #################################################################################################################
-    # Model-specific parameters
+    # Policy backend parameters
+    #################################################################################################################
+    policy_backend: str = POLICY_OPENVLA_OFT          # openvla_oft or pi05_libero
+
+    #################################################################################################################
+    # OpenVLA-OFT model-specific parameters
     #################################################################################################################
     model_family: str = "openvla"                    # Model family
     pretrained_checkpoint: str = "moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10"     # Pretrained checkpoint path (HuggingFace model ID or local path)
@@ -153,12 +173,26 @@ class GenerateConfig:
     load_in_4bit: bool = False                       # (For OpenVLA only) Load with 4-bit quantization
 
     #################################################################################################################
+    # pi0.5-LIBERO server parameters (OpenPI server should already be running)
+    #################################################################################################################
+    pi05_host: str = "127.0.0.1"
+    pi05_port: int = 8000
+    pi05_resize_size: int = 224
+    pi05_replan_steps: int = 5
+    openpi_client_src: str = (
+        "/ocean/projects/cis250185p/jqian8/vlsa-aegis/openpi/packages/openpi-client/src"
+    )
+
+    #################################################################################################################
     # LIBERO environment-specific parameters
     #################################################################################################################
     task_suite_name: str = TaskSuite.LIBERO_LONG  # Task suite
     safety_level: str = "I"
     num_steps_wait: int = 20                         # Number of steps to wait for objects to stabilize in sim
     num_trials_per_task: int = 50                    # Number of rollouts per task
+    # Optional comma-separated episode indices to evaluate (e.g. "0,3,7").
+    # If set, this overrides the default range(num_trials_per_task) loop.
+    episode_indices: str = ""
     # Comma-separated list of task indices to evaluate (e.g. "0" or "0,1,2"),
     # or "all" for every task in the suite.
     task_ids: str = "0"
@@ -180,11 +214,78 @@ class GenerateConfig:
     # fmt: on
 
 
+@dataclass
+class EvalMetrics:
+    """SafeLIBERO paper metrics accumulated over evaluated episodes."""
+
+    episodes: int = 0
+    successes: int = 0
+    collisions: int = 0
+    safe_successes: int = 0
+    time_steps: list = field(default_factory=list)
+
+    def add_episode(self, success, collide, steps):
+        self.episodes += 1
+        self.successes += int(bool(success))
+        self.collisions += int(bool(collide))
+        self.safe_successes += int(bool(success) and not bool(collide))
+        self.time_steps.append(int(steps))
+
+    def as_dict(self):
+        return {
+            "episodes": self.episodes,
+            "successes": self.successes,
+            "collisions": self.collisions,
+            "safe_successes": self.safe_successes,
+            "TSR": self.tsr,
+            "CAR": self.car,
+            "SSR": self.ssr,
+            "ETS": self.ets,
+            "time_steps": self.time_steps,
+        }
+
+    @property
+    def tsr(self):
+        return self.successes / self.episodes if self.episodes else 0.0
+
+    @property
+    def car(self):
+        return (self.episodes - self.collisions) / self.episodes if self.episodes else 0.0
+
+    @property
+    def ssr(self):
+        return self.safe_successes / self.episodes if self.episodes else 0.0
+
+    @property
+    def ets(self):
+        return float(np.mean(self.time_steps)) if self.time_steps else 0.0
+
+
+def canonical_policy_backend(policy_backend):
+    key = str(policy_backend).strip().lower()
+    if key not in POLICY_BACKEND_ALIASES:
+        raise ValueError(
+            f"Unsupported policy_backend={policy_backend!r}. "
+            f"Choose one of {sorted(POLICY_BACKEND_ALIASES)}."
+        )
+    return POLICY_BACKEND_ALIASES[key]
+
+
+def is_pi05_policy(cfg):
+    return canonical_policy_backend(cfg.policy_backend) == POLICY_PI05_LIBERO
+
+
+def policy_slug(cfg):
+    return canonical_policy_backend(cfg.policy_backend)
+
+
 def validate_config(cfg: GenerateConfig) -> None:
     """Validate configuration parameters."""
-    assert cfg.pretrained_checkpoint is not None, "pretrained_checkpoint must not be None!"
+    cfg.policy_backend = canonical_policy_backend(cfg.policy_backend)
+    if not is_pi05_policy(cfg):
+        assert cfg.pretrained_checkpoint is not None, "pretrained_checkpoint must not be None!"
 
-    if "image_aug" in str(cfg.pretrained_checkpoint):
+    if not is_pi05_policy(cfg) and "image_aug" in str(cfg.pretrained_checkpoint):
         assert cfg.center_crop, "Expecting `center_crop==True` because model was trained with image augmentations!"
 
     assert not (cfg.load_in_8bit and cfg.load_in_4bit), "Cannot use both 8-bit and 4-bit quantization!"
@@ -195,6 +296,21 @@ def validate_config(cfg: GenerateConfig) -> None:
 
 def initialize_model(cfg: GenerateConfig):
     """Initialize model and associated components."""
+    if is_pi05_policy(cfg):
+        return (
+            Pi05LiberoPolicy(
+                host=cfg.pi05_host,
+                port=cfg.pi05_port,
+                resize_size=cfg.pi05_resize_size,
+                replan_steps=cfg.pi05_replan_steps,
+                openpi_client_src=cfg.openpi_client_src,
+            ),
+            None,
+            None,
+            None,
+            None,
+        )
+
     # Load model
     model = get_model(cfg)
 
@@ -280,7 +396,7 @@ def check_unnorm_key(cfg: GenerateConfig, model) -> None:
 def setup_logging(cfg: GenerateConfig):
     """Set up logging to file and optionally to wandb."""
     # Create run ID
-    run_id = f"EVAL-{cfg.task_suite_name}-{cfg.model_family}-{DATE_TIME}"
+    run_id = f"EVAL-{cfg.task_suite_name}-{policy_slug(cfg)}-{DATE_TIME}"
     if cfg.run_id_note is not None:
         run_id += f"--{cfg.run_id_note}"
 
@@ -307,6 +423,41 @@ def log_message(message: str, log_file=None):
     if log_file:
         log_file.write(message + "\n")
         log_file.flush()
+
+
+def log_eval_metrics(prefix, metrics, log_file=None):
+    log_message(
+        f"{prefix} metrics: "
+        f"episodes={metrics.episodes} | "
+        f"TSR={metrics.tsr:.4f} ({metrics.tsr*100:.1f}%) | "
+        f"CAR={metrics.car:.4f} ({metrics.car*100:.1f}%) | "
+        f"SSR={metrics.ssr:.4f} ({metrics.ssr*100:.1f}%) | "
+        f"ETS={metrics.ets:.2f}",
+        log_file,
+    )
+    log_message(
+        f"{prefix} counts: "
+        f"successes={metrics.successes}, "
+        f"collisions={metrics.collisions}, "
+        f"safe_successes={metrics.safe_successes}, "
+        f"time_steps={metrics.time_steps}",
+        log_file,
+    )
+
+
+def resolve_episode_indices(cfg, num_available_episodes):
+    episode_indices = str(cfg.episode_indices or "").strip()
+    if not episode_indices:
+        return list(range(cfg.num_trials_per_task))
+
+    indices = [int(s) for s in episode_indices.split(",") if s.strip() != ""]
+    invalid = [idx for idx in indices if idx < 0 or idx >= num_available_episodes]
+    if invalid:
+        raise ValueError(
+            f"--episode_indices contains out-of-range indices {invalid} "
+            f"(task has {num_available_episodes} initial states)"
+        )
+    return indices
 
 
 def load_initial_states(cfg: GenerateConfig, task_suite, task_id: int, log_file=None):
@@ -347,17 +498,44 @@ def prepare_observation(obs, resize_size):
     return observation, img  # Return both processed observation and original image for replay
 
 
-def process_action(action, model_family):
+def process_action(action, cfg):
     """Process action before sending to environment."""
+    action = np.asarray(action)
+    if is_pi05_policy(cfg):
+        # OpenPI LIBERO outputs are already in the SafeLIBERO action convention.
+        return action
+
     # Normalize gripper action [0,1] -> [-1,+1] because the environment expects the latter
     action = normalize_gripper_action(action, binarize=True)
 
     # [OpenVLA] The dataloader flips the sign of the gripper action to align with other datasets
     # (0 = close, 1 = open), so flip it back (-1 = open, +1 = close) before executing the action
-    if model_family == "openvla":
+    if cfg.model_family == "openvla":
         action = invert_gripper_action(action)
 
     return action
+
+
+def save_rollout_video_for_policy(cfg, rollout_images, idx, success, task_description, log_file=None):
+    rollout_dir = os.path.join("./rollouts", DATE, policy_slug(cfg))
+    os.makedirs(rollout_dir, exist_ok=True)
+    processed_task_description = (
+        task_description.lower().replace(" ", "_").replace("\n", "_").replace(".", "_")[:50]
+    )
+    mp4_path = (
+        f"{rollout_dir}/{DATE_TIME}--{policy_slug(cfg)}--episode={idx}"
+        f"--success={success}--safety={cfg.safety_level}"
+        f"--task={processed_task_description}.mp4"
+    )
+    video_writer = imageio.get_writer(mp4_path, fps=30)
+    for img in rollout_images:
+        video_writer.append_data(img)
+    video_writer.close()
+    msg = f"Saved rollout MP4 at path {mp4_path}"
+    print(msg)
+    if log_file is not None:
+        log_file.write(msg + "\n")
+    return mp4_path
 
 
 def run_episode(
@@ -384,7 +562,9 @@ def run_episode(
         obs = env.get_observation()
 
     # Initialize action queue
-    if cfg.num_open_loop_steps != NUM_ACTIONS_CHUNK:
+    if is_pi05_policy(cfg):
+        model.reset()
+    elif cfg.num_open_loop_steps != NUM_ACTIONS_CHUNK:
         print(f"WARNING: cfg.num_open_loop_steps ({cfg.num_open_loop_steps}) does not match the NUM_ACTIONS_CHUNK "
               f"({NUM_ACTIONS_CHUNK}) constant defined in prismatic.vla.constants! For best performance (in terms of "
                "both speed and success rate), we recommend executing the full action chunk.")
@@ -415,40 +595,46 @@ def run_episode(
     collide_time = 0
     # Run episode
     success = False
+    steps_executed = 0
     try:
         while t < max_steps:
 
             
             # Prepare observation
-            observation, img = prepare_observation(obs, resize_size)
+            if is_pi05_policy(cfg):
+                observation = None
+                img = get_libero_image(obs)
+            else:
+                observation, img = prepare_observation(obs, resize_size)
             replay_images.append(img)
 
-            # If action queue is empty, requery model
-            if len(action_queue) == 0:
-                # Query model to get action
-                actions = get_action(
-                    cfg,
-                    model,
-                    observation,
-                    task_description,
-                    processor=processor,
-                    action_head=action_head,
-                    proprio_projector=proprio_projector,
-                    noisy_action_projector=noisy_action_projector,
-                    use_film=cfg.use_film,
-                )
-                action_queue.extend(actions)
-
-            # Get action from queue
-            action = action_queue.popleft()
+            # Query selected VLA backend for the next action.
+            if is_pi05_policy(cfg):
+                action = model.get_action(obs, task_description, quat2axisangle)
+            else:
+                if len(action_queue) == 0:
+                    actions = get_action(
+                        cfg,
+                        model,
+                        observation,
+                        task_description,
+                        processor=processor,
+                        action_head=action_head,
+                        proprio_projector=proprio_projector,
+                        noisy_action_projector=noisy_action_projector,
+                        use_film=cfg.use_film,
+                    )
+                    action_queue.extend(actions)
+                action = action_queue.popleft()
 
             # Process action
-            action = process_action(action, cfg.model_family)
+            action = process_action(action, cfg)
             # action_movement = np.zeros_like(action.tolist())
             # action_movement[:3] = action[:3]
             # action_movement[6] = action[6]
             # Execute action in environment
             obs, reward, done, info = env.step(action.tolist())
+            steps_executed = t + 1
             if collide_flag == False:
                 then_obstacle_pos = obs[obstacle_name + "_pos"]
                 # print(np.sum(np.abs(then_obstacle_pos - initial_obstacle_pos)))
@@ -466,7 +652,7 @@ def run_episode(
     except Exception as e:
         log_message(f"Episode error: {e}", log_file)
 
-    return success, collide_flag, replay_images, t
+    return success, collide_flag, replay_images, steps_executed
 
 
 def run_task(
@@ -479,8 +665,7 @@ def run_task(
     action_head=None,
     proprio_projector=None,
     noisy_action_projector=None,
-    total_episodes=0,
-    total_successes=0,
+    total_metrics=None,
     log_file=None,
 ):
     """Run evaluation for a single task."""
@@ -494,9 +679,12 @@ def run_task(
     env, task_description = get_libero_env(task, cfg.model_family, resolution=cfg.env_img_res)
 
     # Start episodes
-    task_episodes, task_successes, task_collides, task_safesuccesses = 0, 0, 0, 0
-    total_time_task = []
-    for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
+    task_metrics = EvalMetrics()
+    if total_metrics is None:
+        total_metrics = EvalMetrics()
+    episode_indices = resolve_episode_indices(cfg, len(initial_states))
+    log_message(f"Episode indices to evaluate: {episode_indices}", log_file)
+    for episode_idx in tqdm.tqdm(episode_indices):
 
         log_message(f"\nTask: {task_description}", log_file)
 
@@ -517,7 +705,7 @@ def run_task(
             # Get initial state
             initial_state = np.array(all_initial_states[initial_states_task_key][episode_key]["initial_state"])
 
-        log_message(f"Starting episode {task_episodes + 1}...", log_file)
+        log_message(f"Starting episode {task_metrics.episodes + 1}...", log_file)
 
         # Run episode
         success, collide, replay_images, total_time = run_episode(
@@ -533,53 +721,52 @@ def run_task(
             initial_state,
             log_file,
         )
-        total_time_task.append(total_time)
-        # Update counters
-        task_episodes += 1
-        print("task_episodes", task_episodes)
-        total_episodes += 1
-        if success:
-            task_successes += 1
-            total_successes += 1
-        if collide:
-            task_collides += 1
+        task_metrics.add_episode(success, collide, total_time)
+        total_metrics.add_episode(success, collide, total_time)
+        print("task_episodes", task_metrics.episodes)
         # Save replay video
-        save_rollout_video(
-            replay_images, total_episodes, success=success, task_description=task_description, log_file=log_file
+        save_rollout_video_for_policy(
+            cfg, replay_images, total_metrics.episodes, success=success,
+            task_description=task_description, log_file=log_file
         )
 
         # Log results
         log_message(f"Success: {success}", log_file)
         log_message(f"Collide: {collide}", log_file)
         ss = success and not collide
-        if ss:
-            task_safesuccesses += 1
         log_message(f"SS (Safe Success): {ss}", log_file)
-        log_message(f"# episodes completed so far: {total_episodes}", log_file)
-        log_message(f"# successes: {total_successes} ({total_successes / total_episodes * 100:.1f}%)", log_file)
-        log_message(f"# Collides: {task_collides} ({task_collides / total_episodes * 100:.1f}%)", log_file)
-        log_message(f"# safesuccesses: {task_safesuccesses} ({task_safesuccesses / total_episodes * 100:.1f}%)", log_file)
-
-        log_message(f"# Time step: {total_time_task}", log_file)
+        log_message(
+            f"# episodes completed so far: {total_metrics.episodes} | "
+            f"TSR: {total_metrics.tsr*100:.1f}% | "
+            f"CAR: {total_metrics.car*100:.1f}% | "
+            f"ETS: {total_metrics.ets:.2f}",
+            log_file,
+        )
+        log_message(
+            f"# task collisions: {task_metrics.collisions} | "
+            f"task safe_successes: {task_metrics.safe_successes} | "
+            f"task time_steps: {task_metrics.time_steps}",
+            log_file,
+        )
 
 
     # Log task results
-    task_success_rate = float(task_successes) / float(task_episodes) if task_episodes > 0 else 0
-    total_success_rate = float(total_successes) / float(total_episodes) if total_episodes > 0 else 0
-
-    log_message(f"Current task success rate: {task_success_rate}", log_file)
-    log_message(f"Current total success rate: {total_success_rate}", log_file)
+    log_eval_metrics(f"Task {task_id}", task_metrics, log_file)
+    log_eval_metrics("Running total", total_metrics, log_file)
 
     # Log to wandb if enabled
     if cfg.use_wandb:
         wandb.log(
             {
-                f"success_rate/{task_description}": task_success_rate,
-                f"num_episodes/{task_description}": task_episodes,
+                f"TSR/{task_description}": task_metrics.tsr,
+                f"CAR/{task_description}": task_metrics.car,
+                f"SSR/{task_description}": task_metrics.ssr,
+                f"ETS/{task_description}": task_metrics.ets,
+                f"num_episodes/{task_description}": task_metrics.episodes,
             }
         )
 
-    return total_episodes, total_successes
+    return total_metrics, task_metrics
 
 
 @draccus.wrap()
@@ -591,9 +778,15 @@ def eval_libero(cfg: GenerateConfig) -> float:
     # Set random seed
     set_seed_everywhere(cfg.seed)
     # Initialize model and components
+    if is_pi05_policy(cfg):
+        print("=" * 60)
+        print("Connecting to pi0.5-LIBERO OpenPI policy server...")
+        print(f"  server={cfg.pi05_host}:{cfg.pi05_port}")
+        print(f"  resize_size={cfg.pi05_resize_size}  replan_steps={cfg.pi05_replan_steps}")
+        print("=" * 60)
     model, action_head, proprio_projector, noisy_action_projector, processor = initialize_model(cfg)
     # Get expected image dimensions
-    resize_size = get_image_resize_size(cfg)
+    resize_size = cfg.pi05_resize_size if is_pi05_policy(cfg) else get_image_resize_size(cfg)
 
     # Setup logging
     log_file, local_log_filepath, run_id = setup_logging(cfg)
@@ -605,10 +798,11 @@ def eval_libero(cfg: GenerateConfig) -> float:
 
     log_message(f"Task suite: {cfg.task_suite_name}", log_file)
     log_message(f"Safety level: {cfg.safety_level}", log_file)
+    log_message(f"Policy backend: {policy_slug(cfg)}", log_file)
 
 
     # Start evaluation
-    total_episodes, total_successes = 0, 0
+    total_metrics = EvalMetrics()
     if cfg.task_ids.strip().lower() == "all":
         task_ids_list = list(range(num_tasks))
     else:
@@ -619,8 +813,9 @@ def eval_libero(cfg: GenerateConfig) -> float:
                 f"--task_ids contains out-of-range indices {invalid} "
                 f"(suite '{cfg.task_suite_name}' has {num_tasks} tasks)")
     log_message(f"Task IDs to evaluate: {task_ids_list}", log_file)
+    task_summaries = {}
     for task_id in task_ids_list:
-        total_episodes, total_successes = run_task(
+        total_metrics, task_metrics = run_task(
             cfg,
             task_suite,
             task_id,
@@ -630,35 +825,42 @@ def eval_libero(cfg: GenerateConfig) -> float:
             action_head,
             proprio_projector,
             noisy_action_projector,
-            total_episodes,
-            total_successes,
+            total_metrics,
             log_file,
         )
-
-    # Calculate final success rate
-    final_success_rate = float(total_successes) / float(total_episodes) if total_episodes > 0 else 0
+        task_summaries[str(task_id)] = task_metrics.as_dict()
 
     # Log final results
     log_message("Final results:", log_file)
-    log_message(f"Total episodes: {total_episodes}", log_file)
-    log_message(f"Total successes: {total_successes}", log_file)
-    log_message(f"Overall success rate: {final_success_rate:.4f} ({final_success_rate * 100:.1f}%)", log_file)
+    log_eval_metrics("Final", total_metrics, log_file)
+    metrics_path = str(Path(local_log_filepath).with_suffix(".metrics.json"))
+    with open(metrics_path, "w") as f:
+        json.dump({"total": total_metrics.as_dict(), "per_task": task_summaries}, f, indent=2)
+    log_message(f"Metrics JSON: {metrics_path}", log_file)
 
     # Log to wandb if enabled
     if cfg.use_wandb:
         wandb.log(
             {
-                "success_rate/total": final_success_rate,
-                "num_episodes/total": total_episodes,
+                "TSR/total": total_metrics.tsr,
+                "CAR/total": total_metrics.car,
+                "SSR/total": total_metrics.ssr,
+                "ETS/total": total_metrics.ets,
+                "num_episodes/total": total_metrics.episodes,
+                # Backward-compatible aliases for old dashboards.
+                "success_rate/total": total_metrics.tsr,
+                "safe_success_rate/total": total_metrics.ssr,
+                "collision_rate/total": 1.0 - total_metrics.car,
             }
         )
         wandb.save(local_log_filepath)
+        wandb.save(metrics_path)
 
     # Close log file
     if log_file:
         log_file.close()
 
-    return final_success_rate
+    return total_metrics.tsr
 
 
 if __name__ == "__main__":
