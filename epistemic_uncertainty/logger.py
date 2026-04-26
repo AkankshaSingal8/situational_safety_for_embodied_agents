@@ -8,6 +8,10 @@ from typing import Any, Dict, List, Optional
 class StepRecord:
     step: int
     uncertainty: Dict[str, Any]
+    # Index of this policy-query within the episode (0-based).
+    query_step_idx: int = 0
+    # Number of env steps executed since the previous query (open-loop chunk size).
+    steps_executed: int = 0
 
 
 @dataclass
@@ -29,6 +33,8 @@ class UncertaintyLogger:
         self.output_dir = output_dir
         self._episodes: List[EpisodeRecord] = []
         self._current: Optional[EpisodeRecord] = None
+        self._query_step_idx: int = 0
+        self._last_query_env_step: int = 0
 
     def begin_episode(self, episode_idx: int, task_id: int, task_description: str) -> None:
         self._current = EpisodeRecord(
@@ -39,11 +45,21 @@ class UncertaintyLogger:
             collide=False,
             steps=0,
         )
+        self._query_step_idx = 0
+        self._last_query_env_step = 0
 
     def log_step(self, step: int, uncertainty: Dict[str, Any]) -> None:
         if self._current is None:
             raise RuntimeError("Call begin_episode() before log_step()")
-        self._current.step_records.append(StepRecord(step=step, uncertainty=uncertainty))
+        steps_executed = step - self._last_query_env_step
+        self._current.step_records.append(StepRecord(
+            step=step,
+            uncertainty=uncertainty,
+            query_step_idx=self._query_step_idx,
+            steps_executed=steps_executed,
+        ))
+        self._query_step_idx += 1
+        self._last_query_env_step = step
 
     def end_episode(self, success: bool, collide: bool, steps: int) -> None:
         if self._current is None:

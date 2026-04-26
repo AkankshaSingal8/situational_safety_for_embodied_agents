@@ -347,6 +347,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument("--lora-rank", type=int, default=32)
     p.add_argument("--use-proprio", action="store_true", default=True)
     p.add_argument("--env-img-res", type=int, default=1024)
+    p.add_argument("--task-ids", nargs="+", type=int, default=None,
+                   metavar="TASK_ID",
+                   help="Task IDs to run (0-indexed). Omit to run all tasks. "
+                        "Example: --task-ids 0 2")
     return p
 
 
@@ -401,10 +405,18 @@ def main():
     num_tasks = task_suite.n_tasks
     assert num_tasks > 0, f"Task suite '{cfg.task_suite_name}' returned 0 tasks."
 
+    task_ids_to_run = list(range(num_tasks))
+    if args.task_ids is not None:
+        invalid = [t for t in args.task_ids if t < 0 or t >= num_tasks]
+        if invalid:
+            raise ValueError(f"--task-ids {invalid} out of range [0, {num_tasks - 1}]")
+        task_ids_to_run = sorted(set(args.task_ids))
+    logger.info(f"Running tasks: {task_ids_to_run} (of {num_tasks} total)")
+
     all_results = []
     total_ep = total_suc = total_col = 0
 
-    for task_id in range(num_tasks):
+    for task_id in task_ids_to_run:
         task = task_suite.get_task(task_id)
         initial_states = task_suite.get_task_init_states(task_id)
         env, task_description = get_safelibero_env(

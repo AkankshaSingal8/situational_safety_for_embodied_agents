@@ -20,11 +20,22 @@ from epistemic_uncertainty.base import BaseUncertaintyEstimator, UncertaintyEsti
 
 
 class MCDropoutEstimator(BaseUncertaintyEstimator):
-    """Estimates action uncertainty via N stochastic MC-dropout forward passes."""
+    """Estimates action uncertainty via N stochastic MC-dropout forward passes.
 
-    def __init__(self, model: nn.Module, n_samples: int = 10) -> None:
+    Args:
+        trans_var_threshold: trans_var_norm above this triggers high_uncertainty=True.
+            Default 1e-4 empirically separates collision/failure from success episodes.
+    """
+
+    def __init__(
+        self,
+        model: nn.Module,
+        n_samples: int = 10,
+        trans_var_threshold: float = 1e-4,
+    ) -> None:
         self.model = model
         self.n_samples = n_samples
+        self.trans_var_threshold = trans_var_threshold
 
     def reset(self) -> None:
         pass  # stateless between episodes
@@ -72,6 +83,11 @@ class MCDropoutEstimator(BaseUncertaintyEstimator):
         variance = samples.var(axis=0)
         std = samples.std(axis=0)
 
+        trans_var_norm = float(np.linalg.norm(variance[:3]))
+        rot_var_norm = float(np.linalg.norm(variance[3:6]))
+        # dropout_active=False means all MC samples were identical (no dropout effect).
+        dropout_active = bool(variance.max() > 1e-10)
+
         return UncertaintyEstimate(
             method="mc_dropout",
             step=step,
@@ -79,7 +95,9 @@ class MCDropoutEstimator(BaseUncertaintyEstimator):
                 "mean_action": mean_action.tolist(),
                 "action_variance": variance.tolist(),
                 "action_std": std.tolist(),
-                "trans_var_norm": float(np.linalg.norm(variance[:3])),
-                "rot_var_norm": float(np.linalg.norm(variance[3:6])),
+                "trans_var_norm": trans_var_norm,
+                "rot_var_norm": rot_var_norm,
+                "high_uncertainty": bool(trans_var_norm > self.trans_var_threshold),
+                "dropout_active": dropout_active,
             },
         )
