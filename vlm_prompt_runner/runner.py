@@ -9,8 +9,22 @@ from vlm_prompt_runner.episode import load_episode
 logger = logging.getLogger(__name__)
 
 
-def build_prompt(system_prompt: str, task_description: str) -> str:
-    """Combine the .md system prompt with the task description from metadata."""
+class _PassThrough(dict):
+    """format_map helper: unknown keys are returned as-is as {key}."""
+    def __missing__(self, key: str) -> str:
+        return "{" + key + "}"
+
+
+def build_prompt(system_prompt: str, task_description: str,
+                 template_vars: dict | None = None) -> str:
+    """Combine the .md system prompt with the task description from metadata.
+
+    If template_vars is provided, {placeholder} patterns in system_prompt are
+    substituted before the prompt is assembled. Unknown placeholders pass through
+    unchanged so prompts that don't use all variables still work.
+    """
+    if template_vars:
+        system_prompt = system_prompt.format_map(_PassThrough(template_vars))
     return (
         f"{system_prompt.strip()}\n\n"
         f"---\n\n"
@@ -24,13 +38,11 @@ def extract_json(raw: str) -> dict | list:
     Tries direct parse first, then a brace-counting extractor to find the
     first complete JSON block, then falls back to wrapping the raw string.
     """
-    # Direct parse first (handles clean JSON responses)
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
         pass
 
-    # Brace-counting extraction — handles JSON embedded in prose / markdown
     block = _extract_first_json_block(raw)
     if block is not None:
         try:
@@ -46,14 +58,8 @@ def extract_json(raw: str) -> dict | list:
 
 
 def _extract_first_json_block(raw: str) -> str | None:
-    """Return the first complete JSON object or array in raw, or None.
-
-    Picks whichever opener (``{`` or ``[``) appears first in the string so
-    that an array like ``[{...}]`` is returned as an array rather than its
-    first inner object.
-    """
+    """Return the first complete JSON object or array in raw, or None."""
     pairs = [('{', '}'), ('[', ']')]
-    # Sort pairs so we try the opener that appears earliest in the string first
     pairs.sort(key=lambda p: raw.find(p[0]) if raw.find(p[0]) != -1 else len(raw))
 
     for start_char, end_char in pairs:
@@ -92,7 +98,13 @@ def run_episode(ep_dir: Path | str, system_prompt: str,
     out_path = Path(out_path)
 
     episode = load_episode(ep_dir)
-    prompt = build_prompt(system_prompt, episode["task_description"])
+
+    template_vars = {
+        "task_description": episode["task_description"],
+        "object_list": episode.get("object_list", ""),
+        "object_list_with_positions": episode.get("object_list_with_positions", ""),
+    }
+    prompt = build_prompt(system_prompt, episode["task_description"], template_vars)
     image_paths = [episode["agentview"], episode["eye_in_hand"], episode["backview"]]
 
     logger.info(f"Running inference: {ep_dir.name}")
