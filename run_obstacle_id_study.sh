@@ -24,6 +24,7 @@ LEVEL="I"
 TASK="0"
 PROMPTS_DIR="prompts/obstacle_id"
 RESULTS_DIR="vlm_prompt_runner/results"
+OUTPUTS_DIR="vlm_prompt_runner/outputs"
 
 # Activate conda if not already active
 if [[ "${CONDA_DEFAULT_ENV:-}" != "$CONDA_ENV" ]]; then
@@ -44,6 +45,7 @@ python -m vlm_prompt_runner.run_prompt_experiment \
     --prompts-dir "$PROMPTS_DIR" \
     --model qwen3-vl-8b \
     --suite "$SUITE" --level "$LEVEL" --task "$TASK" \
+    --output-base "$OUTPUTS_DIR/qwen3_vl_8b" \
     --results-out "$RESULTS_DIR/phase1_qwen3_vl_8b.json"
 
 BEST_PROMPT=$(python -c "
@@ -66,6 +68,7 @@ for MODEL in qwen2.5-vl-7b qwen2.5-vl-3b; do
         --prompts "$BEST_PROMPT" \
         --model "$MODEL" \
         --suite "$SUITE" --level "$LEVEL" --task "$TASK" \
+        --output-base "$OUTPUTS_DIR/$MODEL_SLUG" \
         --results-out "$RESULTS_DIR/phase2_${MODEL_SLUG}.json"
 done
 
