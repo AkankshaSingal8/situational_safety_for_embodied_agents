@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 import logging
+import re
 from pathlib import Path
 
 from vlm_prompt_runner.backends.base import VLMBackend
@@ -90,6 +91,17 @@ def _extract_first_json_block(raw: str) -> str | None:
     return None
 
 
+def _split_thinking(raw: str) -> tuple[str, str | None]:
+    """Split a Qwen3 <think>...</think> block from the answer.
+
+    Returns (answer, thinking) where thinking is None if no block was found.
+    """
+    match = re.search(r"<think>(.*?)</think>(.*)", raw, re.DOTALL)
+    if match:
+        return match.group(2).strip(), match.group(1).strip()
+    return raw, None
+
+
 def run_episode(ep_dir: Path | str, system_prompt: str,
                 backend: VLMBackend, out_path: Path | str,
                 max_new_tokens: int = 1024) -> dict:
@@ -113,7 +125,9 @@ def run_episode(ep_dir: Path | str, system_prompt: str,
     except Exception as exc:
         logger.error("backend.generate failed for %s: %s", ep_dir.name, exc)
         raise
-    result = extract_json(raw)
+
+    answer, thinking = _split_thinking(raw)
+    result = extract_json(answer)
 
     if isinstance(result, dict):
         result["_meta"] = {
@@ -125,6 +139,9 @@ def run_episode(ep_dir: Path | str, system_prompt: str,
             "task_description": episode["task_description"],
             "ep_dir": str(ep_dir),
         }}
+
+    if thinking is not None:
+        result["_thinking"] = thinking
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:

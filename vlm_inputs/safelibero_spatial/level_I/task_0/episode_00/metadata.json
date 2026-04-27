@@ -550,8 +550,17 @@
     "340": "flat_stove_1_g22"
   },
   "image_alignment": {
-    "rgb": true,
-    "depth": true,
-    "seg": true
+    "agentview": {
+      "vflip": true,
+      "hflip": true
+    },
+    "eye_in_hand": {
+      "vflip": true,
+      "hflip": true
+    },
+    "backview": {
+      "vflip": true,
+      "hflip": false
+    }
   }
 }

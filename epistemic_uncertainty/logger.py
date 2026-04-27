@@ -28,9 +28,10 @@ class EpisodeRecord:
 class UncertaintyLogger:
     """Accumulates per-step uncertainty dicts and flushes to JSON on save()."""
 
-    def __init__(self, output_dir: str) -> None:
+    def __init__(self, output_dir: str, flush_filename: Optional[str] = None) -> None:
         os.makedirs(output_dir, exist_ok=True)
         self.output_dir = output_dir
+        self._flush_path = os.path.join(output_dir, flush_filename) if flush_filename else None
         self._episodes: List[EpisodeRecord] = []
         self._current: Optional[EpisodeRecord] = None
         self._query_step_idx: int = 0
@@ -69,9 +70,14 @@ class UncertaintyLogger:
         self._current.steps = steps
         self._episodes.append(self._current)
         self._current = None
+        if self._flush_path:
+            self._write(self._flush_path)
 
     def save(self, filename: str) -> str:
         path = os.path.join(self.output_dir, filename)
+        self._write(path)
+        return path
+
+    def _write(self, path: str) -> None:
         with open(path, "w") as f:
             json.dump([asdict(e) for e in self._episodes], f, indent=2)
-        return path

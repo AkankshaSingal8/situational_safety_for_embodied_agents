@@ -18,7 +18,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="${PROJECT_ROOT:-$( dirname "$SCRIPT_DIR" )}"
-CONDA_ENV="${CONDA_ENV:-qwen_vlm}"
+CONDA_ENV="${CONDA_ENV:-qwen}"
 
 # Activate conda if needed
 if [[ "${CONDA_DEFAULT_ENV:-}" != "$CONDA_ENV" ]]; then

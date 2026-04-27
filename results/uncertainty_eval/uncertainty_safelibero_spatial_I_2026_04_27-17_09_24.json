@@ -1,0 +1,1722 @@
+[
+  {
+    "episode_idx": 0,
+    "task_id": 3,
+    "task_description": "pick up the black bowl on the wooden cabinet and place it on the plate",
+    "success": false,
+    "collide": false,
+    "steps": 300,
+    "step_records": [
+      {
+        "step": 0,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.1455852955738759,
+              -0.41836983622173485,
+              -0.21629987189837246,
+              0.0021803994667227017,
+              0.04006348061735354,
+              -0.0018833669333810366,
+              1.0078125
+            ],
+            "action_variance": [
+              0.0,
+              3.0814879110195774e-33,
+              3.0814879110195774e-33,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              5.551115123125783e-17,
+              5.551115123125783e-17,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 4.357881996052624e-33,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9555242615164758,
+            "confidence": 1.7485826548780036e-168,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 0,
+        "steps_executed": 0
+      },
+      {
+        "step": 8,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.1258629531355048,
+              -0.3583112411497873,
+              -0.5540771470852108,
+              0.0015233777672917087,
+              0.005414694564703892,
+              0.010362727121355969,
+              0.9921875
+            ],
+            "action_variance": [
+              7.703719777548943e-34,
+              0.0,
+              1.232595164407831e-32,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              2.7755575615628914e-17,
+              0.0,
+              1.1102230246251565e-16,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 1.2350002304302084e-32,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9571696221544,
+            "confidence": 1.9653348189994285e-76,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 1,
+        "steps_executed": 8
+      },
+      {
+        "step": 16,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.2277617224004218,
+              -0.1120710013548023,
+              -0.7804792126158482,
+              -0.009645991123035103,
+              -0.011956521145475879,
+              0.015841242882685708,
+              1.0
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 0.0,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9578530219630939,
+            "confidence": 8.215724933878942e-11,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 2,
+        "steps_executed": 8
+      },
+      {
+        "step": 24,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.24255347922920018,
+              -0.10306221209401012,
+              -0.6198067790134604,
+              -0.03623604578235984,
+              0.007943119492870215,
+              0.025186946240248143,
+              1.0
+            ],
+            "action_variance": [
+              3.0814879110195774e-33,
+              0.0,
+              1.232595164407831e-32,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              5.551115123125783e-17,
+              0.0,
+              1.1102230246251565e-16,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 1.2705300141197633e-32,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.959509019960124,
+            "confidence": 0.013702705722556123,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 3,
+        "steps_executed": 8
+      },
+      {
+        "step": 32,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.09545767520968285,
+              -0.1796369208107433,
+              -0.09990364869209722,
+              -0.008074292155768811,
+              0.11535435625608415,
+              0.004884211360026258,
+              0.000537872314453125
+            ],
+            "action_variance": [
+              0.0,
+              7.703719777548943e-34,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              2.7755575615628914e-17,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 7.703719777548943e-34,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.957685841098746,
+            "confidence": 0.009632319933048594,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 4,
+        "steps_executed": 8
+      },
+      {
+        "step": 40,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.11553030066747394,
+              -0.070029984804439,
+              0.26571742890879113,
+              0.005298031844414838,
+              0.11310686743104739,
+              -0.0016416677086164844,
+              0.005279541015625
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              7.703719777548943e-34,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              2.7755575615628914e-17,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 0.0,
+            "rot_var_norm": 7.703719777548943e-34,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.956938754013795,
+            "confidence": 9.228617165295822e-10,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 5,
+        "steps_executed": 8
+      },
+      {
+        "step": 48,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.35569090806805453,
+              0.24828056907688317,
+              0.6034947040956293,
+              -0.018715467130866803,
+              0.03051165311094741,
+              -0.0009165700343228556,
+              0.00179290771484375
+            ],
+            "action_variance": [
+              3.0814879110195774e-33,
+              3.0814879110195774e-33,
+              0.0,
+              0.0,
+              4.81482486096809e-35,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              5.551115123125783e-17,
+              5.551115123125783e-17,
+              0.0,
+              0.0,
+              6.938893903907228e-18,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 4.357881996052624e-33,
+            "rot_var_norm": 4.81482486096809e-35,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9510753482837581,
+            "confidence": 2.8753892289806823e-09,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 6,
+        "steps_executed": 8
+      },
+      {
+        "step": 56,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.5331919900133937,
+              0.471998835719888,
+              0.6363595200597542,
+              -0.016654222583632316,
+              0.014779231335690285,
+              0.004400812910497154,
+              0.0012664794921875
+            ],
+            "action_variance": [
+              1.232595164407831e-32,
+              1.232595164407831e-32,
+              1.232595164407831e-32,
+              1.2037062152420224e-35,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              1.1102230246251565e-16,
+              1.1102230246251565e-16,
+              1.1102230246251565e-16,
+              3.469446951953614e-18,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 2.1349174499180765e-32,
+            "rot_var_norm": 1.2037062152420224e-35,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9568840710572386,
+            "confidence": 4.436129840456044e-08,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 7,
+        "steps_executed": 8
+      },
+      {
+        "step": 64,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.5923590173285068,
+              0.48250908985747853,
+              0.6144496427503378,
+              -0.003513788595012543,
+              0.018712336779504568,
+              -0.006878484245181671,
+              0.00133514404296875
+            ],
+            "action_variance": [
+              0.0,
+              1.232595164407831e-32,
+              1.232595164407831e-32,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              1.1102230246251565e-16,
+              1.1102230246251565e-16,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 1.7431527984210495e-32,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9517826231711257,
+            "confidence": 9.353055677478878e-14,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 8,
+        "steps_executed": 8
+      },
+      {
+        "step": 72,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.6120813597668777,
+              0.500526668379063,
+              0.501248609985019,
+              -0.005368908687523571,
+              0.011595288833554901,
+              -0.005831120937868639,
+              0.000797271728515625
+            ],
+            "action_variance": [
+              1.232595164407831e-32,
+              0.0,
+              1.232595164407831e-32,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              1.1102230246251565e-16,
+              0.0,
+              1.1102230246251565e-16,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 1.7431527984210495e-32,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9543575308520201,
+            "confidence": 2.1172682948771148e-18,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 9,
+        "steps_executed": 8
+      },
+      {
+        "step": 80,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.5167567046480847,
+              0.7167376106380744,
+              0.06031232913301121,
+              -0.0005829565044135204,
+              -0.007414720811547482,
+              -0.007523015511220449,
+              -0.009033203125
+            ],
+            "action_variance": [
+              0.0,
+              1.232595164407831e-32,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              1.1102230246251565e-16,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 1.232595164407831e-32,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9584788591588844,
+            "confidence": 2.4508474314893395e-14,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 10,
+        "steps_executed": 8
+      },
+      {
+        "step": 88,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.5857849031823832,
+              0.6536760858125293,
+              -0.22816772210763986,
+              0.00403551955923373,
+              -0.019565207271902307,
+              5.022686473532545e-05,
+              -0.0025177001953125
+            ],
+            "action_variance": [
+              1.232595164407831e-32,
+              1.232595164407831e-32,
+              3.0814879110195774e-33,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              1.1102230246251565e-16,
+              1.1102230246251565e-16,
+              5.551115123125783e-17,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 1.7701800349401565e-32,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9562678071178017,
+            "confidence": 5.560781969780776e-23,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 11,
+        "steps_executed": 8
+      },
+      {
+        "step": 96,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.30802858050865783,
+              0.24002251225449028,
+              -0.7293561655605431,
+              0.03219727318582475,
+              -0.07568219387203827,
+              -0.0166673028481458,
+              0.0064697265625
+            ],
+            "action_variance": [
+              3.0814879110195774e-33,
+              3.0814879110195774e-33,
+              1.232595164407831e-32,
+              4.81482486096809e-35,
+              1.925929944387236e-34,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              5.551115123125783e-17,
+              5.551115123125783e-17,
+              1.1102230246251565e-16,
+              6.938893903907228e-18,
+              1.3877787807814457e-17,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 1.307364598815787e-32,
+            "rot_var_norm": 1.98520314706213e-34,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.956157169473302,
+            "confidence": 5.423642432521934e-14,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 12,
+        "steps_executed": 8
+      },
+      {
+        "step": 104,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.15380293825653046,
+              0.052714768873853846,
+              -0.7950857974887926,
+              0.037968757918081276,
+              -0.04721400208823965,
+              -0.043455633592883014,
+              0.001983642578125
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              0.0,
+              4.81482486096809e-35,
+              4.81482486096809e-35,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              0.0,
+              6.938893903907228e-18,
+              6.938893903907228e-18,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 0.0,
+            "rot_var_norm": 6.809190618832225e-35,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9659792092384574,
+            "confidence": 3.389838253181032e-05,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 13,
+        "steps_executed": 8
+      },
+      {
+        "step": 112,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.2754240499598185,
+              -0.04300361702206257,
+              -0.7001429958146542,
+              0.032403397640548205,
+              0.008224055595999813,
+              0.00013079327299017618,
+              -0.0023040771484375
+            ],
+            "action_variance": [
+              3.0814879110195774e-33,
+              0.0,
+              0.0,
+              4.81482486096809e-35,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              5.551115123125783e-17,
+              0.0,
+              0.0,
+              6.938893903907228e-18,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 3.0814879110195774e-33,
+            "rot_var_norm": 4.81482486096809e-35,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9594601833645321,
+            "confidence": 4.291853893681466e-07,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 14,
+        "steps_executed": 8
+      },
+      {
+        "step": 120,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.3165122633730915,
+              0.10734961533322496,
+              -0.5285156235575581,
+              0.0049115484918083735,
+              0.02433105884209641,
+              0.00681780515814262,
+              -0.00384521484375
+            ],
+            "action_variance": [
+              3.0814879110195774e-33,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              5.551115123125783e-17,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 3.0814879110195774e-33,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9613491959148377,
+            "confidence": 0.08099694349737342,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 15,
+        "steps_executed": 8
+      },
+      {
+        "step": 128,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.05108240472334802,
+              0.08499626372502567,
+              0.17807791967112507,
+              -0.022322645088527132,
+              -0.04571567620488182,
+              -0.02067548165882452,
+              0.98828125
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 0.0,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9603484648486792,
+            "confidence": 0.00022829233503959592,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 16,
+        "steps_executed": 8
+      },
+      {
+        "step": 136,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.04122123350416251,
+              -0.015226516801286838,
+              0.5049002562032551,
+              -0.0072240287800346,
+              -0.05751499253632465,
+              -0.03870221550584694,
+              0.99609375
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              1.232595164407831e-32,
+              0.0,
+              1.925929944387236e-34,
+              4.81482486096809e-35,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              1.1102230246251565e-16,
+              0.0,
+              1.3877787807814457e-17,
+              6.938893903907228e-18,
+              0.0
+            ],
+            "trans_var_norm": 1.232595164407831e-32,
+            "rot_var_norm": 1.98520314706213e-34,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9666679600391991,
+            "confidence": 0.023407064831647048,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 17,
+        "steps_executed": 8
+      },
+      {
+        "step": 144,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.015069618872021517,
+              -0.12558418524599047,
+              -0.27655203449926796,
+              0.020860428176035145,
+              -0.10864536330591038,
+              -0.02484479328601294,
+              0.99609375
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              3.0814879110195774e-33,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              5.551115123125783e-17,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 3.0814879110195774e-33,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9547635309820177,
+            "confidence": 1.941253736389275e-27,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 18,
+        "steps_executed": 8
+      },
+      {
+        "step": 152,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.1275064816720357,
+              -0.1541120179051656,
+              -0.39705635970105885,
+              0.0268380373630151,
+              -0.10901994477674984,
+              -0.038218817056317855,
+              1.0078125
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              3.0814879110195774e-33,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              5.551115123125783e-17,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 3.0814879110195774e-33,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9590780206927901,
+            "confidence": 1.7402093770301113e-73,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 19,
+        "steps_executed": 8
+      },
+      {
+        "step": 160,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.14887235264693768,
+              0.0035417941586968205,
+              -0.27655203449926796,
+              0.019829805902417896,
+              -0.06968889033860699,
+              -0.014995549876857667,
+              0.9921875
+            ],
+            "action_variance": [
+              7.703719777548943e-34,
+              0.0,
+              3.0814879110195774e-33,
+              0.0,
+              1.925929944387236e-34,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              2.7755575615628914e-17,
+              0.0,
+              5.551115123125783e-17,
+              0.0,
+              1.3877787807814457e-17,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 3.176325035299408e-33,
+            "rot_var_norm": 1.925929944387236e-34,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9580903858909048,
+            "confidence": 2.031508212548775e-37,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 20,
+        "steps_executed": 8
+      },
+      {
+        "step": 168,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.06725164990687815,
+              0.0301927957218735,
+              0.24745919781761083,
+              0.0028760695014143356,
+              0.12509347449790997,
+              -0.0584409855282849,
+              0.9921875
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.925929944387236e-34,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.3877787807814457e-17,
+              0.0
+            ],
+            "trans_var_norm": 0.0,
+            "rot_var_norm": 1.925929944387236e-34,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9558407647727,
+            "confidence": 1.4484069789167855e-198,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 21,
+        "steps_executed": 8
+      },
+      {
+        "step": 176,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.029716533748446072,
+              0.014802780734686993,
+              0.08176575066514813,
+              0.020963490403396845,
+              -0.0032943246323134667,
+              -0.028752264086373103,
+              0.99609375
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 0.0,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9543335799304512,
+            "confidence": 1.1875691442132425e-158,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 22,
+        "steps_executed": 8
+      },
+      {
+        "step": 184,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.06012181167426811,
+              -0.010722122170890747,
+              -0.04102085342304029,
+              0.01251238775973551,
+              -0.014733691581621522,
+              -0.033304266152772065,
+              0.98828125
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              4.81482486096809e-35,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              6.938893903907228e-18,
+              0.0
+            ],
+            "trans_var_norm": 0.0,
+            "rot_var_norm": 4.81482486096809e-35,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.953375466289659,
+            "confidence": 4.751109592205813e-140,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 23,
+        "steps_executed": 8
+      },
+      {
+        "step": 192,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.102853553624072,
+              -0.027988968254075708,
+              -0.16608973639762628,
+              0.02271554826854616,
+              -0.08841796388057978,
+              -0.034029363827065694,
+              0.984375
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              7.703719777548943e-34,
+              0.0,
+              0.0,
+              4.81482486096809e-35,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              2.7755575615628914e-17,
+              0.0,
+              0.0,
+              6.938893903907228e-18,
+              0.0
+            ],
+            "trans_var_norm": 7.703719777548943e-34,
+            "rot_var_norm": 4.81482486096809e-35,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9557341957947292,
+            "confidence": 8.738556760196385e-84,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 24,
+        "steps_executed": 8
+      },
+      {
+        "step": 200,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.02889476948018055,
+              0.022310105118680368,
+              -0.08986162159194788,
+              0.00591640520858519,
+              0.09812360859746916,
+              -0.06730329043631825,
+              1.0
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.925929944387236e-34,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.3877787807814457e-17,
+              0.0
+            ],
+            "trans_var_norm": 0.0,
+            "rot_var_norm": 1.925929944387236e-34,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9544090344386845,
+            "confidence": 6.513964652269713e-104,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 25,
+        "steps_executed": 8
+      },
+      {
+        "step": 208,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.036846371981056114,
+              0.010298386104290902,
+              0.2036394431987778,
+              -0.004248106964964818,
+              0.013280905452332459,
+              -0.047967352455154544,
+              0.99609375
+            ],
+            "action_variance": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "action_std": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "trans_var_norm": 0.0,
+            "rot_var_norm": 0.0,
+            "high_uncertainty": false,
+            "dropout_active": false
+          },
+          "entropy": {
+            "entropy_score": 0.9571888327968441,
+            "confidence": 2.3619015235362725e-108,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 26,
+        "steps_executed": 8
+      },
+      {
+        "step": 216,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.03812010659686767,
+              0.04044029350602463,
+              0.46838379402089425,
+              -0.004775012602351636,
+              0.02245815148789912,
+              -0.06246930594102733,
+              0.999609375
+            ],
+            "action_variance": [
+              1.5194171533446155e-08,
+              1.1412883679815208e-07,
+              1.232595164407831e-32,
+              1.2561965012907001e-08,
+              0.0,
+              0.0,
+              1.3732910156250006e-06
+            ],
+            "action_std": [
+              0.00012326464023979528,
+              0.0003378295972796819,
+              1.1102230246251565e-16,
+              0.00011208017225587673,
+              0.0,
+              0.0,
+              0.0011718750000000002
+            ],
+            "trans_var_norm": 1.1513580779882086e-07,
+            "rot_var_norm": 1.2561965012907001e-08,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9582132890573186,
+            "confidence": 2.6165840199835283e-30,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 27,
+        "steps_executed": 8
+      },
+      {
+        "step": 224,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.04683080784048155,
+              0.0339464579138703,
+              0.5085519024214911,
+              -0.002805879920821694,
+              -0.04498524233674488,
+              -0.058763251161304306,
+              1.0
+            ],
+            "action_variance": [
+              1.3674754380106456e-07,
+              0.0,
+              0.0,
+              3.024729982298998e-10,
+              3.1570037616657556e-09,
+              1.925929944387236e-34,
+              0.0
+            ],
+            "action_std": [
+              0.0003697939207194523,
+              0.0,
+              0.0,
+              1.7391750867290497e-05,
+              5.6187220625919514e-05,
+              1.3877787807814457e-17,
+              0.0
+            ],
+            "trans_var_norm": 1.3674754380106456e-07,
+            "rot_var_norm": 3.171460651786479e-09,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9637637192660505,
+            "confidence": 2.642742556611676e-07,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 28,
+        "steps_executed": 8
+      },
+      {
+        "step": 232,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.012768678920878152,
+              -0.06304817312732511,
+              0.2551276548759066,
+              0.009879147850643467,
+              -0.10901994477674984,
+              -0.048354071214777826,
+              1.0
+            ],
+            "action_variance": [
+              2.431067445352368e-07,
+              4.5651534719269854e-07,
+              1.2001068092840777e-06,
+              2.891791232459891e-08,
+              0.0,
+              3.738784976113953e-08,
+              0.0
+            ],
+            "action_std": [
+              0.0004930585609592808,
+              0.0006756591945594306,
+              0.0010954938654707646,
+              0.00017005267514684651,
+              0.0,
+              0.00019335937981163347,
+              0.0
+            ],
+            "trans_var_norm": 1.3068142580914092e-06,
+            "rot_var_norm": 4.7266234914309925e-08,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9559242931964322,
+            "confidence": 5.073575434905046e-72,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 29,
+        "steps_executed": 8
+      },
+      {
+        "step": 240,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.22897485790152064,
+              -0.088347856301383,
+              -0.07447906189762835,
+              0.02698232448132152,
+              0.01217589011335607,
+              -0.07387750934991391,
+              1.0
+            ],
+            "action_variance": [
+              2.431067445352368e-07,
+              8.115828394536455e-07,
+              1.6876502005560073e-07,
+              1.8736895258252692e-07,
+              3.157003761665757e-09,
+              1.495513990445613e-07,
+              0.0
+            ],
+            "action_std": [
+              0.0004930585609592808,
+              0.0009008789260792182,
+              0.00041081019955157,
+              0.0004328613549192477,
+              5.618722062591953e-05,
+              0.00038671875962327106,
+              0.0
+            ],
+            "trans_var_norm": 8.638571794738584e-07,
+            "rot_var_norm": 2.3975552552717117e-07,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9552479868051706,
+            "confidence": 1.5601315198538473e-39,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 30,
+        "steps_executed": 8
+      },
+      {
+        "step": 248,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.051227246675701735,
+              0.005193405523175332,
+              0.17552176731835992,
+              0.0008470319002303911,
+              0.051263466595453264,
+              -0.05840875896498293,
+              1.0
+            ],
+            "action_variance": [
+              2.0258895377937312e-07,
+              1.8936932920585067e-06,
+              2.1335232165052864e-06,
+              7.808699350736804e-09,
+              1.0228692187796707e-06,
+              1.1320210066567666e-07,
+              0.0
+            ],
+            "action_std": [
+              0.00045009882668073365,
+              0.001376115290249515,
+              0.0014606584872944417,
+              8.836684531393437e-05,
+              0.0010113699712665345,
+              0.0003364551986010569,
+              0.0
+            ],
+            "trans_var_norm": 2.8599017262745006e-06,
+            "rot_var_norm": 1.0291438821212542e-06,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9570586954179275,
+            "confidence": 4.701858285388635e-26,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 31,
+        "steps_executed": 8
+      },
+      {
+        "step": 256,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.12060469502401316,
+              -0.027838821766395783,
+              0.13717948202688093,
+              0.006117376551940544,
+              0.12022391537699706,
+              -0.06839899358858419,
+              0.99609375
+            ],
+            "action_variance": [
+              3.898149118971176e-06,
+              2.4572924861234875e-06,
+              3.6336567281106265e-06,
+              1.935827188671474e-08,
+              8.138054141182544e-07,
+              8.723831610932843e-08,
+              0.0
+            ],
+            "action_std": [
+              0.0019743730951801326,
+              0.0015675753526141853,
+              0.0019062152890244656,
+              0.00013913400693832813,
+              0.0009021116417152892,
+              0.000295361331438847,
+              0.0
+            ],
+            "trans_var_norm": 5.868331460801983e-06,
+            "rot_var_norm": 8.186968416552092e-07,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9572472325106703,
+            "confidence": 3.656827167514289e-35,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 32,
+        "steps_executed": 8
+      },
+      {
+        "step": 264,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.0051457821273088065,
+              -0.011623001096969964,
+              0.11974287133480357,
+              0.0002853427611089976,
+              -0.08931695941059448,
+              -0.06830231389867839,
+              0.98828125
+            ],
+            "action_variance": [
+              6.07766861338174e-08,
+              1.4428139368064805e-06,
+              9.87504554389491e-05,
+              6.788008574816344e-10,
+              9.546779375276859e-06,
+              5.088901773044161e-08,
+              0.0
+            ],
+            "action_std": [
+              0.000246529280479657,
+              0.0012011719014389576,
+              0.009937326372769947,
+              2.6053806967152313e-05,
+              0.00308978629928946,
+              0.00022558594311357613,
+              0.0
+            ],
+            "trans_var_norm": 9.876101384282005e-05,
+            "rot_var_norm": 9.546915030160674e-06,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9541599603841185,
+            "confidence": 1.1388865763356015e-104,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 33,
+        "steps_executed": 8
+      },
+      {
+        "step": 272,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.05539770033714889,
+              -0.03099189800767309,
+              0.009142210075674029,
+              0.011770339722731095,
+              -0.1690278964052307,
+              -0.051979559586246005,
+              1.009375
+            ],
+            "action_variance": [
+              1.0754519023441497e-05,
+              1.3526380657560094e-06,
+              5.4554255139587835e-05,
+              1.657004342566469e-08,
+              6.959439403493948e-07,
+              5.008414040919502e-07,
+              9.765624999999997e-06
+            ],
+            "action_std": [
+              0.00327940833435568,
+              0.0011630296925513163,
+              0.007386085237768911,
+              0.00012872468071688773,
+              0.0008342325457265467,
+              0.00070770149363411,
+              0.0031249999999999993
+            ],
+            "trans_var_norm": 5.562064421595405e-05,
+            "rot_var_norm": 8.57586524206722e-07,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9556304569011662,
+            "confidence": 5.079225142802199e-151,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 34,
+        "steps_executed": 8
+      },
+      {
+        "step": 280,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.09490473978776232,
+              -0.013274612461448487,
+              0.10162157697680703,
+              0.0015852151037087467,
+              0.15745731357843895,
+              -0.06385504816301071,
+              0.99609375
+            ],
+            "action_variance": [
+              8.936953722424936e-07,
+              4.734233230146535e-07,
+              1.885584483337206e-06,
+              1.3668958098334922e-08,
+              8.979921810960375e-08,
+              8.318796571853862e-07,
+              0.0
+            ],
+            "action_std": [
+              0.0009453546277680634,
+              0.000688057645124777,
+              0.0013731658615539516,
+              0.00011691431947513924,
+              0.00029966517667157083,
+              0.0009120743704245758,
+              0.0
+            ],
+            "trans_var_norm": 2.1396845339778302e-06,
+            "rot_var_norm": 8.368240579879775e-07,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9561138801824481,
+            "confidence": 1.5439518371385197e-64,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 35,
+        "steps_executed": 8
+      },
+      {
+        "step": 288,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              -0.06595633797895283,
+              -0.0500605019430164,
+              -0.2571983095426167,
+              0.016562733295051247,
+              -0.15479380051333136,
+              -0.0246453914255822,
+              1.015625
+            ],
+            "action_variance": [
+              1.829378252627639e-05,
+              4.080458165030791e-06,
+              8.614099986640011e-05,
+              8.295643535541265e-08,
+              2.469478498013919e-07,
+              5.613410789495738e-07,
+              0.0
+            ],
+            "action_std": [
+              0.004277123160054711,
+              0.002020014397233542,
+              0.009281217585338689,
+              0.00028802158834957605,
+              0.0004969384768775627,
+              0.0007492269876009364,
+              0.0
+            ],
+            "trans_var_norm": 8.815659065514277e-05,
+            "rot_var_norm": 6.188447443460105e-07,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9580315864028036,
+            "confidence": 5.333867937354474e-117,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 36,
+        "steps_executed": 8
+      },
+      {
+        "step": 296,
+        "uncertainty": {
+          "mc_dropout": {
+            "mean_action": [
+              0.054082877507924176,
+              0.024374619324278656,
+              0.022494967985403735,
+              0.01764488668234935,
+              0.15378641516421232,
+              -0.0515606142633208,
+              1.0015625
+            ],
+            "action_variance": [
+              9.998608989651883e-07,
+              7.418374391880983e-06,
+              5.1520210289193454e-06,
+              8.66740733034793e-08,
+              1.1786147376883741e-07,
+              6.545470086655326e-07,
+              9.765624999999997e-06
+            ],
+            "action_std": [
+              0.0009999304470637888,
+              0.0027236692882728957,
+              0.002269806385778167,
+              0.0002944046081559854,
+              0.00034330958880992153,
+              0.0008090407954272347,
+              0.0031249999999999993
+            ],
+            "trans_var_norm": 9.08709640742422e-06,
+            "rot_var_norm": 6.706977773445921e-07,
+            "high_uncertainty": false,
+            "dropout_active": true
+          },
+          "entropy": {
+            "entropy_score": 0.9557636904122119,
+            "confidence": 3.5803576058007164e-59,
+            "predicted_failure_label": "potential_failure"
+          }
+        },
+        "query_step_idx": 37,
+        "steps_executed": 8
+      }
+    ]
+  }
+]

@@ -394,8 +394,9 @@ def main():
     resize_size = get_image_resize_size(cfg)
 
     # Build uncertainty infrastructure
+    run_tag = f"uncertainty_{cfg.task_suite_name}_{cfg.safety_level}_{DATE_TIME}"
     uncertainty_manager = _build_uncertainty_manager(cfg, model)
-    unc_logger = UncertaintyLogger(output_dir=cfg.output_dir)
+    unc_logger = UncertaintyLogger(output_dir=cfg.output_dir, flush_filename=f"{run_tag}.json")
 
     logger.info(f"Active uncertainty methods: {list(uncertainty_manager.estimators.keys())}")
 
@@ -460,8 +461,26 @@ def main():
                              "TSR": tsr, "CAR": car, "episodes": task_ep})
         logger.info(f"  Task {task_id}: TSR={tsr:.3f} CAR={car:.3f}")
 
-    # Save uncertainty logs
-    run_tag = f"uncertainty_{cfg.task_suite_name}_{cfg.safety_level}_{DATE_TIME}"
+        # Flush partial summary after each task so progress survives job kills
+        partial_tsr = total_suc / total_ep if total_ep > 0 else 0.0
+        partial_car = (total_ep - total_col) / total_ep if total_ep > 0 else 0.0
+        partial_summary = {
+            "run": run_tag,
+            "suite": cfg.task_suite_name,
+            "safety_level": cfg.safety_level,
+            "uncertainty_methods": cfg.uncertainty_methods,
+            "total_episodes": total_ep,
+            "TSR": round(partial_tsr, 4),
+            "CAR": round(partial_car, 4),
+            "tasks": all_results,
+            "status": "partial",
+        }
+        partial_path = os.path.join(cfg.output_dir, f"{run_tag}_summary.json")
+        with open(partial_path, "w") as f:
+            json.dump(partial_summary, f, indent=2)
+        logger.info(f"  Partial summary flushed to: {partial_path}")
+
+    # Save uncertainty logs (also finalises the incremental flush file)
     log_path = unc_logger.save(f"{run_tag}.json")
     logger.info(f"Uncertainty log saved to: {log_path}")
 
@@ -477,6 +496,7 @@ def main():
         "TSR": round(overall_tsr, 4),
         "CAR": round(overall_car, 4),
         "tasks": all_results,
+        "status": "complete",
     }
     summary_path = os.path.join(cfg.output_dir, f"{run_tag}_summary.json")
     with open(summary_path, "w") as f:

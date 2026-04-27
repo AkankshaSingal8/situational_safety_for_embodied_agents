@@ -10,7 +10,7 @@ QWEN_MODELS = {
     "qwen2.5-vl-3b": "Qwen/Qwen2.5-VL-3B-Instruct",
     "qwen2.5-vl-7b": "Qwen/Qwen2.5-VL-7B-Instruct",
     "qwen2-vl-7b":   "Qwen/Qwen2-VL-7B-Instruct",
-    "qwen3-vl-8b":   "Qwen/Qwen3-VL-8B",
+    "qwen3-vl-8b":   "Qwen/Qwen3-VL-8B-Instruct",
 }
 
 
@@ -43,7 +43,7 @@ class QwenLocalBackend(VLMBackend):
             if torch.cuda.is_available() and torch.cuda.is_bf16_supported()
             else torch.float16
         )
-        load_kwargs: dict = dict(torch_dtype=dtype, device_map=device)
+        load_kwargs: dict = dict(dtype=dtype, device_map=device)
 
         if load_in_4bit:
             from transformers import BitsAndBytesConfig
