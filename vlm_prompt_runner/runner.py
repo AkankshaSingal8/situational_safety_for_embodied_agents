@@ -1,7 +1,6 @@
 from __future__ import annotations
 import json
 import logging
-import re
 from pathlib import Path
 
 from vlm_prompt_runner.backends.base import VLMBackend
@@ -22,20 +21,67 @@ def build_prompt(system_prompt: str, task_description: str) -> str:
 def extract_json(raw: str) -> dict | list:
     """Extract a JSON object or array from the raw VLM response.
 
-    Falls back to wrapping the raw string if no valid JSON is found.
+    Tries direct parse first, then a brace-counting extractor to find the
+    first complete JSON block, then falls back to wrapping the raw string.
     """
+    # Direct parse first (handles clean JSON responses)
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
         pass
-    for pattern in (r'\{.*\}', r'\[.*\]'):
-        m = re.search(pattern, raw, re.DOTALL)
-        if m:
-            try:
-                return json.loads(m.group())
-            except json.JSONDecodeError:
-                continue
+
+    # Brace-counting extraction — handles JSON embedded in prose / markdown
+    block = _extract_first_json_block(raw)
+    if block is not None:
+        try:
+            return json.loads(block)
+        except json.JSONDecodeError:
+            pass
+
+    logger.warning(
+        "Could not parse JSON from VLM response; storing raw text. "
+        "Preview: %.120s", raw
+    )
     return {"raw_response": raw}
+
+
+def _extract_first_json_block(raw: str) -> str | None:
+    """Return the first complete JSON object or array in raw, or None.
+
+    Picks whichever opener (``{`` or ``[``) appears first in the string so
+    that an array like ``[{...}]`` is returned as an array rather than its
+    first inner object.
+    """
+    pairs = [('{', '}'), ('[', ']')]
+    # Sort pairs so we try the opener that appears earliest in the string first
+    pairs.sort(key=lambda p: raw.find(p[0]) if raw.find(p[0]) != -1 else len(raw))
+
+    for start_char, end_char in pairs:
+        start = raw.find(start_char)
+        if start == -1:
+            continue
+        depth = 0
+        in_string = False
+        escape_next = False
+        for i, ch in enumerate(raw[start:], start):
+            if escape_next:
+                escape_next = False
+                continue
+            if ch == '\\' and in_string:
+                escape_next = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if ch == start_char:
+                depth += 1
+            elif ch == end_char:
+                depth -= 1
+                if depth == 0:
+                    return raw[start:i + 1]
+    return None
 
 
 def run_episode(ep_dir: Path | str, system_prompt: str,
@@ -50,7 +96,11 @@ def run_episode(ep_dir: Path | str, system_prompt: str,
     image_paths = [episode["agentview"], episode["eye_in_hand"], episode["backview"]]
 
     logger.info(f"Running inference: {ep_dir.name}")
-    raw = backend.generate(prompt, image_paths, max_new_tokens=max_new_tokens)
+    try:
+        raw = backend.generate(prompt, image_paths, max_new_tokens=max_new_tokens)
+    except Exception as exc:
+        logger.error("backend.generate failed for %s: %s", ep_dir.name, exc)
+        raise
     result = extract_json(raw)
 
     if isinstance(result, dict):
