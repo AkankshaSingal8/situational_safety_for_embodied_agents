@@ -68,6 +68,8 @@ class QwenLocalBackend(VLMBackend):
                 img = PILImage.open(p).convert("RGB")
                 pil_images.append(img)
                 content.append({"type": "image", "image": img})
+            else:
+                logger.warning(f"Image not found, skipping: {p}")
 
         content.append({"type": "text", "text": prompt})
         messages = [{"role": "user", "content": content}]

@@ -30,13 +30,12 @@ class AnthropicBackend(VLMBackend):
                 "Set ANTHROPIC_API_KEY environment variable or pass api_key="
             )
         self._default_max_tokens = max_new_tokens
+        import anthropic as _anthropic
+        self._client = _anthropic.Anthropic(api_key=self.api_key)
 
     def generate(self, prompt: str, image_paths: list[str],
                  max_new_tokens: int | None = None) -> str:
-        import anthropic
-
-        client = anthropic.Anthropic(api_key=self.api_key)
-        max_tokens = max_new_tokens or self._default_max_tokens
+        max_tokens = max_new_tokens if max_new_tokens is not None else self._default_max_tokens
 
         content: list[dict] = []
         for p in image_paths:
@@ -57,7 +56,7 @@ class AnthropicBackend(VLMBackend):
 
         content.append({"type": "text", "text": prompt})
 
-        response = client.messages.create(
+        response = self._client.messages.create(
             model=self.model_id,
             max_tokens=max_tokens,
             messages=[{"role": "user", "content": content}],
