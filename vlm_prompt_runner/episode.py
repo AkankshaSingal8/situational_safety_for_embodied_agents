@@ -42,7 +42,7 @@ def resolve_episodes(input_base: Path | str, suite: str, level: str,
         if not ep_dir.exists():
             raise FileNotFoundError(f"Episode directory not found: {ep_dir}")
         paths.append(ep_dir)
-    return paths
+    return sorted(paths)
 
 
 def output_path(output_base: Path | str, prompt_stem: str, suite: str,

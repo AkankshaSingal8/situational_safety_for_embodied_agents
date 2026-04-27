@@ -58,6 +58,21 @@ def test_resolve_episodes_all():
         assert len(eps) == 3
 
 
+def test_resolve_episodes_missing_task_dir_raises():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "vlm_inputs"
+        with pytest.raises(FileNotFoundError, match="Task directory not found"):
+            resolve_episodes(root, "safelibero_spatial", "I", 99, episodes=None)
+
+
+def test_resolve_episodes_missing_episode_raises():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "vlm_inputs"
+        _make_episode(root, "safelibero_spatial", "I", 0, 0)
+        with pytest.raises(FileNotFoundError, match="Episode directory not found"):
+            resolve_episodes(root, "safelibero_spatial", "I", 0, episodes=[0, 99])
+
+
 def test_output_path():
     p = output_path(
         output_base=Path("/results"),
