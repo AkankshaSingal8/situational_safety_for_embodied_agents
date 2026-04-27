@@ -96,6 +96,9 @@ def main() -> None:
         f"Processing {len(episode_dirs)} episode(s) "
         f"[suite={args.suite}  level={args.level}  task={args.task}]"
     )
+    if not episode_dirs:
+        logger.warning("No episodes to process. Check --episodes and --input_base.")
+        return
 
     backend_kwargs: dict = {}
     if args.vlm.startswith("qwen"):
@@ -103,7 +106,7 @@ def main() -> None:
     backend = get_backend(args.vlm, **backend_kwargs)
 
     for ep_dir in episode_dirs:
-        ep_idx = int(ep_dir.name.split("_")[-1])
+        ep_idx = int(ep_dir.name.removeprefix("episode_"))
         out = output_path(
             output_base=Path(args.output_base),
             prompt_stem=prompt_stem,
