@@ -115,6 +115,9 @@ def main() -> None:
             task_id=args.task,
             ep_idx=ep_idx,
         )
+        if out.exists():
+            logger.info(f"Skipping {ep_dir.name} (output already exists at {out})")
+            continue
         try:
             run_episode(
                 ep_dir=ep_dir,

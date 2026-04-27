@@ -56,12 +56,27 @@ class AnthropicBackend(VLMBackend):
 
         content.append({"type": "text", "text": prompt})
 
-        response = self._client.messages.create(
-            model=self.model_id,
-            max_tokens=max_tokens,
-            messages=[{"role": "user", "content": content}],
-        )
-        return response.content[0].text.strip()
+        import time as _time
+
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = self._client.messages.create(
+                    model=self.model_id,
+                    max_tokens=max_tokens,
+                    messages=[{"role": "user", "content": content}],
+                )
+                return response.content[0].text.strip()
+            except Exception as exc:
+                if attempt < max_retries - 1:
+                    wait = 2 ** attempt
+                    logger.warning(
+                        "Anthropic API error (attempt %d/%d), retrying in %ds: %s",
+                        attempt + 1, max_retries, wait, exc,
+                    )
+                    _time.sleep(wait)
+                else:
+                    raise
 
 
 def _infer_media_type(path: str) -> str:
