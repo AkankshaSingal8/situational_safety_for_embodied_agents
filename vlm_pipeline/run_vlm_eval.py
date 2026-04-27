@@ -122,12 +122,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
                     handlers=[logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 
-ROLLOUT_VIEW_SPECS = (
-    ("agentview", "agentview_image"),
-    ("eye_in_hand", "robot0_eye_in_hand_image"),
-    ("backview", "backview_image"),
-)
-
 POLICY_OPENVLA_OFT = "openvla_oft"
 POLICY_PI05_LIBERO = "pi05_libero"
 POLICY_BACKEND_ALIASES = {
@@ -205,6 +199,9 @@ class GenerateConfig:
     # ── Logging ──────────────────────────────────────────────────────────
     run_id_note: Optional[str] = None
     local_log_dir: str = "./experiments/logs"
+    # If set, rollout MP4s are written directly here instead of
+    # ./rollouts/<DATE>/<policy_backend>.
+    rollout_dir: str = ""
     use_wandb: bool = False
     wandb_entity: str = "your-wandb-entity"
     wandb_project: str = "your-wandb-project"
@@ -385,17 +382,6 @@ def prepare_obs(obs, resize_size):
     }, img
 
 
-def collect_rollout_frames(obs):
-    """Collect all available rollout camera views with the same orientation as replay."""
-    frames = {}
-    for view_name, obs_key in ROLLOUT_VIEW_SPECS:
-        img = obs.get(obs_key)
-        if img is None:
-            continue
-        frames[view_name] = img[::-1, ::-1].copy()
-    return frames
-
-
 def process_action(action, cfg):
     action = np.asarray(action)
     if is_pi05_policy(cfg):
@@ -443,7 +429,9 @@ def resolve_episode_indices(cfg, num_available_episodes):
 
 
 def _rollout_dir_for_policy(cfg):
-    rollout_dir = os.path.join("./rollouts", DATE, policy_slug(cfg))
+    rollout_dir = cfg.rollout_dir.strip() if cfg.rollout_dir else ""
+    if not rollout_dir:
+        rollout_dir = os.path.join("./rollouts", DATE, policy_slug(cfg))
     os.makedirs(rollout_dir, exist_ok=True)
     return rollout_dir
 
@@ -479,7 +467,7 @@ def _save_rollout_video_for_policy(cfg, rollout_images, idx, success, task_descr
 
 def save_rollout_videos(cfg, rollout_frames_by_view, idx, success, task_description,
                         safety_level=None, log_file=None):
-    """Save the default agentview plus any extra available camera views."""
+    """Save only the primary agentview rollout video."""
     agentview_frames = rollout_frames_by_view.get("agentview", [])
     if agentview_frames:
         _save_rollout_video_for_policy(
@@ -488,20 +476,6 @@ def save_rollout_videos(cfg, rollout_frames_by_view, idx, success, task_descript
             idx,
             success=success,
             task_description=task_description,
-            safety_level=safety_level,
-            log_file=log_file,
-        )
-
-    for view_name, frames in rollout_frames_by_view.items():
-        if view_name == "agentview" or not frames:
-            continue
-        _save_rollout_video_for_policy(
-            cfg,
-            frames,
-            idx,
-            success=success,
-            task_description=task_description,
-            view_name=view_name,
             safety_level=safety_level,
             log_file=log_file,
         )
@@ -583,7 +557,7 @@ def run_episode(cfg, env, task_desc, model, resize_size,
     collide_flag = False; collide_time = 0
 
     # ── Run episode ──
-    replay_imgs = {view_name: [] for view_name, _ in ROLLOUT_VIEW_SPECS}
+    replay_imgs = {"agentview": []}
     max_steps = TASK_MAX_STEPS[cfg.task_suite_name]; t = 0; success = False
     steps_executed = 0
     try:
@@ -594,10 +568,6 @@ def run_episode(cfg, env, task_desc, model, resize_size,
             else:
                 observation, img = prepare_obs(obs, resize_size)
             replay_imgs["agentview"].append(img)
-            for view_name, frame in collect_rollout_frames(obs).items():
-                if view_name == "agentview":
-                    continue
-                replay_imgs.setdefault(view_name, []).append(frame)
 
             # Query selected VLA backend for u_nominal.
             if is_pi05_policy(cfg):
@@ -685,7 +655,7 @@ def run_task(cfg, task_suite, task_id, model, resize_size,
         total_metrics.add_episode(success, collide, total_time)
         ss = success and not collide
 
-        save_rollout_videos(cfg, replay, total_metrics.episodes, success=success,
+        save_rollout_videos(cfg, replay, ep_idx, success=success,
                             task_description=task_desc, safety_level=cfg.safety_level, log_file=log_file)
 
         log_msg(f"Success: {success} | Collide: {collide} | SS: {ss}", log_file)

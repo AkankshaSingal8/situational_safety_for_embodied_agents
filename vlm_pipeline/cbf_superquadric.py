@@ -7,8 +7,6 @@ simple ellipsoids for tighter CBF constraint envelopes.
 Outputs:
   - cbf_params.json          : superquadric parameters per constraint
   - vis_3d.html              : interactive 3D plotly visualization
-  - vis_agentview_overlay.png: h=0 boundary projected on agentview image
-  - vis_eye_in_hand_overlay.png: h=0 boundary projected on eye-in-hand image
 
 The gripper is approximated as a sphere by inflating each obstacle
 superquadric during CBF evaluation, while visualization keeps the raw
@@ -184,6 +182,66 @@ def build_gt_point_cloud(position, radius=DEFAULT_OBJECT_RADIUS, n=200):
     return pts
 
 
+def _point_cloud_debug(points, reference=None):
+    """Compact JSON-safe point-cloud summary for debugging fits."""
+    if points is None or len(points) == 0:
+        return {"num_points": 0}
+
+    pts = np.asarray(points, dtype=np.float64)
+    finite = np.all(np.isfinite(pts), axis=1)
+    pts = pts[finite]
+    if len(pts) == 0:
+        return {"num_points": 0, "num_nonfinite": int(len(points))}
+
+    bbox_min = pts.min(axis=0)
+    bbox_max = pts.max(axis=0)
+    summary = {
+        "num_points": int(len(pts)),
+        "num_nonfinite": int(len(points) - len(pts)),
+        "bbox_min": bbox_min.tolist(),
+        "bbox_max": bbox_max.tolist(),
+        "bbox_extent": (bbox_max - bbox_min).tolist(),
+        "centroid": pts.mean(axis=0).tolist(),
+    }
+
+    if reference is not None:
+        ref = np.asarray(reference, dtype=np.float64)
+        d = np.linalg.norm(pts - ref, axis=1)
+        summary["distance_to_reference"] = {
+            "p50": float(np.percentile(d, 50)),
+            "p95": float(np.percentile(d, 95)),
+            "p99": float(np.percentile(d, 99)),
+            "max": float(np.max(d)),
+            "count_gt_0p25": int(np.count_nonzero(d > 0.25)),
+        }
+
+    return summary
+
+
+def _mask_debug(seg, depth, geom_ids):
+    """Mirror build_object_point_cloud mask logic without changing behavior."""
+    seg = np.squeeze(seg)
+    depth = np.squeeze(depth)
+    raw_mask = np.isin(seg, list(geom_ids))
+    if MASK_ERODE_PIXELS > 0:
+        eroded_mask = _binary_erosion_square(raw_mask, radius=MASK_ERODE_PIXELS)
+        use_eroded = np.count_nonzero(eroded_mask) >= MIN_ERODED_PIXELS
+        mask = eroded_mask if use_eroded else raw_mask
+    else:
+        eroded_mask = raw_mask
+        use_eroded = False
+        mask = raw_mask
+
+    valid_depth = mask & (depth > 0)
+    return {
+        "raw_pixels": int(np.count_nonzero(raw_mask)),
+        "eroded_pixels": int(np.count_nonzero(eroded_mask)),
+        "used_eroded_mask": bool(use_eroded),
+        "mask_pixels": int(np.count_nonzero(mask)),
+        "valid_depth_pixels": int(np.count_nonzero(valid_depth)),
+    }
+
+
 # ---------------------------------------------------------------------------
 # 2. Extend point cloud by spatial relationship
 # ---------------------------------------------------------------------------
@@ -262,7 +320,7 @@ def _superquadric_log_volume(params):
     )
 
 
-def fit_superquadric(points, safety_margin=SAFETY_MARGIN):
+def fit_superquadric(points, safety_margin=SAFETY_MARGIN, return_debug=False):
     """
     Fit a minimum-volume enclosing superquadric to a point cloud.
 
@@ -278,6 +336,7 @@ def fit_superquadric(points, safety_margin=SAFETY_MARGIN):
 
     Returns: (cx, cy, cz, ax, ay, az, e1, e2)
     """
+    points = np.asarray(points, dtype=np.float64)
     fit_points = points
     if len(points) > MAX_FIT_POINTS:
         rng = np.random.default_rng(0)
@@ -313,12 +372,47 @@ def fit_superquadric(points, safety_margin=SAFETY_MARGIN):
     params = result.x.copy()
     g_final = _superquadric_inside_outside(points, params)
     g_max = float(np.max(g_final))
+    dilation_factor = 1.0
     if g_max > 1.0:
         e1 = np.clip(params[6], 0.2, 2.0)
-        params[3:6] *= g_max ** (e1 / 2.0)
+        dilation_factor = float(g_max ** (e1 / 2.0))
+        params[3:6] *= dilation_factor
 
     params[3:6] *= safety_margin
-    return params
+    if not return_debug:
+        return params
+
+    final_g = _superquadric_inside_outside(points, params)
+    full_min = points.min(axis=0)
+    full_max = points.max(axis=0)
+    full_extent = full_max - full_min
+    max_extent = float(np.max(full_extent))
+    scale_to_extent = float(np.max(params[3:6]) / max(max_extent, 1e-9))
+
+    debug = {
+        "num_input_points": int(len(points)),
+        "num_fit_points": int(len(fit_points)),
+        "subsampled_for_fit": bool(len(fit_points) != len(points)),
+        "fit_data_bbox_min": data_min.tolist(),
+        "fit_data_bbox_max": data_max.tolist(),
+        "fit_data_bbox_extent": data_extent.tolist(),
+        "full_data_bbox_min": full_min.tolist(),
+        "full_data_bbox_max": full_max.tolist(),
+        "full_data_bbox_extent": full_extent.tolist(),
+        "initial_center": center_init.tolist(),
+        "initial_scales": scales_init.tolist(),
+        "optimizer_success": bool(result.success),
+        "optimizer_status": int(result.status),
+        "optimizer_message": str(result.message),
+        "optimizer_nit": int(getattr(result, "nit", -1)),
+        "optimizer_fun": float(result.fun),
+        "pre_dilation_g_max": g_max,
+        "dilation_factor": dilation_factor,
+        "final_g_max": float(np.max(final_g)),
+        "log_volume": float(_superquadric_log_volume(params)),
+        "scale_to_max_data_extent": scale_to_extent,
+    }
+    return params, debug
 
 
 # ---------------------------------------------------------------------------
@@ -450,35 +544,99 @@ def build_constraints(vlm_json, obs_folder, camera_keys=None):
                 continue
 
         geom_ids = _geom_ids_for_object(obj_name, geom_id_to_name)
+        object_reference = None
+        if obj_name in meta["objects"]:
+            object_reference = meta["objects"][obj_name]["position"]
+
+        camera_debug = []
         pc_parts = []
         if geom_ids:
             for camera_key in valid_cameras:
                 d = camera_data[camera_key]
+                cam_debug = {
+                    "camera": camera_key,
+                    "seg_name": d["seg_name"],
+                    "mask": _mask_debug(d["seg"], d["depth"], geom_ids),
+                }
                 pc_cam = build_object_point_cloud(
                     d["seg"], d["depth"], geom_ids, d["intrinsic"], d["extrinsic"]
                 )
                 if pc_cam is not None and len(pc_cam) > 0:
+                    cam_debug["points_before_downsample"] = _point_cloud_debug(
+                        pc_cam, reference=object_reference
+                    )
                     # Keep fitting stable and balanced across views.
                     if len(pc_cam) > 12000:
                         idx = np.random.choice(len(pc_cam), 12000, replace=False)
                         pc_cam = pc_cam[idx]
+                        cam_debug["downsampled"] = True
+                        cam_debug["downsampled_to"] = int(len(pc_cam))
+                        cam_debug["downsample_rng"] = "np.random.choice_global_state"
+                    else:
+                        cam_debug["downsampled"] = False
+                    cam_debug["points_after_downsample"] = _point_cloud_debug(
+                        pc_cam, reference=object_reference
+                    )
                     pc_parts.append(pc_cam)
+                else:
+                    cam_debug["points_before_downsample"] = {"num_points": 0}
+                    cam_debug["points_after_downsample"] = {"num_points": 0}
+                    cam_debug["downsampled"] = False
+                camera_debug.append(cam_debug)
         pc = np.vstack(pc_parts) if pc_parts else None
 
+        used_gt_fallback = False
         if pc is None or len(pc) < 10:
             if obj_name in meta["objects"]:
                 pc = build_gt_point_cloud(meta["objects"][obj_name]["position"])
+                used_gt_fallback = True
             else:
                 continue
+
+        object_pc_debug = _point_cloud_debug(pc, reference=object_reference)
 
         for rel in relationships:
             ext_pc = extend_point_cloud(pc, rel)
             sq_fit_start = time.perf_counter()
-            sq_params = fit_superquadric(ext_pc)
-            sq_fit_total_seconds += time.perf_counter() - sq_fit_start
+            sq_params, fit_debug = fit_superquadric(ext_pc, return_debug=True)
+            fit_elapsed = time.perf_counter() - sq_fit_start
+            sq_fit_total_seconds += fit_elapsed
             sq_fit_count += 1
             h_val = evaluate_cbf(gripper_center, sq_params)
             grad = cbf_gradient(gripper_center, sq_params)
+            extended_pc_debug = _point_cloud_debug(ext_pc, reference=object_reference)
+
+            object_extent = np.array(object_pc_debug.get("bbox_extent", [0.0, 0.0, 0.0]))
+            extended_extent = np.array(extended_pc_debug.get("bbox_extent", [0.0, 0.0, 0.0]))
+            max_object_extent = float(np.max(object_extent)) if object_extent.size else 0.0
+            max_extended_extent = float(np.max(extended_extent)) if extended_extent.size else 0.0
+            max_scale = float(np.max(sq_params[3:6]))
+            fit_debug["elapsed_seconds"] = float(fit_elapsed)
+            fit_debug["scale_to_max_object_extent"] = float(max_scale / max(max_object_extent, 1e-9))
+            fit_debug["scale_to_max_extended_extent"] = float(max_scale / max(max_extended_extent, 1e-9))
+
+            debug = {
+                "obs_folder": obs_folder,
+                "valid_cameras": valid_cameras,
+                "geom_ids": sorted(int(gid) for gid in geom_ids),
+                "used_gt_fallback": bool(used_gt_fallback),
+                "object_reference_position": object_reference,
+                "per_camera": camera_debug,
+                "object_point_cloud": object_pc_debug,
+                "extended_point_cloud": extended_pc_debug,
+                "fit": fit_debug,
+            }
+
+            print(
+                "  [fit_debug] "
+                f"{obj_name} | {rel} | cameras={valid_cameras} | "
+                f"n_obj={object_pc_debug.get('num_points', 0)} | "
+                f"extent={np.round(object_extent, 4).tolist()} | "
+                f"scales={np.round(sq_params[3:6], 4).tolist()} | "
+                f"scale/object_extent={fit_debug['scale_to_max_object_extent']:.3f} | "
+                f"success={fit_debug['optimizer_success']} status={fit_debug['optimizer_status']} | "
+                f"g_max={fit_debug['final_g_max']:.3f}"
+            )
 
             constraints.append({
                 "object": obj_name,
@@ -488,6 +646,7 @@ def build_constraints(vlm_json, obs_folder, camera_keys=None):
                 "object_points": pc,
                 "h_at_eef": float(h_val),
                 "gradient_at_eef": grad.tolist(),
+                "debug": debug,
             })
 
     print(f"  [timing] total SQ fitting time: {sq_fit_total_seconds:.3f}s for {sq_fit_count} superquadrics")
@@ -962,6 +1121,7 @@ def main():
                 },
                 "h_at_eef": c["h_at_eef"],
                 "gradient_at_eef": c["gradient_at_eef"],
+                "debug": c.get("debug", {}),
             }
             for c in constraints
         ],
@@ -979,51 +1139,12 @@ def main():
         json.dump(cbf_json, f, indent=2)
     print(f"\n  Saved {params_path}")
 
-    # For 2D overlay vis, strip large arrays; for 3D vis, keep them
-    vis_constraints_2d = []
-    for c in constraints:
-        vis_constraints_2d.append({k: v for k, v in c.items()
-                                   if k not in ("extended_points", "object_points")})
-
-    # --- Visualizations ---
-    print("\nGenerating visualizations ...")
-
-    # 3D scene map (point cloud only, no superquadrics)
-    vis_scene_html(eef_pos, os.path.join(out, "vis_scene_3d.html"),
-                   obs_folder=obs, cam_params=cam)
-
-    # 3D point-cloud-only map with per-object legend (no superquadrics)
-    vis_pointcloud_only_html(constraints, eef_pos,
-                             os.path.join(out, "vis_pointcloud_only.html"),
-                             obs_folder=obs, cam_params=cam)
-
-    # 3D scene + object point clouds + superquadric overlays
+    # --- Visualization ---
+    print("\nGenerating vis_3d.html ...")
     vis_3d_html(constraints, eef_pos, os.path.join(out, "vis_3d.html"),
                 obs_folder=obs, cam_params=cam)
 
-    # RGB overlay — agentview
-    agentview_rgb = os.path.join(obs, "agentview_rgb.png")
-    vis_rgb_overlay(vis_constraints_2d, agentview_rgb,
-                    cam["agentview"]["intrinsic"],
-                    cam["agentview"]["extrinsic"],
-                    os.path.join(out, "vis_agentview_overlay.png"))
-
-    # RGB overlay — eye in hand
-    eih_rgb = os.path.join(obs, "eye_in_hand_rgb.png")
-    vis_rgb_overlay(vis_constraints_2d, eih_rgb,
-                    cam["robot0_eye_in_hand"]["intrinsic"],
-                    cam["robot0_eye_in_hand"]["extrinsic"],
-                    os.path.join(out, "vis_eye_in_hand_overlay.png"))
-
-    # RGB overlay — backview (if available)
-    backview_rgb = os.path.join(obs, "backview_rgb.png")
-    if "backview" in cam and os.path.exists(backview_rgb):
-        vis_rgb_overlay(vis_constraints_2d, backview_rgb,
-                        cam["backview"]["intrinsic"],
-                        cam["backview"]["extrinsic"],
-                        os.path.join(out, "vis_backview_overlay.png"))
-
-    print("\nDone. All outputs saved to:", out)
+    print("\nDone. Saved cbf_params.json and vis_3d.html to:", out)
 
 
 if __name__ == "__main__":

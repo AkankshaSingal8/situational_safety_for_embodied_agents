@@ -46,15 +46,16 @@ All pipeline scripts now live under `vlm_pipeline/` only (root-level duplicates 
 | File | Role |
 |---|---|
 | `vlm_pipeline/save_vlm_inputs.py` | Dumps `{rgb, depth, seg_instance, seg_element, seg, camera_params, metadata}.{npy,png,json}` for each (safety_level, task, episode). This is the **data generator**. |
-| `vlm_pipeline/cbf_superquadric.py` | Takes one episode's dump + a per-scene VLM JSON, builds per-object point clouds, fits superquadrics, writes `cbf_params.json` and 3D/2D visualizations. Gripper is approximated as a sphere (`GRIPPER_SPHERE_RADIUS = 0.12` m) via obstacle inflation. |
+| `vlm_pipeline/cbf_superquadric.py` | Takes one episode's dump + a per-scene VLM JSON, builds per-object point clouds, fits superquadrics, writes `cbf_params.json` and `vis_3d.html`. The current local version also writes per-constraint debug summaries into `cbf_params.json`. Gripper is approximated as a sphere (`GRIPPER_SPHERE_RADIUS = 0.12` m) via obstacle inflation. |
 | `vlm_pipeline/semantic_cbf_filter.py` | Runtime CBF-QP filter (`SemanticCBFPipeline`). `setup_from_cbf_json(...)` loads a precomputed `cbf_params.json`. |
 | `vlm_pipeline/run_libero_eval.py` | **Plain VLA eval, NO CBF.** Logs SafeLIBERO paper metrics (`CAR`, `TSR`, `SSR`, `ETS`) and writes a `*.metrics.json` next to the text log. |
-| `vlm_pipeline/run_vlm_eval.py` | **VLA + Semantic CBF eval.** Exposes `--cbf_precomputed_json` CLI arg (accepts either a file path or a directory holding `cbf_params.json`; supports `{task_suite}/{safety_level}/{task_id}/{episode_idx}` templating). Also logs `CAR`, `TSR`, `SSR`, `ETS` and writes `*.metrics.json`. |
+| `vlm_pipeline/run_vlm_eval.py` | **VLA + Semantic CBF eval.** Exposes `--cbf_precomputed_json` CLI arg (accepts either a file path or a directory holding `cbf_params.json`; supports `{task_suite}/{safety_level}/{task_id}/{episode_idx}` templating). The current local version saves only the primary `agentview` rollout MP4 and supports `--rollout_dir`. Also logs `CAR`, `TSR`, `SSR`, `ETS` and writes `*.metrics.json`. |
 | `vlm_pipeline/pi05_libero_policy.py` | OpenPI websocket client wrapper for the official pi0.5-LIBERO server. Mirrors the `vlsa-aegis` LIBERO observation keys, 224 resize, and `replan_steps=5` defaults. |
 | `vlm_pipeline/qwen_vlm_worker.py` | Subprocess target for the live Qwen VLM path (only used when `--cbf_use_vlm True`). Not on the canonical flow. |
+| `vlm_pipeline/generate_task0_manual_vlm_jsons.py` | Local helper that reads each task-0 episode's `metadata.json` active obstacle and writes one-obstacle manual VLM JSONs under `vlm_pipeline/vlm_outputs/task_0/`. Useful before batch precomputing per-episode CBF JSONs. |
 | `vlm_pipeline/vlm_outputs/` | VLM-produced relation JSONs (e.g. `vlm_manual_scene_safety_ep00_single.json`). |
 | `vlm_pipeline/vlm_inputs/safelibero_spatial/level_I/task_X/episode_YY/` | Offline env dumps consumed by `cbf_superquadric.py`. |
-| `vlm_pipeline/cbf_sq_outputs_mves_gripper_sphere/` | Canonical output of `cbf_superquadric.py` (`cbf_params.json` + visualizations). |
+| `vlm_pipeline/cbf_sq_outputs_mves_gripper_sphere/` | Example output location for `cbf_superquadric.py` (`cbf_params.json` + `vis_3d.html`). For multi-episode runs, prefer a templated tree by suite/level/task/episode. |
 
 ## Data File Contents (what's in each `episode_YY/` folder)
 
@@ -75,9 +76,11 @@ Only **new** episode dumps generated after my edit have these fields. If you see
 ## Gotchas I've Already Hit
 
 1. **`_seg.npy` silently held instance IDs on old dumps.** `cbf_superquadric.py::_geom_ids_for_object` matches against geom (element) IDs. If the dump was produced by the pre-Apr-12 `save_vlm_inputs.py` (`"camera_segmentations": "instance"` hardcoded), the mask ends up empty, `pc = None`, and the code **silently falls back** to `build_gt_point_cloud(...)`, which samples 200 points in a 0.05 m sphere around the GT object center — looks like a tiny sphere per object in `vis_3d.html`. Fix: regenerate the dumps with the current `save_vlm_inputs.py` (it defaults to `"instance,element"` and writes both `_seg_instance.npy` / `_seg_element.npy`, and canonical `_seg.npy = element`).
-2. **CBF-for-one-episode vs VLA-over-all-episodes mismatch.** The precomputed `cbf_params.json` is **static** for the scene it was fit on (task X, episode Y, safety level L). If you run VLA eval over multiple episodes with a single hardcoded JSON, the constraints won't match the scene after episode 0. Either (a) restrict `--num_trials_per_task 1` so only ep 0 runs, or (b) precompute a JSON per episode and pass a templated `--cbf_precomputed_json` path.
+2. **CBF-for-one-episode vs VLA-over-all-episodes mismatch.** The precomputed `cbf_params.json` is **static** for the scene it was fit on (task X, episode Y, safety level L). If you run VLA eval over multiple episodes with a single hardcoded JSON, the constraints won't match the scene after episode 0. Either (a) restrict explicitly with `--task_ids 0 --episode_indices 0`, or (b) precompute a JSON per episode and pass a templated `--cbf_precomputed_json` path.
 3. ~~`run_task` hardcodes `task_id` iteration.~~ Fixed by the Apr 21 cleanup — both `vlm_pipeline/run_vlm_eval.py` and `vlm_pipeline/run_libero_eval.py` now take `--task_ids`. Accepts a single id (`--task_ids 0`), a comma-separated list (`--task_ids 0,1,2`), or the literal `all` for the whole suite. Defaults to `"0"`.
 4. ~~Two copies of each script.~~ Fixed by the Apr 21 cleanup — only `vlm_pipeline/` copies remain. Working-tree versions of the deleted root copies are stashed under `.pre_cleanup_backup/` in case you need them.
+5. **Current `cbf_superquadric.py` output is leaner than older notes.** It no longer writes `vis_pointcloud_only.html`, `vis_scene_3d.html`, or RGB overlay PNGs. Use `vis_3d.html` plus the `"debug"` block inside `cbf_params.json` to diagnose fits.
+6. **Current `run_vlm_eval.py` saves only `agentview` rollout video.** Extra rollout views (`eye_in_hand`, `backview`) were removed from this local version. If you want a predictable output folder for a run, pass `--rollout_dir <dir>`; otherwise it uses `./rollouts/<DATE>/<policy_backend>/`.
 
 ## Commands That Work
 
@@ -121,29 +124,58 @@ python3 vlm_pipeline/cbf_superquadric.py \
 In the log, `[build_constraints] <cam>: using <file>` should say `..._seg_element.npy`. If it says `..._seg.npy`, check whether the dump is stale and `_seg.npy` is really element-based. If point clouds end up empty, the pipeline falls back to the GT-center sphere (looks tiny in `vis_3d.html`).
 
 Outputs land in `vlm_pipeline/cbf_sq_outputs_mves_gripper_sphere/`:
-- `cbf_params.json` — per-constraint superquadric `{center, scales, ε1, ε2}`, `h_at_eef`, gradients, and gripper info (`{type: "sphere", radius: 0.12}`).
-- `vis_3d.html`, `vis_pointcloud_only.html`, `vis_scene_3d.html`, `vis_{agentview,eye_in_hand,backview}_overlay.png`.
+- `cbf_params.json` — per-constraint superquadric `{center, scales, ε1, ε2}`, `h_at_eef`, gradients, gripper info (`{type: "sphere", radius: 0.12}`), and a `"debug"` block with per-camera mask counts, point-cloud extents, optimizer status, scale ratios, and whether GT fallback was used.
+- `vis_3d.html` — interactive Plotly view of the scene, object point clouds, fitted superquadrics, and gripper sphere.
+
+The terminal also prints `[fit_debug] ...` lines. Good signs: `n_obj` is not tiny, `used_gt_fallback` in the JSON is `false`, optimizer success is `True`, and `scale/object_extent` is not wildly huge.
+
+### 2b. Optional: generate one-obstacle manual VLM JSONs from metadata
+
+This local helper is useful after regenerating many task-0 dumps. It reads each
+episode's active obstacle from `metadata.json` and writes matching JSON prompts:
+
+```bash
+python3 vlm_pipeline/generate_task0_manual_vlm_jsons.py \
+    --input_root vlm_pipeline/vlm_inputs/safelibero_spatial \
+    --output_root vlm_pipeline/vlm_outputs/task_0 \
+    --levels level_I,level_II \
+    --task_id 0 \
+    --episode_indices all
+```
+
+For one generated episode JSON, use:
+
+```bash
+python3 vlm_pipeline/cbf_superquadric.py \
+    --vlm_json vlm_pipeline/vlm_outputs/task_0/level_I/episode_00.json \
+    --obs_folder vlm_pipeline/vlm_inputs/safelibero_spatial/level_I/task_0/episode_00 \
+    --output_dir vlm_pipeline/cbf_sq_outputs_mves_gripper_sphere/safelibero_spatial/level_I/task_0/episode_00
+```
 
 ### 3. VLA + CBF eval using that CBF JSON
 
-Use `vlm_pipeline/run_vlm_eval.py` (the one with `--cbf_precomputed_json`). Lock task / safety / episode count to match the JSON we just produced:
+Use `vlm_pipeline/run_vlm_eval.py` (the one with `--cbf_precomputed_json`). Lock task / safety / episode index to match the JSON we just produced:
 
 ```bash
 python3 vlm_pipeline/run_vlm_eval.py \
     --task_suite_name safelibero_spatial \
     --safety_level I \
-    --num_trials_per_task 1 \
+    --task_ids 0 \
+    --episode_indices 0 \
     --use_cbf_safety_filter True \
     --cbf_use_vlm False \
     --cbf_precomputed_json vlm_pipeline/cbf_sq_outputs_mves_gripper_sphere/cbf_params.json \
+    --rollout_dir ./rollouts/cbf_ep00 \
     --pretrained_checkpoint /ocean/projects/cis250185p/jqian8/checkpoints/openvla-7b-oft-finetuned-libero-spatial-object-goal-10
 ```
 
 Key flags:
 - `--cbf_use_vlm False` → rule-based CBF (no live Qwen VLM subprocess); since the JSON is already offline-produced, this is what you want.
-- `--cbf_precomputed_json <file>` → a no-template path, so every episode reuses the same JSON. Combined with `--num_trials_per_task 1`, that's exactly "apply this CBF to ep 0 only".
+- `--task_ids 0 --episode_indices 0` → exactly "run task 0, episode 0". This is safer than relying only on `--num_trials_per_task 1` because the target episode is explicit.
+- `--cbf_precomputed_json <file>` → a no-template path, so every evaluated episode reuses the same JSON. Only use this with the matching single episode.
+- `--rollout_dir <dir>` → optional, but useful for keeping these debug rollouts together. Current `run_vlm_eval.py` writes only the `agentview` MP4.
 - In the log, look for `[CBF] Loaded precomputed superquadrics: .../cbf_sq_outputs_mves_gripper_sphere/cbf_params.json` to confirm the JSON got picked up.
-- Rollouts land in backend-specific folders, e.g. `./rollouts/<DATE>/openvla_oft/*.mp4` or `./rollouts/<DATE>/pi05_libero/*.mp4`; text logs in `./experiments/logs/EVAL-*-CBF*.txt`.
+- If `--rollout_dir` is omitted, rollouts land in backend-specific folders, e.g. `./rollouts/<DATE>/openvla_oft/*.mp4` or `./rollouts/<DATE>/pi05_libero/*.mp4`; text logs in `./experiments/logs/EVAL-*-CBF*.txt`.
 
 ### Evaluation metrics now logged by both eval scripts
 
@@ -240,6 +272,7 @@ python3 vlm_pipeline/run_vlm_eval.py \
     --use_cbf_safety_filter True \
     --cbf_use_vlm False \
     --cbf_precomputed_json "vlm_pipeline/cbf_sq_outputs_mves_gripper_sphere/{task_suite}/level_{safety_level}/task_{task_id}/episode_{episode_idx:02d}/cbf_params.json" \
+    --rollout_dir ./rollouts/pi05_cbf_ep0_3 \
     --run_id_note pi05
 ```
 
@@ -318,7 +351,20 @@ rg -n "HARDCODED_CBF_JSON|cbf_precomputed_json" run_vlm_eval.py vlm_pipeline/run
 Which task_id / episode range an eval iterates:
 
 ```bash
-rg -n "for task_id in|num_trials_per_task" vlm_pipeline/run_vlm_eval.py
+rg -n "task_ids|episode_indices|num_trials_per_task|resolve_episode_indices" vlm_pipeline/run_vlm_eval.py
+```
+
+Inspect whether a CBF fit used real segmented point clouds or GT fallback:
+
+```bash
+python3 -c "
+import json
+p='vlm_pipeline/cbf_sq_outputs_mves_gripper_sphere/cbf_params.json'
+d=json.load(open(p))
+for c in d.get('constraints', []):
+    dbg=c.get('debug', {})
+    print(c.get('object'), c.get('relationship'), 'fallback=', dbg.get('used_gt_fallback'), 'n=', dbg.get('object_point_cloud', {}).get('num_points'))
+"
 ```
 
 Most recent rollouts / logs:
