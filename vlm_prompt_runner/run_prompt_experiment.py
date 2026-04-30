@@ -23,6 +23,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+import vlm_prompt_runner.config  # loads .env / .envfile on import
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,7 +45,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--prompts-dir", required=True,
                    help="Directory containing .md prompt files")
     p.add_argument("--model", required=True,
-                   help="VLM model key: qwen3-vl-8b | qwen2.5-vl-7b | qwen2.5-vl-3b | dry-run")
+                   help=("VLM model key: qwen3-vl-8b | qwen2.5-vl-7b | qwen2.5-vl-3b | "
+                         "claude-sonnet-4-6 | claude-opus-4-7 | "
+                         "gpt-4.5-preview | gpt-4.1 | gpt-4.1-mini | "
+                         "gemini-2.5-pro | gemini-2.0-flash | dry-run"))
     p.add_argument("--suite", required=True)
     p.add_argument("--level", required=True)
     p.add_argument("--task", type=int, required=True)

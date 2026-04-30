@@ -31,6 +31,7 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+import vlm_prompt_runner.config  # loads .env / .envfile on import
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,7 +62,9 @@ def parse_args() -> argparse.Namespace:
                    help="Path to .md prompt file, e.g. prompts/safelibero_prompt.md")
     p.add_argument("--vlm", required=True,
                    help=("VLM key: qwen2.5-vl-7b | qwen2.5-vl-3b | qwen2-vl-7b | "
-                         "qwen3-vl-8b | claude-sonnet-4-6 | claude-opus-4-7 | dry-run"))
+                         "qwen3-vl-8b | claude-sonnet-4-6 | claude-opus-4-7 | "
+                         "gpt-4.5-preview | gpt-4.1 | gpt-4.1-mini | "
+                         "gemini-2.5-pro | gemini-2.0-flash | dry-run"))
     p.add_argument("--load_in_4bit", action="store_true",
                    help="4-bit quantization for Qwen local models")
     p.add_argument("--device", default="auto",
