@@ -46,7 +46,7 @@ def eval_episode(pred_ep_dir: Path, gt_ep_dir: Path) -> Optional[dict]:
     prediction = load_prediction(pred_ep_dir)
     if prediction is None:
         return {"correct": False, "predicted": None, "ground_truth": gt_name}
-    pred_object = prediction.get("object", "")
+    pred_object = prediction.get("object") or ""
     return {
         "correct": names_match(pred_object, gt_name),
         "predicted": pred_object,
