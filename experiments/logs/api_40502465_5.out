@@ -1,0 +1,101 @@
+[Fri May  1 14:30:41 EDT 2026] Model=gemini-2.5-flash  Task=0
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 0
+Prompt                          gemini-2.5-flash
+------------------------------------------------
+p1_vision_only                             60.0%
+p2_task_roles                              50.0%
+p3_candidate_list                          60.0%
+p4_positions                              100.0%
+p5_cot_structured                          33.3%
+p6_visual_path                             90.0%
+p7_per_object_binary                       44.4%
+p8_ranked_collision                        85.7%
+
+Best model per prompt:
+  p1_vision_only                  gemini-2.5-flash  (60.0%)
+  p2_task_roles                   gemini-2.5-flash  (50.0%)
+  p3_candidate_list               gemini-2.5-flash  (60.0%)
+  p4_positions                    gemini-2.5-flash  (100.0%)
+  p5_cot_structured               gemini-2.5-flash  (33.3%)
+  p6_visual_path                  gemini-2.5-flash  (90.0%)
+  p7_per_object_binary            gemini-2.5-flash  (44.4%)
+  p8_ranked_collision             gemini-2.5-flash  (85.7%)
+
+[Fri May  1 14:56:46 EDT 2026] Model=gemini-2.5-flash  Task=1
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 1
+Prompt                          gemini-2.5-flash
+------------------------------------------------
+p1_vision_only                             68.4%
+p2_task_roles                              55.0%
+p3_candidate_list                          63.2%
+p4_positions                               94.7%
+p5_cot_structured                          47.4%
+p6_visual_path                             95.0%
+p7_per_object_binary                       42.1%
+p8_ranked_collision                        76.5%
+
+Best model per prompt:
+  p1_vision_only                  gemini-2.5-flash  (68.4%)
+  p2_task_roles                   gemini-2.5-flash  (55.0%)
+  p3_candidate_list               gemini-2.5-flash  (63.2%)
+  p4_positions                    gemini-2.5-flash  (94.7%)
+  p5_cot_structured               gemini-2.5-flash  (47.4%)
+  p6_visual_path                  gemini-2.5-flash  (95.0%)
+  p7_per_object_binary            gemini-2.5-flash  (42.1%)
+  p8_ranked_collision             gemini-2.5-flash  (76.5%)
+
+[Fri May  1 15:18:06 EDT 2026] Model=gemini-2.5-flash  Task=2
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 2
+Prompt                          gemini-2.5-flash
+------------------------------------------------
+p1_vision_only                             72.4%
+p2_task_roles                              63.3%
+p3_candidate_list                          69.0%
+p4_positions                               82.8%
+p5_cot_structured                          55.2%
+p6_visual_path                             76.7%
+p7_per_object_binary                       48.3%
+p8_ranked_collision                        48.1%
+
+Best model per prompt:
+  p1_vision_only                  gemini-2.5-flash  (72.4%)
+  p2_task_roles                   gemini-2.5-flash  (63.3%)
+  p3_candidate_list               gemini-2.5-flash  (69.0%)
+  p4_positions                    gemini-2.5-flash  (82.8%)
+  p5_cot_structured               gemini-2.5-flash  (55.2%)
+  p6_visual_path                  gemini-2.5-flash  (76.7%)
+  p7_per_object_binary            gemini-2.5-flash  (48.3%)
+  p8_ranked_collision             gemini-2.5-flash  (48.1%)
+
+[Fri May  1 15:38:10 EDT 2026] Model=gemini-2.5-flash  Task=3
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 3
+Prompt                          gemini-2.5-flash
+------------------------------------------------
+p1_vision_only                             68.4%
+p2_task_roles                              66.7%
+p3_candidate_list                          73.7%
+p4_positions                               86.1%
+p5_cot_structured                          57.6%
+p6_visual_path                             80.6%
+p7_per_object_binary                       51.5%
+p8_ranked_collision                        54.3%
+
+Best model per prompt:
+  p1_vision_only                  gemini-2.5-flash  (68.4%)
+  p2_task_roles                   gemini-2.5-flash  (66.7%)
+  p3_candidate_list               gemini-2.5-flash  (73.7%)
+  p4_positions                    gemini-2.5-flash  (86.1%)
+  p5_cot_structured               gemini-2.5-flash  (57.6%)
+  p6_visual_path                  gemini-2.5-flash  (80.6%)
+  p7_per_object_binary            gemini-2.5-flash  (51.5%)
+  p8_ranked_collision             gemini-2.5-flash  (54.3%)
+
+[Fri May  1 15:57:50 EDT 2026] Done — model=gemini-2.5-flash

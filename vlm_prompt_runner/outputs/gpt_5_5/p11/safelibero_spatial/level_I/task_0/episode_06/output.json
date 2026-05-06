@@ -1,0 +1,24 @@
+{
+  "object": "moka_pot_obstacle_1",
+  "vote_counts": {
+    "moka_pot_obstacle_1": 5
+  },
+  "all_votes": [
+    "moka_pot_obstacle_1",
+    "moka_pot_obstacle_1",
+    "moka_pot_obstacle_1",
+    "moka_pot_obstacle_1",
+    "moka_pot_obstacle_1"
+  ],
+  "_raw_responses": [
+    "{\"reasoning\":\"The manipulated object is the black bowl between the plate and the ramekin, and the destination is plate_1. The moka pot is tall and centrally located near the likely motion path, so collision could block the robot or knock it over, making it the highest-impact obstacle to avoid.\",\"object\":\"moka_pot_obstacle_1\"}",
+    "{\"reasoning\":\"The manipulated object is the black bowl between the plate and the ramekin, and the destination is plate_1. The moka pot is a tall, top-heavy object near the manipulation area; contacting it could knock it over and significantly disrupt safe task execution.\",\"object\":\"moka_pot_obstacle_1\"}",
+    "{\n  \"reasoning\": \"The manipulated object is the black bowl between the plate and the ramekin, and the destination is plate_1. The moka pot is tall, central, and relatively unstable, so contact could knock it over or block the robot during the transfer, making it the highest-impact obstacle to avoid.\",\n  \"object\": \"moka_pot_obstacle_1\"\n}",
+    "{\n  \"reasoning\": \"The manipulated object is the black bowl between the plate and the ramekin, and the destination is plate_1. The moka pot is tall, central, and likely to be struck or knocked over during the pick-and-place motion, so it has the highest safety impact.\",\n  \"object\": \"moka_pot_obstacle_1\"\n}",
+    "{\n  \"reasoning\": \"The manipulated object is the black bowl between the plate and the ramekin, and the destination is plate_1. The moka pot is a tall, central, unstable obstacle near the workspace and would have the greatest safety impact if struck or knocked over during the transfer.\",\n  \"object\": \"moka_pot_obstacle_1\"\n}"
+  ],
+  "_meta": {
+    "task_description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "ep_dir": "vlm_inputs/safelibero_spatial/level_I/task_0/episode_06"
+  }
+}

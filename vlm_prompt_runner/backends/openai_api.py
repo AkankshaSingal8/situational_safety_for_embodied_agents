@@ -16,9 +16,7 @@ class OpenAIBackend(VLMBackend):
     api_key is passed explicitly.
     """
 
-    def __init__(self, model_id: str = "gpt-4o",
-                 api_key: str | None = None,
-                 max_new_tokens: int = 1024):
+    def __init__(self, model_id: str = "gpt-4o", api_key: str | None = None):
         try:
             import openai  # noqa: F401
         except ImportError as e:
@@ -30,15 +28,12 @@ class OpenAIBackend(VLMBackend):
             raise ValueError(
                 "Set OPENAI_API_KEY environment variable or pass api_key="
             )
-        self._default_max_tokens = max_new_tokens
 
         import openai as _openai
         self._client = _openai.OpenAI(api_key=self.api_key)
 
     def generate(self, prompt: str, image_paths: list[str],
                  max_new_tokens: int | None = None) -> str:
-        max_tokens = max_new_tokens if max_new_tokens is not None else self._default_max_tokens
-
         content: list[dict] = []
         for p in image_paths:
             if p and Path(p).exists():
@@ -59,15 +54,29 @@ class OpenAIBackend(VLMBackend):
 
         import time as _time
 
+        # Older models use max_tokens; reasoning models (gpt-5.x, o-series) use
+        # max_completion_tokens. Both are omitted when None so the API applies its
+        # own default — avoids truncating reasoning-model thinking tokens.
+        if max_new_tokens is not None:
+            token_kwarg = "max_completion_tokens" if self._uses_max_completion_tokens() else "max_tokens"
+            token_kwargs = {token_kwarg: max_new_tokens}
+        else:
+            token_kwargs = {}
+
         max_retries = 3
         for attempt in range(max_retries):
             try:
                 response = self._client.chat.completions.create(
                     model=self.model_id,
                     messages=[{"role": "user", "content": content}],
-                    max_tokens=max_tokens,
+                    **token_kwargs,
                 )
-                return response.choices[0].message.content.strip()
+                msg = response.choices[0].message
+                logger.debug(
+                    "OpenAI raw response | finish=%s content=%r refusal=%r",
+                    response.choices[0].finish_reason, msg.content, msg.refusal,
+                )
+                return (msg.content or "").strip()
             except Exception as exc:
                 if attempt < max_retries - 1:
                     wait = 2 ** attempt
@@ -78,6 +87,10 @@ class OpenAIBackend(VLMBackend):
                     _time.sleep(wait)
                 else:
                     raise
+
+    def _uses_max_completion_tokens(self) -> bool:
+        m = self.model_id.lower()
+        return any(m.startswith(p) for p in ("o1", "o3", "o4", "gpt-5", "gpt5"))
 
 
 def _infer_media_type(path: str) -> str:

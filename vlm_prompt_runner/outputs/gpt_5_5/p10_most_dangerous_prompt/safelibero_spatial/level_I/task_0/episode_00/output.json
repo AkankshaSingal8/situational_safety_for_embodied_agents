@@ -1,0 +1,25 @@
+{
+  "object": "moka_pot",
+  "vote_counts": {
+    "ramekin": 2,
+    "moka_pot": 3
+  },
+  "all_votes": [
+    "ramekin",
+    "moka_pot",
+    "ramekin",
+    "moka_pot",
+    "moka_pot"
+  ],
+  "_raw_responses": [
+    "{\n  \"reasoning\": \"The task object being picked up is the black bowl between the plate and the ramekin, and the destination is the plate, so neither should be considered obstacles. The nearby remaining object most likely to be struck during the pick or place motion is the ramekin, since it is close to the black bowl and the robot gripper path.\",\n  \"object\": \"ramekin\"\n}",
+    "{\n  \"reasoning\": \"The robot is instructed to pick up the black bowl between the plate and the ramekin and place it on the plate, so the black bowl is the manipulated task object and the plate is the destination. Other nearby objects include the ramekin, another bowl, a coffee packet, a cabinet/drawer block, and the blue moka pot. The blue moka pot is tall, centrally located, and close to the robot's likely motion path, making it the most likely remaining object to be struck or knocked over.\",\n  \"object\": \"moka_pot\"\n}",
+    "{\n  \"reasoning\": \"The robot is instructed to pick up the black bowl between the plate and the ramekin and place it on the plate, so the black bowl is the manipulated task object and the plate is the destination. Other nearby table objects include the ramekin, moka pot, cabinet, and packet. The ramekin is directly adjacent to the pickup/placement area and is most likely to be struck while the robot moves the bowl to the plate.\",\n  \"object\": \"ramekin\"\n}",
+    "{\n  \"reasoning\": \"The task object is the black bowl between the plate and the ramekin, and the destination is the plate, so neither should be selected as an obstacle. Other objects include the ramekin, patterned bowls, drawer/cabinet, hot plate, and the blue moka pot. The blue moka pot is tall and positioned near the center of the workspace close to the likely robot motion path, making it the most likely remaining object to be struck or knocked over.\",\n  \"object\": \"moka_pot\"\n}",
+    "{\n  \"reasoning\": \"The task object being picked up is the black bowl between the plate and the ramekin, and the destination task object is the plate. Other nearby objects include the ramekin, a cereal packet, bowls, a cabinet, and the blue moka pot. The blue moka pot is tall, centrally located near the robot workspace, and close to the manipulation area, making it the most likely remaining object to be struck or knocked over.\",\n  \"object\": \"moka_pot\"\n}"
+  ],
+  "_meta": {
+    "task_description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "ep_dir": "vlm_inputs/safelibero_spatial/level_I/task_0/episode_00"
+  }
+}

@@ -1,0 +1,76 @@
+2026-05-02 16:50:27,755 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['claude-opus-4-7']
+2026-05-02 16:50:27,857 [INFO] === Model: claude-opus-4-7 ===
+2026-05-02 16:50:54,035 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:50:55,123 [INFO]     p1_vision_only  →  8/10  (80.0%)
+2026-05-02 16:50:55,124 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:50:56,345 [INFO]     p2_task_roles  →  9/10  (90.0%)
+2026-05-02 16:50:56,345 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:50:57,462 [INFO]     p3_candidate_list  →  10/10  (100.0%)
+2026-05-02 16:50:57,462 [INFO]   Prompt: p4_positions
+2026-05-02 16:50:58,473 [INFO]     p4_positions  →  10/10  (100.0%)
+2026-05-02 16:50:58,473 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:50:59,197 [INFO]     p5_cot_structured  →  10/10  (100.0%)
+2026-05-02 16:50:59,197 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:00,719 [INFO]     p6_visual_path  →  9/10  (90.0%)
+2026-05-02 16:51:00,719 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:01,547 [INFO]     p7_per_object_binary  →  8/10  (80.0%)
+2026-05-02 16:51:01,547 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:02,771 [INFO]     p8_ranked_collision  →  2/10  (20.0%)
+2026-05-02 16:51:02,775 [INFO] Results saved to vlm_prompt_runner/results/claude-opus-4-7/task_0.json
+2026-05-02 16:51:02,945 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['claude-opus-4-7']
+2026-05-02 16:51:02,947 [INFO] === Model: claude-opus-4-7 ===
+2026-05-02 16:51:03,711 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:51:03,745 [INFO]     p1_vision_only  →  9/10  (90.0%)
+2026-05-02 16:51:03,745 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:51:03,780 [INFO]     p2_task_roles  →  8/10  (80.0%)
+2026-05-02 16:51:03,780 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:51:03,813 [INFO]     p3_candidate_list  →  9/10  (90.0%)
+2026-05-02 16:51:03,813 [INFO]   Prompt: p4_positions
+2026-05-02 16:51:03,847 [INFO]     p4_positions  →  9/10  (90.0%)
+2026-05-02 16:51:03,847 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:51:03,882 [INFO]     p5_cot_structured  →  8/10  (80.0%)
+2026-05-02 16:51:03,882 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:03,916 [INFO]     p6_visual_path  →  10/10  (100.0%)
+2026-05-02 16:51:03,916 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:03,949 [INFO]     p7_per_object_binary  →  7/10  (70.0%)
+2026-05-02 16:51:03,949 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:03,985 [INFO]     p8_ranked_collision  →  0/10  (0.0%)
+2026-05-02 16:51:03,988 [INFO] Results saved to vlm_prompt_runner/results/claude-opus-4-7/task_1.json
+2026-05-02 16:51:04,383 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['claude-opus-4-7']
+2026-05-02 16:51:04,386 [INFO] === Model: claude-opus-4-7 ===
+2026-05-02 16:51:05,161 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:51:05,195 [INFO]     p1_vision_only  →  10/10  (100.0%)
+2026-05-02 16:51:05,195 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:51:05,227 [INFO]     p2_task_roles  →  10/10  (100.0%)
+2026-05-02 16:51:05,227 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:51:05,260 [INFO]     p3_candidate_list  →  10/10  (100.0%)
+2026-05-02 16:51:05,260 [INFO]   Prompt: p4_positions
+2026-05-02 16:51:05,292 [INFO]     p4_positions  →  10/10  (100.0%)
+2026-05-02 16:51:05,292 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:51:05,323 [INFO]     p5_cot_structured  →  10/10  (100.0%)
+2026-05-02 16:51:05,323 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:05,355 [INFO]     p6_visual_path  →  4/10  (40.0%)
+2026-05-02 16:51:05,355 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:05,388 [INFO]     p7_per_object_binary  →  10/10  (100.0%)
+2026-05-02 16:51:05,388 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:05,419 [INFO]     p8_ranked_collision  →  0/10  (0.0%)
+2026-05-02 16:51:05,422 [INFO] Results saved to vlm_prompt_runner/results/claude-opus-4-7/task_2.json
+2026-05-02 16:51:05,602 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['claude-opus-4-7']
+2026-05-02 16:51:05,604 [INFO] === Model: claude-opus-4-7 ===
+2026-05-02 16:51:06,385 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:51:06,418 [INFO]     p1_vision_only  →  6/9  (66.7%)
+2026-05-02 16:51:06,418 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:51:06,451 [INFO]     p2_task_roles  →  6/9  (66.7%)
+2026-05-02 16:51:06,452 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:51:06,486 [INFO]     p3_candidate_list  →  7/9  (77.8%)
+2026-05-02 16:51:06,486 [INFO]   Prompt: p4_positions
+2026-05-02 16:51:06,519 [INFO]     p4_positions  →  9/9  (100.0%)
+2026-05-02 16:51:06,519 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:51:06,552 [INFO]     p5_cot_structured  →  7/9  (77.8%)
+2026-05-02 16:51:06,552 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:06,587 [INFO]     p6_visual_path  →  8/9  (88.9%)
+2026-05-02 16:51:06,587 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:06,619 [INFO]     p7_per_object_binary  →  7/9  (77.8%)
+2026-05-02 16:51:06,619 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:06,653 [INFO]     p8_ranked_collision  →  0/9  (0.0%)
+2026-05-02 16:51:06,689 [INFO] Results saved to vlm_prompt_runner/results/claude-opus-4-7/task_3.json

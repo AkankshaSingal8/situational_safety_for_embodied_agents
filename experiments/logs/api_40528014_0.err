@@ -1,0 +1,76 @@
+2026-05-02 16:50:27,756 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['claude-sonnet-4-6']
+2026-05-02 16:50:27,858 [INFO] === Model: claude-sonnet-4-6 ===
+2026-05-02 16:50:54,034 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:50:55,170 [INFO]     p1_vision_only  →  5/10  (50.0%)
+2026-05-02 16:50:55,171 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:50:56,648 [INFO]     p2_task_roles  →  6/10  (60.0%)
+2026-05-02 16:50:56,648 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:50:57,662 [INFO]     p3_candidate_list  →  9/10  (90.0%)
+2026-05-02 16:50:57,662 [INFO]   Prompt: p4_positions
+2026-05-02 16:50:58,902 [INFO]     p4_positions  →  9/10  (90.0%)
+2026-05-02 16:50:58,903 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:50:59,786 [INFO]     p5_cot_structured  →  5/10  (50.0%)
+2026-05-02 16:50:59,786 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:00,974 [INFO]     p6_visual_path  →  9/10  (90.0%)
+2026-05-02 16:51:00,975 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:01,708 [INFO]     p7_per_object_binary  →  2/10  (20.0%)
+2026-05-02 16:51:01,708 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:02,432 [INFO]     p8_ranked_collision  →  0/10  (0.0%)
+2026-05-02 16:51:02,468 [INFO] Results saved to vlm_prompt_runner/results/claude-sonnet-4-6/task_0.json
+2026-05-02 16:51:02,751 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['claude-sonnet-4-6']
+2026-05-02 16:51:02,755 [INFO] === Model: claude-sonnet-4-6 ===
+2026-05-02 16:51:03,740 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:51:03,781 [INFO]     p1_vision_only  →  7/10  (70.0%)
+2026-05-02 16:51:03,781 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:51:03,820 [INFO]     p2_task_roles  →  8/10  (80.0%)
+2026-05-02 16:51:03,820 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:51:03,861 [INFO]     p3_candidate_list  →  9/10  (90.0%)
+2026-05-02 16:51:03,861 [INFO]   Prompt: p4_positions
+2026-05-02 16:51:03,902 [INFO]     p4_positions  →  10/10  (100.0%)
+2026-05-02 16:51:03,902 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:51:03,943 [INFO]     p5_cot_structured  →  9/10  (90.0%)
+2026-05-02 16:51:03,944 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:03,985 [INFO]     p6_visual_path  →  10/10  (100.0%)
+2026-05-02 16:51:03,985 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:04,028 [INFO]     p7_per_object_binary  →  7/10  (70.0%)
+2026-05-02 16:51:04,029 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:04,177 [INFO]     p8_ranked_collision  →  0/10  (0.0%)
+2026-05-02 16:51:04,181 [INFO] Results saved to vlm_prompt_runner/results/claude-sonnet-4-6/task_1.json
+2026-05-02 16:51:04,420 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['claude-sonnet-4-6']
+2026-05-02 16:51:04,424 [INFO] === Model: claude-sonnet-4-6 ===
+2026-05-02 16:51:05,427 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:51:05,470 [INFO]     p1_vision_only  →  8/10  (80.0%)
+2026-05-02 16:51:05,470 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:51:05,511 [INFO]     p2_task_roles  →  9/10  (90.0%)
+2026-05-02 16:51:05,511 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:51:05,551 [INFO]     p3_candidate_list  →  10/10  (100.0%)
+2026-05-02 16:51:05,551 [INFO]   Prompt: p4_positions
+2026-05-02 16:51:05,592 [INFO]     p4_positions  →  10/10  (100.0%)
+2026-05-02 16:51:05,592 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:51:05,633 [INFO]     p5_cot_structured  →  10/10  (100.0%)
+2026-05-02 16:51:05,633 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:05,674 [INFO]     p6_visual_path  →  7/10  (70.0%)
+2026-05-02 16:51:05,674 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:05,714 [INFO]     p7_per_object_binary  →  7/10  (70.0%)
+2026-05-02 16:51:05,714 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:05,756 [INFO]     p8_ranked_collision  →  0/10  (0.0%)
+2026-05-02 16:51:05,760 [INFO] Results saved to vlm_prompt_runner/results/claude-sonnet-4-6/task_2.json
+2026-05-02 16:51:05,968 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['claude-sonnet-4-6']
+2026-05-02 16:51:05,972 [INFO] === Model: claude-sonnet-4-6 ===
+2026-05-02 16:51:06,976 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:51:07,018 [INFO]     p1_vision_only  →  6/9  (66.7%)
+2026-05-02 16:51:07,018 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:51:07,059 [INFO]     p2_task_roles  →  6/9  (66.7%)
+2026-05-02 16:51:07,059 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:51:07,100 [INFO]     p3_candidate_list  →  7/9  (77.8%)
+2026-05-02 16:51:07,100 [INFO]   Prompt: p4_positions
+2026-05-02 16:51:07,141 [INFO]     p4_positions  →  9/9  (100.0%)
+2026-05-02 16:51:07,141 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:51:07,182 [INFO]     p5_cot_structured  →  8/9  (88.9%)
+2026-05-02 16:51:07,182 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:07,223 [INFO]     p6_visual_path  →  8/9  (88.9%)
+2026-05-02 16:51:07,224 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:07,264 [INFO]     p7_per_object_binary  →  6/9  (66.7%)
+2026-05-02 16:51:07,265 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:07,305 [INFO]     p8_ranked_collision  →  0/9  (0.0%)
+2026-05-02 16:51:07,309 [INFO] Results saved to vlm_prompt_runner/results/claude-sonnet-4-6/task_3.json

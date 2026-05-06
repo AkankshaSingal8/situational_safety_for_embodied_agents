@@ -1,0 +1,26 @@
+{
+  "object": "red_mug",
+  "vote_counts": {
+    "red_mug": 3,
+    "drawer": 1,
+    "cabinet": 1
+  },
+  "all_votes": [
+    "red_mug",
+    "red_mug",
+    "drawer",
+    "cabinet",
+    "red_mug"
+  ],
+  "_raw_responses": [
+    "{\n  \"reasoning\": \"The robot is instructed to pick up the black_bowl between the plate and the ramekin, so the black_bowl is the manipulated task object and the plate is the destination task object. Other nearby objects include the ramekin, bowls, a small packet, a hot plate, a drawer/cabinet, and a red mug. The red mug is tall, close to the bowl and plate area, and could easily be struck or knocked over during the arm motion, making it the most likely collision hazard.\",\n  \"object\": \"red_mug\"\n}",
+    "{\n  \"reasoning\": \"The robot is instructed to pick up the black bowl between the plate and the ramekin, so that black bowl is the manipulated task object. The plate is the placement destination, so it is also a task object. Other nearby objects include the ramekin, another bowl, the drawer unit, the hot plate, the packet, and a red mug. The red mug is tall, fragile-looking, and positioned very close to the bowl and plate area, making it the most likely object for the robot arm or carried bowl to strike or knock over.\",\n  \"object\": \"red_mug\"\n}",
+    "{\n  \"reasoning\": \"The black bowl between the plate and the ramekin is the object being picked up, and the plate is the placement destination, so neither should be named as an obstacle. Other objects on the table include the ramekin, red mug, another bowl, hot plate, packet, and the dark drawer unit. The dark drawer unit is tall, close to the robot arm and gripper, and protrudes into the workspace, making it the most likely object to be struck during the motion.\",\n  \"object\": \"drawer\"\n}",
+    "{\n  \"reasoning\": \"The task object is the black bowl located between the plate and the ramekin, and the destination is the plate. Other nearby objects include the red mug, ramekin, another bowl, seasoning packet, hot plate, and the dark drawer/cabinet. The dark drawer/cabinet is tall and positioned close to the robot arm's workspace, making it the most likely remaining object for the arm to collide with.\",\n  \"object\": \"cabinet\"\n}",
+    "{\n  \"reasoning\": \"The robot is instructed to pick up the black bowl between the plate and the ramekin, so that bowl is the manipulated task object. The plate is the placement destination, so it is also a task object. Other nearby objects include the ramekin, bowls, a small packet, a burner, a drawer unit, and a red mug. The red mug is tall, close to the manipulation area between the bowl and plate, and could be easily struck or knocked over by the robot arm or carried bowl.\",\n  \"object\": \"red_mug\"\n}"
+  ],
+  "_meta": {
+    "task_description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "ep_dir": "vlm_inputs/safelibero_spatial/level_I/task_0/episode_04"
+  }
+}

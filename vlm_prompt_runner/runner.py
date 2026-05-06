@@ -104,7 +104,7 @@ def _split_thinking(raw: str) -> tuple[str, str | None]:
 
 def run_episode(ep_dir: Path | str, system_prompt: str,
                 backend: VLMBackend, out_path: Path | str,
-                max_new_tokens: int = 1024) -> dict:
+                max_new_tokens: int | None = None) -> dict:
     """Run VLM inference for one episode and write the result to out_path."""
     ep_dir = Path(ep_dir)
     out_path = Path(out_path)
@@ -114,6 +114,7 @@ def run_episode(ep_dir: Path | str, system_prompt: str,
     template_vars = {
         "task_description": episode["task_description"],
         "object_list": episode.get("object_list", ""),
+        "obstacle_list": episode.get("obstacle_list", ""),
         "object_list_with_positions": episode.get("object_list_with_positions", ""),
     }
     prompt = build_prompt(system_prompt, episode["task_description"], template_vars)
@@ -127,6 +128,10 @@ def run_episode(ep_dir: Path | str, system_prompt: str,
         raise
 
     answer, thinking = _split_thinking(raw)
+    # Some reasoning models (e.g. GPT-5.5) put everything inside <think>…</think>
+    # and leave nothing after the closing tag. Fall back to the full raw response.
+    if not answer.strip():
+        answer = raw
     result = extract_json(answer)
 
     if isinstance(result, dict):
@@ -142,6 +147,14 @@ def run_episode(ep_dir: Path | str, system_prompt: str,
 
     if thinking is not None:
         result["_thinking"] = thinking
+
+    # Always store the raw model output for debugging.
+    result["_raw"] = raw
+
+    predicted = result.get("object", "<not parsed>")
+    parse_ok = "object" in result
+    logger.info("  %s predicted=%r  parse_ok=%s",
+                ep_dir.name, predicted, parse_ok)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:

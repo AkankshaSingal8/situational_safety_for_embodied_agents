@@ -1,0 +1,19 @@
+{
+  "model": "qwen3-vl-8b",
+  "suite": "safelibero_spatial",
+  "level": "I",
+  "task": 0,
+  "prompts": {
+    "p6_visual_path": {
+      "correct": 5,
+      "total": 10,
+      "accuracy": 0.5
+    },
+    "p7_per_object_binary": {
+      "correct": 3,
+      "total": 10,
+      "accuracy": 0.3
+    }
+  },
+  "best_prompt": "p6_visual_path"
+}

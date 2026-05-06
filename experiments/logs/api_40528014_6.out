@@ -1,0 +1,101 @@
+[Sat May  2 16:50:25 EDT 2026] Model=gemini-2.5-pro  Task=0
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 0
+Prompt                          gemini-2.5-pro
+----------------------------------------------
+p1_vision_only                           80.0%
+p2_task_roles                            90.0%
+p3_candidate_list                        80.0%
+p4_positions                            100.0%
+p5_cot_structured                        90.0%
+p6_visual_path                           90.0%
+p7_per_object_binary                     90.0%
+p8_ranked_collision                     100.0%
+
+Best model per prompt:
+  p1_vision_only                  gemini-2.5-pro  (80.0%)
+  p2_task_roles                   gemini-2.5-pro  (90.0%)
+  p3_candidate_list               gemini-2.5-pro  (80.0%)
+  p4_positions                    gemini-2.5-pro  (100.0%)
+  p5_cot_structured               gemini-2.5-pro  (90.0%)
+  p6_visual_path                  gemini-2.5-pro  (90.0%)
+  p7_per_object_binary            gemini-2.5-pro  (90.0%)
+  p8_ranked_collision             gemini-2.5-pro  (100.0%)
+
+[Sat May  2 17:07:43 EDT 2026] Model=gemini-2.5-pro  Task=1
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 1
+Prompt                          gemini-2.5-pro
+----------------------------------------------
+p1_vision_only                           70.0%
+p2_task_roles                            80.0%
+p3_candidate_list                        80.0%
+p4_positions                            100.0%
+p5_cot_structured                        80.0%
+p6_visual_path                          100.0%
+p7_per_object_binary                     50.0%
+p8_ranked_collision                      40.0%
+
+Best model per prompt:
+  p1_vision_only                  gemini-2.5-pro  (70.0%)
+  p2_task_roles                   gemini-2.5-pro  (80.0%)
+  p3_candidate_list               gemini-2.5-pro  (80.0%)
+  p4_positions                    gemini-2.5-pro  (100.0%)
+  p5_cot_structured               gemini-2.5-pro  (80.0%)
+  p6_visual_path                  gemini-2.5-pro  (100.0%)
+  p7_per_object_binary            gemini-2.5-pro  (50.0%)
+  p8_ranked_collision             gemini-2.5-pro  (40.0%)
+
+[Sat May  2 17:13:05 EDT 2026] Model=gemini-2.5-pro  Task=2
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 2
+Prompt                          gemini-2.5-pro
+----------------------------------------------
+p1_vision_only                           90.0%
+p2_task_roles                            70.0%
+p3_candidate_list                        70.0%
+p4_positions                             90.0%
+p5_cot_structured                        90.0%
+p6_visual_path                           80.0%
+p7_per_object_binary                     80.0%
+p8_ranked_collision                       0.0%
+
+Best model per prompt:
+  p1_vision_only                  gemini-2.5-pro  (90.0%)
+  p2_task_roles                   gemini-2.5-pro  (70.0%)
+  p3_candidate_list               gemini-2.5-pro  (70.0%)
+  p4_positions                    gemini-2.5-pro  (90.0%)
+  p5_cot_structured               gemini-2.5-pro  (90.0%)
+  p6_visual_path                  gemini-2.5-pro  (80.0%)
+  p7_per_object_binary            gemini-2.5-pro  (80.0%)
+  p8_ranked_collision             gemini-2.5-pro  (0.0%)
+
+[Sat May  2 17:23:59 EDT 2026] Model=gemini-2.5-pro  Task=3
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 3
+Prompt                          gemini-2.5-pro
+----------------------------------------------
+p1_vision_only                           77.8%
+p2_task_roles                            66.7%
+p3_candidate_list                        66.7%
+p4_positions                            100.0%
+p5_cot_structured                        66.7%
+p6_visual_path                          100.0%
+p7_per_object_binary                     77.8%
+p8_ranked_collision                      77.8%
+
+Best model per prompt:
+  p1_vision_only                  gemini-2.5-pro  (77.8%)
+  p2_task_roles                   gemini-2.5-pro  (66.7%)
+  p3_candidate_list               gemini-2.5-pro  (66.7%)
+  p4_positions                    gemini-2.5-pro  (100.0%)
+  p5_cot_structured               gemini-2.5-pro  (66.7%)
+  p6_visual_path                  gemini-2.5-pro  (100.0%)
+  p7_per_object_binary            gemini-2.5-pro  (77.8%)
+  p8_ranked_collision             gemini-2.5-pro  (77.8%)
+
+[Sat May  2 17:35:21 EDT 2026] Done — model=gemini-2.5-pro

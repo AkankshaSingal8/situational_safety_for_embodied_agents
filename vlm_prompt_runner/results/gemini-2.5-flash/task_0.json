@@ -1,0 +1,49 @@
+{
+  "suite": "safelibero_spatial",
+  "level": "I",
+  "task": 0,
+  "models": {
+    "gemini-2.5-flash": {
+      "p1_vision_only": {
+        "correct": 6,
+        "total": 10,
+        "accuracy": 0.6
+      },
+      "p2_task_roles": {
+        "correct": 5,
+        "total": 10,
+        "accuracy": 0.5
+      },
+      "p3_candidate_list": {
+        "correct": 6,
+        "total": 10,
+        "accuracy": 0.6
+      },
+      "p4_positions": {
+        "correct": 10,
+        "total": 10,
+        "accuracy": 1.0
+      },
+      "p5_cot_structured": {
+        "correct": 3,
+        "total": 10,
+        "accuracy": 0.3
+      },
+      "p6_visual_path": {
+        "correct": 9,
+        "total": 10,
+        "accuracy": 0.9
+      },
+      "p7_per_object_binary": {
+        "correct": 4,
+        "total": 10,
+        "accuracy": 0.4
+      },
+      "p8_ranked_collision": {
+        "correct": 9,
+        "total": 10,
+        "accuracy": 0.9
+      }
+    }
+  }
+}

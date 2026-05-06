@@ -1,0 +1,24 @@
+{
+  "object": "milk_obstacle_1",
+  "vote_counts": {
+    "milk_obstacle_1": 5
+  },
+  "all_votes": [
+    "milk_obstacle_1",
+    "milk_obstacle_1",
+    "milk_obstacle_1",
+    "milk_obstacle_1",
+    "milk_obstacle_1"
+  ],
+  "_raw_responses": [
+    "{\"reasoning\":\"The manipulated object is the black bowl located between the plate and the ramekin, and the destination is plate_1. The milk carton is tall, close to the manipulation area, and could be knocked over or block the robot path, creating the highest safety risk among the remaining objects.\",\"object\":\"milk_obstacle_1\"}",
+    "{\n  \"reasoning\": \"The manipulated object is the black bowl between the plate and the ramekin, and the destination is plate_1. The tall milk carton is close to the manipulation area and could be knocked over or block the robot path, so it has the highest safety impact.\",\n  \"object\": \"milk_obstacle_1\"\n}",
+    "{\n  \"reasoning\": \"The manipulated object is the black bowl between the plate and the ramekin, and the destination is plate_1. The tall milk carton is close to the manipulation area and could be knocked over or spilled, causing the greatest safety impact.\",\n  \"object\": \"milk_obstacle_1\"\n}",
+    "{\n  \"reasoning\": \"The manipulated object is the black bowl between the plate and the ramekin, and the destination object is plate_1. The milk carton is tall, unstable, and close to the robot/work area, so disturbing it could cause a spill or block the motion, making it the highest-impact obstacle to avoid.\",\n  \"object\": \"milk_obstacle_1\"\n}",
+    "{\n  \"reasoning\": \"The manipulated object is the black bowl between the plate and the ramekin, and the destination is plate_1. Among the remaining objects, milk_obstacle_1 is tall and unstable, so collision could knock it over or spill it and interfere with the robot motion, giving it the highest safety impact.\",\n  \"object\": \"milk_obstacle_1\"\n}"
+  ],
+  "_meta": {
+    "task_description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "ep_dir": "vlm_inputs/safelibero_spatial/level_I/task_0/episode_02"
+  }
+}

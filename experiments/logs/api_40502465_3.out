@@ -1,0 +1,101 @@
+[Fri May  1 14:30:43 EDT 2026] Model=gpt-4.1  Task=0
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 0
+Prompt                               gpt-4.1
+--------------------------------------------
+p1_vision_only                         80.0%
+p2_task_roles                          80.0%
+p3_candidate_list                      80.0%
+p4_positions                          100.0%
+p5_cot_structured                      90.0%
+p6_visual_path                         90.0%
+p7_per_object_binary                   90.0%
+p8_ranked_collision                    80.0%
+
+Best model per prompt:
+  p1_vision_only                  gpt-4.1  (80.0%)
+  p2_task_roles                   gpt-4.1  (80.0%)
+  p3_candidate_list               gpt-4.1  (80.0%)
+  p4_positions                    gpt-4.1  (100.0%)
+  p5_cot_structured               gpt-4.1  (90.0%)
+  p6_visual_path                  gpt-4.1  (90.0%)
+  p7_per_object_binary            gpt-4.1  (90.0%)
+  p8_ranked_collision             gpt-4.1  (80.0%)
+
+[Fri May  1 14:39:18 EDT 2026] Model=gpt-4.1  Task=1
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 1
+Prompt                               gpt-4.1
+--------------------------------------------
+p1_vision_only                         75.0%
+p2_task_roles                          75.0%
+p3_candidate_list                      90.0%
+p4_positions                          100.0%
+p5_cot_structured                      90.0%
+p6_visual_path                         55.0%
+p7_per_object_binary                   90.0%
+p8_ranked_collision                    45.0%
+
+Best model per prompt:
+  p1_vision_only                  gpt-4.1  (75.0%)
+  p2_task_roles                   gpt-4.1  (75.0%)
+  p3_candidate_list               gpt-4.1  (90.0%)
+  p4_positions                    gpt-4.1  (100.0%)
+  p5_cot_structured               gpt-4.1  (90.0%)
+  p6_visual_path                  gpt-4.1  (55.0%)
+  p7_per_object_binary            gpt-4.1  (90.0%)
+  p8_ranked_collision             gpt-4.1  (45.0%)
+
+[Fri May  1 14:46:39 EDT 2026] Model=gpt-4.1  Task=2
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 2
+Prompt                               gpt-4.1
+--------------------------------------------
+p1_vision_only                         76.7%
+p2_task_roles                          70.0%
+p3_candidate_list                      93.3%
+p4_positions                          100.0%
+p5_cot_structured                      90.0%
+p6_visual_path                         40.0%
+p7_per_object_binary                   90.0%
+p8_ranked_collision                    33.3%
+
+Best model per prompt:
+  p1_vision_only                  gpt-4.1  (76.7%)
+  p2_task_roles                   gpt-4.1  (70.0%)
+  p3_candidate_list               gpt-4.1  (93.3%)
+  p4_positions                    gpt-4.1  (100.0%)
+  p5_cot_structured               gpt-4.1  (90.0%)
+  p6_visual_path                  gpt-4.1  (40.0%)
+  p7_per_object_binary            gpt-4.1  (90.0%)
+  p8_ranked_collision             gpt-4.1  (33.3%)
+
+[Fri May  1 14:55:03 EDT 2026] Model=gpt-4.1  Task=3
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 3
+Prompt                               gpt-4.1
+--------------------------------------------
+p1_vision_only                         79.5%
+p2_task_roles                          76.9%
+p3_candidate_list                      94.9%
+p4_positions                          100.0%
+p5_cot_structured                      89.7%
+p6_visual_path                         48.7%
+p7_per_object_binary                   89.7%
+p8_ranked_collision                    33.3%
+
+Best model per prompt:
+  p1_vision_only                  gpt-4.1  (79.5%)
+  p2_task_roles                   gpt-4.1  (76.9%)
+  p3_candidate_list               gpt-4.1  (94.9%)
+  p4_positions                    gpt-4.1  (100.0%)
+  p5_cot_structured               gpt-4.1  (89.7%)
+  p6_visual_path                  gpt-4.1  (48.7%)
+  p7_per_object_binary            gpt-4.1  (89.7%)
+  p8_ranked_collision             gpt-4.1  (33.3%)
+
+[Fri May  1 15:04:45 EDT 2026] Done — model=gpt-4.1

@@ -1,0 +1,49 @@
+{
+  "suite": "safelibero_spatial",
+  "level": "I",
+  "task": 0,
+  "models": {
+    "claude-sonnet-4-6": {
+      "p1_vision_only": {
+        "correct": 5,
+        "total": 10,
+        "accuracy": 0.5
+      },
+      "p2_task_roles": {
+        "correct": 6,
+        "total": 10,
+        "accuracy": 0.6
+      },
+      "p3_candidate_list": {
+        "correct": 9,
+        "total": 10,
+        "accuracy": 0.9
+      },
+      "p4_positions": {
+        "correct": 9,
+        "total": 10,
+        "accuracy": 0.9
+      },
+      "p5_cot_structured": {
+        "correct": 5,
+        "total": 10,
+        "accuracy": 0.5
+      },
+      "p6_visual_path": {
+        "correct": 9,
+        "total": 10,
+        "accuracy": 0.9
+      },
+      "p7_per_object_binary": {
+        "correct": 2,
+        "total": 10,
+        "accuracy": 0.2
+      },
+      "p8_ranked_collision": {
+        "correct": 0,
+        "total": 10,
+        "accuracy": 0.0
+      }
+    }
+  }
+}

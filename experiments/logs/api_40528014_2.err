@@ -1,0 +1,76 @@
+2026-05-02 16:50:27,755 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['gpt-4.1-mini']
+2026-05-02 16:50:27,858 [INFO] === Model: gpt-4.1-mini ===
+2026-05-02 16:50:50,467 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:50:51,887 [INFO]     p1_vision_only  →  7/10  (70.0%)
+2026-05-02 16:50:51,887 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:50:53,322 [INFO]     p2_task_roles  →  3/10  (30.0%)
+2026-05-02 16:50:53,322 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:50:54,510 [INFO]     p3_candidate_list  →  7/10  (70.0%)
+2026-05-02 16:50:54,510 [INFO]   Prompt: p4_positions
+2026-05-02 16:50:55,156 [INFO]     p4_positions  →  10/10  (100.0%)
+2026-05-02 16:50:55,156 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:50:56,141 [INFO]     p5_cot_structured  →  8/10  (80.0%)
+2026-05-02 16:50:56,141 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:50:57,253 [INFO]     p6_visual_path  →  9/10  (90.0%)
+2026-05-02 16:50:57,253 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:50:58,334 [INFO]     p7_per_object_binary  →  6/10  (60.0%)
+2026-05-02 16:50:58,334 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:50:59,973 [INFO]     p8_ranked_collision  →  9/10  (90.0%)
+2026-05-02 16:50:59,977 [INFO] Results saved to vlm_prompt_runner/results/gpt-4.1-mini/task_0.json
+2026-05-02 16:51:00,125 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['gpt-4.1-mini']
+2026-05-02 16:51:00,128 [INFO] === Model: gpt-4.1-mini ===
+2026-05-02 16:51:00,805 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:51:00,841 [INFO]     p1_vision_only  →  4/10  (40.0%)
+2026-05-02 16:51:00,841 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:51:00,876 [INFO]     p2_task_roles  →  4/10  (40.0%)
+2026-05-02 16:51:00,876 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:51:00,911 [INFO]     p3_candidate_list  →  8/10  (80.0%)
+2026-05-02 16:51:00,911 [INFO]   Prompt: p4_positions
+2026-05-02 16:51:00,945 [INFO]     p4_positions  →  10/10  (100.0%)
+2026-05-02 16:51:00,945 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:51:00,980 [INFO]     p5_cot_structured  →  6/10  (60.0%)
+2026-05-02 16:51:00,980 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:01,015 [INFO]     p6_visual_path  →  4/10  (40.0%)
+2026-05-02 16:51:01,015 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:01,049 [INFO]     p7_per_object_binary  →  4/10  (40.0%)
+2026-05-02 16:51:01,050 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:01,086 [INFO]     p8_ranked_collision  →  2/10  (20.0%)
+2026-05-02 16:51:01,089 [INFO] Results saved to vlm_prompt_runner/results/gpt-4.1-mini/task_1.json
+2026-05-02 16:51:01,245 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['gpt-4.1-mini']
+2026-05-02 16:51:01,248 [INFO] === Model: gpt-4.1-mini ===
+2026-05-02 16:51:01,935 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:51:01,973 [INFO]     p1_vision_only  →  6/10  (60.0%)
+2026-05-02 16:51:01,973 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:51:02,008 [INFO]     p2_task_roles  →  8/10  (80.0%)
+2026-05-02 16:51:02,008 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:51:02,043 [INFO]     p3_candidate_list  →  9/10  (90.0%)
+2026-05-02 16:51:02,043 [INFO]   Prompt: p4_positions
+2026-05-02 16:51:02,078 [INFO]     p4_positions  →  10/10  (100.0%)
+2026-05-02 16:51:02,078 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:51:02,112 [INFO]     p5_cot_structured  →  9/10  (90.0%)
+2026-05-02 16:51:02,112 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:02,148 [INFO]     p6_visual_path  →  4/10  (40.0%)
+2026-05-02 16:51:02,148 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:02,183 [INFO]     p7_per_object_binary  →  3/10  (30.0%)
+2026-05-02 16:51:02,183 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:02,219 [INFO]     p8_ranked_collision  →  1/10  (10.0%)
+2026-05-02 16:51:02,222 [INFO] Results saved to vlm_prompt_runner/results/gpt-4.1-mini/task_2.json
+2026-05-02 16:51:02,384 [INFO] Episodes: 10  |  Prompts: 8  |  Models: ['gpt-4.1-mini']
+2026-05-02 16:51:02,387 [INFO] === Model: gpt-4.1-mini ===
+2026-05-02 16:51:03,064 [INFO]   Prompt: p1_vision_only
+2026-05-02 16:51:03,100 [INFO]     p1_vision_only  →  4/9  (44.4%)
+2026-05-02 16:51:03,101 [INFO]   Prompt: p2_task_roles
+2026-05-02 16:51:03,135 [INFO]     p2_task_roles  →  5/9  (55.6%)
+2026-05-02 16:51:03,135 [INFO]   Prompt: p3_candidate_list
+2026-05-02 16:51:03,171 [INFO]     p3_candidate_list  →  7/9  (77.8%)
+2026-05-02 16:51:03,171 [INFO]   Prompt: p4_positions
+2026-05-02 16:51:03,206 [INFO]     p4_positions  →  9/9  (100.0%)
+2026-05-02 16:51:03,207 [INFO]   Prompt: p5_cot_structured
+2026-05-02 16:51:03,242 [INFO]     p5_cot_structured  →  5/9  (55.6%)
+2026-05-02 16:51:03,242 [INFO]   Prompt: p6_visual_path
+2026-05-02 16:51:03,277 [INFO]     p6_visual_path  →  7/9  (77.8%)
+2026-05-02 16:51:03,277 [INFO]   Prompt: p7_per_object_binary
+2026-05-02 16:51:03,312 [INFO]     p7_per_object_binary  →  2/9  (22.2%)
+2026-05-02 16:51:03,312 [INFO]   Prompt: p8_ranked_collision
+2026-05-02 16:51:03,348 [INFO]     p8_ranked_collision  →  0/9  (0.0%)
+2026-05-02 16:51:03,350 [INFO] Results saved to vlm_prompt_runner/results/gpt-4.1-mini/task_3.json

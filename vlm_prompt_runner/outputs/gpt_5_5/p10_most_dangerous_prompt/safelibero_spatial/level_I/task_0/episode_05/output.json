@@ -1,0 +1,28 @@
+{
+  "object": "cabinet",
+  "vote_counts": {
+    "cabinet": 1,
+    "drawer": 1,
+    "black_drawer_cabinet": 1,
+    "drawer_cabinet": 1,
+    "black_drawer": 1
+  },
+  "all_votes": [
+    "cabinet",
+    "drawer",
+    "black_drawer_cabinet",
+    "drawer_cabinet",
+    "black_drawer"
+  ],
+  "_raw_responses": [
+    "{\n  \"reasoning\": \"The black bowl is the item being picked up, and the plate is the placement destination, so neither should be considered an obstacle. Other objects include the ramekin, bowls, cookie box, cardboard box, stovetop, and the large dark drawer/cabinet. The large dark drawer/cabinet is tall, close to the robot arm, and lies near the likely motion path, making it the most likely object to be struck or cause a collision.\",\n  \"object\": \"cabinet\"\n}",
+    "{\n  \"reasoning\": \"The task object being picked up is the black bowl between the plate and the ramekin, and the destination is the plate. Other objects on the table include the ramekin, other bowls, a cookie box, a cardboard box, a hot plate, and a large dark drawer/cabinet. The large dark drawer/cabinet is tall, close to the robot arm, and most likely to be struck during motion.\",\n  \"object\": \"drawer\"\n}",
+    "{\n  \"reasoning\": \"The task object is the black bowl, and the destination is the plate. Other nearby table objects include bowls, a ramekin, a cookie box, a cardboard box, the stovetop, and a large black drawer cabinet. The large black drawer cabinet is tall, close to the robot arm workspace, and most likely to be struck during the motion.\",\n  \"object\": \"black_drawer_cabinet\"\n}",
+    "{\"reasoning\":\"The robot is instructed to pick up the black bowl and place it on the plate, so those are task objects. Other objects on the table include the ramekin, bowls, cookie box, cardboard box, hot plate, and the dark drawer cabinet. The dark drawer cabinet is large, tall, and positioned close to the robot arm and likely motion path, making it the most likely object to be struck or cause a collision.\",\"object\":\"drawer_cabinet\"}",
+    "{\n  \"reasoning\": \"The black bowl is the object being picked up, so it is a task object. The plate is the placement destination, so it is also a task object. Among the remaining objects, the tall black drawer cabinet is large and close to the robot arm's working area, making it the most likely object to be struck during the motion.\",\n  \"object\": \"black_drawer\"\n}"
+  ],
+  "_meta": {
+    "task_description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "ep_dir": "vlm_inputs/safelibero_spatial/level_I/task_0/episode_05"
+  }
+}

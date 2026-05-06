@@ -69,7 +69,8 @@ def parse_args() -> argparse.Namespace:
                    help="Root for per-model output dirs (model slug appended automatically)")
     p.add_argument("--load-in-4bit", action="store_true",
                    help="4-bit quantization for Qwen local models")
-    p.add_argument("--max-new-tokens", type=int, default=1024)
+    p.add_argument("--max-new-tokens", type=int, default=None,
+                   help="Token limit passed to the model (default: let the API decide)")
     p.add_argument("--skip-existing", action="store_true", default=True,
                    help="Skip episodes whose output.json already exists (default: True)")
     return p.parse_args()
@@ -132,7 +133,12 @@ def run_model(
 
         stl_dir = model_output_base / stem
         acc = compute_accuracy(stl_dir, vlm_inputs_dir)
-        overall = acc.get("_totals", {}).get("overall", {})
+        overall = (
+            acc.get(args.suite, {})
+               .get(f"level_{args.level}", {})
+               .get(f"task_{args.task}", {})
+               .get("_totals", {})
+        )
         model_results[stem] = {
             "correct": overall.get("correct", 0),
             "total": overall.get("total", 0),

@@ -1,0 +1,14 @@
+{
+  "suite": "safelibero_spatial",
+  "level": "I",
+  "task": 0,
+  "models": {
+    "gpt-5.5": {
+      "p2_task_roles": {
+        "correct": 8,
+        "total": 10,
+        "accuracy": 0.8
+      }
+    }
+  }
+}

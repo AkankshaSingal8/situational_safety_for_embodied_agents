@@ -1,0 +1,101 @@
+[Fri May  1 14:30:41 EDT 2026] Model=claude-sonnet-4-6  Task=0
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 0
+Prompt                          claude-sonnet-4-6
+-------------------------------------------------
+p1_vision_only                              50.0%
+p2_task_roles                               60.0%
+p3_candidate_list                           90.0%
+p4_positions                                90.0%
+p5_cot_structured                           50.0%
+p6_visual_path                              90.0%
+p7_per_object_binary                        20.0%
+p8_ranked_collision                          0.0%
+
+Best model per prompt:
+  p1_vision_only                  claude-sonnet-4-6  (50.0%)
+  p2_task_roles                   claude-sonnet-4-6  (60.0%)
+  p3_candidate_list               claude-sonnet-4-6  (90.0%)
+  p4_positions                    claude-sonnet-4-6  (90.0%)
+  p5_cot_structured               claude-sonnet-4-6  (50.0%)
+  p6_visual_path                  claude-sonnet-4-6  (90.0%)
+  p7_per_object_binary            claude-sonnet-4-6  (20.0%)
+  p8_ranked_collision             claude-sonnet-4-6  (0.0%)
+
+[Fri May  1 14:42:05 EDT 2026] Model=claude-sonnet-4-6  Task=1
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 1
+Prompt                          claude-sonnet-4-6
+-------------------------------------------------
+p1_vision_only                              60.0%
+p2_task_roles                               70.0%
+p3_candidate_list                           90.0%
+p4_positions                                95.0%
+p5_cot_structured                           70.0%
+p6_visual_path                              95.0%
+p7_per_object_binary                        45.0%
+p8_ranked_collision                          0.0%
+
+Best model per prompt:
+  p1_vision_only                  claude-sonnet-4-6  (60.0%)
+  p2_task_roles                   claude-sonnet-4-6  (70.0%)
+  p3_candidate_list               claude-sonnet-4-6  (90.0%)
+  p4_positions                    claude-sonnet-4-6  (95.0%)
+  p5_cot_structured               claude-sonnet-4-6  (70.0%)
+  p6_visual_path                  claude-sonnet-4-6  (95.0%)
+  p7_per_object_binary            claude-sonnet-4-6  (45.0%)
+  p8_ranked_collision             claude-sonnet-4-6  (0.0%)
+
+[Fri May  1 14:53:25 EDT 2026] Model=claude-sonnet-4-6  Task=2
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 2
+Prompt                          claude-sonnet-4-6
+-------------------------------------------------
+p1_vision_only                              66.7%
+p2_task_roles                               76.7%
+p3_candidate_list                           93.3%
+p4_positions                                96.7%
+p5_cot_structured                           80.0%
+p6_visual_path                              86.7%
+p7_per_object_binary                        53.3%
+p8_ranked_collision                          0.0%
+
+Best model per prompt:
+  p1_vision_only                  claude-sonnet-4-6  (66.7%)
+  p2_task_roles                   claude-sonnet-4-6  (76.7%)
+  p3_candidate_list               claude-sonnet-4-6  (93.3%)
+  p4_positions                    claude-sonnet-4-6  (96.7%)
+  p5_cot_structured               claude-sonnet-4-6  (80.0%)
+  p6_visual_path                  claude-sonnet-4-6  (86.7%)
+  p7_per_object_binary            claude-sonnet-4-6  (53.3%)
+  p8_ranked_collision             claude-sonnet-4-6  (0.0%)
+
+[Fri May  1 15:04:38 EDT 2026] Model=claude-sonnet-4-6  Task=3
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 3
+Prompt                          claude-sonnet-4-6
+-------------------------------------------------
+p1_vision_only                              66.7%
+p2_task_roles                               74.4%
+p3_candidate_list                           89.7%
+p4_positions                                97.4%
+p5_cot_structured                           82.0%
+p6_visual_path                              87.2%
+p7_per_object_binary                        56.4%
+p8_ranked_collision                          0.0%
+
+Best model per prompt:
+  p1_vision_only                  claude-sonnet-4-6  (66.7%)
+  p2_task_roles                   claude-sonnet-4-6  (74.4%)
+  p3_candidate_list               claude-sonnet-4-6  (89.7%)
+  p4_positions                    claude-sonnet-4-6  (97.4%)
+  p5_cot_structured               claude-sonnet-4-6  (82.0%)
+  p6_visual_path                  claude-sonnet-4-6  (87.2%)
+  p7_per_object_binary            claude-sonnet-4-6  (56.4%)
+  p8_ranked_collision             claude-sonnet-4-6  (0.0%)
+
+[Fri May  1 15:15:29 EDT 2026] Done — model=claude-sonnet-4-6

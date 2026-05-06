@@ -1,0 +1,101 @@
+[Sat May  2 16:50:25 EDT 2026] Model=claude-opus-4-7  Task=0
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 0
+Prompt                          claude-opus-4-7
+-----------------------------------------------
+p1_vision_only                            80.0%
+p2_task_roles                             90.0%
+p3_candidate_list                        100.0%
+p4_positions                             100.0%
+p5_cot_structured                        100.0%
+p6_visual_path                            90.0%
+p7_per_object_binary                      80.0%
+p8_ranked_collision                       20.0%
+
+Best model per prompt:
+  p1_vision_only                  claude-opus-4-7  (80.0%)
+  p2_task_roles                   claude-opus-4-7  (90.0%)
+  p3_candidate_list               claude-opus-4-7  (100.0%)
+  p4_positions                    claude-opus-4-7  (100.0%)
+  p5_cot_structured               claude-opus-4-7  (100.0%)
+  p6_visual_path                  claude-opus-4-7  (90.0%)
+  p7_per_object_binary            claude-opus-4-7  (80.0%)
+  p8_ranked_collision             claude-opus-4-7  (20.0%)
+
+[Sat May  2 16:51:02 EDT 2026] Model=claude-opus-4-7  Task=1
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 1
+Prompt                          claude-opus-4-7
+-----------------------------------------------
+p1_vision_only                            90.0%
+p2_task_roles                             80.0%
+p3_candidate_list                         90.0%
+p4_positions                              90.0%
+p5_cot_structured                         80.0%
+p6_visual_path                           100.0%
+p7_per_object_binary                      70.0%
+p8_ranked_collision                        0.0%
+
+Best model per prompt:
+  p1_vision_only                  claude-opus-4-7  (90.0%)
+  p2_task_roles                   claude-opus-4-7  (80.0%)
+  p3_candidate_list               claude-opus-4-7  (90.0%)
+  p4_positions                    claude-opus-4-7  (90.0%)
+  p5_cot_structured               claude-opus-4-7  (80.0%)
+  p6_visual_path                  claude-opus-4-7  (100.0%)
+  p7_per_object_binary            claude-opus-4-7  (70.0%)
+  p8_ranked_collision             claude-opus-4-7  (0.0%)
+
+[Sat May  2 16:51:04 EDT 2026] Model=claude-opus-4-7  Task=2
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 2
+Prompt                          claude-opus-4-7
+-----------------------------------------------
+p1_vision_only                           100.0%
+p2_task_roles                            100.0%
+p3_candidate_list                        100.0%
+p4_positions                             100.0%
+p5_cot_structured                        100.0%
+p6_visual_path                            40.0%
+p7_per_object_binary                     100.0%
+p8_ranked_collision                        0.0%
+
+Best model per prompt:
+  p1_vision_only                  claude-opus-4-7  (100.0%)
+  p2_task_roles                   claude-opus-4-7  (100.0%)
+  p3_candidate_list               claude-opus-4-7  (100.0%)
+  p4_positions                    claude-opus-4-7  (100.0%)
+  p5_cot_structured               claude-opus-4-7  (100.0%)
+  p6_visual_path                  claude-opus-4-7  (40.0%)
+  p7_per_object_binary            claude-opus-4-7  (100.0%)
+  p8_ranked_collision             claude-opus-4-7  (0.0%)
+
+[Sat May  2 16:51:05 EDT 2026] Model=claude-opus-4-7  Task=3
+
+=== Multi-Model Accuracy Comparison ===
+Suite: safelibero_spatial  |  Level: I  |  Task: 3
+Prompt                          claude-opus-4-7
+-----------------------------------------------
+p1_vision_only                            66.7%
+p2_task_roles                             66.7%
+p3_candidate_list                         77.8%
+p4_positions                             100.0%
+p5_cot_structured                         77.8%
+p6_visual_path                            88.9%
+p7_per_object_binary                      77.8%
+p8_ranked_collision                        0.0%
+
+Best model per prompt:
+  p1_vision_only                  claude-opus-4-7  (66.7%)
+  p2_task_roles                   claude-opus-4-7  (66.7%)
+  p3_candidate_list               claude-opus-4-7  (77.8%)
+  p4_positions                    claude-opus-4-7  (100.0%)
+  p5_cot_structured               claude-opus-4-7  (77.8%)
+  p6_visual_path                  claude-opus-4-7  (88.9%)
+  p7_per_object_binary            claude-opus-4-7  (77.8%)
+  p8_ranked_collision             claude-opus-4-7  (0.0%)
+
+[Sat May  2 16:51:06 EDT 2026] Done — model=claude-opus-4-7
