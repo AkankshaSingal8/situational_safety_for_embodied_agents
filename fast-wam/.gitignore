@@ -1,0 +1,5 @@
+FastWAM/
+*.pt
+*.safetensors
+*.bin
+checkpoints/
