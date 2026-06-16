@@ -40,12 +40,15 @@ if [ ! -d "$ENV_PATH" ]; then
     conda create -p "$ENV_PATH" python=3.11 -y
     conda activate "$ENV_PATH"
 
-    echo "--- Installing PyTorch 2.8.0 + CUDA 12.4 ---"
-    # Bridges2 H100 nodes run CUDA 12.4 driver-compatible builds
+    echo "--- Installing PyTorch 2.8.0 + CUDA 12.6 ---"
+    # Bridges2 default CUDA module is 12.6.1 → use cu126 wheels
     pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 \
-        --index-url https://download.pytorch.org/whl/cu124
+        --index-url https://download.pytorch.org/whl/cu126
 
-    echo "--- Installing DreamZero package dependencies ---"
+    echo "--- Installing DreamZero server dependencies ---"
+    # Install only the subset needed to run socket_test_optimized_AR.py.
+    # Full pyproject.toml has gear/tensorrt/nvidia-modelopt/pin/decord2 which are
+    # NVIDIA-internal or unavailable on PyPI — skip those via --no-deps below.
     pip install \
         "transformers==4.51.3" \
         "diffusers==0.30.2" \
@@ -63,14 +66,28 @@ if [ ! -d "$ENV_PATH" ]; then
         "numpy==1.26.4" \
         "pillow>=11.0.0" \
         "opencv-python-headless>=4.11.0" \
-        "imageio>=2.37.0" \
+        "imageio==2.34.2" \
+        "imageio-ffmpeg" \
+        "av==15.0.0" \
         "tqdm>=4.67.0" \
         "tyro" \
-        "tianshou" \
-        "openpi-client"
+        "tianshou==0.5.1" \
+        "openpi-client==0.1.1" \
+        "msgpack" \
+        "msgpack-numpy" \
+        "scipy>=1.15.0" \
+        "click" \
+        "termcolor" \
+        "loguru" \
+        "pyzmq" \
+        "tiktoken" \
+        "sentencepiece" \
+        "datasets==3.6.0" \
+        "wandb" \
+        "dm_tree"
 
-    echo "--- Installing DreamZero repo (editable) ---"
-    pip install -e "$DREAMZERO_DIR"
+    echo "--- Installing DreamZero repo (editable, no-deps to skip unavailable NVIDIA packages) ---"
+    pip install -e "$DREAMZERO_DIR" --no-deps
 
     echo "--- Installing flash-attn (compiles against CUDA; ~10 min) ---"
     pip install flash-attn --no-build-isolation
