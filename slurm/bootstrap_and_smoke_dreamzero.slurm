@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=120G
-#SBATCH --time=06:00:00
+#SBATCH --time=10:00:00
 #SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
 #SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
 #SBATCH --mail-user=asingal2@andrew.cmu.edu
@@ -103,15 +103,15 @@ wait_for_file() {
     local path=$1
     local label=$2
     echo "Waiting for $label at $path ..."
-    for i in $(seq 1 60); do
+    for i in $(seq 1 180); do
         if [ -d "$path" ] && [ "$(ls "$path"/*.safetensors "$path"/*.bin 2>/dev/null | wc -l)" -gt 0 ]; then
             echo "  $label: found."
             return 0
         fi
-        echo "  [$i/60] Not ready yet, sleeping 60s ..."
+        echo "  [$i/180] Not ready yet, sleeping 60s ..."
         sleep 60
     done
-    echo "ERROR: $label not found after 60 minutes."
+    echo "ERROR: $label not found after 180 minutes."
     exit 1
 }
 
