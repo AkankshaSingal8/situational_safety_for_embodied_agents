@@ -90,9 +90,6 @@ if [ ! -d "$ENV_PATH" ]; then
     echo "--- Installing DreamZero repo (editable, no-deps to skip unavailable NVIDIA packages) ---"
     pip install -e "$DREAMZERO_DIR" --no-deps
 
-    echo "--- Installing flash-attn (compiles against CUDA; ~10 min) ---"
-    pip install flash-attn --no-build-isolation
-
     echo "--- Verifying GPU access ---"
     python -c "
 import torch
@@ -143,6 +140,9 @@ echo "=========================================="
 # experiment_cfg/conf.yaml (save_lora_only: true) and calls VLA.load_lora(),
 # which auto-downloads Wan2.1-I2V-14B-480P (~40GB) on first run.
 # First startup may take 30-60 minutes.
+# ATTENTION_BACKEND=torch: flash-attn is not installed (requires nvcc to build);
+# wan2_1_attention.py falls back to PyTorch sdp when env var is set to "torch".
+export ATTENTION_BACKEND=torch
 
 cd "$DREAMZERO_DIR"
 CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.run \
