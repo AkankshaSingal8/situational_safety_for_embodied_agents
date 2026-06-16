@@ -26,6 +26,7 @@ Usage (run from project root under fastwam_env):
 """
 
 import argparse
+import inspect
 import json
 import logging
 import math
@@ -84,8 +85,6 @@ from safelibero_utils import (
     get_safelibero_image,
     get_safelibero_wrist_image,
 )
-
-from libero.libero_utils import quat2axisangle  # noqa: F401 – imported via experiments path
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -348,8 +347,9 @@ def run_episode(
         initial_state: optional environment initial state
         images_out: if provided, primary-view frames are appended here
     """
-    env.reset()
-    obs = env.set_init_state(initial_state) if initial_state is not None else env.get_observation()
+    obs = env.reset()
+    if initial_state is not None and hasattr(env, "set_init_state"):
+        obs = env.set_init_state(initial_state)
 
     # Stabilisation warm-up (30 dummy steps)
     for _ in range(30):
@@ -422,18 +422,22 @@ def run_episode(
                 formatted_prompt = DEFAULT_PROMPT.format(task=task_description)
                 num_video_frames = (int(cfg.data.train.num_frames) - 1) // int(cfg.data.train.action_video_freq_ratio) + 1
 
+                _infer_sig = inspect.signature(model.infer_action)
+                _infer_kwargs = dict(
+                    prompt=formatted_prompt,
+                    input_image=img_tensor,
+                    action_horizon=args.action_horizon,
+                    proprio=proprio_tensor,
+                    num_inference_steps=args.num_inference_steps,
+                    negative_prompt="",
+                    text_cfg_scale=1.0,
+                    rand_device="cpu",
+                )
+                if "num_video_frames" in _infer_sig.parameters:
+                    _infer_kwargs["num_video_frames"] = num_video_frames
+
                 with torch.no_grad():
-                    pred = model.infer_action(
-                        prompt=formatted_prompt,
-                        input_image=img_tensor,
-                        action_horizon=args.action_horizon,
-                        proprio=proprio_tensor,
-                        num_inference_steps=args.num_inference_steps,
-                        negative_prompt="",
-                        text_cfg_scale=1.0,
-                        rand_device="cpu",
-                        num_video_frames=num_video_frames,
-                    )
+                    pred = model.infer_action(**_infer_kwargs)
 
                 action_chunk_norm = pred["action"]  # [T, D], normalized, on CPU
 
