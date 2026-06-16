@@ -17,7 +17,8 @@ set -euo pipefail
 REPO=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
 ENV_PATH=/ocean/projects/cis250185p/asingal/envs/dreamzero_env
 HF_CACHE=/ocean/projects/cis250185p/asingal/.hf_cache
-MERGED_CKPT=$HF_CACHE/hub/DreamZero-LIBERO-merged
+# LoRA checkpoint dir — VLA.load_lora() loads directly from here (no merge needed).
+LORA_CKPT=$HF_CACHE/hub/KyleZ0906/DreamZero-LIBERO-LoRA
 DREAMZERO_DIR=$REPO/dream-policy/dreamzero
 SERVER_PORT=8001
 LOG_DIR=$REPO/dream_benchmark/logs
@@ -52,7 +53,7 @@ if [ ! -d "$ENV_PATH" ]; then
     pip install \
         "transformers==4.51.3" \
         "diffusers==0.30.2" \
-        "peft==0.5.0" \
+        "peft>=0.10.0" \
         "accelerate>=1.0.0" \
         "safetensors>=0.5.0" \
         "einops>=0.8.0" \
@@ -68,7 +69,7 @@ if [ ! -d "$ENV_PATH" ]; then
         "opencv-python-headless>=4.11.0" \
         "imageio==2.34.2" \
         "imageio-ffmpeg" \
-        "av==15.0.0" \
+        "av" \
         "tqdm>=4.67.0" \
         "tyro" \
         "tianshou==0.5.1" \
@@ -108,50 +109,40 @@ fi
 
 conda activate "$ENV_PATH"
 
-# ── Step 2: Wait for checkpoints (download runs on login node in background) ──
+# ── Step 2: Wait for LoRA checkpoint (download runs on login node) ────────────
 echo "=========================================="
-echo " STEP 2: Checking checkpoints"
-echo "=========================================="
-
-BASE_CKPT=$HF_CACHE/hub/GEAR-Dreams/DreamZero-AgiBot
-LORA_CKPT=$HF_CACHE/hub/KyleZ0906/DreamZero-LIBERO-LoRA
-
-wait_for_file() {
-    local path=$1
-    local label=$2
-    echo "Waiting for $label at $path ..."
-    for i in $(seq 1 180); do
-        if [ -d "$path" ] && [ "$(ls "$path"/*.safetensors "$path"/*.bin 2>/dev/null | wc -l)" -gt 0 ]; then
-            echo "  $label: found."
-            return 0
-        fi
-        echo "  [$i/180] Not ready yet, sleeping 60s ..."
-        sleep 60
-    done
-    echo "ERROR: $label not found after 180 minutes."
-    exit 1
-}
-
-wait_for_file "$BASE_CKPT" "DreamZero-AgiBot base model"
-wait_for_file "$LORA_CKPT" "DreamZero-LIBERO-LoRA adapter"
-
-# ── Step 3: Merge LoRA into base model ───────────────────────────────────────
-echo "=========================================="
-echo " STEP 3: Merging LoRA into base model"
+echo " STEP 2: Checking LoRA checkpoint"
 echo "=========================================="
 
-if [ ! -d "$MERGED_CKPT" ] || [ -z "$(ls "$MERGED_CKPT" 2>/dev/null)" ]; then
-    python "$REPO/dream-policy/merge_lora.py"
-else
-    echo "Merged checkpoint already exists at $MERGED_CKPT — skipping merge."
-fi
+# Only the LoRA adapter is needed. VLA.load_lora() reads model.safetensors from
+# LORA_CKPT and auto-downloads Wan2.1 sub-components from HuggingFace if missing.
+LORA_WEIGHTS="$LORA_CKPT/model.safetensors"
+echo "Waiting for LoRA weights at $LORA_WEIGHTS ..."
+for i in $(seq 1 180); do
+    if [ -f "$LORA_WEIGHTS" ]; then
+        echo "  LoRA model.safetensors: found ($(du -sh "$LORA_WEIGHTS" | cut -f1))."
+        break
+    fi
+    PARTIAL=$(find "$LORA_CKPT/.cache" -name "*.incomplete" 2>/dev/null | xargs ls -la 2>/dev/null | awk '{print $5}' | sort -n | tail -1)
+    echo "  [$i/180] Not ready yet (incomplete: ${PARTIAL:-0} bytes), sleeping 60s ..."
+    sleep 60
+    if [ $i -eq 180 ]; then
+        echo "ERROR: LoRA model.safetensors not found after 180 minutes."
+        exit 1
+    fi
+done
 
-ls -lh "$MERGED_CKPT"
+ls -lh "$LORA_CKPT"
 
-# ── Step 4: Start DreamZero server in background ─────────────────────────────
+# ── Step 3: Start DreamZero server in background ─────────────────────────────
 echo "=========================================="
-echo " STEP 4: Starting DreamZero server (port $SERVER_PORT)"
+echo " STEP 3: Starting DreamZero server (port $SERVER_PORT)"
 echo "=========================================="
+
+# NOTE: --model-path is the LoRA adapter directory. GrootSimPolicy reads
+# experiment_cfg/conf.yaml (save_lora_only: true) and calls VLA.load_lora(),
+# which auto-downloads Wan2.1-I2V-14B-480P (~40GB) on first run.
+# First startup may take 30-60 minutes.
 
 cd "$DREAMZERO_DIR"
 CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.run \
@@ -159,16 +150,17 @@ CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.run \
     --nproc_per_node=2 \
     socket_test_optimized_AR.py \
     --port "$SERVER_PORT" \
-    --model-path "$MERGED_CKPT" \
+    --model-path "$LORA_CKPT" \
     --enable-dit-cache \
     > "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log" 2>&1 &
 
 SERVER_PID=$!
 echo "Server PID: $SERVER_PID"
 
-# ── Step 5: Wait for server ready ────────────────────────────────────────────
-echo "Waiting for DreamZero server (up to 10 minutes)..."
-for i in $(seq 1 120); do
+# ── Step 4: Wait for server ready ────────────────────────────────────────────
+# First run downloads Wan2.1-I2V-14B-480P (~40GB); allow up to 90 minutes.
+echo "Waiting for DreamZero server (up to 90 minutes — first run downloads Wan2.1)..."
+for i in $(seq 1 1080); do
     sleep 5
     if grep -qEi "listening|running|ready|started|serving|8000|$SERVER_PORT" \
             "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log" 2>/dev/null; then
@@ -176,20 +168,25 @@ for i in $(seq 1 120); do
         break
     fi
     if ! kill -0 $SERVER_PID 2>/dev/null; then
-        echo "ERROR: Server process died. Last 20 lines of log:"
-        tail -20 "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log"
+        echo "ERROR: Server process died. Last 30 lines of log:"
+        tail -30 "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log"
         exit 1
     fi
-    if [ $i -eq 120 ]; then
-        echo "ERROR: Server did not start in 10 minutes."
+    if [ $((i % 60)) -eq 0 ]; then
+        echo "Still waiting ($((i*5))s elapsed). Last server log line:"
+        tail -1 "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log" 2>/dev/null || echo "(no log yet)"
+    fi
+    if [ $i -eq 1080 ]; then
+        echo "ERROR: Server did not start in 90 minutes. Last 30 lines:"
+        tail -30 "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log"
         kill $SERVER_PID 2>/dev/null
         exit 1
     fi
 done
 
-# ── Step 6: Smoke test (1 episode, task 0) ───────────────────────────────────
+# ── Step 5: Smoke test (1 episode, task 0) ───────────────────────────────────
 echo "=========================================="
-echo " STEP 6: Smoke test (1 episode, task 0)"
+echo " STEP 5: Smoke test (1 episode, task 0)"
 echo "=========================================="
 
 conda activate libero_env
@@ -197,7 +194,7 @@ export MUJOCO_GL=egl
 export PYTHONPATH=$REPO/vlm_pipeline:$REPO/SafeLIBERO/safelibero:${PYTHONPATH:-}
 
 # Install WebSocket + client deps into libero_env if missing
-pip install --quiet websockets>=13.0 opencv-python-headless openpi-client 2>/dev/null || true
+pip install --quiet "websockets>=13.0" opencv-python-headless openpi-client 2>/dev/null || true
 
 python "$REPO/vlm_pipeline/run_safelibero_dreamzero_eval.py" \
     --task_suite_name safelibero_spatial \
