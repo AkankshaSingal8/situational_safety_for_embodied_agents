@@ -1,0 +1,8 @@
+dreamzero/
+*.safetensors
+*.bin
+*.pt
+checkpoints/
+__pycache__/
+*.egg-info/
+setup_log.txt
