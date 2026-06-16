@@ -27,18 +27,27 @@ else
 fi
 
 source "$(conda info --base)/etc/profile.d/conda.sh"
-conda activate /ocean/projects/cis250185p/asingal/envs/dreamzero_env
+# Use libero env (has huggingface-cli) — dreamzero_env may not exist yet
+HFCLI=/ocean/projects/cis250185p/asingal/envs/libero/bin/huggingface-cli
+if [ ! -f "$HFCLI" ]; then
+    HFCLI=/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/bin/huggingface-cli
+fi
+if [ ! -f "$HFCLI" ]; then
+    echo "ERROR: huggingface-cli not found in libero or openvla_libero_merged envs."
+    exit 1
+fi
+echo "Using huggingface-cli from: $HFCLI"
 
 mkdir -p "$HF_CACHE/hub"
 
 echo "=== Downloading DreamZero-AgiBot base model (~56GB) ==="
-huggingface-cli download GEAR-Dreams/DreamZero-AgiBot \
+"$HFCLI" download GEAR-Dreams/DreamZero-AgiBot \
     --repo-type model \
     --local-dir "$HF_CACHE/hub/GEAR-Dreams/DreamZero-AgiBot" \
     ${HF_TOKEN:+--token "$HF_TOKEN"}
 
 echo "=== Downloading DreamZero-LIBERO-LoRA adapter (~217MB) ==="
-huggingface-cli download KyleZ0906/DreamZero-LIBERO-LoRA \
+"$HFCLI" download KyleZ0906/DreamZero-LIBERO-LoRA \
     --repo-type model \
     --local-dir "$HF_CACHE/hub/KyleZ0906/DreamZero-LIBERO-LoRA" \
     ${HF_TOKEN:+--token "$HF_TOKEN"}
