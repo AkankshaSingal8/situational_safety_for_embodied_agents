@@ -58,7 +58,6 @@ if [ ! -d "$ENV_PATH" ]; then
         "safetensors>=0.5.0" \
         "einops>=0.8.0" \
         "hydra-core>=1.3.0" \
-        "deepspeed>=0.16.0" \
         "flask>=3.0.0" \
         "flask-socketio>=5.5.0" \
         "python-socketio>=5.13.0" \
