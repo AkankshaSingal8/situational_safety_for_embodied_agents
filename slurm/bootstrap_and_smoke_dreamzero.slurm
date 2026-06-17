@@ -211,6 +211,7 @@ python "$REPO/vlm_pipeline/run_safelibero_dreamzero_eval.py" \
     --server_port "$SERVER_PORT" \
     --replan_steps 24 \
     --results_output_dir /tmp/dreamzero_smoke \
+    --video_output_dir "$REPO/dream_benchmark/videos" \
     --save_videos
 
 EVAL_EXIT=$?
