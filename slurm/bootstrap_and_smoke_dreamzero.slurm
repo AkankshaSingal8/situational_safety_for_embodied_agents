@@ -114,17 +114,19 @@ echo "=========================================="
 # Only the LoRA adapter is needed. VLA.load_lora() reads model.safetensors from
 # LORA_CKPT and auto-downloads Wan2.1 sub-components from HuggingFace if missing.
 LORA_WEIGHTS="$LORA_CKPT/model.safetensors"
-echo "Waiting for LoRA weights at $LORA_WEIGHTS ..."
+LORA_EXPECTED_BYTES=217288600
+echo "Waiting for LoRA weights at $LORA_WEIGHTS (expected ${LORA_EXPECTED_BYTES} bytes) ..."
 for i in $(seq 1 180); do
-    if [ -f "$LORA_WEIGHTS" ]; then
-        echo "  LoRA model.safetensors: found ($(du -sh "$LORA_WEIGHTS" | cut -f1))."
+    # Use python for reliable size — Lustre can lag on stat/ls metadata
+    ACTUAL=$(python3 -c "import os; print(os.path.getsize('$LORA_WEIGHTS'))" 2>/dev/null || echo 0)
+    if [ "${ACTUAL}" -ge "${LORA_EXPECTED_BYTES}" ]; then
+        echo "  LoRA model.safetensors: complete (${ACTUAL} bytes)."
         break
     fi
-    PARTIAL=$(find "$LORA_CKPT/.cache" -name "*.incomplete" 2>/dev/null | xargs ls -la 2>/dev/null | awk '{print $5}' | sort -n | tail -1)
-    echo "  [$i/180] Not ready yet (incomplete: ${PARTIAL:-0} bytes), sleeping 60s ..."
+    echo "  [$i/180] Not ready yet (${ACTUAL}/${LORA_EXPECTED_BYTES} bytes), sleeping 60s ..."
     sleep 60
     if [ $i -eq 180 ]; then
-        echo "ERROR: LoRA model.safetensors not found after 180 minutes."
+        echo "ERROR: LoRA model.safetensors not complete after 180 minutes."
         exit 1
     fi
 done
