@@ -85,7 +85,8 @@ if [ ! -d "$ENV_PATH" ]; then
         "sentencepiece" \
         "datasets==3.6.0" \
         "wandb" \
-        "dm_tree"
+        "dm_tree" \
+        "albumentations==1.4.18"
 
     echo "--- Installing DreamZero repo (editable, no-deps to skip unavailable NVIDIA packages) ---"
     pip install -e "$DREAMZERO_DIR" --no-deps
@@ -145,6 +146,7 @@ echo "=========================================="
 # ATTENTION_BACKEND=torch: flash-attn is not installed (requires nvcc to build);
 # wan2_1_attention.py falls back to PyTorch sdp when env var is set to "torch".
 export ATTENTION_BACKEND=torch
+export NO_ALBUMENTATIONS_UPDATE=1
 
 cd "$DREAMZERO_DIR"
 CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.run \
@@ -164,7 +166,9 @@ echo "Server PID: $SERVER_PID"
 echo "Waiting for DreamZero server (up to 90 minutes — first run downloads Wan2.1)..."
 for i in $(seq 1 1080); do
     sleep 5
-    if grep -qEi "listening|running|ready|started|serving|8000|$SERVER_PORT" \
+    # websockets library logs "server listening on 0.0.0.0:PORT" — match this
+    # specifically to avoid false positives from traceback text containing "run/running".
+    if grep -qEi "listening on|server started on" \
             "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log" 2>/dev/null; then
         echo "Server ready after $((i*5))s"
         break
@@ -191,11 +195,11 @@ echo "=========================================="
 echo " STEP 5: Smoke test (1 episode, task 0)"
 echo "=========================================="
 
-conda activate libero_env
+conda activate /ocean/projects/cis250185p/asingal/envs/libero
 export MUJOCO_GL=egl
 export PYTHONPATH=$REPO/vlm_pipeline:$REPO/SafeLIBERO/safelibero:${PYTHONPATH:-}
 
-# Install WebSocket + client deps into libero_env if missing
+# Install WebSocket + client deps into libero env if missing
 pip install --quiet "websockets>=13.0" opencv-python-headless openpi-client 2>/dev/null || true
 
 python "$REPO/vlm_pipeline/run_safelibero_dreamzero_eval.py" \
