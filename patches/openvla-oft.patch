@@ -1,0 +1,63 @@
+diff --git a/experiments/robot/libero/libero_utils.py b/experiments/robot/libero/libero_utils.py
+index 8e2c234..60cb59e 100644
+--- a/experiments/robot/libero/libero_utils.py
++++ b/experiments/robot/libero/libero_utils.py
+@@ -30,17 +30,54 @@ def get_libero_dummy_action(model_family: str):
+     return [0, 0, 0, 0, 0, 0, -1]
+ 
+ 
+-def get_libero_image(obs):
+-    """Extracts third-person image from observations and preprocesses it."""
++def get_libero_image(obs, validate=True):
++    """Extracts third-person image from observations and preprocesses it.
++
++    Args:
++        obs: Observation dictionary from environment
++        validate: If True, validates image for corruption (default: True)
++    """
+     img = obs["agentview_image"]
+-    img = img[::-1, ::-1]  # IMPORTANT: rotate 180 degrees to match train preprocessing
++
++    if validate:
++        # Validate image to detect rendering failures (grey noise frames)
++        if img is None or img.size == 0:
++            raise ValueError("Invalid image: empty or None")
++
++        # Check for corrupted frames using multiple heuristics:
++        # 1. Extremely low variance (solid color) - rendering returned zeros/constant
++        # 2. Uniform noise pattern - flat histogram indicates uninitialized memory/grey noise
++        img_std = img.std()
++
++        if img_std < 5.0:
++            # Solid color or near-solid - definitely corrupted
++            raise ValueError(f"Invalid image: solid color detected (std={img_std:.2f})")
++
++        # Check for uniform noise (grey noise): histogram should not be too flat
++        # Real scenes have structure - dark shadows, bright lights, varied colors create histogram peaks
++        # Grey noise has uniform distribution - all histogram bins have similar counts (flat histogram)
++        hist, _ = np.histogram(img.flatten(), bins=32, range=(0, 256))
++        hist_std = hist.std()
++
++        # Threshold: real scenes have hist_std > 100k typically, noise has hist_std < 10k
++        # Adjusted based on image size (1024x1024x3 = ~3M pixels)
++        hist_threshold = img.size / 300  # ~10k for 1024x1024x3 images
++
++        if hist_std < hist_threshold:
++            # Flat histogram = uniform noise = corrupted frame
++            raise ValueError(f"Invalid image: uniform noise detected (hist_std={hist_std:.0f} < {hist_threshold:.0f})")
++
++    # BUGFIX: Use ascontiguousarray to guarantee C-contiguous copy independent of simulator buffer
++    # Rotation creates view with negative strides; ascontiguousarray ensures proper memory layout
++    img = np.ascontiguousarray(img[::-1, ::-1])  # IMPORTANT: rotate 180 degrees to match train preprocessing
+     return img
+ 
+ 
+ def get_libero_wrist_image(obs):
+     """Extracts wrist camera image from observations and preprocesses it."""
+     img = obs["robot0_eye_in_hand_image"]
+-    img = img[::-1, ::-1]  # IMPORTANT: rotate 180 degrees to match train preprocessing
++    # BUGFIX: Use ascontiguousarray to guarantee C-contiguous copy independent of simulator buffer
++    img = np.ascontiguousarray(img[::-1, ::-1])  # IMPORTANT: rotate 180 degrees to match train preprocessing
+     return img
+ 
+ 

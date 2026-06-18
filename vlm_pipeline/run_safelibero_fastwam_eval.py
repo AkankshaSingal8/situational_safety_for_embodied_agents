@@ -516,7 +516,10 @@ def run_task(
     timesteps_list: List[int] = []
 
     for episode_idx in range(args.num_trials_per_task):
-        images_out: List[np.ndarray] = [] if args.save_videos else None
+        # Save video for the first 10 episodes and every 5th episode thereafter (1-indexed).
+        episode_num = episode_idx + 1
+        capture_video = args.save_videos and (episode_num <= 10 or episode_num % 5 == 0)
+        images_out: List[np.ndarray] = [] if capture_video else None
         logger.info("  Episode %d/%d", episode_idx + 1, args.num_trials_per_task)
 
         success, collide, steps = run_episode(

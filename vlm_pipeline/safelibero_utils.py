@@ -6,11 +6,19 @@ SafeLIBERO's camera configuration and avoid wrist camera contamination.
 
 import os
 import math
+import time
 import imageio
 import numpy as np
 from libero.libero import get_libero_path
 from libero.libero.envs import OffScreenRenderEnv
-from experiments.robot.robot_utils import DATE, DATE_TIME
+
+# Define locally to avoid dependency on openvla-oft's experiments.robot.robot_utils,
+# which is not available when running under the cosmos-policy venv.
+try:
+    from experiments.robot.robot_utils import DATE, DATE_TIME
+except ModuleNotFoundError:
+    DATE = time.strftime("%Y_%m_%d")
+    DATE_TIME = time.strftime("%Y_%m_%d-%H_%M_%S")
 
 
 def get_safelibero_env(task, model_family, resolution=256, include_wrist_camera=False,

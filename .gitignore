@@ -1,2 +1,23 @@
 .env
 .envfile
+
+# IDE
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Model checkpoints & weights
+checkpoints/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+
+# Benchmark smoke test dirs (not needed for reproducibility)
+openvla_benchmark_smoke/
+pi05_benchmark_smoke/

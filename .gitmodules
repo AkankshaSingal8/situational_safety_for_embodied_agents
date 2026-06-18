@@ -1,3 +1,6 @@
 [submodule "vlsa-aegis"]
 	path = vlsa-aegis
 	url = https://github.com/THU-RCSCT/vlsa-aegis.git
+[submodule "cosmos-policy"]
+	path = cosmos-policy
+	url = https://github.com/NVlabs/cosmos-policy.git

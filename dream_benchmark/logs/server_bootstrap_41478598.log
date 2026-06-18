@@ -1,0 +1,174 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/utils/hub.py:105: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/utils/hub.py:105: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+Rank 1/2 (PID: 67889) setting device to 1
+Rank 0/2 (PID: 67888) setting device to 0
+Rank 0/2 (PID: 67888) using device cuda:0Rank 1/2 (PID: 67889) using device cuda:1
+
+[Gloo] Rank 1 is connected to 1 peer ranks. Expected number of connected peer ranks is : 1
+[Gloo] Rank 0 is connected to 1 peer ranks. Expected number of connected peer ranks is : 1
+INFO:__main__:Rank 1 initialized signal_group (gloo)
+INFO:__main__:Rank 0 initialized signal_group (gloo)
+No model config overrides provided
+Loading LoRA weights from pretrained
+No model config overrides provided
+Loading LoRA weights from pretrained
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 1967, in _get_module
+[rank0]:     return importlib.import_module("." + module_name, self.__name__)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/importlib/__init__.py", line 126, in import_module
+[rank0]:     return _bootstrap._gcd_import(name[level:], package, level)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+[rank0]:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+[rank0]:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+[rank0]:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+[rank0]:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+[rank0]:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/modeling_utils.py", line 158, in <module>
+[rank0]:     import deepspeed
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/__init__.py", line 25, in <module>
+[rank0]:     from . import ops
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/ops/__init__.py", line 15, in <module>
+[rank0]:     from ..git_version_info import compatible_ops as __compatible_ops__
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/git_version_info.py", line 29, in <module>
+[rank0]:     op_compatible = builder.is_compatible()
+[rank0]:                     ^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/ops/op_builder/fp_quantizer.py", line 37, in is_compatible
+[rank0]:     sys_cuda_major, _ = installed_cuda_version()
+[rank0]:                         ^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 51, in installed_cuda_version
+[rank0]:     raise MissingCUDAException("CUDA_HOME does not exist, unable to compile CUDA op(s)")
+[rank0]: deepspeed.ops.op_builder.builder.MissingCUDAException: CUDA_HOME does not exist, unable to compile CUDA op(s)
+
+[rank0]: The above exception was the direct cause of the following exception:
+
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/dream-policy/dreamzero/socket_test_optimized_AR.py", line 836, in <module>
+[rank0]:     main(args)
+[rank0]:   File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/dream-policy/dreamzero/socket_test_optimized_AR.py", line 766, in main
+[rank0]:     policy = GrootSimPolicy(
+[rank0]:              ^^^^^^^^^^^^^^^
+[rank0]:   File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/dream-policy/dreamzero/groot/vla/model/n1_5/sim_policy.py", line 314, in __init__
+[rank0]:     cls = getattr(importlib.import_module(cls_module), cls_name)
+[rank0]:                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/importlib/__init__.py", line 126, in import_module
+[rank0]:     return _bootstrap._gcd_import(name[level:], package, level)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+[rank0]:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+[rank0]:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+[rank0]:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+[rank0]:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+[rank0]:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+[rank0]:   File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/dream-policy/dreamzero/groot/vla/model/dreamzero/base_vla.py", line 10, in <module>
+[rank0]:     from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel
+[rank0]:   File "<frozen importlib._bootstrap>", line 1229, in _handle_fromlist
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 1955, in __getattr__
+[rank0]:     module = self._get_module(self._class_to_module[name])
+[rank0]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 1969, in _get_module
+[rank0]:     raise RuntimeError(
+[rank0]: RuntimeError: Failed to import transformers.modeling_utils because of the following error (look up to see its traceback):
+[rank0]: CUDA_HOME does not exist, unable to compile CUDA op(s)
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 1967, in _get_module
+[rank1]:     return importlib.import_module("." + module_name, self.__name__)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/importlib/__init__.py", line 126, in import_module
+[rank1]:     return _bootstrap._gcd_import(name[level:], package, level)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+[rank1]:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+[rank1]:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+[rank1]:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+[rank1]:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+[rank1]:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/modeling_utils.py", line 158, in <module>
+[rank1]:     import deepspeed
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/__init__.py", line 25, in <module>
+[rank1]:     from . import ops
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/ops/__init__.py", line 15, in <module>
+[rank1]:     from ..git_version_info import compatible_ops as __compatible_ops__
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/git_version_info.py", line 29, in <module>
+[rank1]:     op_compatible = builder.is_compatible()
+[rank1]:                     ^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/ops/op_builder/fp_quantizer.py", line 37, in is_compatible
+[rank1]:     sys_cuda_major, _ = installed_cuda_version()
+[rank1]:                         ^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/deepspeed/ops/op_builder/builder.py", line 51, in installed_cuda_version
+[rank1]:     raise MissingCUDAException("CUDA_HOME does not exist, unable to compile CUDA op(s)")
+[rank1]: deepspeed.ops.op_builder.builder.MissingCUDAException: CUDA_HOME does not exist, unable to compile CUDA op(s)
+
+[rank1]: The above exception was the direct cause of the following exception:
+
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/dream-policy/dreamzero/socket_test_optimized_AR.py", line 836, in <module>
+[rank1]:     main(args)
+[rank1]:   File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/dream-policy/dreamzero/socket_test_optimized_AR.py", line 766, in main
+[rank1]:     policy = GrootSimPolicy(
+[rank1]:              ^^^^^^^^^^^^^^^
+[rank1]:   File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/dream-policy/dreamzero/groot/vla/model/n1_5/sim_policy.py", line 314, in __init__
+[rank1]:     cls = getattr(importlib.import_module(cls_module), cls_name)
+[rank1]:                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/importlib/__init__.py", line 126, in import_module
+[rank1]:     return _bootstrap._gcd_import(name[level:], package, level)
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+[rank1]:   File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+[rank1]:   File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+[rank1]:   File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+[rank1]:   File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+[rank1]:   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+[rank1]:   File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/dream-policy/dreamzero/groot/vla/model/dreamzero/base_vla.py", line 10, in <module>
+[rank1]:     from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel
+[rank1]:   File "<frozen importlib._bootstrap>", line 1229, in _handle_fromlist
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 1955, in __getattr__
+[rank1]:     module = self._get_module(self._class_to_module[name])
+[rank1]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 1969, in _get_module
+[rank1]:     raise RuntimeError(
+[rank1]: RuntimeError: Failed to import transformers.modeling_utils because of the following error (look up to see its traceback):
+[rank1]: CUDA_HOME does not exist, unable to compile CUDA op(s)
+[rank0]:[W617 14:33:24.873061365 ProcessGroupNCCL.cpp:1538] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+W0617 14:33:28.794000 67756 site-packages/torch/distributed/elastic/multiprocessing/api.py:900] Sending process 67888 closing signal SIGTERM
+E0617 14:33:28.958000 67756 site-packages/torch/distributed/elastic/multiprocessing/api.py:874] failed (exitcode: 1) local_rank: 1 (pid: 67889) of binary: /ocean/projects/cis250185p/asingal/envs/dreamzero_env/bin/python
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/torch/distributed/run.py", line 905, in <module>
+    main()
+  File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 357, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/torch/distributed/run.py", line 901, in main
+    run(args)
+  File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/torch/distributed/run.py", line 892, in run
+    elastic_launch(
+  File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 143, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/ocean/projects/cis250185p/asingal/envs/dreamzero_env/lib/python3.11/site-packages/torch/distributed/launcher/api.py", line 277, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+socket_test_optimized_AR.py FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-06-17_14:33:28
+  host      : w004.ib.bridges2.psc.edu
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 67889)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

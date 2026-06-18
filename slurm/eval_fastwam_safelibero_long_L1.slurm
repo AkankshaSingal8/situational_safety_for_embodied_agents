@@ -1,0 +1,45 @@
+#!/bin/bash
+#SBATCH --job-name=fastwam_long_LI
+#SBATCH --partition=GPU-shared
+#SBATCH --gres=gpu:h100-80:1
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64000M
+#SBATCH --time=05:00:00
+#SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
+#SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
+#SBATCH --mail-user=asingal2@andrew.cmu.edu
+#SBATCH --mail-type=END,FAIL
+
+REPO=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
+CKPT_DIR=$REPO/fast-wam/checkpoints
+
+mkdir -p /ocean/projects/cis250185p/asingal/slurm_logs
+mkdir -p $REPO/fastwam_benchmark
+mkdir -p $REPO/fastwam_video
+
+source $(conda info --base)/etc/profile.d/conda.sh
+conda activate /ocean/projects/cis250185p/asingal/envs/fastwam_env
+
+export MUJOCO_GL=egl
+export HF_HOME=/ocean/projects/cis250185p/asingal/.hf_cache
+export TRANSFORMERS_CACHE=/ocean/projects/cis250185p/asingal/.hf_cache
+export DIFFSYNTH_MODEL_BASE_PATH=$CKPT_DIR
+export DIFFSYNTH_DOWNLOAD_SOURCE=huggingface
+export PYTHONPATH=$REPO/vlm_pipeline:$REPO/SafeLIBERO/safelibero:$REPO/fast-wam/FastWAM/src:$REPO/fast-wam/FastWAM/experiments:$PYTHONPATH
+
+python $REPO/vlm_pipeline/run_safelibero_fastwam_eval.py \
+    --task_suite_name safelibero_long \
+    --safety_level I \
+    --num_trials_per_task 50 \
+    --ckpt_path $CKPT_DIR/libero_uncond_2cam224.pt \
+    --stats_path $CKPT_DIR/libero_uncond_2cam224_dataset_stats.json \
+    --results_output_dir $REPO/fastwam_benchmark \
+    --video_output_dir $REPO/fastwam_video \
+    --save_videos \
+    --seed 195 \
+    --replan_steps 10 \
+    --action_horizon 32 \
+    --num_inference_steps 20 \
+    --gpu_id 0
