@@ -21,3 +21,4 @@ checkpoints/
 # Benchmark smoke test dirs (not needed for reproducibility)
 openvla_benchmark_smoke/
 pi05_benchmark_smoke/
+.worktrees/
