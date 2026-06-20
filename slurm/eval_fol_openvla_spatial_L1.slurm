@@ -2,10 +2,11 @@
 #SBATCH --job-name=fol_openvla_spatial_L1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=8
 #SBATCH --partition=GPU-shared
-#SBATCH --gpus=v100-32:1
+#SBATCH --gres=gpu:h100-80:1
 #SBATCH --time=06:00:00
-#SBATCH --mem=48GB
+#SBATCH --mem=64000M
 #SBATCH --output=logs/fol_openvla_spatial_L1_%j.out
 #SBATCH --error=logs/fol_openvla_spatial_L1_%j.err
 
