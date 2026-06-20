@@ -1,0 +1,601 @@
+"""
+FOL Safety Filter — Main Interface
+
+FOLSafetyFilter wraps any policy through a single certify() call.
+
+Episode lifecycle:
+    filter.setup_episode(obs, task_description, obstacle_name, env)
+    while running:
+        action = policy(obs)
+        safe_action = filter.certify(action, obs)
+        obs, _, done, _ = env.step(safe_action)
+
+The filter runs in two stages:
+    [A] Episode setup (~3ms): ground MuJoCo GT poses, optionally run VLM
+        binary queries to fill physical-state fields in ObjectState.
+    [B] Per-timestep (~0.2ms): evaluate spatial predicates geometrically,
+        find active rules, build CBF constraints, call SemanticSafetyFilter.
+"""
+
+from __future__ import annotations
+
+import logging
+import math
+import os
+import sys
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+from scipy.spatial.transform import Rotation
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Lazy import of SemanticSafetyFilter to avoid hard dep during unit tests
+# ---------------------------------------------------------------------------
+
+def _load_semantic_filter():
+    _vlm_dir = os.path.join(os.path.dirname(__file__), "..", "vlm_pipeline")
+    if _vlm_dir not in sys.path:
+        sys.path.insert(0, _vlm_dir)
+    from semantic_cbf_filter import SemanticSafetyFilter
+    return SemanticSafetyFilter
+
+
+# ---------------------------------------------------------------------------
+# Imports from this package
+# ---------------------------------------------------------------------------
+
+from .primitives import (
+    ObjectState,
+    RobotState,
+    VLM_GROUNDING_QUERIES,
+    COMPOSED_RULE_SEEDS,
+    PREDICATE_REGISTRY,
+)
+from .kb import FOLKnowledgeBase, FOLRule, ActiveConstraint, parse_formula
+from .cbf_mapper import CBFMapper, MappedCBFSet
+
+
+# ---------------------------------------------------------------------------
+# VLM Grounder — binary queries for physical-state predicates
+# ---------------------------------------------------------------------------
+
+class VLMGrounder:
+    """
+    Runs VLM binary queries to fill physical-state fields on ObjectState.
+
+    In sim mode with use_vlm=False:  returns all False (conservative but fast).
+    In sim mode with use_vlm=True:   calls Qwen VLM server via subprocess.
+    """
+
+    def __init__(self, use_vlm: bool = False, n_votes: int = 3):
+        self.use_vlm = use_vlm
+        self.n_votes = n_votes
+
+    def ground(self, obs: Dict, object_states: Dict[str, ObjectState],
+               rgb_image: Optional[np.ndarray] = None) -> None:
+        """Fill physical-state attributes on each ObjectState in-place."""
+        if not self.use_vlm:
+            # Sim ground-truth fallback: infer from object name heuristics
+            for name, obj in object_states.items():
+                self._heuristic_ground(name, obj)
+            return
+
+        # VLM path (optional; skipped if Qwen not available)
+        for attr, query_template in VLM_GROUNDING_QUERIES.items():
+            for name, obj in object_states.items():
+                query = query_template.format(obj=name.replace("_", " "))
+                try:
+                    result = self._vlm_binary_query(query, rgb_image, votes=self.n_votes)
+                    setattr(obj, attr, result)
+                except Exception as e:
+                    logger.debug(f"VLM query failed for {attr}({name}): {e}")
+                    setattr(obj, attr, False)
+
+    def _heuristic_ground(self, name: str, obj: ObjectState) -> None:
+        """
+        Name-based heuristics for sim: encode semantic properties in object name.
+
+        SafeLIBERO objects with keyword → infer property:
+            *bowl*, *cup*, *glass*, *mug* → IS_FULL, IS_OPEN, IS_SPILLABLE
+            *moka_pot*                    → IS_HEAVY
+            *candle*                      → IS_LIT (unsafe), IS_FLAMMABLE=False (metal)
+            *napkin*, *paper*             → IS_FLAMMABLE, IS_ABSORBENT
+            *egg*                         → IS_FRAGILE
+            *knife*, *scissors*           → HAS_SHARP_PART
+        """
+        n = name.lower().replace("_", " ")
+
+        obj.is_fragile   = any(k in n for k in ["egg", "glass", "vase", "crystal"])
+        obj.is_wet       = any(k in n for k in ["wet", "sponge", "water"])
+        obj.is_lit       = any(k in n for k in ["candle lit", "torch", "flame"])
+        obj.is_full      = any(k in n for k in ["bowl", "cup", "glass", "mug", "pot", "container"])
+        obj.is_open      = any(k in n for k in ["bowl", "cup", "glass", "mug"])
+        obj.is_flammable = any(k in n for k in ["napkin", "paper", "cloth", "fabric", "wood", "cardboard"])
+        obj.is_absorbent = any(k in n for k in ["napkin", "paper", "cloth", "fabric", "sponge"])
+        obj.is_human     = any(k in n for k in ["human", "hand", "arm", "person", "body"])
+        obj.has_sharp_part = any(k in n for k in ["knife", "scissors", "blade", "sharp"])
+        obj.is_heavy     = any(k in n for k in ["heavy", "moka", "iron", "cast"])
+        obj.is_spillable = bool(obj.is_full and obj.is_open)
+
+    def _vlm_binary_query(self, question: str, image: Optional[np.ndarray],
+                           votes: int = 3) -> bool:
+        """Call Qwen VLM via the existing qwen_vlm_worker subprocess interface."""
+        import subprocess, json, tempfile
+        results = []
+        for _ in range(votes):
+            try:
+                payload = {"question": question, "mode": "binary"}
+                with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+                    json.dump(payload, f)
+                    fname = f.name
+                result = subprocess.run(
+                    ["conda", "run", "-n", "qwen", "python", "-c",
+                     f"import json; from qwen_vlm_worker import answer_binary; "
+                     f"print(answer_binary('{question}'))"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                ans = result.stdout.strip().lower()
+                results.append("yes" in ans or "true" in ans)
+            except Exception:
+                results.append(False)
+        return results.count(True) > votes // 2
+
+
+# ---------------------------------------------------------------------------
+# Main FOL Safety Filter
+# ---------------------------------------------------------------------------
+
+@dataclass
+class FilterMetrics:
+    timesteps: int = 0
+    interventions: int = 0
+    rule_counts: Dict[str, int] = field(default_factory=dict)
+
+
+class FOLSafetyFilter:
+    """
+    Policy-agnostic FOL safety filter.
+
+    Integrates with any policy producing 7-DoF actions:
+        [dx, dy, dz, drx, dry, drz, gripper]
+
+    All spatial predicates use MuJoCo GT poses in sim.
+    Physical-state predicates use name heuristics or VLM queries.
+    """
+
+    def __init__(
+        self,
+        use_vlm_grounding: bool = False,
+        fol_level: int = 3,          # 1=spatial-only, 2=+composed seeds, 3=+novel
+        dt: float = 0.05,
+        alpha_default: float = 1.0,
+        alpha_caution: float = 0.25,
+        safety_margin: float = 0.02,
+        velocity_limit_default: Optional[float] = None,
+        workspace_z_max: float = 1.40,
+    ):
+        self.use_vlm = use_vlm_grounding
+        self.fol_level = fol_level
+        self.dt = dt
+        self.ws_z_max = workspace_z_max
+        self.safety_margin = safety_margin
+        self.velocity_limit_default = velocity_limit_default
+
+        self.kb = FOLKnowledgeBase()
+        self.mapper = CBFMapper(ws_z_max=workspace_z_max)
+        self.grounder = VLMGrounder(use_vlm=use_vlm_grounding)
+
+        # SemanticSafetyFilter — lazy load
+        self._ssf = None
+        self._alpha_default = alpha_default
+        self._alpha_caution = alpha_caution
+
+        # Episode state
+        self._object_states: Dict[str, ObjectState] = {}
+        self._obstacle_name: Optional[str] = None
+        self._ee_quat_ref: Optional[np.ndarray] = None  # for pose lock
+        self._initialized = False
+        self._t = 0
+
+        # Metrics
+        self.metrics = FilterMetrics()
+
+    # ------------------------------------------------------------------ #
+    # Episode setup (called once after env.reset())
+    # ------------------------------------------------------------------ #
+
+    def setup_episode(
+        self,
+        obs: Dict,
+        task_description: str = "",
+        obstacle_name: Optional[str] = None,
+        env=None,
+        rgb_image: Optional[np.ndarray] = None,
+    ) -> None:
+        """
+        Set up the filter for a new episode.
+
+        1. Extract all object poses from MuJoCo obs.
+        2. Run VLM grounding (or heuristics) for physical-state predicates.
+        3. Build FOL rules.
+        4. Initialize SemanticSafetyFilter.
+        """
+        self.kb.clear()
+        self._object_states = {}
+        self._initialized = False
+        self._t = 0
+        self._ee_quat_ref = None
+        self.metrics = FilterMetrics()
+        self._obstacle_name = obstacle_name
+
+        # --- Step 1: Build ObjectState for each detected object ---
+        object_names = self._extract_objects(obs)
+        for name in object_names:
+            pos = np.array(obs.get(f"{name}_pos", [0, 0, 0]), dtype=np.float64)
+            quat = np.array(obs.get(f"{name}_quat", [0, 0, 0, 1]), dtype=np.float64)
+            obj = ObjectState(name=name, pos=pos, quat=quat,
+                              bbox_half=np.array([0.04, 0.04, 0.04]))
+            self._object_states[name] = obj
+
+        logger.info(f"[FOL] Episode setup: {len(self._object_states)} objects: "
+                    f"{list(self._object_states.keys())}")
+
+        # --- Step 2: Ground physical-state predicates ---
+        self.grounder.ground(obs, self._object_states, rgb_image)
+        for name, obj in self._object_states.items():
+            flags = {k: getattr(obj, k) for k in
+                     ["is_fragile", "is_wet", "is_lit", "is_full", "is_open",
+                      "is_flammable", "is_absorbent", "is_human", "has_sharp_part",
+                      "is_heavy", "is_spillable"]
+                     if getattr(obj, k)}
+            if flags:
+                logger.info(f"  {name}: {flags}")
+
+        # --- Step 3: Build FOL rules ---
+        # Level 1: spatial avoidance for every object
+        self.kb.add_rules_for_objects(list(self._object_states.keys()))
+        self.kb.add_workspace_safety_rules()
+
+        # Level 2: composed rules from semantic seeds
+        if self.fol_level >= 2:
+            self._add_semantic_rules()
+
+        # Level 2: obstacle-specific avoidance (main SafeLIBERO constraint)
+        if obstacle_name and obstacle_name in self._object_states:
+            self._add_obstacle_avoidance(obstacle_name, obs)
+
+        logger.info(self.kb.summary())
+
+        # --- Step 4: Initialize SemanticSafetyFilter ---
+        try:
+            SemanticSafetyFilter = _load_semantic_filter()
+            self._ssf = SemanticSafetyFilter(
+                dt=self.dt,
+                alpha_default=self._alpha_default,
+                alpha_caution=self._alpha_caution,
+                safety_margin=self.safety_margin,
+                workspace_z_max=self.ws_z_max,
+            )
+            # Pre-load collision envelopes from all objects
+            self._ssf.semantic_envelopes = []
+            self._ssf.collision_envelopes = []
+            self._ssf._init = True
+        except ImportError as e:
+            logger.warning(f"Could not load SemanticSafetyFilter: {e}. "
+                           "Running in geometry-only mode.")
+            self._ssf = None
+
+        self._initialized = True
+        logger.info(f"[FOL] Episode ready: {len(self.kb.rules)} rules, "
+                    f"VLM={self.use_vlm}")
+
+    # ------------------------------------------------------------------ #
+    # Per-timestep certification (called at ~20 Hz)
+    # ------------------------------------------------------------------ #
+
+    def certify(
+        self,
+        u_cmd: np.ndarray,
+        obs: Dict,
+        ee_pos: Optional[np.ndarray] = None,
+        ee_quat: Optional[np.ndarray] = None,
+    ) -> np.ndarray:
+        """
+        Certify action u_cmd. Returns a safe action.
+
+        u_cmd: [dx, dy, dz, drx, dry, drz, gripper] (7-D)
+        obs:   raw environment observation dict
+        """
+        if not self._initialized:
+            return u_cmd.copy()
+
+        self._t += 1
+
+        # Build RobotState from obs
+        state = self._build_robot_state(obs, ee_pos, ee_quat)
+
+        # Update object positions from obs (objects may move)
+        for name, obj in self._object_states.items():
+            if f"{name}_pos" in obs:
+                obj.pos = np.array(obs[f"{name}_pos"], dtype=np.float64)
+            if f"{name}_quat" in obs:
+                obj.quat = np.array(obs[f"{name}_quat"], dtype=np.float64)
+        state.objects = self._object_states
+
+        # Evaluate FOL rules → active constraints
+        active = self.kb.evaluate(state)
+
+        self.metrics.timesteps += 1
+        if active:
+            self.metrics.interventions += 1
+            for ac in active:
+                self.metrics.rule_counts[ac.rule.name] = \
+                    self.metrics.rule_counts.get(ac.rule.name, 0) + 1
+
+        # Map active constraints → CBF envelopes
+        cbf_set = self.mapper.map(active, state.ee_quat)
+
+        # Apply certified action
+        u_safe = self._apply_cbf(u_cmd, state, cbf_set)
+
+        return u_safe
+
+    # ------------------------------------------------------------------ #
+    # Internal helpers
+    # ------------------------------------------------------------------ #
+
+    def _extract_objects(self, obs: Dict) -> List[str]:
+        """Extract object names from MuJoCo obs keys."""
+        names = set()
+        for k in obs:
+            if k.endswith("_pos") and "robot" not in k and "gripper" not in k:
+                name = k[:-4]
+                pos = obs[k]
+                if isinstance(pos, (list, np.ndarray)) and len(pos) == 3:
+                    p = np.asarray(pos)
+                    if p[2] > -0.1 and abs(p[0]) < 1.5 and abs(p[1]) < 1.5:
+                        names.add(name)
+        return sorted(names)
+
+    def _build_robot_state(self, obs: Dict, ee_pos=None, ee_quat=None) -> RobotState:
+        _ee_pos = ee_pos if ee_pos is not None else \
+                  np.array(obs.get("robot0_eef_pos", [0, 0, 0.9]), dtype=np.float64)
+        _ee_quat = ee_quat if ee_quat is not None else \
+                   np.array(obs.get("robot0_eef_quat", [0, 0, 0, 1]), dtype=np.float64)
+        gripper_q = obs.get("robot0_gripper_qpos", np.array([0.0, 0.0]))
+        gripper_w = float(np.mean(np.abs(gripper_q)))
+
+        # Dummy joint state (7 DoF, limits from Panda defaults)
+        joint_pos = np.zeros(7)
+        joint_vel = np.zeros(7)
+        joint_lo = np.array([-2.9, -1.8, -2.9, -3.1, -2.9, -0.1, -2.9])
+        joint_hi = np.array([ 2.9,  1.8,  2.9, -0.1,  2.9,  3.8,  2.9])
+
+        # Estimate EEF velocity from obs if available
+        ee_vel = np.zeros(3)
+
+        return RobotState(
+            ee_pos=_ee_pos,
+            ee_quat=_ee_quat,
+            ee_vel=ee_vel,
+            joint_pos=joint_pos,
+            joint_vel=joint_vel,
+            joint_limits_lo=joint_lo,
+            joint_limits_hi=joint_hi,
+            gripper_width=gripper_w,
+            objects=self._object_states,
+        )
+
+    def _add_obstacle_avoidance(self, obstacle_name: str, obs: Dict) -> None:
+        """Add tight avoidance rule for the primary SafeLIBERO obstacle."""
+        formula = f"NEAR(eef, {obstacle_name}, 0.10)"
+        try:
+            parsed = parse_formula(formula)
+        except Exception:
+            return
+        rule = FOLRule(
+            name=f"OBSTACLE_AVOID_{obstacle_name.upper()}",
+            formula=formula,
+            parsed=parsed,
+            bindings={},
+            cbf_type="spatial",
+            cbf_params={"shape": "sphere", "margin": 0.05, "alpha_scale": 2.0},
+            violation_action="block",
+            primary_object=obstacle_name,
+            description=f"Primary SafeLIBERO obstacle: {obstacle_name}",
+            level=1,
+        )
+        self.kb.add_rule(rule)
+        logger.info(f"[FOL] Added primary obstacle rule: {formula}")
+
+    def _add_semantic_rules(self) -> None:
+        """Add Level-2 composed rules based on detected object properties."""
+        from .primitives import COMPOSED_RULE_SEEDS
+
+        for seed in COMPOSED_RULE_SEEDS:
+            # Resolve which objects are involved
+            bindings = self._resolve_bindings(seed)
+            if bindings is None:
+                continue
+
+            # Instantiate the formula with bound objects
+            formula = seed["formula"]
+            for var, obj in bindings.items():
+                formula = formula.replace(var, obj)
+
+            try:
+                parsed = parse_formula(formula)
+            except Exception as e:
+                logger.debug(f"Could not parse composed rule {seed['name']}: {e}")
+                continue
+
+            # Determine primary object
+            primary_obj = None
+            if "A" in bindings:
+                primary_obj = bindings["A"]
+
+            rule = FOLRule(
+                name=seed["name"],
+                formula=formula,
+                parsed=parsed,
+                bindings={},  # already resolved
+                cbf_type=seed["cbf_type"],
+                cbf_params=seed["cbf_params"],
+                violation_action=seed["violation_action"],
+                primary_object=primary_obj,
+                description=seed.get("description", ""),
+                level=2,
+            )
+            self.kb.add_rule(rule)
+            logger.info(f"[FOL] Composed rule {rule.name}: {formula}")
+
+    def _resolve_bindings(self, seed: Dict) -> Optional[Dict[str, str]]:
+        """
+        Find objects in the scene that satisfy the seed's variable roles.
+        Returns {variable: object_name} or None if no matching objects.
+        """
+        formula = seed["formula"]
+
+        # Quick heuristic: look for predicate names that tell us what type
+        # of object is needed for variable A, B
+        needs_lit = "IS_LIT(A)" in formula
+        needs_flammable = "IS_FLAMMABLE(B)" in formula
+        needs_wet = "IS_WET(A)" in formula
+        needs_absorbent = "IS_ABSORBENT(B)" in formula
+        needs_spillable = "IS_SPILLABLE(A)" in formula
+        needs_fragile = "IS_FRAGILE(A)" in formula
+        needs_supports = "SUPPORTS(A" in formula
+        needs_human = "IS_HUMAN(A)" in formula
+        needs_sharp = "HAS_SHARP_PART(A)" in formula
+
+        obj_A = obj_B = None
+
+        for name, obj in self._object_states.items():
+            if needs_lit and obj.is_lit:
+                obj_A = name; break
+        for name, obj in self._object_states.items():
+            if needs_flammable and obj.is_flammable:
+                obj_B = name; break
+        for name, obj in self._object_states.items():
+            if needs_wet and obj.is_wet and obj_A is None:
+                obj_A = name; break
+        for name, obj in self._object_states.items():
+            if needs_absorbent and obj.is_absorbent and obj_B is None:
+                obj_B = name; break
+        for name, obj in self._object_states.items():
+            if needs_spillable and obj.is_spillable and obj_A is None:
+                obj_A = name; break
+        for name, obj in self._object_states.items():
+            if needs_fragile and obj.is_fragile and obj_A is None:
+                obj_A = name; break
+        for name, obj in self._object_states.items():
+            if needs_human and obj.is_human and obj_A is None:
+                obj_A = name; break
+        for name, obj in self._object_states.items():
+            if needs_sharp and obj.has_sharp_part and obj_A is None:
+                obj_A = name; break
+
+        # SUPPORTS uses any object
+        if needs_supports and obj_A is None:
+            for name in self._object_states:
+                if "obstacle" not in name.lower():
+                    obj_A = name; break
+
+        # Check if we found the required objects
+        needs_A = any([needs_lit, needs_wet, needs_spillable, needs_fragile,
+                       needs_supports, needs_human, needs_sharp])
+        needs_B = needs_flammable or needs_absorbent
+
+        if needs_A and obj_A is None:
+            return None
+        if needs_B and obj_B is None:
+            return None
+
+        bindings = {}
+        if obj_A:
+            bindings["A"] = obj_A
+        if obj_B:
+            bindings["B"] = obj_B
+        return bindings if bindings else None
+
+    def _apply_cbf(self, u_cmd: np.ndarray, state: RobotState,
+                    cbf_set: MappedCBFSet) -> np.ndarray:
+        """
+        Apply CBF constraints to u_cmd.
+
+        Uses SemanticSafetyFilter for superquadric QP if available,
+        otherwise falls back to a simple velocity-clamp CBF.
+        """
+        u = u_cmd.copy()
+
+        # Velocity limiting (simplest, most robust)
+        if cbf_set.velocity_limit is not None or self.velocity_limit_default is not None:
+            vlim = cbf_set.velocity_limit or self.velocity_limit_default
+            speed = np.linalg.norm(u[:3])
+            if speed > vlim:
+                u[:3] *= vlim / speed
+
+        # Rotation limiting
+        if cbf_set.pose_constrained and cbf_set.angular_limit is not None:
+            omega = np.linalg.norm(u[3:6])
+            if omega > cbf_set.angular_limit:
+                u[3:6] *= cbf_set.angular_limit / omega
+
+        if self._ssf is None:
+            # Fallback: simple repulsion from obstacle positions
+            u = self._simple_repulsion(u, state, cbf_set)
+            return u
+
+        # Update SemanticSafetyFilter envelopes
+        self._ssf.semantic_envelopes = cbf_set.semantic_envelopes
+        self._ssf.collision_envelopes = cbf_set.collision_envelopes
+        self._ssf.pose_constrained = cbf_set.pose_constrained
+        if cbf_set.desired_orientation is not None:
+            self._ssf.desired_orientation = cbf_set.desired_orientation
+
+        # Run QP
+        try:
+            u = self._ssf.certify_action(u, state.ee_pos, state.ee_quat)
+        except Exception as e:
+            logger.debug(f"SemanticSafetyFilter.certify_action failed: {e}")
+            u = self._simple_repulsion(u_cmd.copy(), state, cbf_set)
+
+        return u
+
+    def _simple_repulsion(self, u: np.ndarray, state: RobotState,
+                           cbf_set: MappedCBFSet) -> np.ndarray:
+        """
+        Pure-Python fallback CBF: repulse EEF away from obstacles
+        using gradient of distance field.
+        """
+        ee = state.ee_pos
+        for obj in state.objects.values():
+            diff = ee - obj.pos
+            dist = float(np.linalg.norm(diff))
+            safety_r = 0.12
+            if 0 < dist < safety_r:
+                repulse = (diff / dist) * (safety_r - dist) * 0.5
+                u[:3] += repulse
+                # Clamp to original magnitude
+                orig_speed = np.linalg.norm(u_cmd[:3]) if hasattr(self, 'u_cmd') else 0.1
+                new_speed = np.linalg.norm(u[:3])
+                if new_speed > orig_speed * 1.5 and new_speed > 1e-6:
+                    u[:3] *= orig_speed * 1.5 / new_speed
+        return u
+
+    # ------------------------------------------------------------------ #
+    # Utilities
+    # ------------------------------------------------------------------ #
+
+    def report(self) -> Dict:
+        m = self.metrics
+        far = m.interventions / max(m.timesteps, 1)
+        return {
+            "timesteps": m.timesteps,
+            "interventions": m.interventions,
+            "filter_activation_rate": far,
+            "rule_counts": m.rule_counts,
+        }
