@@ -285,11 +285,16 @@ class FOLKnowledgeBase:
             logger.info(f"[KB] Added rule: {rule.name}: {rule.formula}")
 
     def add_workspace_safety_rules(self):
-        """Add Level-1 workspace boundary rules."""
+        """Add Level-1 workspace boundary rules.
+
+        IN_WORKSPACE() and NEAR_EDGE() have no positional object args —
+        they always operate on the EEF position from state.ee_pos.
+        Omit 'eef' to avoid the arg being misinterpreted as a margin value.
+        """
         templates = [
-            ("WORKSPACE_BOUNDS", "NOT IN_WORKSPACE(eef)", "boolean",
+            ("WORKSPACE_BOUNDS", "NOT IN_WORKSPACE()", "boolean",
              {"block_axes": ["x", "y", "z"]}, "block"),
-            ("NEAR_EDGE_GUARD", "NEAR_EDGE(eef)", "boolean",
+            ("NEAR_EDGE_GUARD", "NEAR_EDGE()", "boolean",
              {"block_axes": ["x", "y"]}, "slow"),
         ]
         for name, formula, cbf_type, params, action in templates:
