@@ -172,6 +172,7 @@ class FOLSafetyFilter:
         self._obstacle_names: List[str] = []
         self._obstacle_radii: Dict[str, float] = {}
         self._obstacle_properties: Dict[str, List[str]] = {}
+        self._obstacle_ellipsoids: Dict[str, Dict] = {}
         self._obstacle_name: Optional[str] = None
         self._target_name: Optional[str] = None
         self._goal_name: Optional[str] = None
@@ -198,6 +199,7 @@ class FOLSafetyFilter:
         self._obstacle_names = []
         self._obstacle_radii = {}
         self._obstacle_properties = {}
+        self._obstacle_ellipsoids = {}
         self._obstacle_name = None
         self._target_name = None
         self._goal_name = None
@@ -673,11 +675,17 @@ class FOLSafetyFilter:
                 speed = float(np.linalg.norm(u[:2]))
                 if tdist < 0.30 and speed > 1e-6                         and float(u[:2] @ tdiff) / (speed * tdist + 1e-9) > 0.6:
                     cancel_scale = 0.6
+            ellipsoid = None
+            if os.environ.get("FOL_ELLIPSOID", "1") == "1":
+                ellipsoid = self._obstacle_ellipsoids.get(obs_name)
             self._apply_point_cbf(
                 u, ee, obs_pos,
                 warning_r=warning_r, hard_r=0.10,
                 push_hard=0.08, label=f"EEF-{obs_name}",
                 cancel_scale=cancel_scale,
+                frame_R=ellipsoid["frame_R"] if ellipsoid else None,
+                warn_radii=ellipsoid["warn_radii"] if ellipsoid else None,
+                hard_radii=ellipsoid["hard_radii"] if ellipsoid else None,
             )
             for cp_pos in (arm_checkpoints or []):
                 self._apply_point_cbf(
@@ -711,12 +719,18 @@ class FOLSafetyFilter:
         push_hard: float,
         label: str = "",
         cancel_scale: float = 1.0,
+        frame_R: Optional[np.ndarray] = None,
+        warn_radii: Optional[np.ndarray] = None,
+        hard_radii: Optional[np.ndarray] = None,
     ) -> None:
         """In-place apply CBF for a single monitoring point (EEF or arm body).
 
         Binary rule (v3): 100% approach cancellation anywhere inside warning_r.
         Outward push proportional to penetration inside hard_r.
         cancel_scale < 1 relaxes the cancellation (target-corridor case).
+        With frame_R/warn_radii/hard_radii the zones are rotated ellipsoids
+        (per-axis radii in the frame_R basis); cancellation and push act along
+        the ellipsoid gradient instead of the radial direction.
         """
         diff = point - obs_pos
         dist = float(np.linalg.norm(diff))
@@ -725,21 +739,43 @@ class FOLSafetyFilter:
 
         point_next = point + u[:3]
         dist_next = float(np.linalg.norm(point_next - obs_pos))
-        if dist >= warning_r and dist_next >= warning_r:
+
+        if frame_R is None:
+            if dist >= warning_r and dist_next >= warning_r:
+                return
+
+            out_dir = diff / dist
+
+            # Cancel 100% of the approach component
+            approach_comp = float(np.dot(u[:3], -out_dir))
+            if approach_comp > 0:
+                u[:3] += approach_comp * cancel_scale * out_dir
+                logger.debug(f"[FOL-CBF] {label} cancel 1.0: dist={dist:.3f}")
+
+            # Outward push when inside hard_r
+            if dist < hard_r:
+                push = (hard_r - dist) / hard_r * push_hard
+                u[:3] += out_dir * push
             return
 
-        out_dir = diff / dist
+        s = frame_R.T @ diff / warn_radii
+        s_next = frame_R.T @ (point_next - obs_pos) / warn_radii
+        if np.linalg.norm(s) >= 1 and np.linalg.norm(s_next) >= 1:
+            return
 
-        # Cancel 100% of the approach component
-        approach_comp = float(np.dot(u[:3], -out_dir))
+        n = frame_R @ (s / warn_radii)
+        n /= np.linalg.norm(n)
+
+        approach_comp = float(np.dot(u[:3], -n))
         if approach_comp > 0:
-            u[:3] += approach_comp * cancel_scale * out_dir
-            logger.debug(f"[FOL-CBF] {label} cancel 1.0: dist={dist:.3f}")
+            u[:3] += approach_comp * cancel_scale * n
+            logger.debug(
+                f"[FOL-CBF] {label} cancel 1.0 (ellipsoid): dist={dist:.3f}")
 
-        # Outward push when inside hard_r
-        if dist < hard_r:
-            push = (hard_r - dist) / hard_r * push_hard
-            u[:3] += out_dir * push
+        s_h_norm = float(np.linalg.norm(frame_R.T @ diff / hard_radii))
+        if s_h_norm < 1:
+            push = (1 - s_h_norm) * push_hard
+            u[:3] += n * push
 
     # ------------------------------------------------------------------ #
     # Internal helpers (identical to v5)
