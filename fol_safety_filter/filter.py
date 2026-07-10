@@ -808,6 +808,7 @@ class FOLSafetyFilter:
                 frame_R=ellipsoid["frame_R"] if ellipsoid else None,
                 warn_radii=ellipsoid["warn_radii"] if ellipsoid else None,
                 hard_radii=ellipsoid["hard_radii"] if ellipsoid else None,
+                ray_rescale=os.environ.get("FOL_RAY_RESCALE", "0") == "1",
             )
             for cp_pos in (arm_checkpoints or []):
                 self._apply_point_cbf(
@@ -847,6 +848,7 @@ class FOLSafetyFilter:
         frame_R: Optional[np.ndarray] = None,
         warn_radii: Optional[np.ndarray] = None,
         hard_radii: Optional[np.ndarray] = None,
+        ray_rescale: bool = False,
     ) -> None:
         """In-place apply CBF for a single monitoring point (EEF or arm body).
 
@@ -891,11 +893,33 @@ class FOLSafetyFilter:
         n = frame_R @ (s / warn_radii)
         n /= np.linalg.norm(n)
 
-        approach_comp = float(np.dot(u[:3], -n))
-        if approach_comp > 0:
-            u[:3] += approach_comp * cancel_scale * n
-            logger.debug(
-                f"[FOL-CBF] {label} cancel 1.0 (ellipsoid): dist={dist:.3f}")
+        if ray_rescale:
+            # Corridor-preserving mode: keep the commanded direction, scale
+            # the step magnitude to stop at the hard boundary (ray masking).
+            a = frame_R.T @ diff / hard_radii
+            b = frame_R.T @ u[:3] / hard_radii
+            na2 = float(a @ a)
+            if na2 >= 1.0:
+                end = a + b
+                if float(end @ end) < 1.0:
+                    bb = float(b @ b)
+                    ab = float(a @ b)
+                    disc = ab * ab - bb * (na2 - 1.0)
+                    t = 0.0
+                    if bb > 1e-12 and disc >= 0.0:
+                        t = max(0.0, (-ab - math.sqrt(disc)) / bb)
+                    u[:3] *= t
+                    logger.debug(
+                        f"[FOL-CBF] {label} ray-rescale t={t:.2f}: "
+                        f"dist={dist:.3f}")
+            else:
+                u[:3] = 0.0
+        else:
+            approach_comp = float(np.dot(u[:3], -n))
+            if approach_comp > 0:
+                u[:3] += approach_comp * cancel_scale * n
+                logger.debug(
+                    f"[FOL-CBF] {label} cancel 1.0 (ellipsoid): dist={dist:.3f}")
 
         s_h_norm = float(np.linalg.norm(frame_R.T @ diff / hard_radii))
         if s_h_norm < 1:
