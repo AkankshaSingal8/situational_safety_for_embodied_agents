@@ -156,6 +156,43 @@ def _closest_point(c1, d1, c2, d2):
     return (p1 + p2) / 2, float(np.linalg.norm(p1 - p2))
 
 
+SIZE_RATIO_MAX = 2.5        # cross-view metric-size consistency gate
+
+
+def _match_crop_detection(locs, seg_c, x1, y1, scale, Ke, Ee, ca, dda,
+                          bb_a, Ka):
+    """Associate the agentview detection with a wrist-crop detection by
+    triangulating EVERY crop candidate and gating on epipolar gap, workspace
+    and cross-view metric-size consistency — pixel distance to the epipolar
+    segment alone routinely binds to the wrong object in dense clutter
+    (runtime DIAG-GT showed ~20cm median grounding error from exactly this).
+    Returns {p, gap, cb, ddb} for the best surviving candidate or None."""
+    size_a_px = max(bb_a[2] - bb_a[0], bb_a[3] - bb_a[1])
+    best, best_score = None, np.inf
+    for l in locs:
+        b = l["bbox"]
+        u_e = x1 + (b[0] + b[2]) / 2 / scale
+        v_e = y1 + (b[1] + b[3]) / 2 / scale
+        cb, ddb = _make_ray(u_e, v_e, Ke, Ee)
+        p, gap = _closest_point(ca, dda, cb, ddb)
+        if p is None or gap > RAY_GAP_MAX or not _in_workspace(p):
+            continue
+        size_agent = size_a_px / Ka[0, 0] * float(np.linalg.norm(p - ca))
+        size_wrist = (max(b[2] - b[0], b[3] - b[1]) / scale
+                      / Ke[0, 0] * float(np.linalg.norm(p - cb)))
+        if size_agent < 1e-6 or size_wrist < 1e-6:
+            continue
+        ratio = size_wrist / size_agent
+        if ratio > SIZE_RATIO_MAX or ratio < 1.0 / SIZE_RATIO_MAX:
+            continue
+        bu, bv = (b[0] + b[2]) / 2, (b[1] + b[3]) / 2
+        d_seg = min(np.hypot(bu - su, bv - sv) for su, sv in seg_c)
+        score = d_seg + 800.0 * gap  # px + m-weighted epipolar residual
+        if score < best_score:
+            best, best_score = {"p": p, "gap": gap, "cb": cb, "ddb": ddb}, score
+    return best
+
+
 def _obstacle_frame(dda, ddb):
     """Orthonormal obstacle frame: axis0 = xy-projection of the viewing-ray
     bisector (horizontal depth direction, where triangulation error
@@ -408,19 +445,15 @@ class VisualObstacleGrounder:
                 logger.info(f"[VisualGrounder] crop-detect empty for '{da['name']}'")
                 continue
             seg_c = [((u - x1) * scale, (v - y1) * scale) for u, v in seg_px]
-            def d_seg(b):
-                bu, bv = (b[0]+b[2])/2, (b[1]+b[3])/2
-                return min((bu-su)**2 + (bv-sv)**2 for su, sv in seg_c)
-            b = min((l["bbox"] for l in locs), key=d_seg)
-            u_e = x1 + (b[0] + b[2]) / 2 / scale
-            v_e = y1 + (b[1] + b[3]) / 2 / scale
-            cb, ddb = _make_ray(u_e, v_e, Ke, Ee)
-            p, gap = _closest_point(ca, dda, cb, ddb)
-            if p is None or gap > RAY_GAP_MAX or not _in_workspace(p):
-                logger.info(f"[VisualGrounder] crop-triangulation rejected for "
-                            f"'{da['name']}': gap={gap} p={p}")
-                continue
             bb = da["bbox"]
+            match = _match_crop_detection(
+                locs, seg_c, x1, y1, scale, Ke, Ee, ca, dda, bb, Ka)
+            if match is None:
+                logger.info(f"[VisualGrounder] crop-triangulation rejected for "
+                            f"'{da['name']}': no size-consistent match")
+                continue
+            p, gap, ddb, cb = (match["p"], match["gap"],
+                               match["ddb"], match["cb"])
             rng = float(np.linalg.norm(p - Ea[:3, 3]))
             size_m = max(bb[2]-bb[0], bb[3]-bb[1]) / Ka[0, 0] * rng
             cands.append({"name": da["name"], "pos": p, "gap": gap,
