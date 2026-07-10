@@ -76,3 +76,51 @@ def test_knob_off_keeps_cancellation_semantics():
     u3 = [-0.02, 0.0, 0.0]
     out = _apply(p, u3, ray_rescale=False)
     assert np.allclose(out, [0.0, 0.0, 0.0], atol=1e-12)
+
+
+def _apply_cbf_mode(mode, aiming, monkeypatch_env):
+    import os
+    from fol_safety_filter.cbf_mapper import MappedCBFSet
+    from fol_safety_filter.primitives import ObjectState
+    os.environ["FOL_RAY_RESCALE"] = mode
+    os.environ["FOL_ELLIPSOID"] = "1"
+    try:
+        f = _f()
+        synth = "visual_pot"
+        f._obstacle_names = [synth]
+        f._obstacle_radii = {synth: 0.30}
+        f._obstacle_ellipsoids = {synth: {
+            "frame_R": R, "warn_radii": WARN, "hard_radii": HARD}}
+        f.velocity_limit_default = None
+        f._vision_fallback_active = False
+        f._fallback_vlim = 0.010
+        # eef inside warning zone at +x; target placed so u aims at it or not
+        f._vision_target_xy = np.array([0.05, 0.05]) if aiming else np.array([0.6, 0.6])
+
+        class _S:
+            ee_pos = np.array([0.25, 0.0, 0.0])
+            objects = {synth: ObjectState(
+                name=synth, pos=np.zeros(3),
+                quat=np.array([0.0, 0.0, 0.0, 1.0]),
+                bbox_half=np.array([0.05, 0.05, 0.05]))}
+
+        u = np.zeros(7)
+        u[:3] = [-0.01, 0.005, 0.0]  # inward + tangential, ends outside hard
+        out, _ = f._apply_cbf(u, _S(), MappedCBFSet(
+            semantic_envelopes=[], collision_envelopes=[]), None)
+        return out[:3]
+    finally:
+        del os.environ["FOL_RAY_RESCALE"]
+
+
+def test_target_mode_carves_corridor_when_aiming(monkeypatch=None):
+    out = _apply_cbf_mode("target", aiming=True, monkeypatch_env=None)
+    # ray-rescale: full commanded step preserved (endpoint outside hard)
+    assert np.allclose(out, [-0.01, 0.005, 0.0])
+
+
+def test_target_mode_slides_when_not_aiming(monkeypatch=None):
+    out = _apply_cbf_mode("target", aiming=False, monkeypatch_env=None)
+    # cancellation: inward (-x) component removed, tangential kept
+    assert out[0] > -1e-12
+    assert out[1] == pytest.approx(0.005)

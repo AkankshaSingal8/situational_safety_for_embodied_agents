@@ -789,6 +789,7 @@ class FOLSafetyFilter:
             # the vision-detected target and the EEF is close to it, cancel
             # only 60% of the approach (v2-validated relaxation).  Oracle-state
             # obstacles are exactly centered and never need this.
+            aiming_at_target = False
             cancel_scale = 1.0
             if (obs_name.startswith("visual_")
                     and getattr(self, "_vision_target_xy", None) is not None):
@@ -796,10 +797,18 @@ class FOLSafetyFilter:
                 tdist = float(np.linalg.norm(tdiff))
                 speed = float(np.linalg.norm(u[:2]))
                 if tdist < 0.30 and speed > 1e-6                         and float(u[:2] @ tdiff) / (speed * tdist + 1e-9) > 0.6:
+                    aiming_at_target = True
                     cancel_scale = 0.6
             ellipsoid = None
             if os.environ.get("FOL_ELLIPSOID", "1") == "1":
                 ellipsoid = self._obstacle_ellipsoids.get(obs_name)
+            # Grasp-corridor carve-out: slide (cancel) by default; when the
+            # command aims at the vision-detected target, switch to ray-
+            # rescale so the gripper may descend its grasp line up to the
+            # hard boundary instead of being deflected off the corridor.
+            rr_mode = os.environ.get("FOL_RAY_RESCALE", "0")
+            ray_rescale = (rr_mode == "1"
+                           or (rr_mode == "target" and aiming_at_target))
             self._apply_point_cbf(
                 u, ee, obs_pos,
                 warning_r=warning_r, hard_r=0.10,
@@ -808,7 +817,7 @@ class FOLSafetyFilter:
                 frame_R=ellipsoid["frame_R"] if ellipsoid else None,
                 warn_radii=ellipsoid["warn_radii"] if ellipsoid else None,
                 hard_radii=ellipsoid["hard_radii"] if ellipsoid else None,
-                ray_rescale=os.environ.get("FOL_RAY_RESCALE", "0") == "1",
+                ray_rescale=ray_rescale,
             )
             for cp_pos in (arm_checkpoints or []):
                 self._apply_point_cbf(
