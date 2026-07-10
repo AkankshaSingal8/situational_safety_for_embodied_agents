@@ -85,6 +85,12 @@ WORKSPACE = dict(x=(-0.6, 0.6), y=(-0.5, 0.8), z=(0.7, 1.5))
 Z_BAND_CENTER = 0.95        # workspace obstacle height band (fallback ray)
 FURNITURE_SIZE_M = 0.35     # metric size gate: larger = workspace structure
 RAY_GAP_MAX = 0.08          # epipolar association gate
+REFINE_JUMP_MAX = 0.15      # max estimate shift accepted per refinement
+_CROP_PROMPT = (
+    'Outline each distinct object in this image patch and output '
+    'all coordinates in JSON format:\n'
+    '[{"bbox_2d": [x1, y1, x2, y2], "label": "<object name>"}]'
+)
 UNCERT_TRIANGULATED = 0.03  # radius inflation, two-view estimate
 UNCERT_FALLBACK = 0.08      # radius inflation, z-band fallback estimate
 
@@ -112,6 +118,29 @@ def _make_ray(u, v, K, E):
     d_cam = np.array([(u - K[0, 2]) / K[0, 0], (v - K[1, 2]) / K[1, 1], 1.0])
     d = E[:3, :3] @ d_cam
     return E[:3, 3], d / np.linalg.norm(d)
+
+
+def _lsq_rays(origins, dirs):
+    """Least-squares point closest to all rays: min_p sum ||(I-ddT)(p-c)||^2.
+    Returns (p, rms_gap) or (None, inf) when the ray bundle is degenerate."""
+    A = np.zeros((3, 3))
+    b = np.zeros(3)
+    for c, d in zip(origins, dirs):
+        d = np.asarray(d, dtype=np.float64)
+        d = d / np.linalg.norm(d)
+        P = np.eye(3) - np.outer(d, d)
+        A += P
+        b += P @ np.asarray(c, dtype=np.float64)
+    if np.linalg.matrix_rank(A, tol=1e-9) < 3:
+        return None, np.inf
+    p = np.linalg.solve(A, b)
+    sq = []
+    for c, d in zip(origins, dirs):
+        d = np.asarray(d, dtype=np.float64)
+        d = d / np.linalg.norm(d)
+        r = p - np.asarray(c, dtype=np.float64)
+        sq.append(float(r @ r - (d @ r) ** 2))
+    return p, float(np.sqrt(max(0.0, np.mean(sq))))
 
 
 def _closest_point(c1, d1, c2, d2):
@@ -222,6 +251,84 @@ class VisualObstacleGrounder:
     def __init__(self, vlm_client):
         self.client = vlm_client
         self._cache: Dict[str, Dict] = {}
+        self._refine_state: Optional[Dict] = None
+
+    def _crop_detect(self, img: np.ndarray, pts_px) -> tuple:
+        """Crop around pixel points, upscale, dense-detect.  Returns
+        (locs, x1, y1, scale); locs are in upscaled-crop coordinates."""
+        wh = img.shape[0]
+        us = [p[0] for p in pts_px]
+        vs = [p[1] for p in pts_px]
+        pad = max(40, int(0.18 * wh))
+        x1 = max(0, int(min(us)) - pad)
+        x2 = min(wh, int(max(us)) + pad)
+        y1 = max(0, int(min(vs)) - pad)
+        y2 = min(wh, int(max(vs)) + pad)
+        if x2 - x1 < 24 or y2 - y1 < 24:
+            return [], 0, 0, 1
+        crop = img[y1:y2, x1:x2]
+        scale = max(1, int(round(320 / max(crop.shape[:2]))))
+        if scale > 1:
+            from PIL import Image as _Image
+            crop = np.array(_Image.fromarray(crop).resize(
+                (crop.shape[1] * scale, crop.shape[0] * scale)))
+        raw = self.client.infer(_CROP_PROMPT, [crop], max_tokens=512)
+        return _parse_detections(raw, max(crop.shape[:2])), x1, y1, scale
+
+    def refine(
+        self,
+        eih_img_raw: np.ndarray,
+        eef_pos: np.ndarray,
+        eef_quat_xyzw: np.ndarray,
+    ) -> Optional[Dict]:
+        """Add one wrist-camera ray to the episode's obstacle estimate and
+        re-solve over all rays.  Returns {pos, uncertainty_m} on an accepted
+        update, else None.  Uses only the wrist image + proprioception."""
+        st = self._refine_state
+        if st is None:
+            return None
+
+        eih_img = np.ascontiguousarray(eih_img_raw[::-1, ::-1])
+        wh = eih_img.shape[0]
+        Ke = EIH_K_512 * (wh / 512.0)
+        Ke[2, 2] = 1.0
+        T = np.eye(4)
+        T[:3, :3] = Rotation.from_quat(eef_quat_xyzw).as_matrix()
+        T[:3, 3] = np.asarray(eef_pos, dtype=np.float64)
+        Ee = T @ T_HANDEYE
+
+        uv = _project(st["pos"], Ke, np.linalg.inv(Ee))
+        if uv is None or not (0 <= uv[0] < wh and 0 <= uv[1] < wh):
+            return None
+
+        locs, x1, y1, scale = self._crop_detect(eih_img, [uv])
+        if not locs:
+            logger.info("[VisualGrounder] refine: crop-detect empty")
+            return None
+        uc, vc = (uv[0] - x1) * scale, (uv[1] - y1) * scale
+        b = min((l["bbox"] for l in locs),
+                key=lambda b: ((b[0] + b[2]) / 2 - uc) ** 2
+                + ((b[1] + b[3]) / 2 - vc) ** 2)
+        u_e = x1 + (b[0] + b[2]) / 2 / scale
+        v_e = y1 + (b[1] + b[3]) / 2 / scale
+        cb, ddb = _make_ray(u_e, v_e, Ke, Ee)
+
+        rays = st["rays"] + [(cb, ddb)]
+        p, gap = _lsq_rays([r[0] for r in rays], [r[1] for r in rays])
+        if (p is None or gap > RAY_GAP_MAX or not _in_workspace(p)
+                or float(np.linalg.norm(p - st["pos"])) > REFINE_JUMP_MAX):
+            logger.info(
+                f"[VisualGrounder] refine rejected: gap={gap} p={p}")
+            return None
+
+        st["rays"] = rays
+        st["pos"] = np.asarray(p, dtype=np.float64)
+        n_rays = len(rays)
+        uncert = max(0.015, UNCERT_TRIANGULATED * 2.0 / n_rays)
+        logger.info(
+            f"[VisualGrounder] refine accepted ({n_rays} rays): "
+            f"pos=({p[0]:.3f},{p[1]:.3f},{p[2]:.3f}) ± {uncert:.3f}m")
+        return {"pos": st["pos"].copy(), "uncertainty_m": uncert}
 
     def _detect(self, img: np.ndarray, votes: int) -> List[Dict]:
         wh = img.shape[0]
@@ -245,6 +352,7 @@ class VisualObstacleGrounder:
         cache_key: Optional[str] = None,
     ) -> Optional[Dict]:
         """Returns {name, pos(3,), uncertainty_m, method} or None."""
+        self._refine_state = None
         if cache_key and cache_key in self._cache:
             return self._cache[cache_key]
 
@@ -289,31 +397,12 @@ class VisualObstacleGrounder:
                     seg_px.append(uv)
             if not seg_px:
                 continue
-            us = [p[0] for p in seg_px]; vs = [p[1] for p in seg_px]
-            pad = max(40, int(0.18 * wh_e_img))
-            x1 = max(0, int(min(us)) - pad); x2 = min(wh_e_img, int(max(us)) + pad)
-            y1 = max(0, int(min(vs)) - pad); y2 = min(wh_e_img, int(max(vs)) + pad)
-            if x2 - x1 < 24 or y2 - y1 < 24:
-                continue
-            crop = eih_img[y1:y2, x1:x2]
-            scale = max(1, int(round(320 / max(crop.shape[:2]))))
-            if scale > 1:
-                from PIL import Image as _Image
-                crop = np.array(_Image.fromarray(crop).resize(
-                    (crop.shape[1] * scale, crop.shape[0] * scale)))
             # Name-agnostic: dense-detect the crop, keep the detection whose
             # center is nearest the projected epipolar segment (crop coords).
             # Cross-view naming fails for top-down appearances; geometry doesn't.
-            crop_prompt = (
-                'Outline each distinct object in this image patch and output '
-                'all coordinates in JSON format:\n'
-                '[{"bbox_2d": [x1, y1, x2, y2], "label": "<object name>"}]'
-            )
-            raw = self.client.infer(crop_prompt, [crop], max_tokens=512)
-            locs = _parse_detections(raw, max(crop.shape[:2]))
+            locs, x1, y1, scale = self._crop_detect(eih_img, seg_px)
             if not locs:
-                logger.info(f"[VisualGrounder] crop-detect empty for '{da['name']}' "
-                            f"(crop {x2-x1}x{y2-y1}, raw: {raw[:60]!r})")
+                logger.info(f"[VisualGrounder] crop-detect empty for '{da['name']}'")
                 continue
             seg_c = [((u - x1) * scale, (v - y1) * scale) for u, v in seg_px]
             def d_seg(b):
@@ -333,6 +422,7 @@ class VisualObstacleGrounder:
             size_m = max(bb[2]-bb[0], bb[3]-bb[1]) / Ka[0, 0] * rng
             cands.append({"name": da["name"], "pos": p, "gap": gap,
                           "size_m": size_m, "dda": dda, "ddb": ddb,
+                          "ca": ca, "cb": cb,
                           "bb": bb, "f": Ka[0, 0], "rng": rng})
 
         # ¬SUPPORTS on estimated positions
@@ -408,6 +498,11 @@ class VisualObstacleGrounder:
         if unmen:
             pick = min(unmen, key=lambda c: dpath(c["pos"]))
             u = UNCERT_TRIANGULATED
+            self._refine_state = {
+                "name": pick["name"],
+                "pos": np.asarray(pick["pos"], dtype=np.float64),
+                "rays": [(pick["ca"], pick["dda"]), (pick["cb"], pick["ddb"])],
+            }
             result = {"name": pick["name"], "pos": np.asarray(pick["pos"]),
                       "uncertainty_m": u, "method": "visual-triangulated",
                       "target_xy": target_est,

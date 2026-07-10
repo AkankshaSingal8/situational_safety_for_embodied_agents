@@ -174,6 +174,13 @@ class FOLSafetyFilter:
         self._obstacle_properties: Dict[str, List[str]] = {}
         self._obstacle_ellipsoids: Dict[str, Dict] = {}
         self._obstacle_name: Optional[str] = None
+        self._refine_steps = {
+            int(x) for x in os.environ.get(
+                "FOL_REFINE_STEPS", "6,12,18").split(",") if x.strip()
+        }
+        self._reground_attempted = False
+        self._visual_res: Optional[Dict] = None
+        self._task_description = ""
         self._target_name: Optional[str] = None
         self._goal_name: Optional[str] = None
         self._ee_quat_ref: Optional[np.ndarray] = None
@@ -201,6 +208,9 @@ class FOLSafetyFilter:
         self._obstacle_properties = {}
         self._obstacle_ellipsoids = {}
         self._obstacle_name = None
+        self._reground_attempted = False
+        self._visual_res = None
+        self._task_description = task_description
         self._target_name = None
         self._goal_name = None
         self._initialized = False
@@ -526,6 +536,7 @@ class FOLSafetyFilter:
             quat=np.array([0.0, 0.0, 0.0, 1.0]),
             bbox_half=np.array([0.05, 0.05, 0.05]),
         )
+        self._visual_res = res
         props, base_r = _props_from_name(res["name"])
         radius = max(0.20, base_r) + float(res["uncertainty_m"])
         if res.get("frame_R") is not None:
@@ -557,6 +568,82 @@ class FOLSafetyFilter:
         })
         return out
 
+    def _vision_maintenance(self, obs: Dict) -> None:
+        """Per-timestep vision upkeep (v19): multi-frame refinement of the
+        obstacle estimate at configured steps, and a single re-ground retry
+        at t=10 when episode setup grounded nothing."""
+        synth = next(
+            (n for n in self._obstacle_names if n.startswith("visual_")), None)
+
+        if synth is not None and self._t in self._refine_steps:
+            if self._visual_grounder is None:
+                return
+            eih = obs.get("robot0_eye_in_hand_image")
+            ep = obs.get("robot0_eef_pos")
+            eq = obs.get("robot0_eef_quat")
+            if eih is None or ep is None or eq is None:
+                return
+            upd = self._visual_grounder.refine(
+                eih, np.asarray(ep, dtype=np.float64),
+                np.asarray(eq, dtype=np.float64))
+            if not upd:
+                return
+            old = self._object_states[synth].pos.copy()
+            new_pos = np.asarray(upd["pos"], dtype=np.float64)
+            u_new = float(upd["uncertainty_m"])
+            self._object_states[synth].pos = new_pos
+            res = self._visual_res or {}
+            _, base_r = _props_from_name(res.get("name", ""))
+            self._obstacle_radii[synth] = max(0.20, base_r) + u_new
+            if (synth in self._obstacle_ellipsoids
+                    and res.get("frame_R") is not None):
+                u_axes = np.array([2.5 * u_new, u_new, u_new])
+                base = (np.asarray(res["half_extents"], dtype=np.float64)
+                        + u_axes)
+                self._obstacle_ellipsoids[synth].update(
+                    warn_radii=np.maximum(base + 0.08, [0.20, 0.14, 0.14]),
+                    hard_radii=np.maximum(base + 0.02, 0.08),
+                )
+            logger.info(
+                f"[FOL-v19] refine t={self._t}: {synth} "
+                f"({old[0]:.3f},{old[1]:.3f},{old[2]:.3f}) -> "
+                f"({new_pos[0]:.3f},{new_pos[1]:.3f},{new_pos[2]:.3f}) "
+                f"r={self._obstacle_radii[synth]:.3f}")
+            return
+
+        if (not self._obstacle_names and self._t == 10
+                and not self._reground_attempted):
+            self._reground_attempted = True
+            agentview = obs.get("agentview_image")
+            eih = obs.get("robot0_eye_in_hand_image")
+            if agentview is None or eih is None:
+                return
+            predicate_dict = self._vision_ground(
+                obs, self._task_description, agentview, eih)
+            valid = [o for o in predicate_dict.get("obstacle_obs_keys", [])
+                     if o in self._object_states]
+            if not valid:
+                logger.info("[FOL-v19] re-ground at t=10 found no obstacle")
+                return
+            self._obstacle_names = valid
+            self._obstacle_radii = {
+                o: predicate_dict["obstacle_radii"].get(o, 0.18)
+                for o in valid
+            }
+            self._obstacle_properties = {
+                o: predicate_dict["obstacle_properties"].get(o, [])
+                for o in valid
+            }
+            self._obstacle_name = valid[0]
+            predicate_dict["obstacle_radii"] = self._obstacle_radii
+            predicate_dict["obstacle_properties"] = self._obstacle_properties
+            predicate_dict["obstacle_obs_keys"] = self._obstacle_names
+            for rule in compose_rules(predicate_dict, self._obstacle_name):
+                self.kb.add_rule(rule)
+            logger.info(
+                f"[FOL-v19] re-ground at t=10 succeeded: {self._obstacle_names} "
+                f"radii={self._obstacle_radii}")
+
     # ------------------------------------------------------------------ #
     # Per-timestep certification (identical to v5)
     # ------------------------------------------------------------------ #
@@ -573,6 +660,11 @@ class FOLSafetyFilter:
             return u_cmd.copy()
 
         self._t += 1
+        if os.environ.get("FOL_VISION_GROUNDING", "0") == "1":
+            try:
+                self._vision_maintenance(obs)
+            except Exception as e:
+                logger.warning(f"[FOL-v19] vision maintenance failed: {e}")
         state = self._build_robot_state(obs, ee_pos, ee_quat)
 
         for name, obj in self._object_states.items():
