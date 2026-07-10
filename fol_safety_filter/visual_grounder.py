@@ -157,24 +157,23 @@ def _closest_point(c1, d1, c2, d2):
 
 
 def _obstacle_frame(dda, ddb):
-    """Orthonormal obstacle frame: axis0 = viewing-ray bisector (depth
-    direction, where triangulation error concentrates), axis2 ~ world-z,
-    axis1 completes the right-handed basis."""
+    """Orthonormal obstacle frame: axis0 = xy-projection of the viewing-ray
+    bisector (horizontal depth direction, where triangulation error
+    concentrates), axis2 = world-z, axis1 completes the right-handed basis.
+    The projection keeps the inflated axis horizontal — a raw 3D bisector
+    from two downward-looking cameras is near-vertical and would build a
+    tall barrier that blocks grasp descent instead of covering depth error."""
     a = np.asarray(dda, dtype=np.float64)
     a = a / np.linalg.norm(a)
     b = np.asarray(ddb, dtype=np.float64)
     b = b / np.linalg.norm(b)
-    ax0 = a + b
+    bis = a + b
+    if np.linalg.norm(bis) < 1e-6:
+        bis = a
+    ax0 = np.array([bis[0], bis[1], 0.0])
     n0 = np.linalg.norm(ax0)
-    ax0 = a if n0 < 1e-6 else ax0 / n0
-    z = np.array([0.0, 0.0, 1.0])
-    ax2 = z - (z @ ax0) * ax0
-    n2 = np.linalg.norm(ax2)
-    if n2 < 1e-6:
-        ax2 = np.array([1.0, 0.0, 0.0]) - (np.array([1.0, 0.0, 0.0]) @ ax0) * ax0
-        ax2 /= np.linalg.norm(ax2)
-    else:
-        ax2 /= n2
+    ax0 = np.array([1.0, 0.0, 0.0]) if n0 < 1e-6 else ax0 / n0
+    ax2 = np.array([0.0, 0.0, 1.0])
     ax1 = np.cross(ax2, ax0)
     return np.column_stack([ax0, ax1, ax2])
 

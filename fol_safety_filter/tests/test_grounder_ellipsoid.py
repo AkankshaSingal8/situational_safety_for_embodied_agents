@@ -24,18 +24,27 @@ def test_frame_near_antiparallel_rays():
     ddb = -dda + np.array([0.0, 1e-9, 0.0])
     R = _obstacle_frame(dda, ddb)
     assert np.allclose(R @ R.T, np.eye(3), atol=1e-9)
-    # falls back to dda_hat for axis0
+    # falls back to dda_hat (already horizontal) for axis0
     assert np.allclose(np.abs(R[:, 0]), np.abs(dda), atol=1e-6)
 
 
-def test_frame_axis0_is_bisector():
+def test_frame_axis0_is_xy_projected_bisector():
     dda = np.array([1.0, 0.0, -1.0]) / np.sqrt(2)
     ddb = np.array([0.0, 1.0, -1.0]) / np.sqrt(2)
     R = _obstacle_frame(dda, ddb)
-    bis = dda + ddb
-    bis /= np.linalg.norm(bis)
-    cos = abs(float(R[:, 0] @ bis))
-    assert cos > 0.999  # within ~2.5 degrees
+    assert R[2, 0] == pytest.approx(0.0)  # axis0 horizontal
+    bis_xy = (dda + ddb)[:2]
+    bis_xy /= np.linalg.norm(bis_xy)
+    assert abs(float(R[:2, 0] @ bis_xy)) > 0.999
+    assert np.allclose(R[:, 2], [0.0, 0.0, 1.0])  # axis2 = world z
+
+
+def test_frame_vertical_bisector_degenerate():
+    dda = np.array([0.0, 0.0, -1.0])
+    ddb = np.array([0.0, 0.0, -1.0])
+    R = _obstacle_frame(dda, ddb)
+    assert np.allclose(R @ R.T, np.eye(3), atol=1e-9)
+    assert R[2, 0] == pytest.approx(0.0)
 
 
 def test_bbox_extents_math():
