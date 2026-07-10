@@ -181,6 +181,8 @@ class FOLSafetyFilter:
         self._reground_attempted = False
         self._visual_res: Optional[Dict] = None
         self._task_description = ""
+        self._vision_fallback_active = False
+        self._fallback_vlim = float(os.environ.get("FOL_FALLBACK_VLIM", "0.010"))
         self._target_name: Optional[str] = None
         self._goal_name: Optional[str] = None
         self._ee_quat_ref: Optional[np.ndarray] = None
@@ -211,6 +213,7 @@ class FOLSafetyFilter:
         self._reground_attempted = False
         self._visual_res = None
         self._task_description = task_description
+        self._vision_fallback_active = False
         self._target_name = None
         self._goal_name = None
         self._initialized = False
@@ -288,6 +291,13 @@ class FOLSafetyFilter:
                 "[FOL-v6] NO OBSTACLE GROUNDED — spatial avoidance inactive this "
                 "episode (workspace rules remain active)"
             )
+            if vision_mode:
+                # v19 verified-safe fallback: grounding failure is the OOD
+                # signal — cap EEF speed until a re-ground succeeds.
+                self._vision_fallback_active = True
+                logger.warning(
+                    f"[FOL-v19] FALLBACK SPEED CAP ACTIVE "
+                    f"(vlim={self._fallback_vlim} m/step)")
 
         # Task target and goal (from VLM CoT, then heuristic parse)
         vlm_target = predicate_dict.get("task_target_obs_key")
@@ -638,8 +648,12 @@ class FOLSafetyFilter:
             predicate_dict["obstacle_radii"] = self._obstacle_radii
             predicate_dict["obstacle_properties"] = self._obstacle_properties
             predicate_dict["obstacle_obs_keys"] = self._obstacle_names
+            self.grounder.ground(obs, self._object_states, agentview)
+            self.grounder.apply_vlm_properties(
+                self._object_states, self._obstacle_properties)
             for rule in compose_rules(predicate_dict, self._obstacle_name):
                 self.kb.add_rule(rule)
+            self._vision_fallback_active = False
             logger.info(
                 f"[FOL-v19] re-ground at t=10 succeeded: {self._obstacle_names} "
                 f"radii={self._obstacle_radii}")
@@ -804,6 +818,9 @@ class FOLSafetyFilter:
 
         # Velocity limit
         vlim = cbf_set.velocity_limit or self.velocity_limit_default
+        if self._vision_fallback_active:
+            vlim = self._fallback_vlim if vlim is None else min(
+                vlim, self._fallback_vlim)
         if vlim is not None:
             speed = np.linalg.norm(u[:3])
             if speed > vlim:

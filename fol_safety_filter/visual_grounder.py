@@ -253,6 +253,10 @@ class VisualObstacleGrounder:
         self._cache: Dict[str, Dict] = {}
         self._refine_state: Optional[Dict] = None
 
+    @property
+    def has_state(self) -> bool:
+        return self._refine_state is not None
+
     def _crop_detect(self, img: np.ndarray, pts_px) -> tuple:
         """Crop around pixel points, upscale, dense-detect.  Returns
         (locs, x1, y1, scale); locs are in upscaled-crop coordinates."""
