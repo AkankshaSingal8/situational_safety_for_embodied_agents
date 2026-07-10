@@ -46,13 +46,17 @@ class _ScriptedClient:
         return json.dumps(self.dets)
 
 
-def _depth_image_for(points_px, K, E, wh=512, bg=2.0):
-    """Metric depth image with each (u, v, world_p) painted in a small patch."""
+def _depth_image_for(points_px, K, E, wh=512, bg=2.0, pad=12):
+    """Metric depth image with each (u, v, world_p) painted in a patch.
+    Entries may be (u, v, p) or (u, v, p, pad) — pad must cover the central
+    half of the detection bbox so the median depth reads the object."""
     d = np.full((wh, wh), bg, dtype=np.float64)
     Einv = np.linalg.inv(E)
-    for u, v, p in points_px:
+    for entry in points_px:
+        u, v, p = entry[:3]
+        pd = entry[3] if len(entry) > 3 else pad
         z = float((Einv @ np.append(p, 1.0))[2])
-        d[max(0, int(v) - 12):int(v) + 12, max(0, int(u) - 12):int(u) + 12] = z
+        d[max(0, int(v) - pd):int(v) + pd, max(0, int(u) - pd):int(u) + pd] = z
     return d
 
 
@@ -144,7 +148,9 @@ def test_rgbd_prefers_tall_table_object_over_short_near_path():
                      int(u2) + 20, int(v2) + h2 // 2], "label": "box"},
     ]
     g = VisualObstacleGrounder(_ScriptedClient(dets, crop_answer="snack box"))
-    depth = _depth_image_for([(u1, v1, pot), (u2, v2, box)], K, E)
+    depth = _depth_image_for(
+        [(u1, v1, pot, h1 // 2 + 4), (u2, v2, box, max(12, h2 // 2 + 4))],
+        K, E)
     rgb = np.zeros((512, 512, 3), dtype=np.uint8)
     res = g.ground(rgb[::-1, ::-1], rgb[::-1, ::-1],
                    "pick up the black bowl and place it on the plate",
