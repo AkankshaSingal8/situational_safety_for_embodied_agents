@@ -17,7 +17,7 @@ WT="$REPO/.worktrees/fol-safety-filter"
 mkdir -p /ocean/projects/cis250185p/asingal/slurm_logs \
          "$WT/fol_v19_spatial_L1_n50" "$WT/fol_v19_spatial_L1_n50_video"
 
-echo "=== FOL v15 spatial Level I smoke (n=5) ===" && echo "Start: $(date)"
+echo "=== FOL v19 spatial Level I n=50 ===" && echo "Start: $(date)"
 module load anaconda3 && conda activate openvla_libero_merged
 export MUJOCO_GL=egl
 export HF_HOME=/ocean/projects/cis250185p/asingal/.hf_cache

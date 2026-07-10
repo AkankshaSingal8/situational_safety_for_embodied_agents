@@ -3,8 +3,8 @@
 #SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=5
 #SBATCH --partition=GPU-shared --gres=gpu:v100-32:1
 #SBATCH --time=03:00:00 --mem=63000M
-#SBATCH --output=/ocean/projects/cis250225p/asingal/slurm_logs/fol_v19_spatial_L2_smoke_%j.out
-#SBATCH --error=/ocean/projects/cis250225p/asingal/slurm_logs/fol_v19_spatial_L2_smoke_%j.err
+#SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/fol_v19_spatial_L2_smoke_%j.out
+#SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/fol_v19_spatial_L2_smoke_%j.err
 
 # FOL v19 — GT-free + covariance-aligned ellipsoid barrier, image-derived extents, multi-frame wrist refinement, step-10 re-ground retry
 # wrist+elbow checkpoints only), keep v6 VLM/FOL grounding pipeline, SSF disabled.
@@ -12,15 +12,15 @@
 # were fixes for phantom problems (filter was dead from NameError) and crushed TSR.
 # SMOKE TEST: safelibero_spatial Level I, n=5 per task (20 total)
 
-REPO=/ocean/projects/cis250225p/asingal/situational_safety_for_embodied_agents
+REPO=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
 WT="$REPO/.worktrees/fol-safety-filter"
-mkdir -p /ocean/projects/cis250225p/asingal/slurm_logs \
+mkdir -p /ocean/projects/cis250185p/asingal/slurm_logs \
          "$WT/fol_v19_spatial_L2_smoke" "$WT/fol_v19_spatial_L2_smoke_video"
 
-echo "=== FOL v15 spatial Level II smoke (n=5) ===" && echo "Start: $(date)"
+echo "=== FOL v19 spatial Level II smoke (n=5) ===" && echo "Start: $(date)"
 module load anaconda3 && conda activate openvla_libero_merged
 export MUJOCO_GL=egl
-export HF_HOME=/ocean/projects/cis250225p/asingal/.hf_cache
+export HF_HOME=/ocean/projects/cis250185p/asingal/.hf_cache
 export TRANSFORMERS_CACHE=$HF_HOME
 
 QWEN_LOG="$WT/fol_v19_spatial_L2_smoke/qwen_server.log"
