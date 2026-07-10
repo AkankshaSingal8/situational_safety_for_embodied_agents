@@ -93,6 +93,8 @@ _CROP_PROMPT = (
 )
 UNCERT_TRIANGULATED = 0.03  # radius inflation, two-view estimate
 UNCERT_FALLBACK = 0.08      # radius inflation, z-band fallback estimate
+UNCERT_DEPTH = 0.02         # radius inflation, RGB-D one-view estimate
+HOVER_BOTTOM_Z = 0.87       # object bottom above this = floating hazard
 
 DETECT_PROMPT = (
     'Outline the position of each object on the table (dishes, containers, '
@@ -112,6 +114,14 @@ def _project(p, K, Einv):
     if pc[2] <= 1e-6:
         return None
     return K[0, 2] + K[0, 0] * pc[0] / pc[2], K[1, 2] + K[1, 1] * pc[1] / pc[2]
+
+
+def _deproject_depth(u, v, z_cam, K, E):
+    """Pixel + camera-frame depth → world point (inverse of _project)."""
+    pc = np.array([(u - K[0, 2]) / K[0, 0] * z_cam,
+                   (v - K[1, 2]) / K[1, 1] * z_cam,
+                   z_cam, 1.0])
+    return (E @ pc)[:3]
 
 
 def _make_ray(u, v, K, E):
@@ -401,8 +411,13 @@ class VisualObstacleGrounder:
         eef_pos: np.ndarray,
         eef_quat_xyzw: np.ndarray,
         cache_key: Optional[str] = None,
+        agent_depth_m: Optional[np.ndarray] = None,
     ) -> Optional[Dict]:
-        """Returns {name, pos(3,), uncertainty_m, method} or None."""
+        """Returns {name, pos(3,), uncertainty_m, method} or None.
+
+        With agent_depth_m (metric agentview depth, raw obs orientation) the
+        obstacle position comes from one-view deprojection — no wrist-view
+        association, and a HOVERING(x) predicate on trusted z."""
         self._refine_state = None
         if cache_key and cache_key in self._cache:
             return self._cache[cache_key]
@@ -433,9 +448,39 @@ class VisualObstacleGrounder:
         # VLM to locate the NAMED object inside the crop — geometry reduces
         # the top-down search problem to a trivial patch query.
         cands = []
+        if agent_depth_m is not None:
+            depth_img = np.ascontiguousarray(
+                np.asarray(agent_depth_m)[::-1, ::-1]).squeeze()
+            for da, (ca, dda) in ra:
+                bb = da["bbox"]
+                x1i = int(bb[0] + (bb[2] - bb[0]) * 0.25)
+                x2i = int(bb[0] + (bb[2] - bb[0]) * 0.75)
+                y1i = int(bb[1] + (bb[3] - bb[1]) * 0.25)
+                y2i = int(bb[1] + (bb[3] - bb[1]) * 0.75)
+                patch = depth_img[max(0, y1i):y2i + 1, max(0, x1i):x2i + 1]
+                if patch.size == 0:
+                    continue
+                z_cam = float(np.median(patch))
+                if not np.isfinite(z_cam) or z_cam <= 1e-3:
+                    continue
+                p = _deproject_depth((bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2,
+                                     z_cam, Ka, Ea)
+                if not _in_workspace(p):
+                    continue
+                rng = float(np.linalg.norm(p - Ea[:3, 3]))
+                size_m = max(bb[2]-bb[0], bb[3]-bb[1]) / Ka[0, 0] * rng
+                h_m = (bb[3] - bb[1]) / Ka[0, 0] * rng
+                cands.append({"name": da["name"], "pos": p, "gap": 0.0,
+                              "size_m": size_m, "dda": dda, "ddb": dda,
+                              "ca": ca, "cb": ca,
+                              "bb": bb, "f": Ka[0, 0], "rng": rng,
+                              "hover": (p[2] - h_m / 2) > HOVER_BOTTOM_Z})
+
         wh_e_img = eih_img.shape[0]
         Einv_e = np.linalg.inv(Ee)
-        for da, (ca, dda) in ra:
+        # RGB-only path: epipolar wrist-view association (skipped when the
+        # depth path above produced candidates).
+        for da, (ca, dda) in (ra if not cands else []):
             seg_px = []
             for z_hyp in np.arange(0.80, 1.31, 0.05):
                 if abs(dda[2]) < 1e-6:
@@ -490,6 +535,11 @@ class VisualObstacleGrounder:
         # obstacle height band: designated hazards sit above the table plane
         # (hover/pedestal band); table-level flats are not the safety obstacle.
         cands = [c for c in cands if 0.85 <= c["pos"][2] <= 1.30] or cands
+
+        # HOVERING(x): designated hazards float above the table.  Only the
+        # RGB-D path sets the flag (z is trusted there); RGB-only candidates
+        # carry no flag and pass unchanged.
+        cands = [c for c in cands if c.get("hover", True)] or cands
 
         # MENTIONED(x, task) is a vision-language predicate under open-vocab
         # labels: the task may say "stove" while detection says "appliance".
@@ -547,21 +597,27 @@ class VisualObstacleGrounder:
         result = None
         if unmen:
             pick = min(unmen, key=lambda c: dpath(c["pos"]))
-            u = UNCERT_TRIANGULATED
-            # Both cameras look down at the obstacle: the triangulated point
+            # Both cameras look down at the obstacle: the estimated point
             # sits on its TOP surface.  Report the body centroid instead —
             # drop by the image-estimated half-height.
             ext = _bbox_extents(pick["bb"], pick["f"], pick["rng"])
             dz_top = float(ext[2])
             pos_c = np.asarray(pick["pos"], dtype=np.float64) - [0.0, 0.0, dz_top]
-            self._refine_state = {
-                "name": pick["name"],
-                "pos": np.asarray(pick["pos"], dtype=np.float64),
-                "dz_top": dz_top,
-                "rays": [(pick["ca"], pick["dda"]), (pick["cb"], pick["ddb"])],
-            }
+            if "hover" in pick:
+                u = UNCERT_DEPTH
+                method = "visual-rgbd"
+            else:
+                u = UNCERT_TRIANGULATED
+                method = "visual-triangulated"
+                self._refine_state = {
+                    "name": pick["name"],
+                    "pos": np.asarray(pick["pos"], dtype=np.float64),
+                    "dz_top": dz_top,
+                    "rays": [(pick["ca"], pick["dda"]),
+                             (pick["cb"], pick["ddb"])],
+                }
             result = {"name": pick["name"], "pos": pos_c,
-                      "uncertainty_m": u, "method": "visual-triangulated",
+                      "uncertainty_m": u, "method": method,
                       "target_xy": target_est,
                       "mentioned_xy": mentioned_xy,
                       "frame_R": _obstacle_frame(pick["dda"], pick["ddb"]),

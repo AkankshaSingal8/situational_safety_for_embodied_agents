@@ -109,6 +109,12 @@ class VLMGrounder:
                 obj.is_spillable = True
 
 
+def _zbuffer_to_metric(z, near, far):
+    """MuJoCo z-buffer → metric depth (robosuite get_real_depth_map formula).
+    near/far are rendering constants (camera calibration, not scene state)."""
+    return near / (1.0 - np.asarray(z, dtype=np.float64) * (1.0 - near / far))
+
+
 # ---------------------------------------------------------------------------
 # Metrics
 # ---------------------------------------------------------------------------
@@ -184,6 +190,7 @@ class FOLSafetyFilter:
         self._task_description = ""
         self._vision_fallback_active = False
         self._fallback_vlim = float(os.environ.get("FOL_FALLBACK_VLIM", "0.010"))
+        self._depth_near_far: Optional[Tuple[float, float]] = None
         self._target_name: Optional[str] = None
         self._goal_name: Optional[str] = None
         self._ee_quat_ref: Optional[np.ndarray] = None
@@ -204,6 +211,16 @@ class FOLSafetyFilter:
         env=None,
         rgb_image: Optional[np.ndarray] = None,
     ) -> None:
+        if (os.environ.get("FOL_RGBD", "0") == "1" and env is not None
+                and getattr(self, "_depth_near_far", None) is None):
+            try:
+                ext = env.sim.model.stat.extent
+                self._depth_near_far = (
+                    float(env.sim.model.vis.map.znear) * ext,
+                    float(env.sim.model.vis.map.zfar) * ext,
+                )
+            except Exception:
+                self._depth_near_far = None
         self.kb.clear()
         self._object_states = {}
         self._obstacle_names = []
@@ -526,12 +543,25 @@ class FOLSafetyFilter:
         quat = obs.get("robot0_eef_quat")
         eef_quat = np.array(quat, dtype=np.float64) if quat is not None             else np.array([0.0, 0.0, 0.0, 1.0])
 
+        depth_m = None
+        if os.environ.get("FOL_RGBD", "0") == "1":
+            d = obs.get("agentview_depth")
+            if d is not None:
+                d = np.asarray(d, dtype=np.float64)
+                nf = getattr(self, "_depth_near_far", None)
+                depth_m = (_zbuffer_to_metric(d, *nf) if nf is not None else d)
+            else:
+                logger.warning(
+                    "[FOL-v21D] FOL_RGBD=1 but no agentview_depth in obs — "
+                    "falling back to RGB-only grounding")
+
         res = None
         if agentview is not None and eye_in_hand is not None:
             try:
                 res = self._visual_grounder.ground(
                     agentview, eye_in_hand, task_description, eef_pos, eef_quat,
                     cache_key=None,  # per-episode: obstacle layout varies
+                    agent_depth_m=depth_m,
                 )
             except Exception as e:
                 logger.warning(f"[FOL-v18] vision grounding failed: {e}")

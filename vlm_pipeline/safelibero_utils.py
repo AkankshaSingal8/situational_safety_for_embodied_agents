@@ -52,6 +52,9 @@ def get_safelibero_env(task, model_family, resolution=256, include_wrist_camera=
     # hard_reset=False: prevents EGL context recreation on each reset, which caused
     # grey-noise frame corruption when multiple cameras were active at high resolutions.
     camera_names = ["agentview", "robot0_eye_in_hand"] if include_wrist_camera else ["agentview"]
+    # FOL_RGBD=1 lights up depth for the RGB-D grounding tier without
+    # touching eval-script call sites (they don't pass camera_depths).
+    camera_depths = camera_depths or os.environ.get("FOL_RGBD", "0") == "1"
     env_args = {
         "bddl_file_name": task_bddl_file,
         "camera_names": camera_names,
