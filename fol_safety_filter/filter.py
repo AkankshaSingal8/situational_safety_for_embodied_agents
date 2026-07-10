@@ -718,16 +718,26 @@ class FOLSafetyFilter:
             "rule_counts": dict(self.metrics.rule_counts),
         }
 
-    def _get_arm_checkpoints(self, env) -> List[np.ndarray]:
-        """v3: wrist and elbow only (robot0_link4, robot0_link6)."""
+    def _get_arm_checkpoints(self, env) -> List[Dict]:
+        """Elbow + wrist (v3) + hand body (v19d).  The hand volume between
+        link6 and the fingertips is what sweeps obstacles when the EEF point
+        has already passed them; it gets tighter radii so corridor passes
+        (~12cm clearance) stay open while plow-throughs are braked."""
         if env is None:
             return []
         checkpoints = []
-        for body_name in ["robot0_link4", "robot0_link6"]:
+        for body_name, warning_r, hard_r, push in [
+            ("robot0_link4", 0.15, 0.08, 0.06),
+            ("robot0_link6", 0.15, 0.08, 0.06),
+            ("robot0_link7", 0.10, 0.06, 0.06),
+            ("robot0_right_hand", 0.10, 0.06, 0.06),
+        ]:
             try:
                 body_id = env.sim.model.body_name2id(body_name)
                 pos = np.array(env.sim.data.body_xpos[body_id], dtype=np.float64)
-                checkpoints.append(pos)
+                checkpoints.append({"pos": pos, "warning_r": warning_r,
+                                    "hard_r": hard_r, "push": push,
+                                    "name": body_name})
             except Exception:
                 pass
         return checkpoints
@@ -819,11 +829,12 @@ class FOLSafetyFilter:
                 hard_radii=ellipsoid["hard_radii"] if ellipsoid else None,
                 ray_rescale=ray_rescale,
             )
-            for cp_pos in (arm_checkpoints or []):
+            for cp in (arm_checkpoints or []):
                 self._apply_point_cbf(
-                    u, cp_pos, obs_pos,
-                    warning_r=0.15, hard_r=0.08,
-                    push_hard=0.06, label=f"ARM-{obs_name}",
+                    u, cp["pos"], obs_pos,
+                    warning_r=cp["warning_r"], hard_r=cp["hard_r"],
+                    push_hard=cp["push"],
+                    label=f"ARM-{cp['name']}-{obs_name}",
                 )
 
         # Velocity limit

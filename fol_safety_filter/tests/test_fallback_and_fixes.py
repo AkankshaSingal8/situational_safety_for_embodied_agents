@@ -119,3 +119,66 @@ def test_no_fallback_no_cap():
     u = np.array([0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
     out, _ = f._apply_cbf(u, _State(), cbf_set, None)
     assert np.linalg.norm(out[:3]) == pytest.approx(0.02)
+
+
+class _FakeSim:
+    class model:
+        @staticmethod
+        def body_name2id(name):
+            ids = {"robot0_link4": 4, "robot0_link6": 6, "robot0_link7": 7}
+            if name not in ids:
+                raise ValueError(name)
+            return ids[name]
+    class data:
+        body_xpos = {4: np.array([0.1, 0.0, 1.2]),
+                     6: np.array([0.2, 0.0, 1.1]),
+                     7: np.array([0.25, 0.0, 1.0])}
+
+
+class _FakeEnv:
+    sim = _FakeSim()
+
+
+def test_arm_checkpoints_include_hand_with_tight_radii():
+    f = FOLSafetyFilter.__new__(FOLSafetyFilter)
+    cps = f._get_arm_checkpoints(_FakeEnv())
+    names = [c["name"] for c in cps]
+    assert names == ["robot0_link4", "robot0_link6", "robot0_link7"]
+    hand = cps[-1]
+    assert hand["warning_r"] == pytest.approx(0.10)
+    assert hand["hard_r"] == pytest.approx(0.06)
+    assert cps[0]["warning_r"] == pytest.approx(0.15)
+
+
+def test_hand_checkpoint_brakes_plow_through():
+    from fol_safety_filter.cbf_mapper import MappedCBFSet
+    from fol_safety_filter.primitives import ObjectState
+    f = FOLSafetyFilter.__new__(FOLSafetyFilter)
+    synth = "visual_pot"
+    f._obstacle_names = [synth]
+    f._obstacle_radii = {synth: 0.20}
+    f._obstacle_ellipsoids = {}
+    f.velocity_limit_default = None
+    f._vision_fallback_active = False
+    f._fallback_vlim = 0.010
+    f._vision_target_xy = None
+    pot = np.array([0.0, 0.0, 0.95])
+
+    class _S:
+        ee_pos = np.array([-0.30, 0.0, 0.95])  # EEF well past/away from pot
+        objects = {synth: ObjectState(
+            name=synth, pos=pot, quat=np.array([0.0, 0.0, 0.0, 1.0]),
+            bbox_half=np.array([0.05, 0.05, 0.05]))}
+
+    hand_cp = [{"pos": np.array([0.05, 0.0, 0.98]), "warning_r": 0.10,
+                "hard_r": 0.06, "push": 0.06, "name": "robot0_link7"}]
+    u = np.zeros(7)
+    u[:3] = [-0.02, 0.0, 0.0]  # dragging hand through the pot
+    out, _ = f._apply_cbf(u, _S(), MappedCBFSet(
+        semantic_envelopes=[], collision_envelopes=[]), hand_cp)
+    # hand checkpoint inside hard zone: the outward-direction component of
+    # the filtered step must be non-negative (approach cancelled + push)
+    d = hand_cp[0]["pos"] - pot
+    out_dir = d / np.linalg.norm(d)
+    assert float(np.array([-0.02, 0.0, 0.0]) @ out_dir) < 0  # raw was inward
+    assert float(out[:3] @ out_dir) >= -1e-9
