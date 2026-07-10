@@ -405,10 +405,10 @@ def run_episode(
 
             action = process_action(action_queue.popleft(), cfg.model_family)
 
-            # FOL safety filter certification
+            # FOL safety filter certification (pass env for arm-body monitoring)
             if fol_filter is not None:
                 try:
-                    action = fol_filter.certify(action, obs)
+                    action = fol_filter.certify(action, obs, env=env)
                 except Exception as exc:
                     logger.debug(f"FOL filter certify failed: {exc}")
 

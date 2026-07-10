@@ -156,7 +156,14 @@ class CBFMapper:
 
             if ctype == "spatial" and ac.obj_pos is not None:
                 sq, alpha = self._build_spatial_sq(ac, params, action)
-                sem.append((sq, alpha))
+                # Sphere-shaped NEAR constraints are already handled by
+                # filter.py._apply_point_cbf (with proper h_cancel_override for
+                # target-proximity relaxation). Passing them to the SSF QP creates
+                # an oversized sphere (~0.23m radius) that double-blocks the arm
+                # and kills TSR.  Only non-sphere shapes (e.g. half_space for
+                # "above") need the SSF gradient-deflection pass.
+                if params.get("shape", "sphere") != "sphere":
+                    sem.append((sq, alpha))
 
             elif ctype == "velocity":
                 vlim = params.get("v_max", 0.15)

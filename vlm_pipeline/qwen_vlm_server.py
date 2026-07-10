@@ -35,7 +35,7 @@ _processor = None
 _loaded_model_key = None
 
 
-def _load_model(model_key: str) -> None:
+def _load_model(model_key: str, load_in_4bit: bool = False) -> None:
     global _model, _processor, _loaded_model_key
     if _model is not None:
         if _loaded_model_key != model_key:
@@ -47,10 +47,10 @@ def _load_model(model_key: str) -> None:
     from transformers import AutoProcessor
 
     model_id = QWEN_MODELS[model_key]
-    logger.info(f"Loading {model_id} onto available GPUs ...")
+    logger.info(f"Loading {model_id} (4bit={load_in_4bit}) ...")
     _processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
 
-    # Pick the right model class (mirrors load_qwen_model in qwen_vlm_worker)
+    # Pick the right model class
     if model_key.startswith("qwen2.5"):
         from transformers import Qwen2_5_VLForConditionalGeneration as ModelCls
     elif model_key.startswith("qwen2"):
@@ -58,14 +58,26 @@ def _load_model(model_key: str) -> None:
     else:
         from transformers import AutoModelForImageTextToText as ModelCls
 
-    dtype = (
-        torch.bfloat16
-        if (torch.cuda.is_available() and torch.cuda.is_bf16_supported())
-        else torch.float16
-    )
-    _model = ModelCls.from_pretrained(
-        model_id, torch_dtype=dtype, device_map="auto"
-    )
+    if load_in_4bit:
+        from transformers import BitsAndBytesConfig
+        bnb_cfg = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+        )
+        _model = ModelCls.from_pretrained(
+            model_id, quantization_config=bnb_cfg, device_map="auto"
+        )
+    else:
+        dtype = (
+            torch.bfloat16
+            if (torch.cuda.is_available() and torch.cuda.is_bf16_supported())
+            else torch.float16
+        )
+        _model = ModelCls.from_pretrained(
+            model_id, torch_dtype=dtype, device_map="auto"
+        )
     _model.eval()
     _loaded_model_key = model_key
     logger.info(f"Model ready: {model_id}")
@@ -129,6 +141,59 @@ def infer():
         return jsonify({"error": str(exc)}), 500
 
 
+@app.route("/infer_v6", methods=["POST"])
+def infer_v6():
+    """
+    Generic text+image inference endpoint for v6 CoT chain.
+    Each CoT step calls this independently with the accumulated context in the prompt.
+
+    Body: {
+        "prompt": "...",
+        "images_b64": ["<base64 PNG>", ...],  # empty list for text-only steps
+        "max_new_tokens": 512
+    }
+    Response: {"text": "<model output>"}
+    """
+    import base64
+    import tempfile
+    import time as _time
+
+    t0 = _time.time()
+    body = request.get_json(force=True)
+    prompt = body.get("prompt", "")
+    images_b64 = body.get("images_b64", []) or []
+    max_new_tokens = int(body.get("max_new_tokens", 512))
+
+    if _model is None or _processor is None:
+        return jsonify({"error": "Model not loaded"}), 503
+
+    tmp_paths = []
+    try:
+        for b64 in images_b64:
+            tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+            tmp.write(base64.b64decode(b64))
+            tmp.close()
+            tmp_paths.append(tmp.name)
+
+        text = _worker.run_vlm_query(
+            _model, _processor, prompt,
+            image_paths=tmp_paths,
+            max_new_tokens=max_new_tokens,
+        )
+        logger.info(f"[infer_v6] {len(images_b64)} imgs, {len(prompt)} chars → {len(text)} chars "
+                    f"in {_time.time() - t0:.1f}s")
+        return jsonify({"text": text})
+    except Exception as exc:
+        logger.exception(f"[infer_v6] Error: {exc}")
+        return jsonify({"error": str(exc)}), 500
+    finally:
+        for p in tmp_paths:
+            try:
+                os.unlink(p)
+            except Exception:
+                pass
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Persistent Qwen VLM inference server")
     parser.add_argument("--port", type=int, default=5001, help="Port to listen on")
@@ -137,6 +202,8 @@ if __name__ == "__main__":
         choices=list(QWEN_MODELS.keys()),
         help="Qwen model key (see QWEN_MODELS in qwen_vlm_worker.py)",
     )
+    parser.add_argument("--load_in_4bit", action="store_true",
+                        help="Load model in 4-bit quantization (saves ~50%% VRAM)")
     args = parser.parse_args()
-    _load_model(args.model)
+    _load_model(args.model, load_in_4bit=args.load_in_4bit)
     app.run(host="0.0.0.0", port=args.port, threaded=False)

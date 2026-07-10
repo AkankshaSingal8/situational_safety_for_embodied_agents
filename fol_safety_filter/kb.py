@@ -212,8 +212,8 @@ class FOLKnowledgeBase:
         active = kb.evaluate(state)
     """
 
-    def __init__(self):
-        self.rules: List[FOLRule] = []
+    def __init__(self, rules: Optional[List["FOLRule"]] = None):
+        self.rules: List[FOLRule] = list(rules) if rules else []
         self.novel_predicates: Dict[str, NovelPredicate] = {}
         self._eval_count = 0
 
