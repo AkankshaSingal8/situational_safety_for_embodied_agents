@@ -127,6 +127,37 @@ def _closest_point(c1, d1, c2, d2):
     return (p1 + p2) / 2, float(np.linalg.norm(p1 - p2))
 
 
+def _obstacle_frame(dda, ddb):
+    """Orthonormal obstacle frame: axis0 = viewing-ray bisector (depth
+    direction, where triangulation error concentrates), axis2 ~ world-z,
+    axis1 completes the right-handed basis."""
+    a = np.asarray(dda, dtype=np.float64)
+    a = a / np.linalg.norm(a)
+    b = np.asarray(ddb, dtype=np.float64)
+    b = b / np.linalg.norm(b)
+    ax0 = a + b
+    n0 = np.linalg.norm(ax0)
+    ax0 = a if n0 < 1e-6 else ax0 / n0
+    z = np.array([0.0, 0.0, 1.0])
+    ax2 = z - (z @ ax0) * ax0
+    n2 = np.linalg.norm(ax2)
+    if n2 < 1e-6:
+        ax2 = np.array([1.0, 0.0, 0.0]) - (np.array([1.0, 0.0, 0.0]) @ ax0) * ax0
+        ax2 /= np.linalg.norm(ax2)
+    else:
+        ax2 /= n2
+    ax1 = np.cross(ax2, ax0)
+    return np.column_stack([ax0, ax1, ax2])
+
+
+def _bbox_extents(bb, f, rng):
+    """Metric half-extents from an image bbox at estimated range: xy
+    isotropic from pixel width (yaw unknown), z from pixel height."""
+    w = (bb[2] - bb[0]) / f * rng
+    h = (bb[3] - bb[1]) / f * rng
+    return np.array([min(w / 2, 0.12), min(w / 2, 0.12), min(h / 2, 0.12)])
+
+
 def _iou(a, b):
     x1, y1 = max(a[0], b[0]), max(a[1], b[1])
     x2, y2 = min(a[2], b[2]), min(a[3], b[3])
@@ -301,7 +332,8 @@ class VisualObstacleGrounder:
             rng = float(np.linalg.norm(p - Ea[:3, 3]))
             size_m = max(bb[2]-bb[0], bb[3]-bb[1]) / Ka[0, 0] * rng
             cands.append({"name": da["name"], "pos": p, "gap": gap,
-                          "size_m": size_m})
+                          "size_m": size_m, "dda": dda, "ddb": ddb,
+                          "bb": bb, "f": Ka[0, 0], "rng": rng})
 
         # ¬SUPPORTS on estimated positions
         drop = set()
@@ -375,9 +407,14 @@ class VisualObstacleGrounder:
         result = None
         if unmen:
             pick = min(unmen, key=lambda c: dpath(c["pos"]))
+            u = UNCERT_TRIANGULATED
             result = {"name": pick["name"], "pos": np.asarray(pick["pos"]),
-                      "uncertainty_m": UNCERT_TRIANGULATED, "method": "visual-triangulated",
-                      "target_xy": target_est}
+                      "uncertainty_m": u, "method": "visual-triangulated",
+                      "target_xy": target_est,
+                      "frame_R": _obstacle_frame(pick["dda"], pick["ddb"]),
+                      "u_axes": np.array([2.5 * u, u, u]),
+                      "half_extents": _bbox_extents(pick["bb"], pick["f"],
+                                                    pick["rng"])}
         else:
             # z-band fallback: best unmentioned agentview ray ∩ z = Z_BAND_CENTER
             best = None

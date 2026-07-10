@@ -528,6 +528,22 @@ class FOLSafetyFilter:
         )
         props, base_r = _props_from_name(res["name"])
         radius = max(0.20, base_r) + float(res["uncertainty_m"])
+        if res.get("frame_R") is not None:
+            base = (np.asarray(res["half_extents"], dtype=np.float64)
+                    + np.asarray(res["u_axes"], dtype=np.float64))
+            frame_R = np.asarray(res["frame_R"], dtype=np.float64)
+            warn_radii = np.maximum(base + 0.08, [0.20, 0.14, 0.14])
+            hard_radii = np.maximum(base + 0.02, 0.08)
+            self._obstacle_ellipsoids[synth] = {
+                "frame_R": frame_R,
+                "warn_radii": warn_radii,
+                "hard_radii": hard_radii,
+            }
+            logger.info(
+                f"[FOL-v19] Ellipsoid for {synth}: "
+                f"warn_radii={np.round(warn_radii, 3).tolist()} "
+                f"depth_axis={np.round(frame_R[:, 0], 3).tolist()}"
+            )
         out = _empty_result()
         out.update({
             "obstacle_obs_keys": [synth],
