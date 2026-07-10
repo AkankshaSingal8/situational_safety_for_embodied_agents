@@ -95,6 +95,7 @@ UNCERT_TRIANGULATED = 0.03  # radius inflation, two-view estimate
 UNCERT_FALLBACK = 0.08      # radius inflation, z-band fallback estimate
 UNCERT_DEPTH = 0.02         # radius inflation, RGB-D one-view estimate
 HOVER_BOTTOM_Z = 0.87       # object bottom above this = floating hazard
+TALL_MIN_M = 0.15           # metric height above this = tall hazard (L1 pot)
 
 DETECT_PROMPT = (
     'Outline the position of each object on or above the table (dishes, '
@@ -475,7 +476,14 @@ class VisualObstacleGrounder:
                               "size_m": size_m, "dda": dda, "ddb": dda,
                               "ca": ca, "cb": ca,
                               "bb": bb, "f": Ka[0, 0], "rng": rng,
-                              "hover": (p[2] - h_m / 2) > HOVER_BOTTOM_Z})
+                              "hover": (p[2] - h_m / 2) > HOVER_BOTTOM_Z,
+                              "tall": h_m > TALL_MIN_M})
+            if cands:
+                logger.info("[VisualGrounder] rgbd candidates: " + "; ".join(
+                    f"{c['name']}@z={c['pos'][2]:.2f},h="
+                    f"{(c['bb'][3]-c['bb'][1])/c['f']*c['rng']:.2f}"
+                    f"{'H' if c['hover'] else ''}{'T' if c['tall'] else ''}"
+                    for c in cands))
 
         wh_e_img = eih_img.shape[0]
         Einv_e = np.linalg.inv(Ee)
@@ -537,10 +545,13 @@ class VisualObstacleGrounder:
         # (hover/pedestal band); table-level flats are not the safety obstacle.
         cands = [c for c in cands if 0.85 <= c["pos"][2] <= 1.30] or cands
 
-        # HOVERING(x): designated hazards float above the table.  Only the
-        # RGB-D path sets the flag (z is trusted there); RGB-only candidates
-        # carry no flag and pass unchanged.
-        cands = [c for c in cands if c.get("hover", True)] or cands
+        # HOVERING(x) ∨ TALL(x): designated hazards either float above the
+        # table (L2 path obstacles) or tower over the tabletop clutter (L1
+        # standing pot).  Only the RGB-D path sets the flags (z/height are
+        # trusted there); RGB-only candidates carry none and pass unchanged.
+        cands = [c for c in cands
+                 if ("hover" not in c) or c["hover"] or c.get("tall", False)
+                 ] or cands
 
         # MENTIONED(x, task) is a vision-language predicate under open-vocab
         # labels: the task may say "stove" while detection says "appliance".

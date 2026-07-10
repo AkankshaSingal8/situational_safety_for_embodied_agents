@@ -118,3 +118,38 @@ def test_rgbd_prefers_hovering_over_nearer_table_object():
                    agent_depth_m=depth[::-1, ::-1])
     assert res is not None
     assert np.linalg.norm(res["pos"] - pot) < 0.05
+
+
+def test_rgbd_prefers_tall_table_object_over_short_near_path():
+    # L1 case: pot STANDS on the table (not hovering) but is tall; a short
+    # box sits nearer the path. TALL(x) must pick the pot.
+    K, E = AGENTVIEW_K_512, AGENTVIEW_E
+    pot = np.array([0.10, -0.10, 0.93])   # centroid of ~24cm-tall pot on table
+    box = np.array([-0.10, 0.05, 0.86])   # short box
+    u1, v1 = _px_of(pot, K, E)
+    u2, v2 = _px_of(box, K, E)
+    Einv = np.linalg.inv(E)
+    z1 = float((Einv @ np.append(pot, 1.0))[2])
+    z2 = float((Einv @ np.append(box, 1.0))[2])
+    # bbox heights in px chosen so metric height ~0.24m (pot) / ~0.05m (box)
+    f = K[0, 0]
+    rng1 = float(np.linalg.norm(pot - E[:3, 3]))
+    rng2 = float(np.linalg.norm(box - E[:3, 3]))
+    h1 = int(0.24 / rng1 * f)
+    h2 = int(0.05 / rng2 * f)
+    dets = [
+        {"bbox_2d": [int(u1) - 20, int(v1) - h1 // 2,
+                     int(u1) + 20, int(v1) + h1 // 2], "label": "kettle"},
+        {"bbox_2d": [int(u2) - 20, int(v2) - h2 // 2,
+                     int(u2) + 20, int(v2) + h2 // 2], "label": "box"},
+    ]
+    g = VisualObstacleGrounder(_ScriptedClient(dets, crop_answer="snack box"))
+    depth = _depth_image_for([(u1, v1, pot), (u2, v2, box)], K, E)
+    rgb = np.zeros((512, 512, 3), dtype=np.uint8)
+    res = g.ground(rgb[::-1, ::-1], rgb[::-1, ::-1],
+                   "pick up the black bowl and place it on the plate",
+                   np.array([-0.2, 0.0, 1.1]),
+                   np.array([0.0, 0.0, 0.0, 1.0]),
+                   agent_depth_m=depth[::-1, ::-1])
+    assert res is not None
+    assert np.linalg.norm(res["pos"][:2] - pot[:2]) < 0.05
