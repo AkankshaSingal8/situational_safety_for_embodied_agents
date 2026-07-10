@@ -165,6 +165,7 @@ class FOLSafetyFilter:
         self._ssf = None
         self._visual_grounder = None
         self._vision_target_xy = None
+        self._vision_targets_xy: List[np.ndarray] = []
         self._alpha_default = alpha_default
         self._alpha_caution = alpha_caution
 
@@ -539,6 +540,25 @@ class FOLSafetyFilter:
             return _empty_result()
 
         self._vision_target_xy = res.get("target_xy")
+        self._vision_targets_xy = [
+            np.asarray(t, dtype=np.float64)
+            for t in (res.get("mentioned_xy") or [])
+        ]
+        if not self._vision_targets_xy and res.get("target_xy") is not None:
+            self._vision_targets_xy = [
+                np.asarray(res["target_xy"], dtype=np.float64)]
+        # Diagnostic telemetry ONLY — compares the vision estimate against the
+        # simulator's designated-obstacle position for offline accuracy stats.
+        # The value feeds logger.info and nothing else; control never sees it.
+        gt_keys = [k for k in obs if k.endswith("_pos") and "_obstacle" in k]
+        if gt_keys:
+            dists = {k: float(np.linalg.norm(
+                np.asarray(obs[k], dtype=np.float64) - np.asarray(res["pos"])))
+                for k in gt_keys}
+            best = min(dists, key=dists.get)
+            logger.info(
+                f"[DIAG-GT] grounded={res['name']} d_to_gt={dists[best]:.3f} "
+                f"gt_key={best}")
         synth = "visual_" + re.sub(r"[^a-z0-9]+", "_", res["name"]).strip("_")
         self._object_states[synth] = ObjectState(
             name=synth,
@@ -807,20 +827,26 @@ class FOLSafetyFilter:
             # obstacles are exactly centered and never need this.
             aiming_at_target = False
             cancel_scale = 1.0
-            if (obs_name.startswith("visual_")
-                    and getattr(self, "_vision_target_xy", None) is not None):
-                tdiff = np.asarray(self._vision_target_xy) - ee[:2]
-                tdist = float(np.linalg.norm(tdiff))
+            if obs_name.startswith("visual_"):
+                targets = getattr(self, "_vision_targets_xy", None)
+                if not targets and getattr(
+                        self, "_vision_target_xy", None) is not None:
+                    targets = [self._vision_target_xy]
                 speed = float(np.linalg.norm(u[:2]))
-                cos_xy = (float(u[:2] @ tdiff) / (speed * tdist + 1e-9)
-                          if speed > 1e-6 else 0.0)
-                # xy-cosine is blind to the vertical grasp descent (zero xy
-                # speed directly above the target) — treat descending while
-                # hovering over the target as aiming at it.
-                descending_above = u[2] < -1e-4 and tdist < 0.10
-                if tdist < 0.30 and (cos_xy > 0.6 or descending_above):
-                    aiming_at_target = True
-                    cancel_scale = 0.6
+                for txy in (targets or []):
+                    tdiff = np.asarray(txy) - ee[:2]
+                    tdist = float(np.linalg.norm(tdiff))
+                    cos_xy = (float(u[:2] @ tdiff) / (speed * tdist + 1e-9)
+                              if speed > 1e-6 else 0.0)
+                    # xy-cosine is blind to the vertical grasp descent (zero
+                    # xy speed directly above the target) — treat descending
+                    # while hovering over any mentioned object (grasp target
+                    # or placement goal) as aiming at it.
+                    descending_above = u[2] < -1e-4 and tdist < 0.10
+                    if tdist < 0.30 and (cos_xy > 0.6 or descending_above):
+                        aiming_at_target = True
+                        cancel_scale = 0.6
+                        break
             ellipsoid = None
             if os.environ.get("FOL_ELLIPSOID", "1") == "1":
                 ellipsoid = self._obstacle_ellipsoids.get(obs_name)

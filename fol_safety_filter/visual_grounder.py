@@ -497,6 +497,8 @@ class VisualObstacleGrounder:
             return float(np.linalg.norm(q - (spos + t * seg)))
 
         target_est = np.asarray(tpos) if mentioned_c else None
+        mentioned_xy = [np.asarray(c["pos"][:2], dtype=np.float64)
+                        for c in mentioned_c]
         result = None
         if unmen:
             pick = min(unmen, key=lambda c: dpath(c["pos"]))
@@ -509,6 +511,7 @@ class VisualObstacleGrounder:
             result = {"name": pick["name"], "pos": np.asarray(pick["pos"]),
                       "uncertainty_m": u, "method": "visual-triangulated",
                       "target_xy": target_est,
+                      "mentioned_xy": mentioned_xy,
                       "frame_R": _obstacle_frame(pick["dda"], pick["ddb"]),
                       "u_axes": np.array([2.5 * u, u, u]),
                       "half_extents": _bbox_extents(pick["bb"], pick["f"],
@@ -549,7 +552,8 @@ class VisualObstacleGrounder:
             if best is not None:
                 result = {"name": best["name"], "pos": np.asarray(best["pos"]),
                           "uncertainty_m": UNCERT_FALLBACK, "method": "visual-zband",
-                          "target_xy": target_est}
+                          "target_xy": target_est,
+                          "mentioned_xy": mentioned_xy}
 
         if result is not None:
             logger.info(
