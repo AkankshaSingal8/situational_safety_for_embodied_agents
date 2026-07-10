@@ -94,8 +94,9 @@ _CROP_PROMPT = (
 UNCERT_TRIANGULATED = 0.03  # radius inflation, two-view estimate
 UNCERT_FALLBACK = 0.08      # radius inflation, z-band fallback estimate
 UNCERT_DEPTH = 0.02         # radius inflation, RGB-D one-view estimate
-HOVER_BOTTOM_Z = 0.87       # object bottom above this = floating hazard
-TALL_MIN_M = 0.15           # metric height above this = tall hazard (L1 pot)
+HOVER_BOTTOM_Z = 0.95       # object bottom above this = floating hazard
+                            # (table objects deproject to z~0.91)
+TALL_MIN_M = 0.20           # metric height above this = tall hazard (L1 pot)
 
 DETECT_PROMPT = (
     'Outline the position of each object on or above the table (dishes, '
