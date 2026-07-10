@@ -97,8 +97,9 @@ UNCERT_DEPTH = 0.02         # radius inflation, RGB-D one-view estimate
 HOVER_BOTTOM_Z = 0.87       # object bottom above this = floating hazard
 
 DETECT_PROMPT = (
-    'Outline the position of each object on the table (dishes, containers, '
-    'bottles, boxes, food items, appliances, books — every distinct item, '
+    'Outline the position of each object on or above the table (dishes, '
+    'containers, bottles, boxes, food items, appliances, books — every '
+    'distinct item, INCLUDING any object floating or suspended in the air, '
     'but NOT the robot arm, table, or walls) and output all the coordinates '
     'in JSON format:\n'
     '[{"bbox_2d": [x1, y1, x2, y2], "label": "<object name>"}]'
