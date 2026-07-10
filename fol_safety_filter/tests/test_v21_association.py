@@ -75,3 +75,22 @@ def test_epipolar_gap_gate_still_applies():
     m = _match_crop_detection([locB], [uv_e], 0, 0, 1,
                               Ke, Ee, ca, dda, bb_a, Ka)
     assert m is None
+
+
+def test_clipped_small_bbox_not_rejected():
+    true_p = np.array([0.05, 0.10, 0.95])
+    Ka, Ke, Ee, ca, dda, uv_e = _setup(true_p)
+    bb_a = [200.0, 200.0, 293.0, 293.0]
+    # undersized bbox centered on the true pixel but touching the crop
+    # border (clipped view of a big object)
+    loc = {"bbox": [uv_e[0] - 5, uv_e[1] - 5, uv_e[0] + 5, uv_e[1] + 5],
+           "name": "obj"}
+    m = _match_crop_detection([loc], [uv_e], 0, 0, 1,
+                              Ke, Ee, ca, dda, bb_a, Ka,
+                              crop_wh=(int(uv_e[0] + 5), int(uv_e[1] + 200)))
+    assert m is not None  # clipped → under-size violation forgiven
+    # same tiny bbox NOT touching the border stays rejected
+    m2 = _match_crop_detection([loc], [uv_e], 0, 0, 1,
+                               Ke, Ee, ca, dda, bb_a, Ka,
+                               crop_wh=(int(uv_e[0] + 200), int(uv_e[1] + 200)))
+    assert m2 is None

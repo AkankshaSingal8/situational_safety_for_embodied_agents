@@ -66,7 +66,7 @@ def _patch_crop_detect(g, target_uv):
     # one detection whose center maps exactly back to target_uv (scale=1, x1=y1=0)
     locs = [{"bbox": [target_uv[0] - 5, target_uv[1] - 5,
                       target_uv[0] + 5, target_uv[1] + 5], "name": "obj"}]
-    g._crop_detect = lambda img, pts: (locs, 0, 0, 1)
+    g._crop_detect = lambda img, pts: (locs, 0, 0, 1, (1000, 1000))
 
 
 def _wrist_pose_looking_at(pos):

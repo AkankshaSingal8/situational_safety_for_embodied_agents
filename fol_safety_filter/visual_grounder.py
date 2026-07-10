@@ -160,7 +160,7 @@ SIZE_RATIO_MAX = 2.5        # cross-view metric-size consistency gate
 
 
 def _match_crop_detection(locs, seg_c, x1, y1, scale, Ke, Ee, ca, dda,
-                          bb_a, Ka):
+                          bb_a, Ka, crop_wh=None):
     """Associate the agentview detection with a wrist-crop detection by
     triangulating EVERY crop candidate and gating on epipolar gap, workspace
     and cross-view metric-size consistency — pixel distance to the epipolar
@@ -183,7 +183,16 @@ def _match_crop_detection(locs, seg_c, x1, y1, scale, Ke, Ee, ca, dda,
         if size_agent < 1e-6 or size_wrist < 1e-6:
             continue
         ratio = size_wrist / size_agent
-        if ratio > SIZE_RATIO_MAX or ratio < 1.0 / SIZE_RATIO_MAX:
+        # A bbox touching the crop border is clipped — its size is a lower
+        # bound, so only an over-size violation is evidence against it.
+        clipped = False
+        if crop_wh is not None:
+            cw, ch = crop_wh
+            clipped = (b[0] <= 2 or b[1] <= 2
+                       or b[2] >= cw - 2 or b[3] >= ch - 2)
+        if ratio > SIZE_RATIO_MAX:
+            continue
+        if not clipped and ratio < 1.0 / SIZE_RATIO_MAX:
             continue
         bu, bv = (b[0] + b[2]) / 2, (b[1] + b[3]) / 2
         d_seg = min(np.hypot(bu - su, bv - sv) for su, sv in seg_c)
@@ -305,7 +314,7 @@ class VisualObstacleGrounder:
         y1 = max(0, int(min(vs)) - pad)
         y2 = min(wh, int(max(vs)) + pad)
         if x2 - x1 < 24 or y2 - y1 < 24:
-            return [], 0, 0, 1
+            return [], 0, 0, 1, (0, 0)
         crop = img[y1:y2, x1:x2]
         scale = max(1, int(round(320 / max(crop.shape[:2]))))
         if scale > 1:
@@ -313,7 +322,8 @@ class VisualObstacleGrounder:
             crop = np.array(_Image.fromarray(crop).resize(
                 (crop.shape[1] * scale, crop.shape[0] * scale)))
         raw = self.client.infer(_CROP_PROMPT, [crop], max_tokens=512)
-        return _parse_detections(raw, max(crop.shape[:2])), x1, y1, scale
+        return (_parse_detections(raw, max(crop.shape[:2])), x1, y1,
+                scale, (crop.shape[1], crop.shape[0]))
 
     def refine(
         self,
@@ -341,7 +351,7 @@ class VisualObstacleGrounder:
         if uv is None or not (0 <= uv[0] < wh and 0 <= uv[1] < wh):
             return None
 
-        locs, x1, y1, scale = self._crop_detect(eih_img, [uv])
+        locs, x1, y1, scale, _ = self._crop_detect(eih_img, [uv])
         if not locs:
             logger.info("[VisualGrounder] refine: crop-detect empty")
             return None
@@ -440,14 +450,15 @@ class VisualObstacleGrounder:
             # Name-agnostic: dense-detect the crop, keep the detection whose
             # center is nearest the projected epipolar segment (crop coords).
             # Cross-view naming fails for top-down appearances; geometry doesn't.
-            locs, x1, y1, scale = self._crop_detect(eih_img, seg_px)
+            locs, x1, y1, scale, crop_wh = self._crop_detect(eih_img, seg_px)
             if not locs:
                 logger.info(f"[VisualGrounder] crop-detect empty for '{da['name']}'")
                 continue
             seg_c = [((u - x1) * scale, (v - y1) * scale) for u, v in seg_px]
             bb = da["bbox"]
             match = _match_crop_detection(
-                locs, seg_c, x1, y1, scale, Ke, Ee, ca, dda, bb, Ka)
+                locs, seg_c, x1, y1, scale, Ke, Ee, ca, dda, bb, Ka,
+                crop_wh=crop_wh)
             if match is None:
                 logger.info(f"[VisualGrounder] crop-triangulation rejected for "
                             f"'{da['name']}': no size-consistent match")
