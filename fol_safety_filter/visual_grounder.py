@@ -375,10 +375,11 @@ class VisualObstacleGrounder:
         st["pos"] = np.asarray(p, dtype=np.float64)
         n_rays = len(rays)
         uncert = max(0.015, UNCERT_TRIANGULATED * 2.0 / n_rays)
+        pos_c = st["pos"] - np.array([0.0, 0.0, st.get("dz_top", 0.0)])
         logger.info(
             f"[VisualGrounder] refine accepted ({n_rays} rays): "
-            f"pos=({p[0]:.3f},{p[1]:.3f},{p[2]:.3f}) ± {uncert:.3f}m")
-        return {"pos": st["pos"].copy(), "uncertainty_m": uncert}
+            f"pos=({pos_c[0]:.3f},{pos_c[1]:.3f},{pos_c[2]:.3f}) ± {uncert:.3f}m")
+        return {"pos": pos_c, "uncertainty_m": uncert}
 
     def _detect(self, img: np.ndarray, votes: int) -> List[Dict]:
         wh = img.shape[0]
@@ -547,19 +548,25 @@ class VisualObstacleGrounder:
         if unmen:
             pick = min(unmen, key=lambda c: dpath(c["pos"]))
             u = UNCERT_TRIANGULATED
+            # Both cameras look down at the obstacle: the triangulated point
+            # sits on its TOP surface.  Report the body centroid instead —
+            # drop by the image-estimated half-height.
+            ext = _bbox_extents(pick["bb"], pick["f"], pick["rng"])
+            dz_top = float(ext[2])
+            pos_c = np.asarray(pick["pos"], dtype=np.float64) - [0.0, 0.0, dz_top]
             self._refine_state = {
                 "name": pick["name"],
                 "pos": np.asarray(pick["pos"], dtype=np.float64),
+                "dz_top": dz_top,
                 "rays": [(pick["ca"], pick["dda"]), (pick["cb"], pick["ddb"])],
             }
-            result = {"name": pick["name"], "pos": np.asarray(pick["pos"]),
+            result = {"name": pick["name"], "pos": pos_c,
                       "uncertainty_m": u, "method": "visual-triangulated",
                       "target_xy": target_est,
                       "mentioned_xy": mentioned_xy,
                       "frame_R": _obstacle_frame(pick["dda"], pick["ddb"]),
                       "u_axes": np.array([2.5 * u, u, u]),
-                      "half_extents": _bbox_extents(pick["bb"], pick["f"],
-                                                    pick["rng"])}
+                      "half_extents": ext}
         else:
             # z-band fallback: best unmentioned agentview ray ∩ z = Z_BAND_CENTER
             best = None

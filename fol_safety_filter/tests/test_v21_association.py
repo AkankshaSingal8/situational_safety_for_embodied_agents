@@ -94,3 +94,28 @@ def test_clipped_small_bbox_not_rejected():
                                Ke, Ee, ca, dda, bb_a, Ka,
                                crop_wh=(int(uv_e[0] + 200), int(uv_e[1] + 200)))
     assert m2 is None
+
+
+def test_refine_reports_centroid_with_dz_top():
+    from fol_safety_filter.tests.test_refine import (
+        _grounder_with_state, _patch_crop_detect, _wrist_pose_looking_at)
+    from fol_safety_filter.visual_grounder import EIH_K_512, T_HANDEYE, _project
+    true_pos = np.array([0.05, 0.15, 0.95])
+    g = _grounder_with_state(true_pos)
+    g._refine_state["dz_top"] = 0.06
+    eef_pos, eef_quat = _wrist_pose_looking_at(true_pos)
+    T = np.eye(4)
+    T[:3, :3] = Rotation.from_quat(eef_quat).as_matrix()
+    T[:3, 3] = eef_pos
+    wh = 128
+    Ke = EIH_K_512 * (wh / 512.0)
+    Ke[2, 2] = 1.0
+    uv = _project(true_pos, Ke, np.linalg.inv(T @ T_HANDEYE))
+    if uv is None:
+        pytest.skip("bad geometry")
+    _patch_crop_detect(g, uv)
+    img = np.zeros((wh, wh, 3), dtype=np.uint8)
+    out = g.refine(img[::-1, ::-1], eef_pos, eef_quat)
+    assert out is not None
+    # reported z = ray-solution z (≈ true surface z) minus dz_top
+    assert out["pos"][2] == pytest.approx(g._refine_state["pos"][2] - 0.06)

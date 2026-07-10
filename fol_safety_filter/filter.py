@@ -556,8 +556,11 @@ class FOLSafetyFilter:
                 np.asarray(obs[k], dtype=np.float64) - np.asarray(res["pos"])))
                 for k in gt_keys}
             best = min(dists, key=dists.get)
+            diff = np.asarray(obs[best], dtype=np.float64) - np.asarray(res["pos"])
             logger.info(
                 f"[DIAG-GT] grounded={res['name']} d_to_gt={dists[best]:.3f} "
+                f"d_xy={float(np.linalg.norm(diff[:2])):.3f} "
+                f"d_z={float(diff[2]):.3f} "
                 f"gt_key={best}")
         synth = "visual_" + re.sub(r"[^a-z0-9]+", "_", res["name"]).strip("_")
         self._object_states[synth] = ObjectState(
