@@ -725,13 +725,19 @@ class FOLSafetyFilter:
         (~12cm clearance) stay open while plow-throughs are braked."""
         if env is None:
             return []
-        checkpoints = []
-        for body_name, warning_r, hard_r, push in [
+        bodies = [
             ("robot0_link4", 0.15, 0.08, 0.06),
             ("robot0_link6", 0.15, 0.08, 0.06),
-            ("robot0_link7", 0.10, 0.06, 0.06),
-            ("robot0_right_hand", 0.10, 0.06, 0.06),
-        ]:
+        ]
+        # Hand-body monitoring braked plow-throughs but cost TSR broadly at
+        # n=50 (v19e: L1 34.5 vs 37.0) — opt-in until the tradeoff is solved.
+        if os.environ.get("FOL_HAND_CHECKPOINT", "0") == "1":
+            bodies += [
+                ("robot0_link7", 0.10, 0.06, 0.06),
+                ("robot0_right_hand", 0.10, 0.06, 0.06),
+            ]
+        checkpoints = []
+        for body_name, warning_r, hard_r, push in bodies:
             try:
                 body_id = env.sim.model.body_name2id(body_name)
                 pos = np.array(env.sim.data.body_xpos[body_id], dtype=np.float64)

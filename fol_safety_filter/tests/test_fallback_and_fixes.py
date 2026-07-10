@@ -139,7 +139,8 @@ class _FakeEnv:
     sim = _FakeSim()
 
 
-def test_arm_checkpoints_include_hand_with_tight_radii():
+def test_arm_checkpoints_include_hand_with_tight_radii(monkeypatch):
+    monkeypatch.setenv("FOL_HAND_CHECKPOINT", "1")
     f = FOLSafetyFilter.__new__(FOLSafetyFilter)
     cps = f._get_arm_checkpoints(_FakeEnv())
     names = [c["name"] for c in cps]
@@ -210,3 +211,9 @@ def test_corridor_relaxation_fires_on_vertical_descent():
     # xy-only gate cancels 100% (out_z=0); 3D-aware gate relaxes to 0.6
     # leaving 40% of the descent
     assert out[2] < -0.005
+
+
+def test_hand_checkpoint_default_off():
+    f = FOLSafetyFilter.__new__(FOLSafetyFilter)
+    names = [c["name"] for c in f._get_arm_checkpoints(_FakeEnv())]
+    assert names == ["robot0_link4", "robot0_link6"]
