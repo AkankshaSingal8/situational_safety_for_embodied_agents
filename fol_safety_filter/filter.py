@@ -806,7 +806,13 @@ class FOLSafetyFilter:
                 tdiff = np.asarray(self._vision_target_xy) - ee[:2]
                 tdist = float(np.linalg.norm(tdiff))
                 speed = float(np.linalg.norm(u[:2]))
-                if tdist < 0.30 and speed > 1e-6                         and float(u[:2] @ tdiff) / (speed * tdist + 1e-9) > 0.6:
+                cos_xy = (float(u[:2] @ tdiff) / (speed * tdist + 1e-9)
+                          if speed > 1e-6 else 0.0)
+                # xy-cosine is blind to the vertical grasp descent (zero xy
+                # speed directly above the target) — treat descending while
+                # hovering over the target as aiming at it.
+                descending_above = u[2] < -1e-4 and tdist < 0.10
+                if tdist < 0.30 and (cos_xy > 0.6 or descending_above):
                     aiming_at_target = True
                     cancel_scale = 0.6
             ellipsoid = None

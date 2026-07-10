@@ -182,3 +182,31 @@ def test_hand_checkpoint_brakes_plow_through():
     out_dir = d / np.linalg.norm(d)
     assert float(np.array([-0.02, 0.0, 0.0]) @ out_dir) < 0  # raw was inward
     assert float(out[:3] @ out_dir) >= -1e-9
+
+
+def test_corridor_relaxation_fires_on_vertical_descent():
+    from fol_safety_filter.cbf_mapper import MappedCBFSet
+    f = FOLSafetyFilter.__new__(FOLSafetyFilter)
+    synth = "visual_pot"
+    f._obstacle_names = [synth]
+    f._obstacle_radii = {synth: 0.20}
+    f._obstacle_ellipsoids = {}
+    f.velocity_limit_default = None
+    f._vision_fallback_active = False
+    f._fallback_vlim = 0.010
+    f._vision_target_xy = np.array([0.0, 0.0])  # target directly below EEF
+
+    class _S:
+        ee_pos = np.array([0.0, 0.0, 1.10])  # above obstacle, inside warning
+        objects = {synth: ObjectState(
+            name=synth, pos=np.array([0.0, 0.0, 0.95]),
+            quat=np.array([0.0, 0.0, 0.0, 1.0]),
+            bbox_half=np.array([0.05, 0.05, 0.05]))}
+
+    u = np.zeros(7)
+    u[:3] = [0.0, 0.0, -0.02]  # pure vertical grasp descent, zero xy speed
+    out, _ = f._apply_cbf(u, _S(), MappedCBFSet(
+        semantic_envelopes=[], collision_envelopes=[]), None)
+    # xy-only gate cancels 100% (out_z=0); 3D-aware gate relaxes to 0.6
+    # leaving 40% of the descent
+    assert out[2] < -0.005
