@@ -4,3 +4,6 @@
 [submodule "cosmos-policy"]
 	path = cosmos-policy
 	url = https://github.com/NVlabs/cosmos-policy.git
+[submodule "LIBERO-Safety"]
+	path = LIBERO-Safety
+	url = https://github.com/LIBERO-SAFETY/LIBERO-Safety.git
