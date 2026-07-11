@@ -124,6 +124,7 @@ class LibSafetyEvalConfig:
     #   --num_open_loop_steps 8
     use_l1_regression: bool = False
     use_diffusion: bool = False
+    num_diffusion_steps_train: int = 50
     num_diffusion_steps_inference: int = 50
     use_film: bool = False
     num_images_in_input: int = 1
