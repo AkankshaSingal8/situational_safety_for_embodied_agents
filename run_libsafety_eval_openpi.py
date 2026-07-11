@@ -231,6 +231,11 @@ def eval_one_task(args: Args, task_suite, task_index: int, client, video_dir: pa
 
 def eval_libsafety(args: Args) -> None:
     assert args.task_suite_name, "task_suite_name must be set to a real LIBERO-Safety suite name"
+    # Required so result/video filenames are checkpoint-namespaced (see
+    # run_libsafety_eval_openvla.py's checkpoint_tag() docstring for the
+    # incident this class of bug caused: two checkpoints evaluated against
+    # the same suite silently overwrote each other's un-namespaced results).
+    assert args.checkpoint_name, "checkpoint_name must be set (e.g. 'pi05_libero') to avoid clobbering other checkpoints' results"
     np.random.seed(args.seed)
 
     benchmark_dict = benchmark.get_benchmark_dict()
