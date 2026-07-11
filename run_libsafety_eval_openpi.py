@@ -70,9 +70,13 @@ class Args:
     # --- LIBERO-Safety environment parameters ---
     task_suite_name: str = ""  # e.g. "human_safety", "affordance", ... (see benchmark.get_benchmark_dict())
     task_index: int = 0
-    num_trials_per_task: int = 1
-    num_steps_wait: int = 10
-    max_steps: int = 300
+    # If True, loop over every task in the suite (range(task_suite.n_tasks))
+    # instead of just --task_index, reusing the single connected client/server
+    # across all of them. --task_index is ignored when this is set.
+    all_tasks: bool = False
+    num_trials_per_task: int = 1  # trials (episodes) per task
+    num_steps_wait: int = 10  # no-op warmup steps before handing control to the policy
+    max_steps: int = 300  # episode horizon
     checkpoint_name: str = ""  # e.g. "pi05_libero" or "pi0_libero" (for results-json bookkeeping only)
 
     seed: int = 7
@@ -129,13 +133,8 @@ def save_rollout_video(replay_images, video_dir: pathlib.Path, task_suite_name, 
     return str(mp4_path)
 
 
-def eval_libsafety(args: Args) -> None:
-    assert args.task_suite_name, "task_suite_name must be set to a real LIBERO-Safety suite name"
-    np.random.seed(args.seed)
-
-    benchmark_dict = benchmark.get_benchmark_dict()
-    task_suite = benchmark_dict[args.task_suite_name]()
-    task = task_suite.get_task(args.task_index)
+def eval_one_task(args: Args, task_suite, task_index: int, client, video_dir: pathlib.Path, results_dir: pathlib.Path) -> list:
+    task = task_suite.get_task(task_index)
     # NOTE: LIBERO-Safety's Benchmark.get_task_init_states() signature is
     # (level, level_id), NOT a single flat task index -- unlike upstream
     # LIBERO / the openpi examples this driver is otherwise adapted from.
@@ -147,14 +146,6 @@ def eval_libsafety(args: Args) -> None:
     initial_states = task_suite.get_task_init_states(task.level, task.level_id)
     env, task_description = _get_env(task_suite, task, LIBERO_ENV_RESOLUTION, args.seed)
     logger.info(f"Task description: {task_description}")
-
-    video_dir = pathlib.Path(args.video_out_path)
-    video_dir.mkdir(parents=True, exist_ok=True)
-    results_dir = pathlib.Path(args.results_out_path)
-    results_dir.mkdir(parents=True, exist_ok=True)
-
-    client = _websocket_client_policy.WebsocketClientPolicy(args.host, args.port)
-    logger.info(f"Connected to policy server at {args.host}:{args.port}; metadata={client.get_server_metadata()}")
 
     episode_results = []
     for episode_idx in tqdm.tqdm(range(args.num_trials_per_task)):
@@ -213,13 +204,13 @@ def eval_libsafety(args: Args) -> None:
             logger.exception(f"Episode {episode_idx} raised an exception: {e}")
 
         mp4_path = save_rollout_video(
-            replay_images, video_dir, args.task_suite_name, args.task_index, episode_idx, success, task_description
+            replay_images, video_dir, args.task_suite_name, task_index, episode_idx, success, task_description
         )
         episode_results.append(
             {
                 "task": task_description,
                 "task_suite": args.task_suite_name,
-                "task_index": args.task_index,
+                "task_index": task_index,
                 "episode": episode_idx,
                 "success": success,
                 "num_steps": t,
@@ -230,10 +221,61 @@ def eval_libsafety(args: Args) -> None:
         logger.info(f"Episode {episode_idx}: success={success}, steps={t}")
 
     suffix = f"_{args.checkpoint_name}" if args.checkpoint_name else ""
-    out_path = results_dir / f"{args.task_suite_name}_task{args.task_index}{suffix}.json"
+    out_path = results_dir / f"{args.task_suite_name}_task{task_index}{suffix}.json"
     with open(out_path, "w") as f:
         json.dump(episode_results, f, indent=2)
     logger.info(f"Wrote results to {out_path}")
+
+    return episode_results
+
+
+def eval_libsafety(args: Args) -> None:
+    assert args.task_suite_name, "task_suite_name must be set to a real LIBERO-Safety suite name"
+    np.random.seed(args.seed)
+
+    benchmark_dict = benchmark.get_benchmark_dict()
+    task_suite = benchmark_dict[args.task_suite_name]()
+
+    video_dir = pathlib.Path(args.video_out_path)
+    video_dir.mkdir(parents=True, exist_ok=True)
+    results_dir = pathlib.Path(args.results_out_path)
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    client = _websocket_client_policy.WebsocketClientPolicy(args.host, args.port)
+    logger.info(f"Connected to policy server at {args.host}:{args.port}; metadata={client.get_server_metadata()}")
+
+    if args.all_tasks:
+        # Loop over every task in the suite, reusing the single connected
+        # client/server for the whole sweep (server stays up across tasks;
+        # only the env/task changes). --task_index is ignored here.
+        task_indices = list(range(task_suite.n_tasks))
+        logger.info(
+            f"--all_tasks set: running all {len(task_indices)} tasks in suite "
+            f"'{args.task_suite_name}' x {args.num_trials_per_task} trials each "
+            f"({len(task_indices) * args.num_trials_per_task} episodes total)"
+        )
+    else:
+        task_indices = [args.task_index]
+
+    all_results = []
+    for task_index in task_indices:
+        logger.info(f"=== Starting suite='{args.task_suite_name}' task_index={task_index} ===")
+        try:
+            task_results = eval_one_task(args, task_suite, task_index, client, video_dir, results_dir)
+            all_results.extend(task_results)
+        except Exception as e:
+            logger.exception(f"Task {task_index} raised an exception, skipping to next task: {e}")
+
+    if args.all_tasks:
+        suffix = f"_{args.checkpoint_name}" if args.checkpoint_name else ""
+        summary_path = results_dir / f"{args.task_suite_name}_all_tasks{suffix}.json"
+        with open(summary_path, "w") as f:
+            json.dump(all_results, f, indent=2)
+        n_success = sum(1 for r in all_results if r["success"])
+        logger.info(
+            f"Wrote combined results for {len(task_indices)} tasks "
+            f"({len(all_results)} episodes, {n_success} successes) to {summary_path}"
+        )
 
 
 if __name__ == "__main__":
