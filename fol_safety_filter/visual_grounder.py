@@ -471,6 +471,11 @@ class VisualObstacleGrounder:
                 if not _in_workspace(p):
                     continue
                 rng = float(np.linalg.norm(p - Ea[:3, 3]))
+                # depth reads the FRONT surface; push half a body-width along
+                # the viewing ray to reach the body center (t1 forensic showed
+                # ~18cm bias on tall objects from exactly this)
+                w_m = (bb[2] - bb[0]) / Ka[0, 0] * rng
+                p = p + min(w_m / 2, 0.06) * dda
                 size_m = max(bb[2]-bb[0], bb[3]-bb[1]) / Ka[0, 0] * rng
                 h_m = (bb[3] - bb[1]) / Ka[0, 0] * rng
                 cands.append({"name": da["name"], "pos": p, "gap": 0.0,
@@ -614,7 +619,8 @@ class VisualObstacleGrounder:
             # sits on its TOP surface.  Report the body centroid instead —
             # drop by the image-estimated half-height.
             ext = _bbox_extents(pick["bb"], pick["f"], pick["rng"])
-            dz_top = float(ext[2])
+            # rgbd positions are already ray-pushed to the body center
+            dz_top = 0.0 if "hover" in pick else float(ext[2])
             pos_c = np.asarray(pick["pos"], dtype=np.float64) - [0.0, 0.0, dz_top]
             if "hover" in pick:
                 u = UNCERT_DEPTH
@@ -636,6 +642,21 @@ class VisualObstacleGrounder:
                       "frame_R": _obstacle_frame(pick["dda"], pick["ddb"]),
                       "u_axes": np.array([2.5 * u, u, u]),
                       "half_extents": ext}
+            rest = sorted((c for c in unmen if c is not pick),
+                          key=lambda c: dpath(c["pos"]))
+            if rest:
+                c2 = rest[0]
+                ext2 = _bbox_extents(c2["bb"], c2["f"], c2["rng"])
+                dz2 = 0.0 if "hover" in c2 else float(ext2[2])
+                result["second"] = {
+                    "name": c2["name"],
+                    "pos": np.asarray(c2["pos"], dtype=np.float64)
+                    - [0.0, 0.0, dz2],
+                    "uncertainty_m": u,
+                    "frame_R": _obstacle_frame(c2["dda"], c2["ddb"]),
+                    "u_axes": np.array([2.5 * u, u, u]),
+                    "half_extents": ext2,
+                }
         else:
             # z-band fallback: best unmentioned agentview ray ∩ z = Z_BAND_CENTER
             best = None

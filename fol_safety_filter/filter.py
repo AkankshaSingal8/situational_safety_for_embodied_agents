@@ -618,13 +618,39 @@ class FOLSafetyFilter:
                 f"warn_radii={np.round(warn_radii, 3).tolist()} "
                 f"depth_axis={np.round(frame_R[:, 0], 3).tolist()}"
             )
+        keys, props_map, radii_map = [synth], {synth: props}, {synth: radius}
+        sec = res.get("second")
+        if sec is not None and os.environ.get("FOL_TOPK", "1") == "2":
+            # Top-2 grounding: selection ranking is imperfect (L1 forensic);
+            # a second barrier protects the true obstacle when it ranks #2.
+            synth2 = "visual2_" + re.sub(
+                r"[^a-z0-9]+", "_", sec["name"]).strip("_")
+            self._object_states[synth2] = ObjectState(
+                name=synth2,
+                pos=np.asarray(sec["pos"], dtype=np.float64),
+                quat=np.array([0.0, 0.0, 0.0, 1.0]),
+                bbox_half=np.array([0.05, 0.05, 0.05]),
+            )
+            p2, br2 = _props_from_name(sec["name"])
+            keys.append(synth2)
+            props_map[synth2] = p2
+            radii_map[synth2] = max(0.20, br2) + float(sec["uncertainty_m"])
+            base2 = (np.asarray(sec["half_extents"], dtype=np.float64)
+                     + np.asarray(sec["u_axes"], dtype=np.float64))
+            self._obstacle_ellipsoids[synth2] = {
+                "frame_R": np.asarray(sec["frame_R"], dtype=np.float64),
+                "warn_radii": np.maximum(base2 + 0.08, [0.20, 0.14, 0.14]),
+                "hard_radii": np.maximum(base2 + 0.02, 0.08),
+            }
+            logger.info(f"[FOL-v21D2] second obstacle {synth2} @ "
+                        f"{np.round(sec['pos'], 3).tolist()}")
         out = _empty_result()
         out.update({
-            "obstacle_obs_keys": [synth],
+            "obstacle_obs_keys": keys,
             "obstacle_obs_key": synth,
-            "obstacle_properties": {synth: props},
-            "all_properties": {synth: props},
-            "obstacle_radii": {synth: radius},
+            "obstacle_properties": props_map,
+            "all_properties": props_map,
+            "obstacle_radii": radii_map,
             "physical_properties": props,
             "confidence": 0.8,
             "method": res["method"],
