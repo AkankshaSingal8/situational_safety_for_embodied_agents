@@ -144,6 +144,11 @@ class LibSafetyEvalConfig:
     # --- LIBERO-Safety environment parameters ---
     task_suite_name: str = ""  # e.g. "human_safety", "affordance", ...
     task_index: int = 0
+    # If True, loop over ALL tasks in task_suite_name (range(task_suite.n_tasks))
+    # within this single process, reusing the already-loaded model across tasks.
+    # task_index is ignored when this is set. Default False preserves the
+    # exact single-task smoke-test invocation/behavior unchanged.
+    all_tasks: bool = False
     num_trials_per_task: int = 1
     num_steps_wait: int = 10
     max_steps: int = 300
@@ -253,6 +258,18 @@ def get_libsafety_env(task_suite, task, resolution=256):
     return env, task_description
 
 
+def checkpoint_tag(pretrained_checkpoint: str) -> str:
+    """Short filesystem-safe tag derived from a checkpoint id, e.g.
+    'openvla/openvla-7b-finetuned-libero-spatial' -> 'openvla-7b-finetuned-libero-spatial'.
+    Used to namespace results filenames so that runs against different
+    checkpoints for the same task_suite_name never collide/overwrite each
+    other (see incident: base-OpenVLA obstacle_avoidance(_human) results
+    were silently clobbered by a later-finishing OFT run against the same
+    suite, since both wrote to the same '{suite}_all_tasks.json').
+    """
+    return str(pretrained_checkpoint).rstrip("/").split("/")[-1]
+
+
 def save_rollout_video(replay_images, video_dir: pathlib.Path, task_suite_name, task_index, episode_idx, success, task_description):
     video_dir.mkdir(parents=True, exist_ok=True)
     processed_task_description = (
@@ -271,25 +288,16 @@ def save_rollout_video(replay_images, video_dir: pathlib.Path, task_suite_name, 
     return str(mp4_path)
 
 
-@draccus.wrap()
-def eval_libsafety(cfg: LibSafetyEvalConfig) -> None:
-    assert cfg.task_suite_name, "task_suite_name must be set to a real LIBERO-Safety suite name"
-    set_seed_everywhere(cfg.seed)
+def run_one_task(cfg: LibSafetyEvalConfig, model, processor, resize_size, task_suite, task_index: int) -> list:
+    """Run num_trials_per_task episodes for a single task_index within task_suite.
 
-    model = get_model(cfg)
-    resize_size = get_image_resize_size(cfg)
-    cfg.unnorm_key = resolve_unnorm_key(cfg, model)
-    logger.info(f"Using unnorm_key='{cfg.unnorm_key}'")
-
-    processor = None
-    if cfg.model_family == "openvla":
-        from experiments.robot.openvla_utils import get_processor
-
-        processor = get_processor(cfg)
-
-    benchmark_dict = benchmark.get_benchmark_dict()
-    task_suite = benchmark_dict[cfg.task_suite_name]()
-    task = task_suite.get_task(cfg.task_index)
+    Reuses the already-loaded model/processor (passed in) so the caller can
+    loop this over every task in a suite without reloading the model each
+    time. Returns the list of per-episode result dicts (also written to
+    <results_out_path>/<task_suite_name>_task<task_index>.json, matching the
+    original single-task on-disk layout).
+    """
+    task = task_suite.get_task(task_index)
     # NOTE: LIBERO-Safety's Benchmark.get_task_init_states() takes (level, level_id),
     # not a single global task index — unlike upstream LIBERO/SafeLIBERO. Each Task
     # carries its own .level/.level_id, which we must look up explicitly.
@@ -350,13 +358,13 @@ def eval_libsafety(cfg: LibSafetyEvalConfig) -> None:
             logger.exception(f"Episode {episode_idx} raised an exception: {e}")
 
         mp4_path = save_rollout_video(
-            replay_images, video_dir, cfg.task_suite_name, cfg.task_index, episode_idx, success, task_description
+            replay_images, video_dir, cfg.task_suite_name, task_index, episode_idx, success, task_description
         )
         episode_results.append(
             {
                 "task": task_description,
                 "task_suite": cfg.task_suite_name,
-                "task_index": cfg.task_index,
+                "task_index": task_index,
                 "episode": episode_idx,
                 "success": success,
                 "num_steps": t,
@@ -366,10 +374,90 @@ def eval_libsafety(cfg: LibSafetyEvalConfig) -> None:
         )
         logger.info(f"Episode {episode_idx}: success={success}, steps={t}")
 
-    out_path = results_dir / f"{cfg.task_suite_name}_task{cfg.task_index}.json"
+    # Env cleanup is important in the multi-task loop (one OffScreenRenderEnv
+    # per task_index, in a single long-lived process) to avoid leaking
+    # mujoco/renderer resources across ~15 tasks.
+    try:
+        env.close()
+    except Exception:
+        logger.warning("env.close() failed/unavailable; continuing anyway", exc_info=True)
+
+    out_path = results_dir / f"{cfg.task_suite_name}_{checkpoint_tag(cfg.pretrained_checkpoint)}_task{task_index}.json"
     with open(out_path, "w") as f:
         json.dump(episode_results, f, indent=2)
     logger.info(f"Wrote results to {out_path}")
+
+    return episode_results
+
+
+@draccus.wrap()
+def eval_libsafety(cfg: LibSafetyEvalConfig) -> None:
+    assert cfg.task_suite_name, "task_suite_name must be set to a real LIBERO-Safety suite name"
+    set_seed_everywhere(cfg.seed)
+
+    model = get_model(cfg)
+    resize_size = get_image_resize_size(cfg)
+    cfg.unnorm_key = resolve_unnorm_key(cfg, model)
+    logger.info(f"Using unnorm_key='{cfg.unnorm_key}'")
+
+    processor = None
+    if cfg.model_family == "openvla":
+        from experiments.robot.openvla_utils import get_processor
+
+        processor = get_processor(cfg)
+
+    benchmark_dict = benchmark.get_benchmark_dict()
+    task_suite = benchmark_dict[cfg.task_suite_name]()
+
+    if not cfg.all_tasks:
+        # Original single-task behavior (smoke-test path), unchanged.
+        run_one_task(cfg, model, processor, resize_size, task_suite, cfg.task_index)
+        return
+
+    # Multi-task loop: reuse the already-loaded model across every task in
+    # the suite (model load happens once per process, not once per task).
+    n_tasks = task_suite.n_tasks
+    logger.info(f"--all_tasks=True: looping over all {n_tasks} tasks in suite '{cfg.task_suite_name}'")
+    all_results = []
+    task_errors = {}  # task_index -> exception repr, for tasks that raised
+    for task_index in tqdm.tqdm(range(n_tasks), desc=f"{cfg.task_suite_name} tasks"):
+        logger.info(f"=== Starting task {task_index}/{n_tasks - 1} of suite '{cfg.task_suite_name}' ===")
+        try:
+            task_results = run_one_task(cfg, model, processor, resize_size, task_suite, task_index)
+            all_results.extend(task_results)
+        except Exception as e:
+            logger.exception(f"Task {task_index} raised an exception, skipping to next task: {e}")
+            task_errors[task_index] = repr(e)
+
+    results_dir = pathlib.Path(cfg.results_out_path)
+    results_dir.mkdir(parents=True, exist_ok=True)
+    agg_out_path = results_dir / f"{cfg.task_suite_name}_{checkpoint_tag(cfg.pretrained_checkpoint)}_all_tasks.json"
+    with open(agg_out_path, "w") as f:
+        json.dump(all_results, f, indent=2)
+    n_success = sum(1 for r in all_results if r["success"])
+    logger.info(
+        f"Wrote aggregate results to {agg_out_path} "
+        f"({len(all_results)} episodes, {n_success} successes, "
+        f"success_rate={n_success / max(1, len(all_results)):.3f})"
+    )
+
+    # Fail loudly instead of silently reporting a 0-episode "success" when
+    # every task in the suite errored out (e.g. upstream data gaps like
+    # missing .pruned_init files for an entire suite) — this previously
+    # produced a misleading exit-code-0 job with an empty results file.
+    if len(task_errors) == n_tasks:
+        logger.error(
+            f"ALL {n_tasks} tasks in suite '{cfg.task_suite_name}' raised exceptions "
+            f"(0 episodes ran). This usually indicates missing/corrupt upstream data "
+            f"(e.g. absent .pruned_init files) rather than a transient per-task issue. "
+            f"Per-task errors: {task_errors}"
+        )
+        sys.exit(1)
+    elif task_errors:
+        logger.warning(
+            f"{len(task_errors)}/{n_tasks} tasks in suite '{cfg.task_suite_name}' raised "
+            f"exceptions and were skipped: {task_errors}"
+        )
 
 
 if __name__ == "__main__":
