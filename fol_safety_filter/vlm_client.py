@@ -44,6 +44,14 @@ class VLMClient:
         logger.info(f"[VLMClient] Backend: {self._backend}")
 
     def _detect_backend(self) -> str:
+        override = os.environ.get("FOL_VLM_BACKEND", "").strip().lower()
+        if override in ("anthropic", "openai"):
+            return override
+        if override:
+            logger.warning(
+                f"[VLMClient] Unrecognized FOL_VLM_BACKEND={override!r}; "
+                "falling back to auto-detection"
+            )
         qwen_url = os.environ.get("QWEN_SERVER_URL", "").strip()
         if qwen_url:
             return "qwen"
