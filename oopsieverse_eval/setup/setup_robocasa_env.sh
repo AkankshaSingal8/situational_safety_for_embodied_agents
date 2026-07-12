@@ -9,3 +9,7 @@ OOPSIEVERSE_DIR="$SCRIPT_DIR/../external/oopsieverse"
 
 cd "$OOPSIEVERSE_DIR"
 python install.py --new_env --robocasa
+
+# NOTE: to also use this env as an OpenVLA/pi0.5 policy *client* (talking to
+# the servers over localhost), run setup_robocasa_client_deps.sh afterwards
+# (it needs setup_pi05_server_env.sh's openpi clone for openpi-client).

@@ -26,3 +26,7 @@ pi05_benchmark_smoke/
 
 # OopsieVerse eval outputs (rollout videos + per-episode JSON, not source)
 oopsieverse_eval/results/
+
+# Fresh openpi checkout (runtime dependency for the pi0.5 server, cloned by
+# setup/setup_pi05_server_env.sh -- not vendored/tracked as project source)
+oopsieverse_eval/external/openpi/
