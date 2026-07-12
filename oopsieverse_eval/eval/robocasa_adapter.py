@@ -119,6 +119,15 @@ class RoboCasaAdapter:
         if wrist_image is not None:
             obs["wrist_image"] = wrist_image
 
+        # Only populated if the caller explicitly requested
+        # "robot0_agentview_left" in camera_names (e.g. Cosmos-Policy-RoboCasa,
+        # which hard-requires two third-person cameras) -- absent (None) for
+        # every other policy client, which only ever request the default
+        # [agentview_right, eye_in_hand] pair.
+        secondary_image = self._safe_get(raw_obs, "robot0_agentview_left_image")
+        if secondary_image is not None:
+            obs["secondary_image"] = secondary_image
+
         self._last_health = obs["health"]
         return obs
 

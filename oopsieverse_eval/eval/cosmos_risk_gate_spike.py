@@ -19,75 +19,20 @@ existing container/venv read-only -- built by
 
 from __future__ import annotations
 
+import os
 import sys
 import traceback
-from dataclasses import dataclass
 
 import numpy as np
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
+from cosmos_config import CosmosEvalConfig, DEFAULT_COSMOS_CONFIG_KWARGS  # noqa: E402
 
 COSMOS_REPO = "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/cosmos-policy"
 if COSMOS_REPO not in sys.path:
     sys.path.insert(0, COSMOS_REPO)
-
-
-@dataclass
-class _SpikeConfig:
-    """Minimal duck-typed stand-in for run_robocasa_eval.py's PolicyEvalConfig.
-
-    NOT importing PolicyEvalConfig itself: that module does
-    `from robocasa.utils.dataset_registry import ...` at import time (the
-    real RoboCasa pip package, from moojink's fork), which isn't installed
-    in this container's .venv_rhel8 (built with `--group libero`, not
-    `--group robocasa` -- confirmed by this spike's first failed attempt).
-    get_model()/get_action() only touch a handful of plain attributes, so a
-    local dataclass with just those fields avoids that import entirely
-    without needing to install/rebuild anything.
-    """
-
-    suite: str = "robocasa"
-    config: str = ""
-    ckpt_path: str = ""
-    config_file: str = "cosmos_policy/config/config.py"
-    dataset_stats_path: str = ""
-    t5_text_embeddings_path: str = ""
-    num_denoising_steps_action: int = 5
-    num_denoising_steps_future_state: int = 1
-    num_denoising_steps_value: int = 1
-    chunk_size: int = 32
-    env_img_res: int = 224
-
-    # Every other field get_action()/prepare_images_for_model() reads,
-    # copied from PolicyEvalConfig's own defaults (ROBOCASA.md's example CLI
-    # invocation) -- not importing that class itself, see docstring above.
-    use_third_person_image: bool = True
-    num_third_person_images: int = 2
-    use_wrist_image: bool = True
-    num_wrist_images: int = 1
-    use_proprio: bool = True
-    flip_images: bool = True
-    use_variance_scale: bool = False
-    use_jpeg_compression: bool = True
-    ar_future_prediction: bool = False
-    ar_value_prediction: bool = False
-    ar_qvalue_prediction: bool = False
-    unnormalize_actions: bool = True
-    normalize_proprio: bool = True
-    trained_with_image_aug: bool = True
-    seed: int = 195
-    randomize_seed: bool = False
-    planning_model_config_name: str = ""
-    planning_model_ckpt_path: str = ""
-    use_ensemble_future_state_predictions: bool = False
-    num_future_state_predictions_in_ensemble: int = 3
-    future_state_ensemble_aggregation_scheme: str = "average"
-    use_ensemble_value_predictions: bool = False
-    num_value_predictions_in_ensemble: int = 5
-    value_ensemble_aggregation_scheme: str = "average"
-    search_depth: int = 1
-    mask_current_state_action_for_value_prediction: bool = False
-    mask_future_state_for_qvalue_prediction: bool = False
-    num_queries_best_of_n: int = 1
-    parallel_timeout: int = 15
 
 
 def main():
@@ -100,19 +45,7 @@ def main():
 
     print("=== Cosmos-Policy risk-gate spike (no sim construction) ===")
 
-    cfg = _SpikeConfig(
-        suite="robocasa",
-        config="cosmos_predict2_2b_480p_robocasa_50_demos_per_task__inference",
-        ckpt_path="nvidia/Cosmos-Policy-RoboCasa-Predict2-2B",
-        config_file="cosmos_policy/config/config.py",
-        dataset_stats_path="nvidia/Cosmos-Policy-RoboCasa-Predict2-2B/robocasa_dataset_statistics.json",
-        t5_text_embeddings_path="",  # deliberately empty: force a live T5 compute, not a cache hit
-        num_denoising_steps_action=5,
-        num_denoising_steps_future_state=1,
-        num_denoising_steps_value=1,
-        chunk_size=32,
-        env_img_res=224,
-    )
+    cfg = CosmosEvalConfig(**DEFAULT_COSMOS_CONFIG_KWARGS)
 
     print(f"Loading model from {cfg.ckpt_path} (config={cfg.config})...")
     model, model_config = get_model(cfg)
