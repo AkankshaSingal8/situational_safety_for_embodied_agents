@@ -69,6 +69,10 @@ from safelibero_utils import (
     get_safelibero_image,
     get_safelibero_wrist_image,
 )
+from contextual_predictive_filter import (
+    ContextualPredictiveSafetyFilter,
+    PredictiveFilterConfig,
+)
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -149,6 +153,12 @@ class EvalConfig:
     wandb_entity: str = "akankshasingal08"
     wandb_project: str = "SafeLibero"
     seed: int = 7
+
+    # ── Contextual predictive safety filter ───────────────────────────────────
+    use_contextual_filter: bool = False
+    filter_safety_margin: float = 0.035
+    filter_influence_distance: float = 0.055
+    filter_detour_gain: float = 0.75
 
     # fmt: on
 
@@ -293,7 +303,7 @@ def run_episode(
     initial_state=None,
     log_file=None,
 ):
-    """Run one episode.  Returns (success, collide_flag, replay_images, steps)."""
+    """Run one episode and return outcome plus filter diagnostics."""
     env.reset()
     obs = env.set_init_state(initial_state) if initial_state is not None else env.get_observation()
 
@@ -329,6 +339,15 @@ def run_episode(
     initial_obstacle_pos = obs.get(f"{obstacle_name}_pos", np.zeros(3)) if obstacle_name else np.zeros(3)
     collide_flag = False
 
+    safety_filter = None
+    if cfg.use_contextual_filter:
+        safety_filter = ContextualPredictiveSafetyFilter(PredictiveFilterConfig(
+            safety_margin=cfg.filter_safety_margin,
+            influence_distance=cfg.filter_influence_distance,
+            detour_gain=cfg.filter_detour_gain,
+        ))
+        safety_filter.reset(obs, task_description, obstacle_name)
+
     success = False
     try:
         while t < max_steps:
@@ -361,6 +380,15 @@ def run_episode(
                     noisy_action_projector=noisy_action_projector,
                     use_film=cfg.use_film,
                 )
+                if safety_filter is not None:
+                    actions, decision = safety_filter.filter_chunk(actions, obs)
+                    if decision.intervened:
+                        logger.debug(
+                            "Predictive filter: nominal_clearance=%.4f filtered=%.4f correction=%.4f",
+                            decision.min_clearance_nominal,
+                            decision.min_clearance_filtered,
+                            decision.correction_norm,
+                        )
                 action_queue.extend(actions)
 
             action = process_action(action_queue.popleft(), cfg.model_family)
@@ -381,7 +409,8 @@ def run_episode(
     except Exception as exc:
         log_message(f"Episode error: {exc}", log_file)
 
-    return success, collide_flag, replay_images, t
+    filter_metrics = safety_filter.metrics.summary() if safety_filter is not None else {}
+    return success, collide_flag, replay_images, t, filter_metrics
 
 
 def run_task(
@@ -416,6 +445,8 @@ def run_task(
 
     task_episodes = task_successes = task_collides = 0
     timesteps_list: List[int] = []
+    filter_totals = {"chunks": 0, "interventions": 0, "infeasible": 0,
+                     "weighted_correction": 0.0, "weighted_latency_ms": 0.0}
 
     for episode_idx in range(cfg.num_trials_per_task):
         # Resolve initial state
@@ -431,7 +462,7 @@ def run_task(
 
         log_message(f"  Episode {episode_idx + 1}/{cfg.num_trials_per_task}", log_file)
 
-        success, collide, replay_images, steps = run_episode(
+        success, collide, replay_images, steps, episode_filter = run_episode(
             cfg, env, task_description, model, resize_size,
             processor, action_head, proprio_projector, noisy_action_projector,
             initial_state, log_file,
@@ -443,6 +474,13 @@ def run_task(
         if collide:
             task_collides += 1
         timesteps_list.append(steps)
+        if episode_filter:
+            chunks = int(episode_filter["chunks"])
+            filter_totals["chunks"] += chunks
+            filter_totals["interventions"] += int(episode_filter["interventions"])
+            filter_totals["infeasible"] += int(episode_filter["infeasible"])
+            filter_totals["weighted_correction"] += episode_filter["mean_correction_norm"] * chunks
+            filter_totals["weighted_latency_ms"] += episode_filter["mean_latency_ms"] * chunks
 
         safe_success = success and not collide
         log_message(
@@ -472,7 +510,16 @@ def run_task(
         log_file,
     )
 
-    return task_episodes, task_successes, task_collides, timesteps_list, task_description
+    chunks = filter_totals["chunks"]
+    filter_summary = {
+        "chunks": chunks,
+        "interventions": filter_totals["interventions"],
+        "intervention_rate": filter_totals["interventions"] / chunks if chunks else 0.0,
+        "infeasible": filter_totals["infeasible"],
+        "mean_correction_norm": filter_totals["weighted_correction"] / chunks if chunks else 0.0,
+        "mean_latency_ms": filter_totals["weighted_latency_ms"] / chunks if chunks else 0.0,
+    }
+    return task_episodes, task_successes, task_collides, timesteps_list, task_description, filter_summary
 
 
 # ── Main entry point ───────────────────────────────────────────────────────────
@@ -500,9 +547,11 @@ def eval_safelibero(cfg: EvalConfig) -> dict:
     results: dict = {}
     all_episodes = all_successes = all_collides = 0
     all_timesteps: List[int] = []
+    all_filter_chunks = all_filter_interventions = all_filter_infeasible = 0
+    all_filter_correction = all_filter_latency = 0.0
 
     for task_id in range(num_tasks):
-        task_episodes, task_successes, task_collides, timesteps_list, task_desc = run_task(
+        task_episodes, task_successes, task_collides, timesteps_list, task_desc, filter_summary = run_task(
             cfg, task_suite, task_id, model, resize_size,
             processor, action_head, proprio_projector, noisy_action_projector,
             log_file, run_id,
@@ -512,6 +561,12 @@ def eval_safelibero(cfg: EvalConfig) -> dict:
         all_successes += task_successes
         all_collides += task_collides
         all_timesteps.extend(timesteps_list)
+        chunks = int(filter_summary["chunks"])
+        all_filter_chunks += chunks
+        all_filter_interventions += int(filter_summary["interventions"])
+        all_filter_infeasible += int(filter_summary["infeasible"])
+        all_filter_correction += filter_summary["mean_correction_norm"] * chunks
+        all_filter_latency += filter_summary["mean_latency_ms"] * chunks
 
         tsr = float(task_successes) / task_episodes if task_episodes > 0 else 0.0
         car = float(task_episodes - task_collides) / task_episodes if task_episodes > 0 else 0.0
@@ -525,6 +580,7 @@ def eval_safelibero(cfg: EvalConfig) -> dict:
             "CAR": round(car, 4),
             "ETS_mean": round(float(np.mean(timesteps_list)) if timesteps_list else 0.0, 2),
             "ETS_median": round(float(np.median(timesteps_list)) if timesteps_list else 0.0, 2),
+            "filter": filter_summary,
         }
 
         if cfg.use_wandb:
@@ -551,6 +607,16 @@ def eval_safelibero(cfg: EvalConfig) -> dict:
         "CAR": round(overall_car, 4),
         "ETS_mean": round(overall_ets_mean, 2),
         "ETS_median": round(overall_ets_median, 2),
+        "contextual_filter_enabled": cfg.use_contextual_filter,
+        "context_source": "libero_observation_object_pose_pilot",
+        "filter": {
+            "chunks": all_filter_chunks,
+            "interventions": all_filter_interventions,
+            "intervention_rate": all_filter_interventions / all_filter_chunks if all_filter_chunks else 0.0,
+            "infeasible": all_filter_infeasible,
+            "mean_correction_norm": all_filter_correction / all_filter_chunks if all_filter_chunks else 0.0,
+            "mean_latency_ms": all_filter_latency / all_filter_chunks if all_filter_chunks else 0.0,
+        },
     }
 
     # Save JSON results

@@ -44,6 +44,7 @@ from libero.libero import get_libero_path
 from libero.libero.envs import OffScreenRenderEnv
 from openpi_client import image_tools
 from openpi_client import websocket_client_policy as _websocket_client_policy
+from contextual_predictive_filter import ContextualPredictiveSafetyFilter, PredictiveFilterConfig
 
 LIBERO_ENV_RESOLUTION = 1024
 RESIZE_SIZE = 224
@@ -76,6 +77,10 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--task_indices", type=int, nargs="+", default=None,
                         help="Subset of task IDs to evaluate. Defaults to all tasks.")
+    parser.add_argument("--use_contextual_filter", action="store_true")
+    parser.add_argument("--filter_safety_margin", type=float, default=0.035)
+    parser.add_argument("--filter_influence_distance", type=float, default=0.055)
+    parser.add_argument("--filter_detour_gain", type=float, default=0.75)
     return parser.parse_args()
 
 
@@ -137,6 +142,8 @@ def run_eval(args):
     total_successes = 0
     total_collisions = 0
     all_ets = []
+    filter_chunks = filter_interventions = filter_infeasible = 0
+    filter_correction = filter_latency = 0.0
 
     for task_id in task_ids:
         task = task_suite.get_task(task_id)
@@ -184,6 +191,15 @@ def run_eval(args):
             initial_obstacle_pos = obs[f"{obstacle_name}_pos"] if obstacle_name else None
             collide_flag = False
 
+            safety_filter = None
+            if args.use_contextual_filter:
+                safety_filter = ContextualPredictiveSafetyFilter(PredictiveFilterConfig(
+                    safety_margin=args.filter_safety_margin,
+                    influence_distance=args.filter_influence_distance,
+                    detour_gain=args.filter_detour_gain,
+                ))
+                safety_filter.reset(obs, task_description, obstacle_name)
+
             replay_images = []
             t = 0
             done = False
@@ -215,8 +231,17 @@ def run_eval(args):
                             )),
                             "prompt": str(task_description),
                         }
-                        action_chunk = client.infer(element)["actions"]
-                        action_plan.extend(action_chunk[:REPLAN_STEPS])
+                        action_chunk = client.infer(element)["actions"][:REPLAN_STEPS]
+                        if safety_filter is not None:
+                            action_chunk, decision = safety_filter.filter_chunk(action_chunk, obs)
+                            if decision.intervened:
+                                logging.debug(
+                                    "Predictive filter: nominal_clearance=%.4f filtered=%.4f correction=%.4f",
+                                    decision.min_clearance_nominal,
+                                    decision.min_clearance_filtered,
+                                    decision.correction_norm,
+                                )
+                        action_plan.extend(action_chunk)
 
                     action = action_plan.popleft()
                     obs, reward, done, info = env.step(action.tolist())
@@ -264,6 +289,14 @@ def run_eval(args):
             task_successes += int(done)
             task_collisions += int(collide_flag)
             task_ets.append(t)
+            if safety_filter is not None:
+                summary = safety_filter.metrics.summary()
+                chunks = int(summary["chunks"])
+                filter_chunks += chunks
+                filter_interventions += int(summary["interventions"])
+                filter_infeasible += int(summary["infeasible"])
+                filter_correction += summary["mean_correction_norm"] * chunks
+                filter_latency += summary["mean_latency_ms"] * chunks
 
             logging.info(
                 f"  ep {ep_idx+1}/{args.num_trials_per_task}: "
@@ -322,6 +355,16 @@ def run_eval(args):
         "overall_CAR": overall_car,
         "overall_ETS_mean": overall_ets_mean,
         "overall_ETS_median": overall_ets_median,
+        "contextual_filter_enabled": args.use_contextual_filter,
+        "context_source": "libero_observation_object_pose_pilot",
+        "filter": {
+            "chunks": filter_chunks,
+            "interventions": filter_interventions,
+            "intervention_rate": filter_interventions / filter_chunks if filter_chunks else 0.0,
+            "infeasible": filter_infeasible,
+            "mean_correction_norm": filter_correction / filter_chunks if filter_chunks else 0.0,
+            "mean_latency_ms": filter_latency / filter_chunks if filter_chunks else 0.0,
+        },
         "per_task": per_task_results,
     }
 
