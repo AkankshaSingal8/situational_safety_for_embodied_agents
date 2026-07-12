@@ -196,6 +196,7 @@ class FOLSafetyFilter:
         self._ee_quat_ref: Optional[np.ndarray] = None
         self._initialized = False
         self._t = 0
+        self.replan_requested = False
 
         self.metrics = FilterMetrics()
 
@@ -782,8 +783,17 @@ class FOLSafetyFilter:
         # spheres double-block the arm (v12 root cause).
         u_safe, _ = self._apply_cbf(u_cmd, state, cbf_set, arm_checkpoints)
 
-        if np.linalg.norm(u_safe[:3] - u_cmd[:3]) > 1e-6:
+        correction_mag = float(np.linalg.norm(u_safe[:3] - u_cmd[:3]))
+        if correction_mag > 1e-6:
             self.metrics.interventions += 1
+
+        # v23 Task C: opt-in chunk replan-on-correction.  A large correction
+        # means the remaining (uncorrected) actions still queued for this
+        # chunk are stale/off-distribution — request that the caller replan.
+        if os.environ.get("FOL_CHUNK_REPLAN", "0") == "1":
+            threshold = float(os.environ.get("FOL_CHUNK_REPLAN_THRESHOLD", "0.01"))
+            if correction_mag > threshold:
+                self.replan_requested = True
 
         return u_safe
 
@@ -934,6 +944,14 @@ class FOLSafetyFilter:
                     label=f"ARM-{cp['name']}-{obs_name}",
                 )
 
+        # v23 Task B: opt-in task-progress bias.  After all obstacle
+        # projections, nudge the remaining safe motion toward the current
+        # target so a cancelled/deflected step doesn't stall task progress.
+        # Only accepted if it doesn't push the EEF past any obstacle's hard
+        # boundary (rejects back to the un-biased, already-safe `u`).
+        if os.environ.get("FOL_TASK_BIAS", "0") == "1":
+            u = self._apply_task_bias(u, ee, state)
+
         # Velocity limit
         vlim = cbf_set.velocity_limit or self.velocity_limit_default
         if self._vision_fallback_active:
@@ -951,6 +969,61 @@ class FOLSafetyFilter:
                 u[3:6] *= cbf_set.angular_limit / omega
 
         return u, z_ceiling_active
+
+    def _apply_task_bias(
+        self, u: np.ndarray, ee: np.ndarray, state: RobotState,
+    ) -> np.ndarray:
+        """v23 Task B: bias the already-safe `u[:3]` toward the current
+        target direction. Rejects the bias entirely (returns `u` unchanged)
+        if it would push the EEF past any obstacle's hard boundary — the
+        safety projection in `_apply_cbf` always runs first and this never
+        substitutes for it, only nudges within what's already safe."""
+        target_pos = self._get_target_pos(state)
+        if target_pos is None:
+            return u
+        diff = target_pos - ee
+        dist = float(np.linalg.norm(diff))
+        if dist < 1e-6:
+            return u
+        target_dir = diff / dist
+        speed = float(np.linalg.norm(u[:3]))
+        if speed < 1e-6:
+            return u
+
+        strength = float(os.environ.get("FOL_TASK_BIAS_STRENGTH", "0.3"))
+        u_biased = u.copy()
+        u_biased[:3] = u[:3] + strength * speed * target_dir
+
+        for obs_name in self._obstacle_names:
+            if obs_name not in state.objects:
+                continue
+            obs_pos = state.objects[obs_name].pos
+            ellipsoid = None
+            if os.environ.get("FOL_ELLIPSOID", "1") == "1":
+                ellipsoid = self._obstacle_ellipsoids.get(obs_name)
+            if not self._is_safe_step(ee, u_biased[:3], obs_pos, ellipsoid):
+                return u
+
+        return u_biased
+
+    def _is_safe_step(
+        self,
+        point: np.ndarray,
+        delta: np.ndarray,
+        obs_pos: np.ndarray,
+        ellipsoid: Optional[Dict],
+    ) -> bool:
+        """Whether stepping by `delta` keeps `point` outside the obstacle's
+        hard boundary (ellipsoid hard_radii if available, else the default
+        0.10m hard_r used elsewhere in `_apply_cbf`)."""
+        point_next = point + delta
+        if ellipsoid is not None:
+            frame_R = ellipsoid["frame_R"]
+            hard_radii = ellipsoid["hard_radii"]
+            s_h = frame_R.T @ (point_next - obs_pos) / hard_radii
+            return float(np.linalg.norm(s_h)) >= 1.0
+        dist_next = float(np.linalg.norm(point_next - obs_pos))
+        return dist_next >= 0.10
 
     def _apply_point_cbf(
         self,

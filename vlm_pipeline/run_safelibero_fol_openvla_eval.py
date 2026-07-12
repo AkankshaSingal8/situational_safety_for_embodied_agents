@@ -412,6 +412,13 @@ def run_episode(
                 except Exception as exc:
                     logger.debug(f"FOL filter certify failed: {exc}")
 
+            # v23 authorized exception (user-approved one-time additive hook):
+            # only takes effect when FOL_CHUNK_REPLAN=1; no-op otherwise, and
+            # inert when fol_filter is None (baseline runs unaffected).
+            if fol_filter is not None and getattr(fol_filter, "replan_requested", False):
+                action_queue.clear()
+                fol_filter.replan_requested = False
+
             obs, _, done, _ = env.step(action.tolist())
 
             # Collision detection: obstacle displacement > 1 mm
