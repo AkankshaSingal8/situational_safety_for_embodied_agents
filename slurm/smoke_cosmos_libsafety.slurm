@@ -43,7 +43,13 @@ fi
 # entrypoint bash process too (not just python), which breaks bash the same
 # way for the same reason (see incident in job 42146973). Instead export it
 # only inside the bash -c string, after bash itself is already running, so
-# only the python child process picks it up.
+# only the python child process picks it up. Also APPEND (not overwrite):
+# overwriting LD_LIBRARY_PATH=/host-lib64 made the dynamic linker prefer
+# host RHEL8 libstdc++/libgcc over the container's own for every library
+# lookup (not just MagickWand), which segfaulted python/torch on load
+# (incident in job 42147010, "Segmentation fault", no output at all).
+# Appending keeps container libs first-priority; host-lib64 only supplies
+# fallback libs (e.g. libMagickWand) missing from the container.
 apptainer exec --nv \
     --env MUJOCO_GL=egl \
     --env HF_HOME=/ocean/projects/cis250185p/asingal/.hf_cache \
@@ -55,7 +61,7 @@ apptainer exec --nv \
     --bind /jet/home/asingal:/jet/home/asingal \
     --bind /usr/lib64:/host-lib64:ro \
     $SIF_PATH \
-    bash -c "cd $WORKTREE && export LD_LIBRARY_PATH=/host-lib64 && $COSMOS_DIR/.venv_rhel8/bin/python \
+    bash -c "cd $WORKTREE && export LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:/host-lib64\" && $COSMOS_DIR/.venv_rhel8/bin/python \
         $WORKTREE/run_libsafety_cosmos_policy_eval.py \
             --task_suite_name human_safety \
             --task_index 0 \
