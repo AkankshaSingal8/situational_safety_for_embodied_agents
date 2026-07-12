@@ -10,7 +10,7 @@
 
 # Tier-GT in-denoising DCBF flow guidance on pi0.5 — Spatial L1 n=50/task (GO metric)
 # Pre-registered continuation criteria: CAR >= 40% AND TSR >= 62% (baseline 67.0/14.0).
-# Config: smoke-r2-validated (eef_radius=0.09, inflation_slope=0.004, gamma=0.9, d_safe=0.01).
+# Config r3: eef_radius=0.09, inflation_slope=0.004, gamma=0.9, d_safe=0.01 + vertical companion points (hand +0.08, payload -0.06).
 
 set -euo pipefail
 module load anaconda3
@@ -44,10 +44,12 @@ conda activate openvla_libero_merged
 export MUJOCO_GL=egl
 export PYTHONPATH="$ROOT/SafeLIBERO/safelibero:$WT/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
 
+for LEVEL in I II; do
 python "$WT/vlm_pipeline/run_guided_safelibero_pi05_eval.py" \
-  --task_suite_name safelibero_spatial --safety_level I \
+  --task_suite_name safelibero_spatial --safety_level "$LEVEL" \
   --num_trials_per_task 50 \
   --host 127.0.0.1 --port "$PORT" \
   --results_output_dir "$OUT/results"
+done
 
 echo "N50_COMPLETE"
