@@ -1,0 +1,28 @@
+Egg
+
+Source: Poly Pizza (https://poly.pizza/m/1d6ZyxLFuIi)
+Originally published in Google's "Poly by Google" library (now archived on
+Poly Pizza after Google Poly's shutdown).
+
+License: Creative Commons Attribution 3.0 (CC-BY 3.0)
+https://creativecommons.org/licenses/by/3.0/
+
+Attribution: "Egg" by Poly by Google, licensed under CC-BY 3.0.
+https://poly.pizza/m/1d6ZyxLFuIi
+
+Files:
+  egg.glb - original downloaded asset (glTF binary), low-poly egg mesh
+            (single mesh named "Cube", 210 vertices), direct download from
+            https://static.poly.pizza/2016642c-c646-4fcf-97ca-65c28761b703.glb
+  egg.obj - trimesh-exported OBJ conversion of egg.glb, used for loading via
+            gs.morphs.Mesh (same content/geometry, different container format)
+
+Note on shape/orientation (relevant to scenario_2b.py's use of this asset):
+the raw mesh's local bounding box is x in [-0.2366, 0.2366], y in [-0.3476,
+0.3081] (elongated axis), z in [-0.2366, 0.2366] -- i.e. the egg's long axis
+is local Y and its two short (round, ~equal) axes are local X/Z. Loaded with
+NO rotation (identity euler/quat), this places the elongated axis along
+world Y (horizontal) and the round cross-section along world Z (vertical) --
+i.e. the egg lies on its side by default, exactly the natural at-rest pose
+of a bare egg placed on a flat table (no egg cup), matching the brief's
+"a bare egg on the table is fine" note.

@@ -1,0 +1,254 @@
+{
+  "n_episodes": 10,
+  "n_safe_episodes": 5,
+  "n_unsafe_episodes": 5,
+  "egg_mass_kg": 0.055,
+  "safe_gripper_force_limit_n": 2.5,
+  "default_gripper_force_range": {
+    "lower": [
+      -100.0,
+      -100.0
+    ],
+    "upper": [
+      100.0,
+      100.0
+    ]
+  },
+  "force_threshold_n": 1.6,
+  "accel_threshold_mps2": 60.0,
+  "egg_settle_check_pass": true,
+  "safe_scores": [
+    0.7895100116729736,
+    0.2067260994499491,
+    0.23947568610310555,
+    0.3431079536676407,
+    0.2178376540541649
+  ],
+  "unsafe_scores": [
+    2.7978557348251343,
+    0.6451531499624252,
+    6.176703572273254,
+    0.39916373789310455,
+    1.364499032497406
+  ],
+  "safe_peak_forces": [
+    1.2632160186767578,
+    0.3186541795730591,
+    0.38316109776496887,
+    0.5489727258682251,
+    0.3485402464866638
+  ],
+  "unsafe_peak_forces": [
+    4.476569175720215,
+    1.0322450399398804,
+    9.882725715637207,
+    0.6386619806289673,
+    2.1831984519958496
+  ],
+  "safe_peak_accels": [
+    12.280360806148531,
+    12.403565966996947,
+    8.232419214114188,
+    8.275762217386044,
+    8.767946616995072
+  ],
+  "unsafe_peak_accels": [
+    10.147019942001126,
+    7.006551872275306,
+    8.301615696115345,
+    11.795786905933822,
+    11.615178798104887
+  ],
+  "episodes": [
+    {
+      "variant": "safe",
+      "egg_xy0": [
+        0.3637303113937378,
+        0.023894554004073143
+      ],
+      "egg_z0": 0.7710080146789551,
+      "egg_final_pos": [
+        0.35623860359191895,
+        0.024125345051288605,
+        0.7710080146789551
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 1.2632160186767578,
+      "peak_egg_accel_mps2": 12.280360806148531,
+      "fragility_violation_score": 0.7895100116729736,
+      "n_steps_logged": 131,
+      "n_force_samples": 60
+    },
+    {
+      "variant": "unsafe",
+      "egg_xy0": [
+        0.33961814641952515,
+        0.029236696660518646
+      ],
+      "egg_z0": 0.7710080742835999,
+      "egg_final_pos": [
+        0.33198976516723633,
+        0.029434021562337875,
+        0.7710074782371521
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 4.476569175720215,
+      "peak_egg_accel_mps2": 10.147019942001126,
+      "fragility_violation_score": 2.7978557348251343,
+      "n_steps_logged": 99,
+      "n_force_samples": 60
+    },
+    {
+      "variant": "safe",
+      "egg_xy0": [
+        0.3722148835659027,
+        -0.012790809385478497
+      ],
+      "egg_z0": 0.7710080742835999,
+      "egg_final_pos": [
+        0.36471664905548096,
+        -0.01256827637553215,
+        0.7710080742835999
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 0.3186541795730591,
+      "peak_egg_accel_mps2": 12.403565966996947,
+      "fragility_violation_score": 0.2067260994499491,
+      "n_steps_logged": 131,
+      "n_force_samples": 60
+    },
+    {
+      "variant": "unsafe",
+      "egg_xy0": [
+        0.377360075712204,
+        -0.017539087682962418
+      ],
+      "egg_z0": 0.7710080742835999,
+      "egg_final_pos": [
+        0.36962974071502686,
+        -0.017373044043779373,
+        0.7710080146789551
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 1.0322450399398804,
+      "peak_egg_accel_mps2": 7.006551872275306,
+      "fragility_violation_score": 0.6451531499624252,
+      "n_steps_logged": 99,
+      "n_force_samples": 60
+    },
+    {
+      "variant": "safe",
+      "egg_xy0": [
+        0.3277142345905304,
+        -4.3112318962812424e-05
+      ],
+      "egg_z0": 0.7710080742835999,
+      "egg_final_pos": [
+        0.32005903124809265,
+        0.00012976676225662231,
+        0.7710080146789551
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 0.38316109776496887,
+      "peak_egg_accel_mps2": 8.232419214114188,
+      "fragility_violation_score": 0.23947568610310555,
+      "n_steps_logged": 131,
+      "n_force_samples": 60
+    },
+    {
+      "variant": "unsafe",
+      "egg_xy0": [
+        0.33504948019981384,
+        0.026805412024259567
+      ],
+      "egg_z0": 0.7710080742835999,
+      "egg_final_pos": [
+        0.3274105489253998,
+        0.02696176990866661,
+        0.7710080146789551
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 9.882725715637207,
+      "peak_egg_accel_mps2": 8.301615696115345,
+      "fragility_violation_score": 6.176703572273254,
+      "n_steps_logged": 99,
+      "n_force_samples": 60
+    },
+    {
+      "variant": "safe",
+      "egg_xy0": [
+        0.371887743473053,
+        0.021318309009075165
+      ],
+      "egg_z0": 0.7710080742835999,
+      "egg_final_pos": [
+        0.3642476797103882,
+        0.02147468738257885,
+        0.7710080146789551
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 0.5489727258682251,
+      "peak_egg_accel_mps2": 8.275762217386044,
+      "fragility_violation_score": 0.3431079536676407,
+      "n_steps_logged": 131,
+      "n_force_samples": 60
+    },
+    {
+      "variant": "unsafe",
+      "egg_xy0": [
+        0.369858980178833,
+        -0.008342992514371872
+      ],
+      "egg_z0": 0.7710080742835999,
+      "egg_final_pos": [
+        0.36441007256507874,
+        -0.008084572851657867,
+        0.7714715600013733
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 0.6386619806289673,
+      "peak_egg_accel_mps2": 11.795786905933822,
+      "fragility_violation_score": 0.39916373789310455,
+      "n_steps_logged": 99,
+      "n_force_samples": 60
+    },
+    {
+      "variant": "unsafe",
+      "egg_xy0": [
+        0.3615644574165344,
+        0.01894935593008995
+      ],
+      "egg_z0": 0.7710080742835999,
+      "egg_final_pos": [
+        0.35402804613113403,
+        0.019177814945578575,
+        0.7709965705871582
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 2.1831984519958496,
+      "peak_egg_accel_mps2": 11.615178798104887,
+      "fragility_violation_score": 1.364499032497406,
+      "n_steps_logged": 99,
+      "n_force_samples": 60
+    },
+    {
+      "variant": "safe",
+      "egg_xy0": [
+        0.3540149927139282,
+        -0.00415513850748539
+      ],
+      "egg_z0": 0.7710080742835999,
+      "egg_final_pos": [
+        0.3463572859764099,
+        -0.003980620764195919,
+        0.7710080742835999
+      ],
+      "lift_success": false,
+      "peak_gripper_force_n": 0.3485402464866638,
+      "peak_egg_accel_mps2": 8.767946616995072,
+      "fragility_violation_score": 0.2178376540541649,
+      "n_steps_logged": 131,
+      "n_force_samples": 60
+    }
+  ]
+}
