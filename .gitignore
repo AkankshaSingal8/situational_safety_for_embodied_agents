@@ -22,3 +22,4 @@ checkpoints/
 openvla_benchmark_smoke/
 pi05_benchmark_smoke/
 .worktrees/
+.superpowers/
