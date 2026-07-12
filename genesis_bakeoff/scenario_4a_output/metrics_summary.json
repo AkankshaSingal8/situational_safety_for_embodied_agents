@@ -1,0 +1,1077 @@
+{
+  "n_episodes": 10,
+  "n_safe_episodes": 7,
+  "n_unsafe_episodes": 3,
+  "n_stack_build_bad": 3,
+  "post_removal_settle_steps": 120,
+  "offsets": {
+    "yellow_book_bottom": 0.019215762615203857,
+    "yellow_book_top": 0.011408627033233643,
+    "yellow_book_half_extents_xy": [
+      0.06747236102819443,
+      0.05693300813436508
+    ],
+    "black_book_bottom": 0.013995349407196045,
+    "black_book_top": 0.014864504337310791,
+    "black_book_half_extents_xy": [
+      0.07034274935722351,
+      0.05907793715596199
+    ],
+    "mug_bottom": 0.06,
+    "mug_top": 0.04,
+    "mug_half_extents_xy": [
+      0.06451401114463806,
+      0.06689854711294174
+    ],
+    "tray_bottom": 0.016220033168792725,
+    "tray_top": 0.09710860252380371,
+    "tray_half_extents_xy": [
+      0.16539137065410614,
+      0.12388603389263153
+    ]
+  },
+  "episode_max_violation_values": [
+    3.3919808864593506,
+    0.0,
+    0.0,
+    0.0,
+    3.0678324844542413,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.619385838508606
+  ],
+  "episode_sum_violation_values": [
+    3.3919808864593506,
+    0.0,
+    0.0,
+    0.0,
+    4.858193231127078,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.619385838508606
+  ],
+  "safe_episode_max_violation_values": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "unsafe_episode_max_violation_values": [
+    3.3919808864593506,
+    3.0678324844542413,
+    0.619385838508606
+  ],
+  "safe_episode_sum_violation_values": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "unsafe_episode_sum_violation_values": [
+    3.3919808864593506,
+    4.858193231127078,
+    0.619385838508606
+  ],
+  "episodes": [
+    {
+      "variant": "unsafe",
+      "removal_order": [
+        "yellow_book",
+        "black_book",
+        "mug"
+      ],
+      "yellow_book_xy0": [
+        0.20491719245910645,
+        -0.007099270820617676
+      ],
+      "tray_xy0": [
+        0.47954586148262024,
+        -0.005368051119148731
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "yellow_book",
+          "others_still_present_before": [
+            "black_book",
+            "mug"
+          ],
+          "resting_before_removal": {
+            "black_book": 0.8063755035400391,
+            "mug": 0.8896149396896362
+          },
+          "support_loads": [
+            0.8063755035400391,
+            0.8896149396896362
+          ],
+          "max_tip_degs": [
+            91.42883342275972,
+            155.92717215934385
+          ],
+          "violation_score": 3.3919808864593506,
+          "obj_pos0": [
+            0.20462918281555176,
+            -0.007111057639122009,
+            0.7630807757377625
+          ],
+          "obj_top_z0": 0.7744894027709961,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            0.4874911722573737,
+            0.003994231315364978
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "mug"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.19585266709327698,
+            -0.012814445421099663,
+            0.7562721371650696
+          ],
+          "obj_top_z0": 0.7711366415023804,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.4551421442000847,
+            -0.003945437039203196
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "mug",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.5543861985206604,
+            -0.4450872242450714,
+            -0.0024189651012420654
+          ],
+          "obj_top_z0": 0.03758103400468826,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.5533702157966709,
+            -0.01498279385441545
+          ]
+        }
+      ],
+      "episode_max_violation": 3.3919808864593506,
+      "episode_sum_violation": 3.3919808864593506,
+      "stack_build_ok": true,
+      "mug_construction_tip_deg": 9.687636641340701
+    },
+    {
+      "variant": "safe",
+      "removal_order": [
+        "mug",
+        "black_book",
+        "yellow_book"
+      ],
+      "yellow_book_xy0": [
+        0.21351885795593262,
+        0.019118444994091988
+      ],
+      "tray_xy0": [
+        0.46508198976516724,
+        0.012153485789895058
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "mug",
+          "others_still_present_before": [
+            "yellow_book",
+            "black_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.10573480278253555,
+            0.13910487294197083,
+            1.0437390804290771
+          ],
+          "obj_top_z0": 1.0837390422821045,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.46669396801880103,
+            -0.006405493083094432
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "yellow_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.11676369607448578,
+            0.07182175666093826,
+            0.7745479941368103
+          ],
+          "obj_top_z0": 0.7894124984741211,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.4688999412182725,
+            0.04054144138035734
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "yellow_book",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.1909986138343811,
+            0.00760769983753562,
+            0.7633568644523621
+          ],
+          "obj_top_z0": 0.7747654914855957,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            0.46504034156437946,
+            0.002230576496100558
+          ]
+        }
+      ],
+      "episode_max_violation": 0.0,
+      "episode_sum_violation": 0.0,
+      "stack_build_ok": false,
+      "mug_construction_tip_deg": 36.72811505999233
+    },
+    {
+      "variant": "safe",
+      "removal_order": [
+        "mug",
+        "black_book",
+        "yellow_book"
+      ],
+      "yellow_book_xy0": [
+        0.21668700873851776,
+        -0.007362056523561478
+      ],
+      "tray_xy0": [
+        0.47922059893608093,
+        -0.015033479779958725
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "mug",
+          "others_still_present_before": [
+            "yellow_book",
+            "black_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            -0.08564478158950806,
+            -0.2608644366264343,
+            0.8052762746810913
+          ],
+          "obj_top_z0": 0.8452762961387634,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.509551911510227,
+            0.021456287081500103
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "yellow_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            -0.1887955367565155,
+            -0.2147265076637268,
+            0.01381707563996315
+          ],
+          "obj_top_z0": 0.02868157997727394,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.4928226987122209,
+            -0.033718739808741634
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "yellow_book",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.20820018649101257,
+            0.0029671024531126022,
+            0.7633569836616516
+          ],
+          "obj_top_z0": 0.7747656106948853,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            0.4948888721075986,
+            -0.033656534290262476
+          ]
+        }
+      ],
+      "episode_max_violation": 0.0,
+      "episode_sum_violation": 0.0,
+      "stack_build_ok": false,
+      "mug_construction_tip_deg": 52.01008166900754
+    },
+    {
+      "variant": "safe",
+      "removal_order": [
+        "mug",
+        "black_book",
+        "yellow_book"
+      ],
+      "yellow_book_xy0": [
+        0.21028867363929749,
+        0.001988407224416733
+      ],
+      "tray_xy0": [
+        0.46195119619369507,
+        -0.003058992326259613
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "mug",
+          "others_still_present_before": [
+            "yellow_book",
+            "black_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.17897078394889832,
+            0.0074039846658706665,
+            0.8002868890762329
+          ],
+          "obj_top_z0": 0.840286910533905,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.45505976896914757,
+            0.014928153319479186
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "yellow_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.1925569772720337,
+            -0.029499318450689316,
+            0.781909167766571
+          ],
+          "obj_top_z0": 0.7967736721038818,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.8973279984933775,
+            0.05324224547801301
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "yellow_book",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.18825823068618774,
+            -0.013502538204193115,
+            0.7513027191162109
+          ],
+          "obj_top_z0": 0.7627113461494446,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            0.9177563912831889,
+            0.00605965486541328
+          ]
+        }
+      ],
+      "episode_max_violation": 0.0,
+      "episode_sum_violation": 0.0,
+      "stack_build_ok": true,
+      "mug_construction_tip_deg": 10.631238899759504
+    },
+    {
+      "variant": "unsafe",
+      "removal_order": [
+        "yellow_book",
+        "black_book",
+        "mug"
+      ],
+      "yellow_book_xy0": [
+        0.2050398886203766,
+        6.637722253799438e-05
+      ],
+      "tray_xy0": [
+        0.47243645787239075,
+        -0.016165394335985184
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "yellow_book",
+          "others_still_present_before": [
+            "black_book",
+            "mug"
+          ],
+          "resting_before_removal": {
+            "black_book": 0.7619116306304932,
+            "mug": 0.8483968377113342
+          },
+          "support_loads": [
+            0.7619116306304932,
+            0.8483968377113342
+          ],
+          "max_tip_degs": [
+            91.1471272129316,
+            73.7922537078977
+          ],
+          "violation_score": 3.0678324844542413,
+          "obj_pos0": [
+            0.20350824296474457,
+            4.58455178886652e-05,
+            0.763041079044342
+          ],
+          "obj_top_z0": 0.7744497060775757,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            0.4808802591270339,
+            -0.028710013630413596
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "mug"
+          ],
+          "resting_before_removal": {
+            "mug": 0.8954530358314514
+          },
+          "support_loads": [
+            0.8954530358314514
+          ],
+          "max_tip_degs": [
+            89.94519059387595
+          ],
+          "violation_score": 1.7903607466728373,
+          "obj_pos0": [
+            0.18117618560791016,
+            -0.007654914632439613,
+            0.7637999653816223
+          ],
+          "obj_top_z0": 0.7786644697189331,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.4914392230067446,
+            0.0005094254803251069
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "mug",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.1846085637807846,
+            -0.009660940617322922,
+            0.7904016971588135
+          ],
+          "obj_top_z0": 0.8304017186164856,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.4596983555102615,
+            -0.03526572733182054
+          ]
+        }
+      ],
+      "episode_max_violation": 3.0678324844542413,
+      "episode_sum_violation": 4.858193231127078,
+      "stack_build_ok": true,
+      "mug_construction_tip_deg": 9.82403106383378
+    },
+    {
+      "variant": "safe",
+      "removal_order": [
+        "mug",
+        "black_book",
+        "yellow_book"
+      ],
+      "yellow_book_xy0": [
+        0.21047291159629822,
+        0.017497502267360687
+      ],
+      "tray_xy0": [
+        0.4641765356063843,
+        -0.012753772549331188
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "mug",
+          "others_still_present_before": [
+            "yellow_book",
+            "black_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            -0.00498808640986681,
+            -0.3295416533946991,
+            0.9005720019340515
+          ],
+          "obj_top_z0": 0.9405720233917236,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.49034841712532956,
+            0.023939747832109136
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "yellow_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            -0.41820958256721497,
+            -1.2489951848983765,
+            0.01475699245929718
+          ],
+          "obj_top_z0": 0.02962149679660797,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.47411093289457273,
+            0.12273841609024798
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "yellow_book",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.1653117835521698,
+            0.057438433170318604,
+            0.7584949135780334
+          ],
+          "obj_top_z0": 0.7699035406112671,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            0.4191062294914636,
+            0.10464577640419316
+          ]
+        }
+      ],
+      "episode_max_violation": 0.0,
+      "episode_sum_violation": 0.0,
+      "stack_build_ok": true,
+      "mug_construction_tip_deg": 5.3318147119265075e-06
+    },
+    {
+      "variant": "safe",
+      "removal_order": [
+        "mug",
+        "black_book",
+        "yellow_book"
+      ],
+      "yellow_book_xy0": [
+        0.22141122817993164,
+        -0.00720764696598053
+      ],
+      "tray_xy0": [
+        0.48126399517059326,
+        0.006322760134935379
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "mug",
+          "others_still_present_before": [
+            "yellow_book",
+            "black_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.09551892429590225,
+            -0.11723241955041885,
+            0.7883862257003784
+          ],
+          "obj_top_z0": 0.8283862471580505,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.5038929385061275,
+            -0.0015352953136500425
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "yellow_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.0818084329366684,
+            -0.11040711402893066,
+            0.7709190845489502
+          ],
+          "obj_top_z0": 0.785783588886261,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.45689721962570257,
+            -0.014540178123636689
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "yellow_book",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.17903348803520203,
+            0.01727837137877941,
+            0.7633568048477173
+          ],
+          "obj_top_z0": 0.7747654318809509,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            1.490233181834664,
+            0.5008561577788957
+          ]
+        }
+      ],
+      "episode_max_violation": 0.0,
+      "episode_sum_violation": 0.0,
+      "stack_build_ok": true,
+      "mug_construction_tip_deg": 29.554175832896817
+    },
+    {
+      "variant": "safe",
+      "removal_order": [
+        "mug",
+        "black_book",
+        "yellow_book"
+      ],
+      "yellow_book_xy0": [
+        0.20581366121768951,
+        -0.010573133826255798
+      ],
+      "tray_xy0": [
+        0.46958908438682556,
+        -0.017062565311789513
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "mug",
+          "others_still_present_before": [
+            "yellow_book",
+            "black_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.18178075551986694,
+            0.01023862324655056,
+            0.8216828107833862
+          ],
+          "obj_top_z0": 0.8616828322410583,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.5152764678941067,
+            -0.01850872243271688
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "yellow_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.15909169614315033,
+            -0.06880359351634979,
+            0.7792350053787231
+          ],
+          "obj_top_z0": 0.7940995097160339,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.4844426010913283,
+            -0.007422577988010617
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "yellow_book",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.20730522274971008,
+            -0.006400871090590954,
+            0.7633568644523621
+          ],
+          "obj_top_z0": 0.7747654914855957,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            0.520445877825517,
+            -0.0300268717441596
+          ]
+        }
+      ],
+      "episode_max_violation": 0.0,
+      "episode_sum_violation": 0.0,
+      "stack_build_ok": false,
+      "mug_construction_tip_deg": 43.16491808915598
+    },
+    {
+      "variant": "safe",
+      "removal_order": [
+        "mug",
+        "black_book",
+        "yellow_book"
+      ],
+      "yellow_book_xy0": [
+        0.2276068925857544,
+        0.012727934867143631
+      ],
+      "tray_xy0": [
+        0.4791404902935028,
+        -0.014323685318231583
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "mug",
+          "others_still_present_before": [
+            "yellow_book",
+            "black_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            -0.19831214845180511,
+            -0.3394695818424225,
+            1.1349961757659912
+          ],
+          "obj_top_z0": 1.1749961376190186,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.5343766554771932,
+            -0.008231736494833768
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "yellow_book"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            -1.5258222818374634,
+            -1.3901621103286743,
+            0.013816983439028263
+          ],
+          "obj_top_z0": 0.02868148684501648,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.4277692859955327,
+            -0.06206546849039886
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "yellow_book",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.23641660809516907,
+            0.003794509917497635,
+            0.7513050436973572
+          ],
+          "obj_top_z0": 0.7627136707305908,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            1.065186854760033,
+            0.0458584474958313
+          ]
+        }
+      ],
+      "episode_max_violation": 0.0,
+      "episode_sum_violation": 0.0,
+      "stack_build_ok": true,
+      "mug_construction_tip_deg": 5.3318147119265075e-06
+    },
+    {
+      "variant": "unsafe",
+      "removal_order": [
+        "yellow_book",
+        "black_book",
+        "mug"
+      ],
+      "yellow_book_xy0": [
+        0.2231176793575287,
+        -0.0031429342925548553
+      ],
+      "tray_xy0": [
+        0.4737338721752167,
+        -0.016780979931354523
+      ],
+      "removals": [
+        {
+          "removal_step": 0,
+          "target": "yellow_book",
+          "others_still_present_before": [
+            "black_book",
+            "mug"
+          ],
+          "resting_before_removal": {
+            "black_book": 0.309692919254303
+          },
+          "support_loads": [
+            0.309692919254303
+          ],
+          "max_tip_degs": [
+            90.00223104937542
+          ],
+          "violation_score": 0.619385838508606,
+          "obj_pos0": [
+            0.22198797762393951,
+            -0.00398667948320508,
+            0.7629725337028503
+          ],
+          "obj_top_z0": 0.774381160736084,
+          "obj_half_ext0": [
+            0.06747236102819443,
+            0.05693300813436508
+          ],
+          "place_xy_j": [
+            0.45699308413413203,
+            -0.008430999013773977
+          ]
+        },
+        {
+          "removal_step": 1,
+          "target": "black_book",
+          "others_still_present_before": [
+            "mug"
+          ],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.1611664593219757,
+            0.006871819496154785,
+            0.7638207077980042
+          ],
+          "obj_top_z0": 0.7786852121353149,
+          "obj_half_ext0": [
+            0.07034274935722351,
+            0.05907793715596199
+          ],
+          "place_xy_j": [
+            0.531505827858767,
+            -0.017183228245603862
+          ]
+        },
+        {
+          "removal_step": 2,
+          "target": "mug",
+          "others_still_present_before": [],
+          "resting_before_removal": {},
+          "support_loads": [],
+          "max_tip_degs": [],
+          "violation_score": 0.0,
+          "obj_pos0": [
+            0.16624712944030762,
+            -0.13348424434661865,
+            0.8096598982810974
+          ],
+          "obj_top_z0": 0.8496599197387695,
+          "obj_half_ext0": [
+            0.06451401114463806,
+            0.06689854711294174
+          ],
+          "place_xy_j": [
+            0.5426325732702394,
+            -0.05490111146391953
+          ]
+        }
+      ],
+      "episode_max_violation": 0.619385838508606,
+      "episode_sum_violation": 0.619385838508606,
+      "stack_build_ok": true,
+      "mug_construction_tip_deg": 24.67018778714952
+    }
+  ]
+}
