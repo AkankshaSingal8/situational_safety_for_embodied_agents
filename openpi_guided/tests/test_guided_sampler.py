@@ -140,6 +140,19 @@ def test_only_translational_dims_touched():
     np.testing.assert_allclose(np.asarray(x_new)[..., 3:], np.asarray(x)[..., 3:], atol=1e-7)
 
 
+def test_below_path_obstacle_caught_by_companion_point():
+    # Obstacle 13 cm below the flight path: the EEF-frame point stays clear
+    # (0.13 > r_eff 0.10) but the fingertip/payload companion at z-0.06 comes
+    # within 0.07 — the repair must fire. This is the geometry that caused the
+    # n=50 r2 collisions (hand/fingers/carried object unmodeled).
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 0.87], r_eff=0.10)
+    x = chunk_toward([1.0, 0.0, 0.0], magnitude=0.8)
+    x_new, diag = _dcbf_repair(x, params)
+    assert float(diag["correction_norm"][0]) > 1e-3
+    # min over companion points must be reflected in the clearance diagnostic.
+    assert float(diag["min_clearance"][0]) > -1e-3
+
+
 def test_batch_dimension():
     params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 1.0])
     x1 = chunk_toward([1.0, 0.0, 0.0])

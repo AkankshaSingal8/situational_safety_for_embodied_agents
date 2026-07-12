@@ -65,30 +65,43 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams) -> tuple[jnp.ndarray, dict
     cmd = (x_t[..., :3] + 1.0) / 2.0 * span + g.q01  # (B, H, 3)
     disp = cmd * g.translation_scale  # metric per-step displacement
 
+    # Vertical companion points approximating the full manipulated system, not
+    # just the EEF frame origin: the hand/wrist body sits above the grip site
+    # (v19 forensics: unmonitored hand plowed obstacles), fingers and a carried
+    # object hang below. Each shares r_eff; the barrier is the min over points.
+    COMPANIONS = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]])
+
+    def _closest(p):
+        """Min distance (and its direction) from any companion point to the obstacle."""
+        diffs = p[None, :] + COMPANIONS - g.obstacle_pos  # (3, 3)
+        dists = jnp.linalg.norm(diffs, axis=-1)
+        k = jnp.argmin(dists)
+        return dists[k], diffs[k] / (dists[k] + 1e-8)
+
     def repair_one(disp_b):
         """Sweep j = 0..H-1 enforcing B_j >= (1-gamma) * B_{j-1}."""
         p0 = g.eef_pos
-        b0 = jnp.linalg.norm(p0 - g.obstacle_pos) - g.r_eff
+        d0, _ = _closest(p0)
+        b0 = d0 - g.r_eff
 
         def body(j, carry):
             disp_acc, p_prev, b_prev = carry
             r_j = g.r_eff + g.inflation_slope * (j + 1.0)
             p_j = p_prev + disp_acc[j]
-            diff = p_j - g.obstacle_pos
-            dist = jnp.linalg.norm(diff)
+            dist, direction = _closest(p_j)
             b_j = dist - r_j
             need = (1.0 - g.gamma) * b_prev
             deficit = jnp.maximum(need - b_j, 0.0)
             # Push p_j (and, through the cumulative rollout, all later points)
-            # radially away from the obstacle by the deficit.
-            direction = diff / (dist + 1e-8)
+            # away from the obstacle along the closest companion's direction.
             new_step = disp_acc[j] + deficit * direction
             # Respect the actuator range: |command| <= 1 per dim.
             new_cmd = jnp.clip(new_step / g.translation_scale, -1.0, 1.0)
             new_step = new_cmd * g.translation_scale
             disp_acc = disp_acc.at[j].set(new_step)
             p_j = p_prev + new_step
-            b_j = jnp.linalg.norm(p_j - g.obstacle_pos) - r_j
+            dist2, _ = _closest(p_j)
+            b_j = dist2 - r_j
             return disp_acc, p_j, b_j
 
         disp_out, _, _ = jax.lax.fori_loop(0, h, body, (disp_b, p0, b0))
@@ -102,11 +115,15 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams) -> tuple[jnp.ndarray, dict
     xt_trans = (cmd_new - g.q01) / span * 2.0 - 1.0
     x_new = x_t.at[..., :3].set(xt_trans)
 
-    # Diagnostics (computed on the possibly-repaired chunk, inflated radii).
+    # Diagnostics (computed on the possibly-repaired chunk, inflated radii,
+    # min over companion points).
     p_traj = g.eef_pos + jnp.cumsum(disp_new, axis=1)  # (B, H, 3)
     r_horizon = g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)
-    clearance = jnp.linalg.norm(p_traj - g.obstacle_pos, axis=-1) - r_horizon
-    b0_val = jnp.linalg.norm(g.eef_pos - g.obstacle_pos) - g.r_eff
+    comp_dists = jnp.linalg.norm(
+        p_traj[:, :, None, :] + COMPANIONS[None, None, :, :] - g.obstacle_pos, axis=-1
+    )  # (B, H, 3)
+    clearance = jnp.min(comp_dists, axis=-1) - r_horizon
+    b0_val = jnp.min(jnp.linalg.norm(g.eef_pos[None, :] + COMPANIONS - g.obstacle_pos, axis=-1)) - g.r_eff
     b_chain = jnp.concatenate([jnp.broadcast_to(b0_val, (b, 1)), clearance], axis=1)
     residual = jnp.maximum((1.0 - g.gamma) * b_chain[:, :-1] - b_chain[:, 1:], 0.0)
     diag = {
