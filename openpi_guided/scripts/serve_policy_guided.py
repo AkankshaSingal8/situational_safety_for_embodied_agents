@@ -35,7 +35,8 @@ class Args:
     # Guidance knobs (Tier-GT geometric defaults).
     gamma: float = 0.9
     d_safe: float = 0.01
-    eef_radius: float = 0.05
+    eef_radius: float = 0.09
+    inflation_slope: float = 0.004
     translation_scale: float = 0.05
 
 
@@ -56,6 +57,7 @@ def main(args: Args) -> None:
         gamma=args.gamma,
         d_safe=args.d_safe,
         eef_radius=args.eef_radius,
+        inflation_slope=args.inflation_slope,
         translation_scale=args.translation_scale,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)

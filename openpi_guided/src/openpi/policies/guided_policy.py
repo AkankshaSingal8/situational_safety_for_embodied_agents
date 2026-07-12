@@ -30,7 +30,8 @@ from openpi.shared import nnx_utils
 class GuidanceConfig:
     gamma: float = 0.9  # DCBF decay (SOTA setting)
     d_safe: float = 0.01  # extra clearance margin [m]
-    eef_radius: float = 0.05  # EEF sphere approximation [m]
+    eef_radius: float = 0.09  # EEF+fingers+carried-object sphere approximation [m]
+    inflation_slope: float = 0.004  # extra margin per horizon step [m]
     translation_scale: float = 0.05  # metres per unit command per control step
     default_obstacle_radius: float = 0.065
 
@@ -75,6 +76,7 @@ class GuidedPolicy(_policy.Policy):
             eef_pos=jnp.asarray(eef),
             obstacle_pos=jnp.asarray(obs_pos),
             r_eff=jnp.float32(r_obs + cfg.eef_radius + cfg.d_safe),
+            inflation_slope=jnp.float32(cfg.inflation_slope),
             gamma=jnp.float32(cfg.gamma),
             q01=jnp.asarray(self._q01),
             q99=jnp.asarray(self._q99),

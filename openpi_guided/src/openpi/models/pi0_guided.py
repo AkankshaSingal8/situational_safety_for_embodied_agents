@@ -43,6 +43,7 @@ class GuidanceParams(NamedTuple):
     eef_pos: at.Float[at.Array, "3"]  # current metric EEF position p_0
     obstacle_pos: at.Float[at.Array, "3"]  # metric obstacle center o
     r_eff: at.Float[at.Array, ""]  # obstacle radius + eef radius + d_safe
+    inflation_slope: at.Float[at.Array, ""]  # extra margin per horizon step [m] (open-loop tracking uncertainty)
     gamma: at.Float[at.Array, ""]  # DCBF decay rate (0.9 = SOTA setting)
     q01: at.Float[at.Array, "3"]  # action quantile stats, translational dims
     q99: at.Float[at.Array, "3"]
@@ -71,10 +72,11 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams) -> tuple[jnp.ndarray, dict
 
         def body(j, carry):
             disp_acc, p_prev, b_prev = carry
+            r_j = g.r_eff + g.inflation_slope * (j + 1.0)
             p_j = p_prev + disp_acc[j]
             diff = p_j - g.obstacle_pos
             dist = jnp.linalg.norm(diff)
-            b_j = dist - g.r_eff
+            b_j = dist - r_j
             need = (1.0 - g.gamma) * b_prev
             deficit = jnp.maximum(need - b_j, 0.0)
             # Push p_j (and, through the cumulative rollout, all later points)
@@ -86,7 +88,7 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams) -> tuple[jnp.ndarray, dict
             new_step = new_cmd * g.translation_scale
             disp_acc = disp_acc.at[j].set(new_step)
             p_j = p_prev + new_step
-            b_j = jnp.linalg.norm(p_j - g.obstacle_pos) - g.r_eff
+            b_j = jnp.linalg.norm(p_j - g.obstacle_pos) - r_j
             return disp_acc, p_j, b_j
 
         disp_out, _, _ = jax.lax.fori_loop(0, h, body, (disp_b, p0, b0))
@@ -100,9 +102,10 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams) -> tuple[jnp.ndarray, dict
     xt_trans = (cmd_new - g.q01) / span * 2.0 - 1.0
     x_new = x_t.at[..., :3].set(xt_trans)
 
-    # Diagnostics (computed on the possibly-repaired chunk).
+    # Diagnostics (computed on the possibly-repaired chunk, inflated radii).
     p_traj = g.eef_pos + jnp.cumsum(disp_new, axis=1)  # (B, H, 3)
-    clearance = jnp.linalg.norm(p_traj - g.obstacle_pos, axis=-1) - g.r_eff
+    r_horizon = g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)
+    clearance = jnp.linalg.norm(p_traj - g.obstacle_pos, axis=-1) - r_horizon
     b0_val = jnp.linalg.norm(g.eef_pos - g.obstacle_pos) - g.r_eff
     b_chain = jnp.concatenate([jnp.broadcast_to(b0_val, (b, 1)), clearance], axis=1)
     residual = jnp.maximum((1.0 - g.gamma) * b_chain[:, :-1] - b_chain[:, 1:], 0.0)

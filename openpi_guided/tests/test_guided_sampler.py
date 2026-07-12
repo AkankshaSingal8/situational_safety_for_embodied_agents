@@ -28,6 +28,7 @@ def make_params(eef, obstacle, r_eff=0.12, enabled=1.0):
         eef_pos=jnp.asarray(np.asarray(eef, dtype=np.float32)),
         obstacle_pos=jnp.asarray(np.asarray(obstacle, dtype=np.float32)),
         r_eff=jnp.float32(r_eff),
+        inflation_slope=jnp.float32(0.0),
         gamma=jnp.float32(GAMMA),
         q01=jnp.asarray(Q01),
         q99=jnp.asarray(Q99),
