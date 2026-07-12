@@ -38,30 +38,46 @@ fi
 # /usr/lib64/libMagickWand-6.Q16.so.7 (confirmed present). Bind the host lib
 # dir to a SEPARATE in-container path (NOT /usr/lib64 — binding directly over
 # /usr/lib64 shadows the container's own newer glibc with the host's older
-# RHEL8 glibc, breaking bash itself; see incident in job 42146941). Also do
-# NOT set LD_LIBRARY_PATH via `apptainer exec --env` — that applies to the
-# entrypoint bash process too (not just python), which breaks bash the same
-# way for the same reason (see incident in job 42146973). Instead export it
-# only inside the bash -c string, after bash itself is already running, so
-# only the python child process picks it up. Also APPEND (not overwrite):
-# overwriting LD_LIBRARY_PATH=/host-lib64 made the dynamic linker prefer
-# host RHEL8 libstdc++/libgcc over the container's own for every library
-# lookup (not just MagickWand), which segfaulted python/torch on load
-# (incident in job 42147010, "Segmentation fault", no output at all).
-# Appending keeps container libs first-priority; host-lib64 only supplies
-# fallback libs (e.g. libMagickWand) missing from the container.
+# RHEL8 glibc, breaking bash itself; see incident in job 42146941).
+#
+# Putting the WHOLE host /usr/lib64 on LD_LIBRARY_PATH (even appended after
+# the container's own paths) still segfaults python at interpreter startup,
+# before any of our code runs (incident in jobs 42147010 and 42157696) —
+# LD_LIBRARY_PATH entries are searched before the container's own ld.so
+# cache, so for any library not already found in the container's existing
+# LD_LIBRARY_PATH dirs, the host version wins and is ABI-incompatible with
+# the container's compiled binaries (confirmed via manual apptainer exec:
+# `python -c 'print(...)'` alone segfaults with /host-lib64 on the path).
+#
+# Fix: only expose the ~12 libraries MagickWand actually needs that are
+# missing from the container (confirmed via `ldconfig -p` diff inside the
+# container against `ldd libMagickWand`) via a small scoped symlink
+# directory ($COSMOS_DIR/magickwand_libs, symlinked to /host-lib64/<name>),
+# plus MAGICK_HOME pointing at a second scoped dir
+# ($COSMOS_DIR/magickwand_home/lib) with unversioned-name symlinks
+# (libMagickWand-6.Q16.so -> libMagickWand-6.Q16.so.7) so wand's
+# `library_paths()` finds it directly via ctypes.CDLL instead of relying on
+# `ctypes.util.find_library` (which only consults ldconfig's cache and
+# never sees LD_LIBRARY_PATH additions). Verified working end-to-end:
+# `from libero.libero.envs import env_wrapper` succeeds with exit code 0.
+#
+# Do NOT set LD_LIBRARY_PATH via `apptainer exec --env` — that applies to
+# the entrypoint bash process too (not just python), which can break bash
+# itself (see incident in job 42146973). Set it only inside the bash -c
+# string, after bash itself is already running.
 apptainer exec --nv \
     --env MUJOCO_GL=egl \
     --env HF_HOME=/ocean/projects/cis250185p/asingal/.hf_cache \
     --env TRANSFORMERS_CACHE=/ocean/projects/cis250185p/asingal/.hf_cache \
     --env HF_TOKEN=$(cat /jet/home/asingal/.cache/huggingface/token 2>/dev/null || echo "") \
     --env LIBERO_CONFIG_PATH=$WORKTREE/LIBERO-Safety/.libero_config \
+    --env MAGICK_HOME=$COSMOS_DIR/magickwand_home \
     --bind $REPO:$REPO \
     --bind /ocean/projects/cis250185p/asingal/.hf_cache:/ocean/projects/cis250185p/asingal/.hf_cache \
     --bind /jet/home/asingal:/jet/home/asingal \
     --bind /usr/lib64:/host-lib64:ro \
     $SIF_PATH \
-    bash -c "cd $WORKTREE && export LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:/host-lib64\" && $COSMOS_DIR/.venv_rhel8/bin/python \
+    bash -c "cd $WORKTREE && export LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:$COSMOS_DIR/magickwand_libs\" && $COSMOS_DIR/.venv_rhel8/bin/python \
         $WORKTREE/run_libsafety_cosmos_policy_eval.py \
             --task_suite_name human_safety \
             --task_index 0 \
