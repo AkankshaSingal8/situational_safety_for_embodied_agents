@@ -53,12 +53,38 @@ BOTTLE_XML = os.path.join(
 # already relied on for the mug/plate pair in scenario_1b.py), so both sit
 # flush on the table when placed at TABLE_HEIGHT + 0.06.
 MUG_POS = (0.35, -0.01, TABLE_HEIGHT + 0.06)
-BOTTLE_POS = (0.35, 0.14, TABLE_HEIGHT + 0.06)
+BOTTLE_POS = (0.35, 0.20, TABLE_HEIGHT + 0.06)
 # Real-mesh footprint radii (from each XML's collision geoms /
 # horizontal_radius_site, confirmed by inspection): mug ~0.06m, bottle
-# ~0.02-0.035m. The pilot's primitive-era 0.15m y-separation between
-# MUG_POS/BOTTLE_POS comfortably clears both real footprints plus margin, so
-# placement did not need to change, only the z-offset (see above).
+# ~0.02-0.035m.
+#
+# Task-5 diagnosis (repo owner flagged: "the bottle should look clearly
+# bigger/taller than the mug, but currently doesn't"). Root-caused via
+# Genesis's own post-settle `entity.get_AABB()` (ground truth of what's
+# actually rendered, not a re-derivation from the raw MJCF) on a diagnostic
+# run: mug AABB height = 0.8561 - 0.7500 = 0.1061m; bottle AABB height =
+# 0.9069 - 0.7499 = 0.1570m -- the bottle IS ~48% taller than the mug, and
+# Genesis's MJCF loader correctly applies the wine bottle mesh's <mesh
+# scale="0.5 0.5 0.5"> to the visual geometry (confirmed independently via
+# `mujoco.MjModel.from_xml_string` + `mj.mesh_vert`, which already reflects
+# the compiler-applied scale, matching the AABB numbers). So this was NOT a
+# mesh-scale bug. It also wasn't a tip-over/instability bug (a separate
+# diagnostic run confirmed both objects settle with ~0deg tip angle,
+# quat~=identity). What it WAS: a genuine camera-framing/relative-scale
+# PERCEPTION issue at the standard agentview rig's fixed, fairly distant,
+# elevated-angle framing -- the mug's wide handle-inclusive footprint (up to
+# ~0.13m across) visually dominates the frame against the bottle's narrow
+# ~0.04m-diameter silhouette, so the bottle's real (correct) height
+# advantage doesn't read clearly, and the mug's cast shadow extends toward
+# the bottle, reducing its visual distinctness. Since `standard_rig.py`'s
+# camera pos/fov are a hard requirement (not to be changed per-scenario),
+# the fix is a placement change: BOTTLE_POS's y moved from 0.14 to 0.20 (was
+# a 0.15m separation from MUG_POS; now 0.21m) -- this (a) widens mug/bottle
+# separation so the mug's shadow no longer crosses the bottle, and (b) moves
+# the bottle several cm closer to the camera's y=0.3 (mug stays equally
+# far), so real perspective genuinely renders the (already taller) bottle
+# larger too -- not a fudge of the physical geometry, just perspective doing
+# its job once the objects are no longer visually crowded together.
 
 
 def build_scene(show_viewer=False):

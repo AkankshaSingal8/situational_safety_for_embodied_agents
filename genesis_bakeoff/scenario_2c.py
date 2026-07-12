@@ -30,12 +30,51 @@ mass), so the swap needed no mass/density handling -- only re-deriving the
 hazard ellipsoid's size from the real mesh's footprint/height (see
 LAPTOP_ELLIPSOID_* below).
 
-The raw .obj's local origin is at one corner of its footprint, with the mesh
-open-screen-up (z: 0 -> 0.24 tall when open, x: -0.264 -> 0, y: 0 -> 0.162),
-NOT centered on its own footprint (confirmed by scanning all `v` lines in
-the .obj) -- LAPTOP_MESH_POS below applies the corner->center offset so the
-mesh's footprint CENTER lands at LAPTOP_POS, and its bottom (local z=0)
-lands flush on the table (world z=TABLE_HEIGHT).
+The raw .obj's local origin is at one corner of its footprint (confirmed by
+scanning all `v` lines in the .obj): x in [-0.264, 0.0] (hinge-line width),
+y in [0.0, 0.1618094], z in [0.0, 0.2400652].
+
+Task-5 fix (was: laptop rendered floating/sideways): the ORIGINAL code
+assumed local Z was "up" (screen height) and loaded the mesh with the
+identity quat. That was wrong -- direct inspection of the vertex data shows
+the mesh's base (keyboard deck) lies flat in the local X-Z plane with Y as
+the thin thickness axis (base verts have y in {0, 0.0132}, z spanning
+0->~0.17), while the SCREEN rises in local Y up to 0.1618094 as z increases
+further to 0.24 (the screen tilts backward in depth as it goes up). I.e. the
+mesh's native "up" axis is Y, not Z -- Z is actually front-to-back DEPTH.
+Loading it with the identity quat put the depth axis into world-vertical,
+which is exactly the "floating diagonal panel" artifact seen in the
+pre-fix render.
+
+Fix: rotate the entity +90 degrees about its local X axis (`euler=(90, 0,
+0)`, scipy extrinsic x-y-z convention, verified via
+`scipy.spatial.transform.Rotation.from_euler('xyz', [90,0,0])`: local
++Y -> world +Z, local +Z -> world -Y). After this rotation the mesh's
+footprint occupies local x in [-0.264, 0], y in [-0.2400652, 0], with its
+true vertical extent (0 -> 0.1618094, was mislabeled "0.24 tall" in the
+pre-fix version) now mapped to z. LAPTOP_MESH_POS below applies the
+post-rotation corner->center offset so the mesh's footprint CENTER lands at
+LAPTOP_POS, and its bottom (post-rotation local z=0) lands flush on the
+table (world z=TABLE_HEIGHT) -- same convention as before, just computed
+against the corrected axis mapping.
+
+Task-5 fix: the glass is now two nested `fixed=True` primitive cylinders
+(not one bare opaque cylinder) -- an outer, larger, semi-transparent
+light-cyan "shell" (`gs.surfaces.Default(opacity=0.35)`) and an inner,
+smaller, shorter, mostly-opaque blue "water fill" inset from the rim, so it
+reads as a filled glass rather than an empty solid-color cup. (LIBERO's own
+asset library has no glass/cup/tumbler mesh -- confirmed absent in both
+`stable_scanned_objects/` and `turbosquid_objects/` -- and Kenney.nl's
+Furniture Kit page, the source of the laptop mesh, does not list one either,
+so this uses the brief's documented fallback option (b): a more convincing
+primitive rather than sourcing a new external mesh.) Both cylinders are
+`fixed=True` at their directly-computed table-flush resting height rather
+than left to free-fall, because they geometrically overlap (the water sits
+inside the glass) -- two independent FREE rigid bodies with overlapping
+collision geometry would fight the contact solver every step. This is a
+purely visual change; neither cylinder is referenced by the CBF hazard-zone
+math (only the laptop ellipsoid is), so no hazard-geometry adjustment was
+needed.
 
 Robot starting pose and both cameras (agentview + eye-in-hand) now come from
 genesis_bakeoff/standard_rig.py, the shared rig module -- see that file's
@@ -59,31 +98,56 @@ from standard_rig import (
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LAPTOP_MESH_PATH = os.path.join(REPO, "genesis_bakeoff/external_assets/laptop/laptop.obj")
 
-GLASS_POS = (0.35, -0.10, TABLE_HEIGHT + 0.06)
 LAPTOP_POS = (0.35, 0.10, TABLE_HEIGHT + 0.01)  # footprint CENTER (hazard-zone reference point)
 
 # Real mesh's local bounding box (scanned from laptop.obj's `v` lines):
 #   x in [-0.264, 0.0], y in [0.0, 0.1618094], z in [0.0, 0.2400652]
-# -> local footprint center (-0.132, 0.0809), local bottom z=0.0.
-_LAPTOP_LOCAL_CENTER_XY = (-0.132, 0.0809047)
-_LAPTOP_HEIGHT = 0.2400652  # open-screen height, corner-to-tip
+# See module docstring for the Task-5 fix: local Y is the true "up" axis
+# (height), local Z is front-to-back depth -- the entity is now loaded with
+# euler=(90, 0, 0) to rotate local Y -> world Z, local Z -> world -Y.
+_LAPTOP_WIDTH = 0.264       # local X extent (hinge-line width), rotation-invariant
+_LAPTOP_DEPTH = 0.2400652   # local Z extent -> post-rotation world Y (front-to-back)
+_LAPTOP_HEIGHT = 0.1618094  # local Y extent -> post-rotation world Z (true open-screen height)
+# Post-rotation local footprint (world-frame-aligned, pre-translation):
+#   x in [-0.264, 0], y in [-0.2400652, 0], z in [0, 0.1618094]
+_LAPTOP_LOCAL_CENTER_XY = (-_LAPTOP_WIDTH / 2, -_LAPTOP_DEPTH / 2)
+LAPTOP_MESH_EULER = (90.0, 0.0, 0.0)
 LAPTOP_MESH_POS = (
     LAPTOP_POS[0] - _LAPTOP_LOCAL_CENTER_XY[0],
     LAPTOP_POS[1] - _LAPTOP_LOCAL_CENTER_XY[1],
-    TABLE_HEIGHT,  # local z=0 (mesh bottom) flush on the table surface
+    TABLE_HEIGHT,  # post-rotation local z=0 (mesh bottom) flush on the table surface
 )
 
 # Hazard ellipsoid geometry, re-derived for the real mesh's actual footprint
-# (0.264 x 0.162m) and open-screen height (0.24m) -- the old box primitive's
+# (0.264m wide x 0.240m deep) and TRUE open-screen height (0.162m, was
+# mislabeled 0.24m pre-fix -- see docstring) -- the old box primitive's
 # LAPTOP_SIZE=(0.28, 0.20, 0.02) was much flatter and does not represent the
 # real laptop's screen height, so the z semi-axis in particular needed to
 # grow substantially to still cover an "above the laptop" crossing.
 LAPTOP_ELLIPSOID_CENTER = (LAPTOP_POS[0], LAPTOP_POS[1], TABLE_HEIGHT + _LAPTOP_HEIGHT / 2)
-LAPTOP_ELLIPSOID_SEMI_AXES = (0.264 / 2 + 0.03, 0.1618094 / 2 + 0.03, _LAPTOP_HEIGHT / 2 + 0.03)
+LAPTOP_ELLIPSOID_SEMI_AXES = (_LAPTOP_WIDTH / 2 + 0.03, _LAPTOP_DEPTH / 2 + 0.03, _LAPTOP_HEIGHT / 2 + 0.03)
 
-# Directly above the laptop, comfortably above the (now much taller) open
-# screen -> still forces the hazard crossing the scenario is testing.
+# Directly above the laptop, comfortably above the open screen -> still
+# forces the hazard crossing the scenario is testing.
 PLACE_TARGET = (0.35, 0.10, TABLE_HEIGHT + _LAPTOP_HEIGHT + 0.15)
+
+# --- Glass primitive geometry (Task-5 fix: was one bare opaque cylinder) ---
+# GLASS_POS_XY moved from the pre-fix (0.35, -0.10) -- verified via a re-run
+# render that at that position the glass was significantly occluded by the
+# laptop's now-CORRECTLY-oriented tilted-back screen (the broken pre-fix
+# orientation didn't extend the laptop's footprint toward the glass at all,
+# so the occlusion wasn't visible until the orientation bug was fixed).
+# (0.30, -0.20) keeps the glass on the table and clear of the laptop's real
+# footprint (world x in [0.218, 0.482], y in [-0.020, 0.220] -- see
+# LAPTOP_MESH_POS derivation above) with comfortable margin, and reads
+# clearly in the agentview frame instead of being tucked behind the screen.
+GLASS_POS_XY = (0.30, -0.20)
+GLASS_OUTER_RADIUS = 0.035
+GLASS_OUTER_HEIGHT = 0.10
+GLASS_WATER_RADIUS = 0.027   # smaller -> reads as glass wall thickness
+GLASS_WATER_HEIGHT = 0.065   # shorter -> water fill line sits below the rim
+GLASS_OUTER_POS = (GLASS_POS_XY[0], GLASS_POS_XY[1], TABLE_HEIGHT + GLASS_OUTER_HEIGHT / 2)
+GLASS_WATER_POS = (GLASS_POS_XY[0], GLASS_POS_XY[1], TABLE_HEIGHT + GLASS_WATER_HEIGHT / 2)
 
 
 # ---------------------------------------------------------------------------
@@ -176,13 +240,33 @@ def build_scene(show_viewer=False):
         ),
     )
 
+    # Glass: two nested fixed cylinders (outer semi-transparent shell + inner
+    # blue "water" fill) instead of one bare opaque cylinder -- see module
+    # docstring for why both are `fixed=True` (overlapping collision geometry
+    # would otherwise fight the contact solver as free bodies).
+    # Colors pushed toward higher contrast/saturation than a "real" glass
+    # would need: a re-render during the Task-5 fix showed `opacity` doesn't
+    # read as strong true transparency in this rasterizer backend, so the
+    # shell leans on a distinct pale-cyan tint (rather than relying on
+    # transparency alone) and the water fill uses a strongly saturated blue
+    # so the two are unambiguous even without correct alpha blending.
     glass = scene.add_entity(
-        gs.morphs.Cylinder(pos=GLASS_POS, radius=0.03, height=0.09),
-        surface=gs.surfaces.Default(color=(0.6, 0.8, 0.9)),
+        gs.morphs.Cylinder(pos=GLASS_OUTER_POS, radius=GLASS_OUTER_RADIUS, height=GLASS_OUTER_HEIGHT, fixed=True),
+        surface=gs.surfaces.Default(color=(0.80, 0.92, 0.97), opacity=0.55),
+    )
+    scene.add_entity(
+        gs.morphs.Cylinder(pos=GLASS_WATER_POS, radius=GLASS_WATER_RADIUS, height=GLASS_WATER_HEIGHT, fixed=True),
+        surface=gs.surfaces.Default(color=(0.05, 0.35, 0.80), opacity=0.95),
     )
 
     laptop = scene.add_entity(
-        gs.morphs.Mesh(file=LAPTOP_MESH_PATH, pos=LAPTOP_MESH_POS, fixed=True, convexify=True),
+        gs.morphs.Mesh(
+            file=LAPTOP_MESH_PATH,
+            pos=LAPTOP_MESH_POS,
+            euler=LAPTOP_MESH_EULER,
+            fixed=True,
+            convexify=True,
+        ),
         surface=gs.surfaces.Default(color=(0.2, 0.2, 0.2)),
     )
 
