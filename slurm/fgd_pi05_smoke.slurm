@@ -42,11 +42,12 @@ for _ in $(seq 1 180); do
 done
 kill -0 "$SERVER_PID"
 
-# ---------------- client (libero env) ----------------
-conda activate libero
+# ---------------- client (openvla_libero_merged: the env with months of
+# validated batch LIBERO+EGL runs; py3.8 'libero' env core-dumped in batch
+# and was never batch-validated — see job 42157846) ----------------
+conda activate openvla_libero_merged
 export MUJOCO_GL=egl
-export LD_PRELOAD="$CONDA_PREFIX/lib/libstdc++.so.6"
-export PYTHONPATH="$WT/openpi_guided/packages/openpi-client/src:$ROOT/SafeLIBERO/safelibero:$WT/vlm_pipeline"
+export PYTHONPATH="$ROOT/SafeLIBERO/safelibero:$WT/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
 
 # Phase 0: disabled-guidance sanity (task 0, L1, n=2) — same server, enabled=0
 python "$WT/vlm_pipeline/run_guided_safelibero_pi05_eval.py" \
