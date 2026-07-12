@@ -56,6 +56,39 @@ class _SpikeConfig:
     chunk_size: int = 32
     env_img_res: int = 224
 
+    # Every other field get_action()/prepare_images_for_model() reads,
+    # copied from PolicyEvalConfig's own defaults (ROBOCASA.md's example CLI
+    # invocation) -- not importing that class itself, see docstring above.
+    use_third_person_image: bool = True
+    num_third_person_images: int = 2
+    use_wrist_image: bool = True
+    num_wrist_images: int = 1
+    use_proprio: bool = True
+    flip_images: bool = True
+    use_variance_scale: bool = False
+    use_jpeg_compression: bool = True
+    ar_future_prediction: bool = False
+    ar_value_prediction: bool = False
+    ar_qvalue_prediction: bool = False
+    unnormalize_actions: bool = True
+    normalize_proprio: bool = True
+    trained_with_image_aug: bool = True
+    seed: int = 195
+    randomize_seed: bool = False
+    planning_model_config_name: str = ""
+    planning_model_ckpt_path: str = ""
+    use_ensemble_future_state_predictions: bool = False
+    num_future_state_predictions_in_ensemble: int = 3
+    future_state_ensemble_aggregation_scheme: str = "average"
+    use_ensemble_value_predictions: bool = False
+    num_value_predictions_in_ensemble: int = 5
+    value_ensemble_aggregation_scheme: str = "average"
+    search_depth: int = 1
+    mask_current_state_action_for_value_prediction: bool = False
+    mask_future_state_for_qvalue_prediction: bool = False
+    num_queries_best_of_n: int = 1
+    parallel_timeout: int = 15
+
 
 def main():
     from cosmos_policy.experiments.robot.cosmos_utils import (

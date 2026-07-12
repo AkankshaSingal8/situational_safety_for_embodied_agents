@@ -51,7 +51,7 @@ import numpy as np
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 from robocasa_adapter import RoboCasaAdapter  # noqa: E402
-from robocasa_action_utils import build_env_action  # noqa: E402
+from robocasa_action_utils import build_env_action, json_default  # noqa: E402
 
 from openpi_client import image_tools  # noqa: E402
 from openpi_client import websocket_client_policy as _websocket_client_policy  # noqa: E402
@@ -182,7 +182,7 @@ def main():
 
     results_path = os.path.join(args.results_dir, "episodes.json")
     with open(results_path, "w") as f:
-        json.dump(all_results, f, indent=2)
+        json.dump(all_results, f, indent=2, default=json_default)
 
     n_ok = sum(1 for r in all_results if r["error"] is None)
     n_success = sum(1 for r in all_results if r.get("success"))

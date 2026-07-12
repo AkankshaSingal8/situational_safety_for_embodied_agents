@@ -65,6 +65,11 @@ pip install --no-deps "lerobot@git+https://github.com/huggingface/lerobot@0cf864
 pip install -e "${OPENPI_REPO}" --no-deps
 pip install -e "${OPENPI_REPO}/packages/openpi-client" --no-deps
 
+# `lerobot`'s own dataset utils import `jsonlines` at module level, but it's
+# not in the pinned closure above (only surfaced when actually running
+# serve_policy.py, which imports through openpi -> lerobot's data_loader).
+pip install jsonlines
+
 # Route checkpoint/config downloads to $OCEAN, NOT $HOME -- home quota on
 # this cluster is nearly full (~1.6GB free as of this build).
 export OPENPI_DATA_HOME="/ocean/projects/cis250185p/asingal/oopsieverse_eval_cache/openpi"

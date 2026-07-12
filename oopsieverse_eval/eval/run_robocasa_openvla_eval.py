@@ -28,7 +28,7 @@ import requests
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 from robocasa_adapter import RoboCasaAdapter  # noqa: E402
-from robocasa_action_utils import build_env_action, openvla_gripper_to_robocasa  # noqa: E402
+from robocasa_action_utils import build_env_action, json_default, openvla_gripper_to_robocasa  # noqa: E402
 
 ALL_TASKS = [
     "pick_egg", "serve_pastry", "open_single_door", "turn_on_faucet",
@@ -126,7 +126,7 @@ def main():
 
     results_path = os.path.join(args.results_dir, "episodes.json")
     with open(results_path, "w") as f:
-        json.dump(all_results, f, indent=2)
+        json.dump(all_results, f, indent=2, default=json_default)
 
     n_ok = sum(1 for r in all_results if r["error"] is None)
     n_success = sum(1 for r in all_results if r.get("success"))

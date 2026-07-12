@@ -11,6 +11,19 @@ from __future__ import annotations
 import numpy as np
 
 
+def json_default(obj):
+    """`json.dump(..., default=json_default)` handler for numpy scalar types.
+
+    `RoboCasaAdapter.get_health_summary()` returns numpy float32 values,
+    which the stdlib `json` module doesn't know how to serialize.
+    """
+    if isinstance(obj, np.generic):
+        return obj.item()
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
 def build_env_action(robot, arm_delta: np.ndarray, gripper_value: float) -> np.ndarray:
     """Build a full composite-controller action vector for `robot`.
 
