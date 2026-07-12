@@ -54,3 +54,13 @@ def test_invalid_chunk_fails_closed():
     filt.reset(obs, "instruction", "mug_obstacle")
     with np.testing.assert_raises(ValueError):
         filt.filter_chunk(np.zeros(7), obs)
+
+
+def test_valid_low_eef_pose_does_not_trigger_workspace_intervention():
+    obs = _obs(eef=(0.0, 0.0, 0.75), obstacle=(0.3, 0.3, 0.9))
+    filt = ContextualPredictiveSafetyFilter()
+    filt.reset(obs, "instruction", "mug_obstacle")
+    actions = np.zeros((8, 7), dtype=np.float32)
+    filtered, decision = filt.filter_chunk(actions, obs)
+    np.testing.assert_array_equal(filtered, actions)
+    assert not decision.intervened

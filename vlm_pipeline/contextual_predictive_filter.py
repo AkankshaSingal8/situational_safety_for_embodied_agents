@@ -91,7 +91,10 @@ class PredictiveFilterConfig:
     influence_distance: float = 0.055
     detour_gain: float = 0.75
     smoothing: float = 0.30
-    table_z_min: float = 0.805
+    # Franka EEF origins can legitimately descend below the tabletop surface
+    # while the fingers grasp an object; this is a broad robot workspace bound,
+    # not a tabletop collision constraint.
+    table_z_min: float = 0.68
     workspace_z_max: float = 1.35
     numerical_eps: float = 1e-8
 
