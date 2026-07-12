@@ -1,0 +1,31 @@
+Source: YCB Object and Model Set (Yale-CMU-Berkeley)
+https://www.ycbbenchmarks.com/object-models/
+http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/
+
+Object: 026_sponge ("scouring pad" / kitchen sponge)
+File set downloaded: data/google/026_sponge_google_16k.tgz
+  (Google 16k-vertex scanned mesh: textured.obj + textured.mtl + texture_map.png,
+   plus the raw nontextured.ply/.stl and textured.dae also included in the
+   archive but unused here -- only textured.obj/.mtl/texture_map.png are
+   referenced by genesis_bakeoff/scenario_2a_i.py.)
+
+Downloaded: 2026-07-12, via direct HTTP GET against the S3-hosted YCB data
+bucket (bucket confirmed reachable from this cluster; see
+genesis_bakeoff/scenario_2a_i.py's module docstring for the exact URL used).
+
+License / usage terms: The YCB Object and Model Set is provided by the YCB
+Benchmarks project (Calli, Singh, Walsman, Srinivasa, Abbeel, Dollar, "The
+YCB Object and Model Set: Towards Common Benchmarks for Manipulation
+Research," ICAR 2015) for free use in manipulation research and benchmarking.
+Per the project's website, the object models and associated data are made
+freely available to the research community; no separate per-object license
+file is bundled in the downloaded archive (the archive itself is the primary
+usage-permission artifact, consistent with this project's other
+externally-sourced assets, e.g. external_assets/laptop/License.txt's Kenney
+CC0 convention -- this file exists to document provenance for that same
+attribution purpose).
+
+Citation:
+  B. Calli, A. Singh, A. Walsman, S. Srinivasa, P. Abbeel, A. M. Dollar,
+  "The YCB Object and Model Set: Towards Common Benchmarks for Manipulation
+  Research," IEEE International Conference on Advanced Robotics (ICAR), 2015.
