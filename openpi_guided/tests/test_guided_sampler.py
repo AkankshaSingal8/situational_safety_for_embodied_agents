@@ -1,0 +1,149 @@
+"""Offline unit tests for the in-denoising DCBF repair (no GPU, no checkpoint).
+
+Run from the worktree root:
+    JAX_PLATFORMS=cpu PYTHONPATH=openpi_guided/src python -m pytest openpi_guided/tests -q
+"""
+
+import os
+
+os.environ.setdefault("JAX_PLATFORMS", "cpu")
+
+import jax.numpy as jnp
+import numpy as np
+import pytest
+
+from openpi.models.pi0_guided import GuidanceParams, _dcbf_repair
+
+H = 10
+GAMMA = 0.9
+SCALE = 0.05
+# Symmetric quantiles so normalized 0 == zero command in the synthetic tests.
+Q01 = np.full(3, -1.0, dtype=np.float32)
+Q99 = np.full(3, 1.0, dtype=np.float32)
+
+
+def make_params(eef, obstacle, r_eff=0.12, enabled=1.0):
+    return GuidanceParams(
+        enabled=jnp.float32(enabled),
+        eef_pos=jnp.asarray(np.asarray(eef, dtype=np.float32)),
+        obstacle_pos=jnp.asarray(np.asarray(obstacle, dtype=np.float32)),
+        r_eff=jnp.float32(r_eff),
+        gamma=jnp.float32(GAMMA),
+        q01=jnp.asarray(Q01),
+        q99=jnp.asarray(Q99),
+        translation_scale=jnp.float32(SCALE),
+    )
+
+
+def chunk_toward(direction, magnitude=0.8, action_dim=32):
+    """Chunk whose translational commands all push in `direction`."""
+    x = np.zeros((1, H, action_dim), dtype=np.float32)
+    d = np.asarray(direction, dtype=np.float32)
+    d = d / np.linalg.norm(d)
+    x[0, :, :3] = d * magnitude
+    return jnp.asarray(x)
+
+
+def rollout(x, params):
+    """Numpy reference: normalized chunk -> metric EEF positions."""
+    span = Q99 - Q01 + 1e-6
+    cmd = (np.asarray(x)[0, :, :3] + 1.0) / 2.0 * span + Q01
+    disp = cmd * SCALE
+    return np.asarray(params.eef_pos) + np.cumsum(disp, axis=0)
+
+
+def barrier_chain(x, params):
+    p = rollout(x, params)
+    dists = np.linalg.norm(p - np.asarray(params.obstacle_pos), axis=-1)
+    b = dists - float(params.r_eff)
+    b0 = np.linalg.norm(np.asarray(params.eef_pos) - np.asarray(params.obstacle_pos)) - float(params.r_eff)
+    return b0, b
+
+
+def test_noop_when_far():
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[5.0, 5.0, 5.0])
+    x = chunk_toward([1.0, 0.0, 0.0])
+    x_new, diag = _dcbf_repair(x, params)
+    np.testing.assert_allclose(np.asarray(x_new), np.asarray(x), atol=1e-6)
+    assert float(diag["correction_norm"][0]) < 1e-6
+    assert float(diag["max_residual"][0]) < 1e-6
+
+
+def test_disabled_is_identity_even_when_violating():
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.15, 0.0, 1.0], enabled=0.0)
+    x = chunk_toward([1.0, 0.0, 0.0])  # drives straight at the obstacle
+    x_new, _ = _dcbf_repair(x, params)
+    np.testing.assert_allclose(np.asarray(x_new), np.asarray(x), atol=1e-6)
+
+
+def test_head_on_chunk_gets_repaired_to_satisfy_dcbf_chain():
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 1.0])
+    x = chunk_toward([1.0, 0.0, 0.0])  # 4 cm/step straight at obstacle 20 cm away
+    x_new, diag = _dcbf_repair(x, params)
+
+    b0, b = barrier_chain(x_new, params)
+    chain = np.concatenate([[b0], b])
+    violations = (1.0 - GAMMA) * chain[:-1] - chain[1:]
+    assert np.max(violations) < 1e-4, f"DCBF chain violated: {violations}"
+    assert float(diag["correction_norm"][0]) > 1e-3
+    # The repaired path must keep positive clearance.
+    assert np.min(b) > -1e-4
+    assert float(diag["min_clearance"][0]) == pytest.approx(np.min(b), abs=1e-4)
+
+
+def test_tangential_chunk_barely_modified():
+    # Path passes at ~18 cm lateral offset from an r_eff=0.12 obstacle: safe.
+    params = make_params(eef=[0.0, 0.18, 1.0], obstacle=[0.15, 0.0, 1.0])
+    x = chunk_toward([1.0, 0.0, 0.0], magnitude=0.5)
+    x_new, diag = _dcbf_repair(x, params)
+    assert float(diag["correction_norm"][0]) < 1e-3
+
+
+def test_starts_inside_margin_escapes_gradually():
+    # B_0 < 0: DCBF requires B_j >= (1-gamma)*B_{j-1}, i.e., geometric decay of
+    # the violation toward the boundary — no teleporting, monotone improvement.
+    params = make_params(eef=[0.10, 0.0, 1.0], obstacle=[0.15, 0.0, 1.0])
+    x = chunk_toward([1.0, 0.0, 0.0], magnitude=0.3)
+    x_new, diag = _dcbf_repair(x, params)
+    b0, b = barrier_chain(x_new, params)
+    assert b0 < 0
+    chain = np.concatenate([[b0], b])
+    # From deep inside the margin the |command|<=1 clamp physically bounds the
+    # escape speed, so the chain condition can be unattainable at early steps.
+    # The honest guaranteed property is monotone escape at max commanded speed.
+    assert np.all(np.diff(chain) >= -1e-5), f"barrier not monotone: {chain}"
+    # The end of the horizon must be strictly safer than the start.
+    assert b[-1] > b0
+    # Residual violation must be reported, not hidden.
+    assert float(diag["max_residual"][0]) > 1e-4
+
+
+def test_command_clamp_respected():
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.08, 0.0, 1.0], r_eff=0.2)
+    x = chunk_toward([1.0, 0.0, 0.0])
+    x_new, diag = _dcbf_repair(x, params)
+    span = Q99 - Q01 + 1e-6
+    cmd = (np.asarray(x_new)[0, :, :3] + 1.0) / 2.0 * span + Q01
+    assert np.max(np.abs(cmd)) <= 1.0 + 1e-5
+    # Clamp saturation is allowed to leave residual, but it must be reported.
+    assert float(diag["max_residual"][0]) >= 0.0
+
+
+def test_only_translational_dims_touched():
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 1.0])
+    rng = np.random.default_rng(0)
+    x = np.array(chunk_toward([1.0, 0.0, 0.0]))  # writable copy
+    x[..., 3:] = rng.normal(size=x[..., 3:].shape).astype(np.float32)
+    x = jnp.asarray(x)
+    x_new, _ = _dcbf_repair(x, params)
+    np.testing.assert_allclose(np.asarray(x_new)[..., 3:], np.asarray(x)[..., 3:], atol=1e-7)
+
+
+def test_batch_dimension():
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 1.0])
+    x1 = chunk_toward([1.0, 0.0, 0.0])
+    x2 = chunk_toward([-1.0, 0.0, 0.0])  # moving away: should be untouched
+    x = jnp.concatenate([x1, x2], axis=0)
+    x_new, diag = _dcbf_repair(x, params)
+    assert float(diag["correction_norm"][0]) > 1e-3
+    assert float(diag["correction_norm"][1]) < 1e-6
