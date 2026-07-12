@@ -117,7 +117,7 @@ def serve(server: CosmosServer, host: str, port: int) -> None:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((host, port))
-        sock.listen(1)
+        sock.listen(5)  # defense-in-depth backlog; the real fix is the client's long timeout
         logger.info("Listening on %s:%d", host, port)
         while True:
             conn, addr = sock.accept()

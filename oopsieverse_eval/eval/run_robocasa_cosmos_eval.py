@@ -86,7 +86,14 @@ def _send_msg(sock: socket.socket, obj: dict) -> None:
 
 
 def act(host: str, port: int, primary_image, secondary_image, wrist_image, proprio, instruction: str) -> np.ndarray:
-    with socket.create_connection((host, port), timeout=120) as sock:
+    # 900s, not 120s: the risk-gate spike measured ~6 minutes for a single
+    # get_action() call (T5 encoder first-load + video-diffusion denoising),
+    # and a too-short client timeout here doesn't just fail that one call --
+    # it also causes the NEXT connection attempt to pile up against the
+    # server's listen() backlog while the abandoned first request is still
+    # being computed server-side, cascading into every subsequent episode
+    # failing too (observed: every episode after the first timed out).
+    with socket.create_connection((host, port), timeout=900) as sock:
         _send_msg(sock, {
             "primary_image": primary_image,
             "secondary_image": secondary_image,
