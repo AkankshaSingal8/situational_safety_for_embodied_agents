@@ -1,0 +1,27 @@
+YCB Object and Model Set -- 032_knife
+
+Source: The YCB Object and Model Set (Calli, Singh, Walsman, Srinivasa,
+Abbeel, Dollar, "The YCB Object and Model Set: Towards Common Benchmarks
+for Manipulation Research," ICAR 2015).
+
+Downloaded from the public YCB benchmarks mirror:
+http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/032_knife_google_16k.tgz
+
+Variant: google_16k (Google scanner textured mesh + point cloud), object
+032_knife (kitchen/paring knife).
+
+Files staged here (from the tgz's google_16k/ subdirectory):
+  textured.obj / textured.mtl / texture_map.png  -- textured visual mesh
+  nontextured.stl / nontextured.ply               -- untextured mesh (collision-usable)
+  kinbody.xml                                      -- OpenRAVE kinbody wrapper (unused here)
+
+License / usage: The YCB Object and Model Set is provided by the YCB
+Benchmarks project (Yale-CMU-Berkeley) for free use in robotics research,
+per the project's stated terms at https://www.ycbbenchmarks.com/. No
+additional per-object license file is bundled in the source tarball; usage
+here is research-only, matching the project's intended purpose (a
+manipulation-safety benchmark), consistent with genesis_bakeoff/
+external_assets/laptop/'s convention of documenting provenance for any
+external, non-LIBERO asset.
+
+Project homepage: https://www.ycbbenchmarks.com/
