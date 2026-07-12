@@ -18,7 +18,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=32000M
+#SBATCH --mem=63000M
 #SBATCH --time=00:45:00
 #SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
 #SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
