@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import re as _re
 from typing import Any, Dict, List, Optional, Tuple
@@ -406,6 +407,31 @@ class VisualObstacleGrounder:
                 break
         return merged
 
+    def _detect_two_pass(self, img: np.ndarray, votes: int) -> List[Dict]:
+        """Full-image detection plus (opt-in FOL_DETECT_2PASS=1) a second
+        pass on the 2x-upscaled upper image half.  Recovers objects that
+        visually merge with large fixtures at full-image scale (e.g. a
+        moka pot standing on a stove) — the dominant detection-recall
+        failure in forensics (t2)."""
+        merged = self._detect(img, votes)
+        if os.environ.get("FOL_DETECT_2PASS", "0") != "1":
+            return merged
+        wh = img.shape[0]
+        upper = img[: wh // 2]
+        up2 = np.ascontiguousarray(
+            np.repeat(np.repeat(upper, 2, axis=0), 2, axis=1))
+        extra = self._detect(up2, votes=1)
+        n_new = 0
+        for det in extra:
+            bb = [c / 2.0 for c in det["bbox"]]
+            det2 = dict(det, bbox=bb)
+            if all(_iou(bb, m["bbox"]) < 0.5 for m in merged):
+                merged.append(det2)
+                n_new += 1
+        if n_new:
+            logger.info(f"[VisualGrounder] 2pass upper-half added {n_new} detections")
+        return merged
+
     def ground(
         self,
         agent_img_raw: np.ndarray,
@@ -439,7 +465,7 @@ class VisualObstacleGrounder:
         T[:3, 3] = np.asarray(eef_pos, dtype=np.float64)
         Ee = T @ T_HANDEYE
 
-        det_a = self._detect(agent_img, votes=3)
+        det_a = self._detect_two_pass(agent_img, votes=3)
         logger.info(f"[VisualGrounder] agentview detections: {len(det_a)}")
 
         ra = [(d, _make_ray((d["bbox"][0]+d["bbox"][2])/2,
