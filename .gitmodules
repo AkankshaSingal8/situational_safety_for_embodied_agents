@@ -4,3 +4,6 @@
 [submodule "cosmos-policy"]
 	path = cosmos-policy
 	url = https://github.com/NVlabs/cosmos-policy.git
+[submodule "oopsieverse_eval/external/oopsieverse"]
+	path = oopsieverse_eval/external/oopsieverse
+	url = https://github.com/UT-Austin-RobIn/oopsieverse.git
