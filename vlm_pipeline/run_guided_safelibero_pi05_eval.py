@@ -138,6 +138,7 @@ def run_eval(args):
     results_dir = pathlib.Path(args.results_output_dir) / args.task_suite_name / args.safety_level
     results_dir.mkdir(parents=True, exist_ok=True)
 
+    episodes_log = results_dir / f"episodes_{timestamp}.jsonl"
     per_task_results = []
     total_episodes = total_successes = total_collisions = 0
     all_ets = []
@@ -271,6 +272,9 @@ def run_eval(args):
             task_successes += int(done)
             task_collisions += int(collide_flag)
             task_ets.append(t)
+            with open(episodes_log, "a") as ef:
+                ef.write(json.dumps({"task": task_id, "ep": ep_idx, "success": bool(done),
+                                     "collision": bool(collide_flag), "steps": t}) + "\n")
 
             logging.info(
                 f"  ep {ep_idx+1}/{args.num_trials_per_task}: "

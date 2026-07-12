@@ -63,6 +63,16 @@ def main(args: Args) -> None:
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)
 
+    # Warm up JIT before opening the port so the first real request doesn't sit
+    # behind a ~60-90s compile (which trips the client's websocket keepalive).
+    from openpi.policies.libero_policy import make_libero_example
+
+    example = make_libero_example()
+    example["guidance"] = {"enabled": 0.0}
+    t0 = __import__("time").monotonic()
+    policy.infer(example)
+    logging.info("Warmup infer done in %.1fs — opening port.", __import__("time").monotonic() - t0)
+
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
     logging.info("Creating guided server (host: %s, ip: %s, port: %s)", hostname, local_ip, args.port)
