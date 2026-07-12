@@ -23,3 +23,6 @@ openvla_benchmark_smoke/
 pi05_benchmark_smoke/
 .worktrees/
 .superpowers/
+
+# OopsieVerse eval outputs (rollout videos + per-episode JSON, not source)
+oopsieverse_eval/results/
