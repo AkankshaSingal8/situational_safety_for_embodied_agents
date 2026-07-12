@@ -23,8 +23,8 @@ conda activate aegis
 export XLA_PYTHON_CLIENT_MEM_FRACTION=0.85
 export PYTHONPATH="$AEGIS/openpi/src:${PYTHONPATH:-}"
 python "$AEGIS/openpi/scripts/serve_policy.py" \
-  policy:checkpoint --policy.config=pi05_libero \
-  --policy.dir="$AEGIS/checkpoints/pi05_libero" --port "$PORT" &
+  --port "$PORT" policy:checkpoint --policy.config=pi05_libero \
+  --policy.dir="$AEGIS/checkpoints/pi05_libero" &
 SERVER_PID=$!
 trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
 
