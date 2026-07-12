@@ -1,0 +1,882 @@
+[
+  {
+    "step": 0,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.707763962457646
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 1,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.675316346971442
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 2,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.63300312852156
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 3,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.58759106358541
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 4,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.541234926847467
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 5,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.494649005137788
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 6,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.448039719622022
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 7,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.401487654361759
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 8,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.355046129612862
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 9,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.308688435762164
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 10,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.262440949804056
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 11,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.216295419891397
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 12,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.170242065850099
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 13,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.124310300286618
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 14,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.078479901571717
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 15,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 9.032747318013774
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 16,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.987118959640325
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 17,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.941591968386135
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 18,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.89618459850324
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 19,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.850867025558001
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 20,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.805672691007294
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 21,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.760577473240089
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 22,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.71559102490797
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 23,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.670701566402379
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 24,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.625936465070652
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 25,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.58125824455925
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 26,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.53669340475744
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 27,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.492230129420602
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 28,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.4478715273577
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 29,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.403632255135282
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 30,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.359496568989542
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 31,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.315469255727702
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 32,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.271548666357138
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 33,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.227732421321216
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 34,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.184026932460608
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 35,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.140434835420875
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 36,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.09695463562693
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 37,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.05357786849817
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 38,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 8.010310527089514
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 39,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.967147029572052
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 40,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.924114421835391
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 41,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.881159817099526
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 42,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.838338430668136
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 43,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.795613978117043
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 44,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.753020676150488
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 45,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.710524208691128
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 46,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.668132403234592
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 47,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.625862613809996
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 48,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.583701737981169
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 49,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.541646804608062
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 50,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.499702846201112
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 51,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.457888560777631
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 52,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.4161706267786585
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 53,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.374562667213249
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 54,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.333077663396592
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 55,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.291685573547518
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 56,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.250430032527646
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 57,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.209281043122683
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 58,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.168242515896724
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 59,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.127318810596734
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 60,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.086513370032094
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 61,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.045807693666191
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 62,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 7.005222216775794
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 63,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.964755053810668
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 64,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.924394426475001
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 65,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.8841550024050155
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 66,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.844034604803054
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 67,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.80402837310673
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 68,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.764127557802423
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 69,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.724353320589286
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 70,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.684693217292744
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 71,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.645144344773305
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 72,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.605714296130461
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 73,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.566402410166611
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 74,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.527204496800189
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 75,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.488123113560638
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 76,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.449163905360306
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 77,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.410314011980588
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 78,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.371585752626241
+      }
+    ],
+    "modified": false
+  },
+  {
+    "step": 79,
+    "h": [
+      {
+        "object": "laptop",
+        "relationship": "above",
+        "h": 6.332968043347891
+      }
+    ],
+    "modified": false
+  }
+]

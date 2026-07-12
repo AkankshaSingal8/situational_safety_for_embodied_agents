@@ -41,6 +41,16 @@ from libero_asset_loader import load_libero_object
 from metrics_1b import edge_margin, joint_limit_margin, nearest_edge_distance
 from placement_sampler import sample_placement
 from scenario_builder import generate_init_states, save_init_states, load_init_states
+from standard_rig import (
+    ARM_READY_QPOS,
+    GRIPPER_CLOSED,
+    GRIPPER_OPEN,
+    TABLE_HEIGHT,
+    add_eye_in_hand_camera,
+    add_standard_agentview_camera,
+    render_eye_in_hand,
+    set_robot_ready_pose,
+)
 
 REPO = "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents"
 MUG_XML = os.path.join(
@@ -50,10 +60,25 @@ PLATE_XML = os.path.join(
     REPO, "SafeLIBERO/safelibero/libero/libero/assets/stable_scanned_objects/plate/plate.xml"
 )
 
-TABLE_HEIGHT = 0.75  # matches scenario_1a_i / scenario_2c convention
+# TABLE_HEIGHT now comes from standard_rig (was locally redefined here
+# before the rig retrofit; value unchanged at 0.75).
+# NOTE: TABLE_CENTER_XY below is the PHYSICAL table center (matches the Box
+# entity's actual pos in build_scene() and feeds the edge-distance metric
+# geometry) -- do not confuse with the camera's lookat point, which is a
+# separate CAMERA_LOOKAT_XY constant below (standard_rig's
+# add_standard_agentview_camera(table_center_xy=...) param name refers to
+# lookat target, not this physical-table constant).
 TABLE_CENTER_XY = (0.35, 0.05)
 TABLE_SIZE = (0.6, 0.6, TABLE_HEIGHT)  # Box primitive (x, y, z) size -> half-extents = size/2
 TABLE_HALF_EXTENTS_XY = (TABLE_SIZE[0] / 2, TABLE_SIZE[1] / 2)  # (0.3, 0.3)
+
+# Deliberate deviation from standard_rig's shared default lookat center
+# (0.35, 0.05): 1b's mug/plate regions span x in [0.25, 0.55] and y in
+# [-0.08, 0.33], noticeably wider/further out than the other scenarios, so
+# (0.35, 0.1) -- matching this scenario's original pre-retrofit lookat --
+# keeps both regions comfortably in frame. Camera pos/fov/res are NOT
+# overridden; those stay standard (see build_scene()).
+CAMERA_LOOKAT_XY = (0.35, 0.1)
 
 # Table's y spans [0.05-0.3, 0.05+0.3] = [-0.25, 0.35]. The robot base sits at
 # the origin (0,0), so +y (toward 0.35) is the FAR edge relative to the base.
@@ -86,9 +111,12 @@ ARM_Q_MAX = np.array([2.8973, 1.7628, 2.8973, -0.0698, 2.8973, 3.7525, 2.8973])
 
 ARM_DOFS_IDX = list(range(7))
 GRIPPER_DOFS_IDX = [7, 8]
-HOME_Q = np.array([0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785])  # standard Panda "ready" pose
-GRIPPER_OPEN = np.array([0.04, 0.04])
-GRIPPER_CLOSED = np.array([0.0, 0.0])
+# HOME_Q / GRIPPER_OPEN / GRIPPER_CLOSED now come from standard_rig
+# (ARM_READY_QPOS matches this file's old locally-rounded HOME_Q to 3
+# decimal places -- [0, -0.785398, 0, -2.356194, 0, 1.570796, 0.785398] vs
+# the old [0, -0.785, 0, -2.356, 0, 1.571, 0.785] -- so per-episode reset
+# behavior, and therefore this scenario's metrics, is unaffected).
+HOME_Q = ARM_READY_QPOS
 
 
 def build_scene(show_viewer=False):
@@ -127,16 +155,12 @@ def build_scene(show_viewer=False):
         pos=(PLATE_XY_RANGE[0][0], PLATE_XY_RANGE[0][1], PLATE_Z),
     )
 
-    cam = scene.add_camera(
-        res=(512, 512),
-        pos=(1.5, 0.5, TABLE_HEIGHT + 1.0),
-        lookat=(0.35, 0.1, TABLE_HEIGHT + 0.05),
-        fov=45,
-        GUI=False,
-    )
+    cam = add_standard_agentview_camera(scene, table_center_xy=CAMERA_LOOKAT_XY)
+    wrist_cam = add_eye_in_hand_camera(scene)
 
     scene.build()
-    return scene, franka, mug, plate, cam
+    set_robot_ready_pose(franka)
+    return scene, franka, mug, plate, cam, wrist_cam
 
 
 def get_ee_pos_np(hand_link):
@@ -182,9 +206,7 @@ def run_episode(scene, franka, mug, plate, hand_link, init_state, steps_per_phas
     plate_xy0 = np.array(init_state["plate"][:2])
 
     # --- reset ---
-    franka.set_dofs_position(
-        np.concatenate([HOME_Q, GRIPPER_OPEN]), list(range(9)),
-    )
+    set_robot_ready_pose(franka)  # equivalent to the old manual HOME_Q + GRIPPER_OPEN set_dofs_position call
     mug.set_pos(np.array(init_state["mug"]))
     mug.set_quat(np.array([1.0, 0.0, 0.0, 0.0]))
     plate.set_pos(np.array(init_state["plate"]))
@@ -249,7 +271,7 @@ def main():
     args = parser.parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
 
-    scene, franka, mug, plate, cam = build_scene(show_viewer=False)
+    scene, franka, mug, plate, cam, wrist_cam = build_scene(show_viewer=False)
     hand_link = franka.get_link("hand")
 
     # Sanity: confirm live joint limits match the hardcoded ARM_Q_MIN/MAX
@@ -296,6 +318,8 @@ def main():
             rgb, depth, _, _ = cam.render(depth=True)
             import imageio
             imageio.imwrite(os.path.join(args.output_dir, "frame_start_rgb.png"), rgb)
+            wrist_rgb = render_eye_in_hand(wrist_cam, franka)
+            imageio.imwrite(os.path.join(args.output_dir, "frame_start_wrist_rgb.png"), wrist_rgb)
 
     # Render a final-state frame after the last episode's scripted motion too,
     # for a second visual sanity check (mug should be near/on the plate now,
@@ -303,6 +327,8 @@ def main():
     rgb, depth, _, _ = cam.render(depth=True)
     import imageio
     imageio.imwrite(os.path.join(args.output_dir, "frame_final_rgb.png"), rgb)
+    wrist_rgb = render_eye_in_hand(wrist_cam, franka)
+    imageio.imwrite(os.path.join(args.output_dir, "frame_final_wrist_rgb.png"), wrist_rgb)
 
     summary = {
         "n_episodes": n_eval,
