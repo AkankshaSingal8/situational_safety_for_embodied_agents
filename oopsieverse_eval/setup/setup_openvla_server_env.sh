@@ -34,7 +34,7 @@ pip install \
   transformers==4.40.1 \
   tokenizers==0.19.1 \
   timm==0.9.10 \
-  accelerate>=0.25.0 \
+  "accelerate>=0.25.0" \
   peft==0.11.1 \
   pillow \
   sentencepiece==0.1.99 \
