@@ -54,10 +54,14 @@ def quat2axisangle(quat: np.ndarray) -> np.ndarray:
         return np.zeros(3)
     return (quat[:3] * 2.0 * math.acos(float(quat[3]))) / den
 
+# NOTE: shelve_item excluded -- requires a one-time interactive camera
+# calibration file (resources/camera_states/shelve_item_1.json) that
+# OopsieVerse does not ship (see smoke_test_robocasa.py's original
+# exclusion of it, and the FileNotFoundError this produces if attempted).
 ALL_TASKS = [
     "pick_egg", "serve_pastry", "open_single_door", "turn_on_faucet",
     "turn_on_microwave", "turn_on_stove", "open_drawer", "close_drawer",
-    "place_plate", "counter_to_microwave", "prepare_coffee", "shelve_item",
+    "place_plate", "counter_to_microwave", "prepare_coffee",
     "prepare_breakfast", "dishes_to_sink", "nav_lift_bowl", "wipe_counter",
 ]
 
@@ -86,7 +90,7 @@ def run_episode(
     # NOTE: get_ep_meta() must be called AFTER reset() -- RoboCasa's base
     # Kitchen.get_ep_meta() reads attributes (object_cfgs, layout_id) only
     # populated during reset()/_reset_internal().
-    instruction = adapter.env.get_ep_meta()["lang"]
+    instruction = adapter.get_instruction()
     robot = adapter.env.robots[0]
     action_plan: collections.deque = collections.deque()
     frames = []

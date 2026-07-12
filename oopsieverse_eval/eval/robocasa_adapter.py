@@ -141,6 +141,22 @@ class RoboCasaAdapter:
         raw_obs, _info = self.env.reset()
         return self._build_obs(raw_obs)
 
+    def get_instruction(self) -> str:
+        """Return the task's natural-language instruction, post-reset.
+
+        Some OopsieVerse task classes' own `get_ep_meta()` returns None
+        under certain scene-randomization settings (e.g. TurnOnStove
+        returns None whenever `self.randomize_scene` is True, its default)
+        -- a permanent quirk of those task classes, not a bug in this
+        adapter. Falls back to a generic instruction derived from the task
+        name in that case, rather than letting every caller crash on
+        `None["lang"]`.
+        """
+        ep_meta = self.env.get_ep_meta()
+        if ep_meta is not None and "lang" in ep_meta:
+            return ep_meta["lang"]
+        return self.task_name.replace("_", " ")
+
     def step(self, action: np.ndarray) -> Tuple[Dict[str, Any], bool, bool, Dict[str, Any]]:
         """Step the underlying env with `action`, passed through unchanged."""
         raw_obs, _reward, done, info = self.env.step(action)

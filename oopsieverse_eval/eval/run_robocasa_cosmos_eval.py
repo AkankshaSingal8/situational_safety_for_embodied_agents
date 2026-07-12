@@ -49,10 +49,14 @@ sys.path.insert(0, _HERE)
 from robocasa_adapter import RoboCasaAdapter  # noqa: E402
 from robocasa_action_utils import build_env_action, json_default  # noqa: E402
 
+# NOTE: shelve_item excluded -- requires a one-time interactive camera
+# calibration file (resources/camera_states/shelve_item_1.json) that
+# OopsieVerse does not ship (see smoke_test_robocasa.py's original
+# exclusion of it, and the FileNotFoundError this produces if attempted).
 ALL_TASKS = [
     "pick_egg", "serve_pastry", "open_single_door", "turn_on_faucet",
     "turn_on_microwave", "turn_on_stove", "open_drawer", "close_drawer",
-    "place_plate", "counter_to_microwave", "prepare_coffee", "shelve_item",
+    "place_plate", "counter_to_microwave", "prepare_coffee",
     "prepare_breakfast", "dishes_to_sink", "nav_lift_bowl", "wipe_counter",
 ]
 
@@ -111,7 +115,7 @@ def run_episode(
     adapter: RoboCasaAdapter, host: str, port: int, num_open_loop_steps: int, save_video_path: str,
 ) -> dict:
     obs = adapter.reset()
-    instruction = adapter.env.get_ep_meta()["lang"]
+    instruction = adapter.get_instruction()
     robot = adapter.env.robots[0]
     action_plan: collections.deque = collections.deque()
     frames = []
