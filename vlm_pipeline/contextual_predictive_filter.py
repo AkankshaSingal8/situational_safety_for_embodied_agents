@@ -86,7 +86,10 @@ class ObservationContextProvider:
 class PredictiveFilterConfig:
     safety_margin: float = 0.035
     eef_radius: float = 0.025
-    max_translation_delta: float = 0.050
+    # LIBERO OSC actions are normalized controller commands.  The controller's
+    # positional output range is approximately 5 cm per control step.
+    translation_scale: float = 0.050
+    max_translation_command: float = 1.0
     max_correction_per_step: float = 0.035
     influence_distance: float = 0.055
     detour_gain: float = 0.75
@@ -235,22 +238,29 @@ class ContextualPredictiveSafetyFilter:
             raise ValueError("Action chunk contains non-finite values")
 
         start = np.asarray(obs["robot0_eef_pos"], dtype=np.float64)
-        deltas = np.clip(
-            chunk[:, :3], -self.config.max_translation_delta, self.config.max_translation_delta
+        commands = np.clip(
+            chunk[:, :3],
+            -self.config.max_translation_command,
+            self.config.max_translation_command,
         )
+        deltas = commands * self.config.translation_scale
         nominal_positions = self._positions(start, deltas)
         nominal_clearance = self._clearance(nominal_positions)
         safe_positions, infeasible = self._project_positions(start, nominal_positions)
 
         safe_deltas = np.diff(np.vstack([start, safe_positions]), axis=0)
-        safe_deltas = np.clip(
-            safe_deltas, -self.config.max_translation_delta, self.config.max_translation_delta
+        safe_commands = np.clip(
+            safe_deltas / self.config.translation_scale,
+            -self.config.max_translation_command,
+            self.config.max_translation_command,
         )
         result = chunk.copy()
-        result[:, :3] = safe_deltas
+        result[:, :3] = safe_commands
         correction = float(np.linalg.norm(result[:, :3] - chunk[:, :3]))
         intervened = correction > 1e-7
-        filtered_clearance = self._clearance(self._positions(start, result[:, :3]))
+        filtered_clearance = self._clearance(
+            self._positions(start, result[:, :3] * self.config.translation_scale)
+        )
         elapsed_ms = (time.perf_counter() - started) * 1000.0
         decision = FilterDecision(
             intervened=intervened,

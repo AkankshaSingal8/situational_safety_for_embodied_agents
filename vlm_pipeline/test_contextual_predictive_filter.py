@@ -15,7 +15,7 @@ def test_safe_chunk_is_unchanged():
     filt = ContextualPredictiveSafetyFilter()
     filt.reset(obs, "move bowl", "mug_obstacle")
     actions = np.zeros((8, 7), dtype=np.float32)
-    actions[:, 0] = 0.01
+    actions[:, 0] = 0.2
     filtered, decision = filt.filter_chunk(actions, obs)
     np.testing.assert_allclose(filtered, actions, atol=1e-7)
     assert not decision.intervened
@@ -28,7 +28,7 @@ def test_future_collision_is_redirected_and_gripper_preserved():
     )
     filt.reset(obs, "move bowl", "mug_obstacle")
     actions = np.zeros((8, 7), dtype=np.float64)
-    actions[:, 0] = 0.025
+    actions[:, 0] = 0.5
     actions[:, 3:6] = 0.1
     actions[:, 6] = -1.0
     filtered, decision = filt.filter_chunk(actions, obs)
