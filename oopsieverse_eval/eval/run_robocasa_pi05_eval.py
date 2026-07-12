@@ -102,9 +102,13 @@ def build_observation(obs: dict, instruction: str) -> dict:
 
 
 def run_episode(
-    adapter: RoboCasaAdapter, client, instruction: str, replan_steps: int, save_video_path: str
+    adapter: RoboCasaAdapter, client, replan_steps: int, save_video_path: str
 ) -> dict:
     obs = adapter.reset()
+    # NOTE: get_ep_meta() must be called AFTER reset() -- RoboCasa's base
+    # Kitchen.get_ep_meta() reads attributes (object_cfgs, layout_id) only
+    # populated during reset()/_reset_internal().
+    instruction = adapter.env.get_ep_meta()["lang"]
     robot = adapter.env.robots[0]
     action_plan: collections.deque = collections.deque()
     frames = []
@@ -135,6 +139,7 @@ def run_episode(
     return {
         "success": bool(success),
         "num_steps": n_steps,
+        "instruction": instruction,
         "health_summary": adapter.get_health_summary(),
         "video_path": save_video_path if frames else None,
     }
@@ -166,10 +171,8 @@ def main():
                 task_name=task_name, max_episode_steps=args.max_episode_steps, seed=episode_seed
             )
             try:
-                instruction = adapter.env.get_ep_meta()["lang"]
                 video_path = os.path.join(args.results_dir, f"{task_name}_trial{trial}.mp4")
-                record.update(run_episode(adapter, client, instruction, args.replan_steps, video_path))
-                record["instruction"] = instruction
+                record.update(run_episode(adapter, client, args.replan_steps, video_path))
             except Exception:
                 record["error"] = traceback.format_exc()
                 print(record["error"])

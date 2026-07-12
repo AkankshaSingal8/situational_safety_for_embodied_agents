@@ -46,8 +46,13 @@ def act(server_url: str, image: np.ndarray, instruction: str) -> np.ndarray:
     return np.asarray(json_numpy.loads(resp.json()), dtype=np.float32)
 
 
-def run_episode(adapter: RoboCasaAdapter, server_url: str, instruction: str, save_video_path: str) -> dict:
+def run_episode(adapter: RoboCasaAdapter, server_url: str, save_video_path: str) -> dict:
     obs = adapter.reset()
+    # NOTE: get_ep_meta() must be called AFTER reset() -- RoboCasa's base
+    # Kitchen.get_ep_meta() reads attributes (object_cfgs, layout_id) that
+    # are only populated during reset()/_reset_internal(), and raises
+    # AttributeError if called on a freshly-constructed, not-yet-reset env.
+    instruction = adapter.env.get_ep_meta()["lang"]
     robot = adapter.env.robots[0]
     frames = []
     success = False
@@ -76,6 +81,7 @@ def run_episode(adapter: RoboCasaAdapter, server_url: str, instruction: str, sav
     return {
         "success": bool(success),
         "num_steps": n_steps,
+        "instruction": instruction,
         "health_summary": adapter.get_health_summary(),
         "video_path": save_video_path if frames else None,
     }
@@ -109,10 +115,8 @@ def main():
                 task_name=task_name, max_episode_steps=args.max_episode_steps, seed=episode_seed
             )
             try:
-                instruction = adapter.env.get_ep_meta()["lang"]
                 video_path = os.path.join(args.results_dir, f"{task_name}_trial{trial}.mp4")
-                record.update(run_episode(adapter, args.server_url, instruction, video_path))
-                record["instruction"] = instruction
+                record.update(run_episode(adapter, args.server_url, video_path))
             except Exception:
                 record["error"] = traceback.format_exc()
                 print(record["error"])

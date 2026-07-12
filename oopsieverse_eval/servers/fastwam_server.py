@@ -59,8 +59,13 @@ from hydra.utils import instantiate
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("fastwam_server")
 
+# `fast-wam/FastWAM` is gitignored in the main repo (large local checkout,
+# not tracked git content) -- it does not exist inside this or any worktree,
+# only in the main repo's working directory. Reference that fixed absolute
+# path directly (read-only) rather than deriving from this file's location.
 _HERE = Path(__file__).resolve().parent
-_FASTWAM_REPO = _HERE.parent.parent.parent / "fast-wam" / "FastWAM"
+_MAIN_REPO = Path("/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents")
+_FASTWAM_REPO = _MAIN_REPO / "fast-wam" / "FastWAM"
 _FASTWAM_SRC = _FASTWAM_REPO / "src"
 _FASTWAM_CONFIGS = _FASTWAM_REPO / "configs"
 for _p in (str(_FASTWAM_SRC),):
@@ -243,12 +248,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--ckpt_path",
-        default=str(_HERE.parent.parent.parent / "fast-wam" / "checkpoints" / "libero_uncond_2cam224.pt"),
+        default=str(_MAIN_REPO / "fast-wam" / "checkpoints" / "libero_uncond_2cam224.pt"),
     )
     parser.add_argument(
         "--stats_path",
         default=str(
-            _HERE.parent.parent.parent / "fast-wam" / "checkpoints" / "libero_uncond_2cam224_dataset_stats.json"
+            _MAIN_REPO / "fast-wam" / "checkpoints" / "libero_uncond_2cam224_dataset_stats.json"
         ),
     )
     parser.add_argument("--gpu_id", type=int, default=0)

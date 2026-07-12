@@ -14,6 +14,13 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "${ENV_PREFIX}"
 
 pip install requests json-numpy
+
+# openpi-client's own pyproject.toml pins numpy<2.0.0, which would conflict
+# with oopsieverse_robocasa's robosuite/robocasa-driven numpy 2.x -- install
+# its actual runtime deps (dm-tree, msgpack, pillow, websockets) unpinned,
+# then the package itself with --no-deps, rather than letting pip's resolver
+# try to satisfy openpi-client's numpy<2 pin against this env's real numpy.
+pip install dm-tree msgpack pillow websockets
 pip install -e "$OPENPI_CLIENT_DIR" --no-deps
 
 python -c "

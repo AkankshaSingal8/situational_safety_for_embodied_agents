@@ -14,9 +14,15 @@
 # nothing here touches that env or its checkpoint download location.
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-FASTWAM_REPO="${REPO_ROOT}/fast-wam/FastWAM"
+# `fast-wam/FastWAM` is gitignored in the main repo (see fast-wam/.gitignore)
+# -- it's a large local checkout, not tracked git content -- so it does NOT
+# exist inside this (or any) worktree, only in the main repo's working
+# directory. Reference that fixed absolute path directly (read-only), the
+# same way the existing Cosmos SLURM jobs reference cosmos-policy's own
+# untracked build artifacts (.venv_rhel8, cosmos_policy.sif) by absolute
+# main-repo path rather than deriving from the worktree.
+MAIN_REPO="/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents"
+FASTWAM_REPO="${MAIN_REPO}/fast-wam/FastWAM"
 ENV_PREFIX="/ocean/projects/cis250185p/asingal/envs/oopsieverse_fastwam_srv"
 
 if [ ! -d "${FASTWAM_REPO}" ]; then
@@ -79,7 +85,7 @@ pip install opencv-python-headless scipy fastapi "uvicorn[standard]" json-numpy
 # path. If either is ever missing, re-run fast-wam/download_checkpoint.sh
 # (unmodified) to (re)populate them.
 export HF_HOME="/ocean/projects/cis250185p/asingal/.hf_cache"
-export DIFFSYNTH_MODEL_BASE_PATH="${REPO_ROOT}/fast-wam/checkpoints"
+export DIFFSYNTH_MODEL_BASE_PATH="${MAIN_REPO}/fast-wam/checkpoints"
 export DIFFSYNTH_DOWNLOAD_SOURCE="huggingface"
 
 python -c "

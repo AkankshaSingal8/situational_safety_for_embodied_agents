@@ -21,12 +21,40 @@ from __future__ import annotations
 
 import sys
 import traceback
+from dataclasses import dataclass
 
 import numpy as np
 
 COSMOS_REPO = "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/cosmos-policy"
 if COSMOS_REPO not in sys.path:
     sys.path.insert(0, COSMOS_REPO)
+
+
+@dataclass
+class _SpikeConfig:
+    """Minimal duck-typed stand-in for run_robocasa_eval.py's PolicyEvalConfig.
+
+    NOT importing PolicyEvalConfig itself: that module does
+    `from robocasa.utils.dataset_registry import ...` at import time (the
+    real RoboCasa pip package, from moojink's fork), which isn't installed
+    in this container's .venv_rhel8 (built with `--group libero`, not
+    `--group robocasa` -- confirmed by this spike's first failed attempt).
+    get_model()/get_action() only touch a handful of plain attributes, so a
+    local dataclass with just those fields avoids that import entirely
+    without needing to install/rebuild anything.
+    """
+
+    suite: str = "robocasa"
+    config: str = ""
+    ckpt_path: str = ""
+    config_file: str = "cosmos_policy/config/config.py"
+    dataset_stats_path: str = ""
+    t5_text_embeddings_path: str = ""
+    num_denoising_steps_action: int = 5
+    num_denoising_steps_future_state: int = 1
+    num_denoising_steps_value: int = 1
+    chunk_size: int = 32
+    env_img_res: int = 224
 
 
 def main():
@@ -36,11 +64,10 @@ def main():
         init_t5_text_embeddings_cache,
         load_dataset_stats,
     )
-    from cosmos_policy.experiments.robot.robocasa.run_robocasa_eval import PolicyEvalConfig
 
     print("=== Cosmos-Policy risk-gate spike (no sim construction) ===")
 
-    cfg = PolicyEvalConfig(
+    cfg = _SpikeConfig(
         suite="robocasa",
         config="cosmos_predict2_2b_480p_robocasa_50_demos_per_task__inference",
         ckpt_path="nvidia/Cosmos-Policy-RoboCasa-Predict2-2B",
