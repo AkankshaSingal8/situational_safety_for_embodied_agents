@@ -38,6 +38,7 @@ kill -0 "$SERVER_PID"
 
 conda activate libero
 export MUJOCO_GL=egl
+export LD_PRELOAD="$CONDA_PREFIX/lib/libstdc++.so.6"
 export PYTHONPATH="$AEGIS/openpi/src:$AEGIS/openpi/packages/openpi-client/src:$ROOT/SafeLIBERO/safelibero:$WORKTREE/vlm_pipeline:${PYTHONPATH:-}"
 for LEVEL in I II; do
   python "$WORKTREE/vlm_pipeline/run_safelibero_pi05_eval.py" \
