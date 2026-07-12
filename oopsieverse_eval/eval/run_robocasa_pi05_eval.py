@@ -55,6 +55,46 @@ from robocasa_action_utils import build_env_action, json_default  # noqa: E402
 
 from openpi_client import image_tools  # noqa: E402
 from openpi_client import websocket_client_policy as _websocket_client_policy  # noqa: E402
+from openpi_client import msgpack_numpy  # noqa: E402
+import websockets.sync.client  # noqa: E402
+
+
+class NoPingWebsocketClientPolicy(_websocket_client_policy.WebsocketClientPolicy):
+    """WebsocketClientPolicy, but with keepalive pings disabled.
+
+    pi0.5's server does JAX/XLA JIT compilation on its first inference call,
+    which routinely takes well over `websockets`' default 20s ping_timeout
+    (observed: connections were force-closed with "keepalive ping timeout"
+    on every single episode's first infer() call). Since this is a
+    long-lived local script talking to a single dedicated server process
+    (not a shared production service), disabling pings entirely is safe and
+    avoids re-implementing the whole class just to change one constructor
+    kwarg -- `_wait_for_server` is the only method that constructs the
+    connection, so only it needs overriding.
+    """
+
+    def _wait_for_server(self):
+        import logging
+        import time
+
+        logging.info(f"Waiting for server at {self._uri}...")
+        while True:
+            try:
+                headers = {"Authorization": f"Api-Key {self._api_key}"} if self._api_key else None
+                conn = websockets.sync.client.connect(
+                    self._uri,
+                    compression=None,
+                    max_size=None,
+                    additional_headers=headers,
+                    ping_interval=None,
+                    open_timeout=None,
+                )
+                metadata = msgpack_numpy.unpackb(conn.recv())
+                return conn, metadata
+            except ConnectionRefusedError:
+                logging.info("Still waiting for server...")
+                time.sleep(5)
+
 
 ALL_TASKS = [
     "pick_egg", "serve_pastry", "open_single_door", "turn_on_faucet",
@@ -158,7 +198,7 @@ def main():
     args = parser.parse_args()
 
     os.makedirs(args.results_dir, exist_ok=True)
-    client = _websocket_client_policy.WebsocketClientPolicy(args.host, args.port)
+    client = NoPingWebsocketClientPolicy(args.host, args.port)
     print(f"pi0.5 server metadata: {client.get_server_metadata()}")
 
     all_results = []
