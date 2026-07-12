@@ -1,0 +1,206 @@
+{
+  "n_episodes": 10,
+  "n_safe_episodes": 5,
+  "n_unsafe_episodes": 5,
+  "sim_dt": 0.002,
+  "sim_substeps": 20,
+  "burst_steps": 400,
+  "safe_bag_center": [
+    0.35,
+    0.0
+  ],
+  "unsafe_bag_center": [
+    0.73,
+    0.28
+  ],
+  "safe_off_table_fraction_values": [
+    0.05,
+    0.0,
+    0.05,
+    0.0,
+    0.05
+  ],
+  "unsafe_off_table_fraction_values": [
+    0.6,
+    0.5,
+    0.55,
+    0.6,
+    0.65
+  ],
+  "safe_mean_boundary_overshoot_values": [
+    0.00027283996343612784,
+    0.0,
+    0.00077366203069687,
+    0.0,
+    7.432401180268444e-06
+  ],
+  "unsafe_mean_boundary_overshoot_values": [
+    0.06322476816958178,
+    0.0328133104588572,
+    0.08235018742006213,
+    0.06170146482796788,
+    0.06997937828786474
+  ],
+  "episodes": [
+    {
+      "bag_center_xy": [
+        0.7259722352027893,
+        0.2886965870857239
+      ],
+      "off_table_fraction": 0.6,
+      "mean_boundary_overshoot_m": 0.06322476816958178,
+      "max_speed_seen_mps": 3.887765407562256,
+      "final_z_range": [
+        -0.0052712238393723965,
+        0.7579426765441895
+      ],
+      "n_frames_saved": 0,
+      "variant": "unsafe",
+      "ep_idx": 0
+    },
+    {
+      "bag_center_xy": [
+        0.3400329649448395,
+        0.017870116978883743
+      ],
+      "off_table_fraction": 0.05,
+      "mean_boundary_overshoot_m": 0.00027283996343612784,
+      "max_speed_seen_mps": 2.2710163593292236,
+      "final_z_range": [
+        0.7574549317359924,
+        0.7579312324523926
+      ],
+      "n_frames_saved": 0,
+      "variant": "safe",
+      "ep_idx": 1
+    },
+    {
+      "bag_center_xy": [
+        0.7268151640892029,
+        0.29703477025032043
+      ],
+      "off_table_fraction": 0.5,
+      "mean_boundary_overshoot_m": 0.0328133104588572,
+      "max_speed_seen_mps": 3.8341853618621826,
+      "final_z_range": [
+        0.006957333069294691,
+        0.7578948140144348
+      ],
+      "n_frames_saved": 0,
+      "variant": "unsafe",
+      "ep_idx": 2
+    },
+    {
+      "bag_center_xy": [
+        0.36459189653396606,
+        0.014212100766599178
+      ],
+      "off_table_fraction": 0.0,
+      "mean_boundary_overshoot_m": 0.0,
+      "max_speed_seen_mps": 2.277775764465332,
+      "final_z_range": [
+        0.7578883767127991,
+        0.7578970193862915
+      ],
+      "n_frames_saved": 0,
+      "variant": "safe",
+      "ep_idx": 3
+    },
+    {
+      "bag_center_xy": [
+        0.7212030291557312,
+        0.27844586968421936
+      ],
+      "off_table_fraction": 0.55,
+      "mean_boundary_overshoot_m": 0.08235018742006213,
+      "max_speed_seen_mps": 3.920681953430176,
+      "final_z_range": [
+        0.0013047868851572275,
+        0.7578966021537781
+      ],
+      "n_frames_saved": 0,
+      "variant": "unsafe",
+      "ep_idx": 4
+    },
+    {
+      "bag_center_xy": [
+        0.3632393181324005,
+        -0.005562133155763149
+      ],
+      "off_table_fraction": 0.05,
+      "mean_boundary_overshoot_m": 0.00077366203069687,
+      "max_speed_seen_mps": 2.2759146690368652,
+      "final_z_range": [
+        0.7540552616119385,
+        0.757898211479187
+      ],
+      "n_frames_saved": 0,
+      "variant": "safe",
+      "ep_idx": 5
+    },
+    {
+      "bag_center_xy": [
+        0.7412447333335876,
+        0.28423386812210083
+      ],
+      "off_table_fraction": 0.6,
+      "mean_boundary_overshoot_m": 0.06170146482796788,
+      "max_speed_seen_mps": 3.859830379486084,
+      "final_z_range": [
+        0.0021104756742715836,
+        0.7578951716423035
+      ],
+      "n_frames_saved": 0,
+      "variant": "unsafe",
+      "ep_idx": 6
+    },
+    {
+      "bag_center_xy": [
+        0.35770973563194275,
+        0.012632684782147408
+      ],
+      "off_table_fraction": 0.0,
+      "mean_boundary_overshoot_m": 0.0,
+      "max_speed_seen_mps": 2.2717831134796143,
+      "final_z_range": [
+        0.7578884959220886,
+        0.7578949928283691
+      ],
+      "n_frames_saved": 0,
+      "variant": "safe",
+      "ep_idx": 7
+    },
+    {
+      "bag_center_xy": [
+        0.352676659822464,
+        -0.0027702341321855783
+      ],
+      "off_table_fraction": 0.05,
+      "mean_boundary_overshoot_m": 7.432401180268444e-06,
+      "max_speed_seen_mps": 2.285567283630371,
+      "final_z_range": [
+        0.7578892111778259,
+        0.7578967809677124
+      ],
+      "n_frames_saved": 0,
+      "variant": "safe",
+      "ep_idx": 8
+    },
+    {
+      "bag_center_xy": [
+        0.7246538996696472,
+        0.26797181367874146
+      ],
+      "off_table_fraction": 0.65,
+      "mean_boundary_overshoot_m": 0.06997937828786474,
+      "max_speed_seen_mps": 3.8631198406219482,
+      "final_z_range": [
+        -0.003202717751264572,
+        0.7578967213630676
+      ],
+      "n_frames_saved": 0,
+      "variant": "unsafe",
+      "ep_idx": 9
+    }
+  ]
+}
