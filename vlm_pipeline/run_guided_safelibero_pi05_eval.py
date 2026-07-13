@@ -271,10 +271,19 @@ def _oracle_counterfactual_score(
     env.env.timestep = snapshot_timestep
     collided = False
     done = False
+    minimum_separation = float("inf")
     for action in np.asarray(candidate["actions"][:oracle_horizon]):
         branch_obs, _, done, _ = env.step(action.tolist())
+        obstacle_position = np.asarray(branch_obs[f"{obstacle_name}_pos"])
+        relevant_positions = [np.asarray(branch_obs["robot0_eef_pos"])]
+        if manipulated_name is not None:
+            relevant_positions.append(np.asarray(branch_obs[f"{manipulated_name}_pos"]))
+        minimum_separation = min(
+            minimum_separation,
+            *(float(np.linalg.norm(position - obstacle_position)) for position in relevant_positions),
+        )
         displacement = np.sum(np.abs(
-            np.asarray(branch_obs[f"{obstacle_name}_pos"]) - initial_obstacle_pos
+            obstacle_position - initial_obstacle_pos
         ))
         collided = collided or displacement > 0.001
         if done:
@@ -292,9 +301,18 @@ def _oracle_counterfactual_score(
 
     diagnostic = candidate.get("guidance", {})
     correction = float(diagnostic.get("correction_norm", 0.0))
-    # Lexicographic priorities represented with separated scales:
-    # avoid observed contact, then terminal success, then make phase progress.
-    return -10.0 * float(collided) + 3.0 * float(done) + progress - 0.001 * correction
+    # Lexicographic priorities represented with separated scales: avoid observed
+    # contact, then terminal success. Inside the safe set, prefer candidates that
+    # increase physical margin before task progress; this lets a detour begin
+    # before contact is unavoidable inside the short rollout horizon.
+    separation_score = 0.0 if not np.isfinite(minimum_separation) else minimum_separation
+    return (
+        -10.0 * float(collided)
+        + 3.0 * float(done)
+        + 3.0 * separation_score
+        + progress
+        - 0.001 * correction
+    )
 
 
 def _get_libero_env(task, resolution, seed):
