@@ -98,6 +98,7 @@ def parse_args():
     parser.add_argument("--progress_weight", type=float, default=4.0)
     parser.add_argument("--clearance_weight", type=float, default=1.0)
     parser.add_argument("--controller_scale", type=float, default=0.00523)
+    parser.add_argument("--oracle_horizon", type=int, default=2)
     return parser.parse_args()
 
 
@@ -188,7 +189,7 @@ def _candidate_score(candidate, eef_pos, phase_target, args):
 
 def _oracle_counterfactual_score(
     env, candidate, snapshot, snapshot_timestep, obstacle_name,
-    manipulated_name, phase_target, current_target_distance,
+    manipulated_name, phase_target, current_target_distance, oracle_horizon,
 ):
     """Score a short candidate with an exact simulator fork (GT upper bound)."""
     branch_obs = env.regenerate_obs_from_state(snapshot)
@@ -196,7 +197,7 @@ def _oracle_counterfactual_score(
     branch_obstacle_start = np.asarray(branch_obs[f"{obstacle_name}_pos"]).copy()
     collided = False
     done = False
-    for action in np.asarray(candidate["actions"][:REPLAN_STEPS]):
+    for action in np.asarray(candidate["actions"][:oracle_horizon]):
         branch_obs, _, done, _ = env.step(action.tolist())
         displacement = np.sum(np.abs(
             np.asarray(branch_obs[f"{obstacle_name}_pos"]) - branch_obstacle_start
@@ -391,18 +392,29 @@ def run_eval(args):
                                     float(np.linalg.norm(np.asarray(obs["robot0_eef_pos"]) - phase_target))
                                     if phase_target is not None else 0.0
                                 )
-                                scores = [
-                                    _oracle_counterfactual_score(
-                                        env, candidate, snapshot, snapshot_timestep,
-                                        obstacle_name, manipulated_name, phase_target,
-                                        current_target_distance,
+                                risky = any(
+                                    float(c.get("guidance", {}).get("min_clearance", -1.0)) < 0.02
+                                    or float(c.get("guidance", {}).get("correction_norm", 0.0)) > 0.05
+                                    for c in candidates
+                                )
+                                if risky:
+                                    scores = [
+                                        _oracle_counterfactual_score(
+                                            env, candidate, snapshot, snapshot_timestep,
+                                            obstacle_name, manipulated_name, phase_target,
+                                            current_target_distance, args.oracle_horizon,
+                                        )
+                                        for candidate in candidates
+                                    ]
+                                    result = candidates[int(np.argmax(scores))]
+                                    # Counterfactual rollouts must be observationally invisible.
+                                    obs = env.regenerate_obs_from_state(snapshot)
+                                    env.env.timestep = snapshot_timestep
+                                else:
+                                    result = min(
+                                        candidates,
+                                        key=lambda c: float(c.get("guidance", {}).get("correction_norm", 0.0)),
                                     )
-                                    for candidate in candidates
-                                ]
-                                result = candidates[int(np.argmax(scores))]
-                                # Counterfactual rollouts must be observationally invisible.
-                                obs = env.regenerate_obs_from_state(snapshot)
-                                env.env.timestep = snapshot_timestep
                             elif args.steering_mode == "semantic_best_of_k" and manipulated_name is not None:
                                 phase = _semantic_phase(obs, manipulated_name, initial_manipulated_pos)
                                 object_position = np.asarray(obs[f"{manipulated_name}_pos"])
