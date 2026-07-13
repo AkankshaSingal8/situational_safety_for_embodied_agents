@@ -108,3 +108,17 @@ Object L1 resists: obstacle sits ON the sanctioned corridor at the grasp point �
 cannot help (hazard IS the path), fat margins hurt. Note SOTA's own Object S1 T3 CAR=46 —
 this cell family is hard for them too. Object L1 needs forensics (JSONL + video), not knobs.
 Next: n=20 composed confirmation on L1 suites.
+
+## E2 corridor-clearance precompute (offline, saved-episode metadata, straight-line approach)
+Spatial L1, n≈10/task; margin = r_obs + eef_r + d_safe; corridor = margin×0.4 inside exemption:
+| task | clear% (r09/r12, no corridor) | clear% WITH corridor |
+|---|---|---|
+| t0 | 0/0 | 70/60 |
+| t1 | 40/20 | 100/100 |
+| t2 | 60/40 | 100/100 |
+| t3 | 0/0 | **11/11** |
+READ: exemption mathematically restores straight-line grasp liveness on t0-t2 (consistent with
+composed smoke); t3 = obstacle-ON-path family (<6cm from the approach line) — straight-line
+clearance impossible at any usable margin; recovery must come from curved approaches (K-selection
+can find these; E2 straight-line is a lower bound) or contact-adjacent acceptance. Object L1
+t1/t2 presumed same family. E2 gate (>=70%) PASSES for 3/4 tasks.
