@@ -27,3 +27,4 @@ fgd_smoke/
 fgd_benchmark/
 fgd_video/
 fgd_n50/
+viability_tournament/**/server.log
