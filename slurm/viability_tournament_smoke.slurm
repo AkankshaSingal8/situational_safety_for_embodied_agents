@@ -26,6 +26,7 @@ CLEARANCE_WEIGHT=${CLEARANCE_WEIGHT:-1.0}
 CORRECTION_PENALTY=${CORRECTION_PENALTY:-0.02}
 ADAPTIVE_DISTANCE=${ADAPTIVE_DISTANCE:-0.20}
 ORACLE_HORIZON=${ORACLE_HORIZON:-2}
+TASK_INDICES=${TASK_INDICES:-}
 OUT="$WT/viability_tournament/${MODE}_scale-${TRANSLATION_SCALE}_k${K}_p${PROGRESS_WEIGHT}_c${CLEARANCE_WEIGHT}_a${ADAPTIVE_DISTANCE}"
 mkdir -p "$OUT"
 
@@ -50,6 +51,11 @@ conda activate openvla_libero_merged
 export MUJOCO_GL=egl
 export PYTHONPATH="$ROOT/SafeLIBERO/safelibero:$ROOT/.worktrees/flow-guidance-tier-gt/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
 for LEVEL in I II; do
+  TASK_ARGS=()
+  if [[ -n "$TASK_INDICES" ]]; then
+    read -r -a TASK_LIST <<< "$TASK_INDICES"
+    TASK_ARGS=(--task_indices "${TASK_LIST[@]}")
+  fi
   python -u "$WT/vlm_pipeline/run_guided_safelibero_pi05_eval.py" \
     --task_suite_name safelibero_spatial --safety_level "$LEVEL" \
     --num_trials_per_task "$TRIALS" --host 127.0.0.1 --port "$PORT" \
@@ -58,6 +64,7 @@ for LEVEL in I II; do
     --progress_weight "$PROGRESS_WEIGHT" --clearance_weight "$CLEARANCE_WEIGHT" \
     --correction_penalty "$CORRECTION_PENALTY" --adaptive_distance "$ADAPTIVE_DISTANCE" \
     --oracle_horizon "$ORACLE_HORIZON" \
+    "${TASK_ARGS[@]}" \
     --results_output_dir "$OUT/results"
 done
 echo "TOURNAMENT_COMPLETE mode=$MODE scale=$TRANSLATION_SCALE"
