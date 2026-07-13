@@ -121,23 +121,43 @@ def serve(server: CosmosServer, host: str, port: int) -> None:
         logger.info("Listening on %s:%d", host, port)
         while True:
             conn, addr = sock.accept()
-            with conn:
-                try:
-                    request = recv_msg(conn)
-                    if request.get("_health_check"):
-                        send_msg(conn, {"status": "ok"})
-                        continue
-                    obs = {
-                        "primary_image": request["primary_image"],
-                        "secondary_image": request["secondary_image"],
-                        "wrist_image": request["wrist_image"],
-                        "proprio": request["proprio"],
-                    }
-                    action = server.predict(obs, request["instruction"])
-                    send_msg(conn, {"action": action})
-                except Exception:
-                    logger.exception("Inference failed")
-                    send_msg(conn, {"error": traceback.format_exc()})
+            # Every step of handling one connection -- including the
+            # error-reporting send_msg -- must never let an exception
+            # escape this loop iteration. A single malformed/probe
+            # connection (e.g. a bare TCP connect+close with no payload,
+            # or a real client that already gave up after a slow request
+            # and closed its socket) previously killed the ENTIRE server
+            # process here: the fallback `send_msg(conn, {"error": ...})`
+            # in the except clause was itself unguarded, so if the peer was
+            # already gone, THAT send raised too, propagating out of
+            # `serve()` and taking down every future request with it. This
+            # is why the smoke test failed on every episode after the
+            # first hiccup -- observed directly: the server log ends
+            # exactly at the first ConnectionError, no further requests
+            # were ever served.
+            try:
+                with conn:
+                    try:
+                        request = recv_msg(conn)
+                        if request.get("_health_check"):
+                            send_msg(conn, {"status": "ok"})
+                            continue
+                        obs = {
+                            "primary_image": request["primary_image"],
+                            "secondary_image": request["secondary_image"],
+                            "wrist_image": request["wrist_image"],
+                            "proprio": request["proprio"],
+                        }
+                        action = server.predict(obs, request["instruction"])
+                        send_msg(conn, {"action": action})
+                    except Exception:
+                        logger.exception("Inference failed")
+                        try:
+                            send_msg(conn, {"error": traceback.format_exc()})
+                        except Exception:
+                            logger.warning("Could not send error response -- peer already gone.")
+            except Exception:
+                logger.exception("Unexpected error handling connection from %s -- continuing to serve.", addr)
 
 
 def main():

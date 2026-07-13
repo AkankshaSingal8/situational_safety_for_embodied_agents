@@ -14,6 +14,12 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=63000M
 #SBATCH --time=01:30:00
+# w006 produced an unexplained "Aborted (core dumped)" crash (SIGABRT, no
+# Python traceback) during robosuite/MuJoCo controller loading on two
+# separate prior attempts (pi0.5 full-eval and this smoke test), while every
+# other node used across ~10 successful runs was fine -- excluding it as a
+# cheap, reversible mitigation pending further evidence one way or the other.
+#SBATCH --exclude=w006
 #SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
 #SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
 #SBATCH --mail-user=asingal2@andrew.cmu.edu
