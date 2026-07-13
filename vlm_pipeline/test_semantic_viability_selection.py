@@ -7,6 +7,7 @@ from run_guided_safelibero_pi05_eval import (
     _infer_diverse_candidates,
     _inject_topology_experts,
     _resolve_semantic_context,
+    _segment_distance_2d,
     _semantic_phase,
 )
 
@@ -36,6 +37,11 @@ def test_motion_switches_to_transport_phase():
     assert _semantic_phase(obs, "akita_black_bowl_2", initial) == "approach"
     obs["akita_black_bowl_2_pos"] = initial + np.array([0.0, 0.0, 0.04])
     assert _semantic_phase(obs, "akita_black_bowl_2", initial) == "transport"
+
+
+def test_segment_distance_detects_blocked_contextual_corridor():
+    assert _segment_distance_2d([0.5, 0.1], [0.0, 0.0], [1.0, 0.0]) == 0.1
+    assert _segment_distance_2d([-1.0, 0.0], [0.0, 0.0], [1.0, 0.0]) == 1.0
 
 
 def test_candidate_score_rewards_safe_task_progress():
@@ -94,3 +100,5 @@ def test_transport_phase_injects_opposite_side_tangent_experts():
     assert np.linalg.norm(result[-1]["actions"][0, :2]) > 0.7
     assert np.sign(result[-2]["actions"][0, 1]) != np.sign(result[-1]["actions"][0, 1])
     assert np.all(result[-2]["actions"][:5, 2] == 0.2)
+    assert result[-2]["topology_required"]
+    assert result[-1]["topology_required"]

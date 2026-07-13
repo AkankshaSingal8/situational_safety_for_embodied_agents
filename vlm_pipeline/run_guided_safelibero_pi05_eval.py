@@ -188,6 +188,19 @@ def _candidate_score(candidate, eef_pos, phase_target, args):
     )
 
 
+def _segment_distance_2d(point, start, end):
+    """Euclidean distance from a point to a closed planar segment."""
+    point = np.asarray(point, dtype=np.float64)
+    start = np.asarray(start, dtype=np.float64)
+    end = np.asarray(end, dtype=np.float64)
+    segment = end - start
+    denominator = float(np.dot(segment, segment))
+    if denominator < 1e-12:
+        return float(np.linalg.norm(point - start))
+    fraction = float(np.clip(np.dot(point - start, segment) / denominator, 0.0, 1.0))
+    return float(np.linalg.norm(point - (start + fraction * segment)))
+
+
 def _infer_diverse_candidates(client, element, count):
     """Sample a mixture of policy intent and safety-envelope experts."""
     candidates = []
@@ -229,13 +242,19 @@ def _inject_topology_experts(
     goal = np.asarray(goal_position, dtype=np.float64)
     mover = eef_pos if phase == "approach" else object_pos
     target = object_pos if phase == "approach" else goal
-    path = target[:2] - mover[:2]
+    # Transport uses the initial semantic route so the two homotopy classes and
+    # their waypoints remain stable across replans rather than oscillating.
+    route_start = eef_pos if phase == "approach" else initial_object_pos
+    path = target[:2] - route_start[:2]
     path_norm = float(np.linalg.norm(path))
     if path_norm < 1e-6:
         return candidates
     path_unit = path / path_norm
     perpendicular = np.array([-path_unit[1], path_unit[0]])
     clearance = obstacle_radius(obstacle_name) + 0.075
+    corridor_blocked = _segment_distance_2d(
+        obstacle_pos[:2], mover[:2], target[:2]
+    ) < clearance
 
     detours = []
     for side, label in ((1.0, "tangent_left"), (-1.0, "tangent_right")):
@@ -254,6 +273,7 @@ def _inject_topology_experts(
             )
         detour["actions"] = detour_actions
         detour["expert"] = label
+        detour["topology_required"] = corridor_blocked
         detours.append(detour)
 
     result = list(candidates)
@@ -306,9 +326,11 @@ def _oracle_counterfactual_score(
     # increase physical margin before task progress; this lets a detour begin
     # before contact is unavoidable inside the short rollout horizon.
     separation_score = 0.0 if not np.isfinite(minimum_separation) else minimum_separation
+    topology_bonus = float(candidate.get("topology_required", False))
     return (
         -10.0 * float(collided)
         + 3.0 * float(done)
+        + topology_bonus
         + 3.0 * separation_score
         + progress
         - 0.001 * correction
