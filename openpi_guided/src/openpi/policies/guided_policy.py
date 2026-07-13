@@ -81,7 +81,11 @@ class GuidedPolicy(_policy.Policy):
         logging.info("Repair schedule %s: w=%s", config.repair_schedule, np.round(w, 2))
 
         bound = types.MethodType(guided_sample_actions, self._model)
-        self._sample_actions = nnx_utils.module_jit(bound)
+        # Shape-determining kwargs must be static under jit (noise shape,
+        # loop bounds, selection slice) — one compile per distinct K.
+        self._sample_actions = nnx_utils.module_jit(
+            bound, static_argnames=("num_candidates", "prefix_len", "num_steps")
+        )
 
     def _make_params(self, payload: dict | None) -> GuidanceParams:
         cfg = self._config
