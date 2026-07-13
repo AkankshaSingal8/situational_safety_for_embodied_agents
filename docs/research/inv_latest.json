@@ -1,0 +1,222 @@
+{
+ "findings": [
+  {
+   "name": "CoVer: Scaling Verification over Policy Learning for VLA Alignment",
+   "id_or_url": "arXiv:2602.12281",
+   "venue_year": "arXiv Feb 2026",
+   "mechanism": "Trained 1B contrastive verifier (SigLIP2 + action-sequence transformer, bi-directional InfoNCE on success-only data) scores K VLM-rephrased instructions x M sampled action chunks from frozen pi0/pi0.5; hierarchical selection picks best rephrase then best chunk. Establishes test-time scaling laws showing verification scaling beats policy scaling.",
+   "relevance": "Strongest evidence that chunk-level best-of-N on pi0-class flow VLAs scales, and the instruction-rephrasing axis is a diversity source we don't exploit. Doesn't fill the gap: verifier is trained on 20M samples, scores only fully-denoised chunks, task-alignment only \u2014 no safety term, no denoising-time interaction with a barrier stack."
+  },
+  {
+   "name": "Look Before You Leap: Distilling Tree Search into Action Evaluation for Frozen VLA Models",
+   "id_or_url": "arXiv:2607.03751",
+   "venue_year": "arXiv Jul 2026",
+   "mechanism": "Runs tree search offline over VLA rollouts, distills the resulting value estimates into a lightweight action evaluator; at inference the frozen VLA proposes N candidates and the evaluator ranks them (best-of-N), amortizing search cost.",
+   "relevance": "July-2026 confirmation that the field is converging on amortized-verifier best-of-N for frozen VLAs. Doesn't fill the gap: trained evaluator, task-quality only, post-denoise selection granularity, no safety constraints, no use of the flow structure."
+  },
+  {
+   "name": "TapSampling: Task-Progress-Understanding Verifier Sampling",
+   "id_or_url": "arXiv:2605.25547",
+   "venue_year": "arXiv May 2026",
+   "mechanism": "Training-free rejection sampling: an off-the-shelf VLM judges whether each sampled action candidate advances task progress toward the goal state; applies to diffusion, flow, and VLA policies.",
+   "relevance": "Closest existing 'value-free task signal' for candidate selection. Doesn't fill the gap: VLM-in-the-loop latency rules out per-Euler-step or even reliable chunk-boundary use at 20Hz; scalar accept/reject only (no directional guidance); no safety coupling; no cross-chunk state."
+  },
+  {
+   "name": "Pre-VLA: Preemptive Runtime Verification for VLA and World-Model Rollouts",
+   "id_or_url": "arXiv:2605.22446",
+   "venue_year": "arXiv May 2026",
+   "mechanism": "Lightweight dual-branch head on frozen WorldVLA hidden states (modality-aware pooling) jointly predicts (a) safety confidence and (b) PPO-critic-derived advantage per candidate action chunk; a preemptive scheduler rejects low-safety chunks and requests resampling (up to N), falling back to highest-advantage candidate. ~184ms per verification, trained on PPO rollouts in LIBERO.",
+   "relevance": "The only found method that scores safety AND task quality jointly per chunk \u2014 the closest prior art to joint steering. Doesn't fill the gap: both signals are learned (task-specific critic, no honest guarantee), intervention is accept/resample only (no repair, no gradient guidance, no per-Euler-step mechanism), safety is a soft learned confidence rather than an analytic barrier, and fallback silently trades safety for advantage when resampling exhausts."
+  },
+  {
+   "name": "VERITAS: Visual Verification for Inference-time Steering and Policy Improvement",
+   "id_or_url": "arXiv:2606.18247",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Generator-verifier loop: frozen generalist policy proposes actions; a gradient-free visual verifier scores them at inference; verified rollouts are recycled as supervision for offline self-improvement.",
+   "relevance": "Shows verifier-filtered rollouts can substitute for expert demos (a data flywheel we could borrow). Doesn't fill the gap: task-only, selection-level, no safety notion, no exploitation of flow/chunk structure."
+  },
+  {
+   "name": "Robot Critics that Sweat the Small Stuff",
+   "id_or_url": "arXiv:2606.21572",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "VLM critic fine-tuned with pairwise progress supervision from success/failure rollouts; paired with an action-conditioned video model that renders predicted outcomes of candidate actions, which the critic ranks for execution.",
+   "relevance": "Addresses the known weakness of zero-shot VLM critics (coarse progress reasoning) \u2014 relevant negative result for any VLM-as-value plan. Doesn't fill the gap: trained critic + heavy video model per candidate; task-only; incompatible with jittable per-step loops."
+  },
+  {
+   "name": "GPC: Inference-Time Enhancement of Generative Robot Policies via Predictive World Modeling",
+   "id_or_url": "arXiv:2502.00622",
+   "venue_year": "RA-L 2026 (rev. Mar 2026)",
+   "mechanism": "Frozen diffusion policy augmented at deployment with an action-conditioned world model (trained on demos + random exploration); lightweight online planning ranks and refines policy proposals via model-based look-ahead.",
+   "relevance": "Canonical 'world model as verifier/refiner' for frozen generative policies. Doesn't fill the gap: needs a trained world model, look-ahead is task-scored only, refinement happens outside the denoising process, no analytic safety, no chunk-boundary certificates."
+  },
+  {
+   "name": "Feedback World Model Enables Precise Guidance of Diffusion Policy",
+   "id_or_url": "arXiv:2605.15705",
+   "venue_year": "arXiv May 2026",
+   "mechanism": "Keeps a pretrained world model honest online via a feedback state updated from real observations (feedback-gain correction of latent predictions); guides the frozen diffusion policy by matching predicted latents to expert states, weighting latent dimensions by counterfactual variance under actions (action-controllability weighting).",
+   "relevance": "The counterfactual-variance weighting is a genuinely new idea for isolating task-relevant directions \u2014 adjacent to our need for a directional task signal. Doesn't fill the gap: requires a trained world model and expert reference states; no safety; guidance is toward demonstrations, not toward analytic task targets."
+  },
+  {
+   "name": "Do What You Say: Runtime Reasoning-Action Alignment Verification",
+   "id_or_url": "arXiv:2510.16281",
+   "venue_year": "arXiv Oct 2025 (NVIDIA/CMU)",
+   "mechanism": "Samples multiple candidate action sequences from a reasoning VLA, predicts their outcomes via simulation, and uses a pretrained VLM to select the candidate whose outcome best matches the VLA's own textual plan \u2014 steering the policy toward its own stated intent.",
+   "relevance": "Introduces 'policy self-consistency' (action vs own reasoning) as a value-free task signal \u2014 conceptually close to our policy-self-signal agenda. Doesn't fill the gap: needs a simulator + VLM per decision, reasoning-VLA-specific, selection-only, no safety, no flow-structure exploitation."
+  },
+  {
+   "name": "V-VLAPS: Value Vision-Language-Action Planning & Search",
+   "id_or_url": "arXiv:2601.00969",
+   "venue_year": "arXiv Jan 2026",
+   "mechanism": "MCTS over VLA action proposals with a lightweight value head trained on offline VLA rollouts to predict Monte Carlo returns; value-guided node selection cuts simulations 5-15% and lifts LIBERO success up to +6pts at large budgets.",
+   "relevance": "Representative of the action-MCTS line (with VLA-Reasoner arXiv:2509.22643 and FORGE-Tree arXiv:2510.21744): all require a simulator/world model for rollouts and trained value components, with latencies incompatible with real-time chunked execution; none incorporates safety constraints in the tree. Confirms tree search is not the right substrate for our jittable per-step regime."
+  },
+  {
+   "name": "VLA-Pilot: Plug-and-Play Inference-Time VLA Policy Steering via Embodied Evolutionary Diffusion",
+   "id_or_url": "arXiv:2511.14178",
+   "venue_year": "arXiv Nov 2025 (v2 2026)",
+   "mechanism": "GPT-4o with an Embodied-Policy-Steering CoT synthesizes a reward; elite action proposals are softmax-selected, partially re-noised, and re-denoised by the frozen diffusion VLA across generations \u2014 evolutionary search constrained to the policy manifold. Training-free; +31% success; ~2.4s latency.",
+   "relevance": "The re-noise/re-denoise elite loop is an interesting manifold-preserving refinement operator that works in few-step regimes (unlike SMC). Doesn't fill the gap: MLLM latency, task-only reward, no safety, no cross-chunk memory, no guarantees."
+  },
+  {
+   "name": "SCALE: Self-uncertainty Conditioned Adaptive Looking and Execution",
+   "id_or_url": "arXiv:2602.04208",
+   "venue_year": "ICML 2026 Spotlight",
+   "mechanism": "Single-forward-pass, training-free, verifier-free: the VLA's own self-uncertainty jointly modulates visual perception (where/how broadly to look) and action execution (explore vs exploit), inspired by active inference.",
+   "relevance": "Proof that policy self-signals can modulate perception AND action without extra passes \u2014 the cheapest point on the test-time-scaling Pareto. Doesn't fill the gap: uncertainty is used as a scalar modulator, not a directional steering field; no safety, no chunk/flow structure."
+  },
+  {
+   "name": "Velocity-Field Disagreement UQ for Flow-Based VLAs (SAVE)",
+   "id_or_url": "arXiv:2606.18043",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Proves KL between two flow policies equals a time-weighted integral of velocity-field differences (weight s/(1-s)); approximates it with a 2-member ensemble (same base VLA fine-tuned twice) integrated in parallel. Used for conformal failure detection (7/8 failures caught) and active data acquisition, not steering.",
+   "relevance": "Directly relevant theory: gives a principled epistemic-uncertainty functional over the velocity field itself \u2014 exactly the object our sampler controls. Doesn't fill the gap: needs two fine-tuned ensemble members (not frozen-only), and the signal is consumed as a monitor/acquisition score, never as guidance or for safety-task arbitration."
+  },
+  {
+   "name": "Denoising Tells When to Replan: Denoising-Variance Adaptive Chunking",
+   "id_or_url": "arXiv:2606.03847",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Training-free: variance across the denoising/flow-integration process of a flow policy is read as confidence; low variance \u2192 execute longer chunk prefixes, high variance \u2192 truncate and replan. Applied post-hoc to existing flow policies.",
+   "relevance": "First method using a flow-native self-signal to set the execution horizon \u2014 validates 'the sampler knows when it's unsure.' Doesn't fill the gap: signal decides only WHEN to replan (scalar, temporal), not WHAT direction to steer; no safety coupling; no joint objective."
+  },
+  {
+   "name": "AAC: Adaptive Action Chunking at Inference-time",
+   "id_or_url": "arXiv:2604.04161",
+   "venue_year": "arXiv Apr 2026",
+   "mechanism": "Training-free: action entropy of current predictions adaptively sets chunk size, trading responsiveness (small chunks) against mode-jumping/jerk (large chunks).",
+   "relevance": "Same family as DVAC/PACE (arXiv:2606.00537, phase-aware horizon selection): all use self-signals for horizon length only. None steers content, none touches safety \u2014 leaves the WHERE-to-steer gap fully open."
+  },
+  {
+   "name": "VLA-Corrector: Lightweight Detect-and-Correct Inference",
+   "id_or_url": "arXiv:2607.01804",
+   "venue_year": "arXiv Jul 2026",
+   "mechanism": "Latent-space Vision Monitor compares predicted vs actual visual feature evolution during open-loop chunk execution; on persistent drift it truncates stale actions and invokes Online Gradient Guidance for short-horizon corrective replanning. No backbone retraining.",
+   "relevance": "July-2026 state of the art in failure-triggered chunk steering: detection \u2192 truncate \u2192 gradient-guided regeneration. Doesn't fill the gap: correction signal is visual-prediction mismatch (task-agnostic), intervention is episodic/event-triggered rather than continuous, no safety constraints, no certificate on the corrected chunk."
+  },
+  {
+   "name": "ACG: Action Coherence Guidance for Flow-based VLAs",
+   "id_or_url": "arXiv:2510.22201",
+   "venue_year": "arXiv Oct 2025 (v2 2026)",
+   "mechanism": "Training-free negative guidance: builds an 'incoherent' velocity field by replacing self-attention with identity (each action token attends only to itself), then extrapolates away from it, v = (1+l)v - l*v_IC, at each denoising step. +6.7% RoboCasa, +28.8% real.",
+   "relevance": "The only found method that manufactures a guidance direction from the policy's own internals (attention ablation) \u2014 a template for internal-signal-derived vector fields. Doesn't fill the gap: targets intra-chunk smoothness only, explicitly leaves inter-chunk consistency to prior work, and encodes no task-progress or safety semantics."
+  },
+  {
+   "name": "COAST: Contrastive Conceptor Activation Steering",
+   "id_or_url": "arXiv:2605.17144",
+   "venue_year": "arXiv May 2026",
+   "mechanism": "Fits closed-form conceptors (soft projection matrices) from offline success vs failure rollout activations; at inference multiplicatively gates the frozen policy's residual stream to amplify success-correlated subspaces.",
+   "relevance": "Activation-space (not action-space) steering of frozen policies; closed-form, cheap. Doesn't fill the gap: needs labeled success/failure rollouts per deployment, steers a learned correlate of success with no honest failure mode, no safety, not composable with barrier constraints in any principled way. Same family: mechanistic steering arXiv:2509.00328, ATA attention/action-guided inference arXiv:2603.01490."
+  },
+  {
+   "name": "TTT-VLA: Test-Time Latent Prompt Optimization",
+   "id_or_url": "arXiv:2606.03127",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Freezes policy weights and optimizes only a latent prompt at deployment using a self-supervised proxy task's loss on current-environment interaction data; gains come from flipping a few critical decisions.",
+   "relevance": "A third steering locus (prompt space) besides action/activation space. Doesn't fill the gap: requires co-training the proxy task (not applicable to off-the-shelf pi0.5), adapts slowly across episodes not within a chunk, task-only."
+  },
+  {
+   "name": "DiRecT: Safe Diffusion-Based Planning via Receding-Horizon Denoising",
+   "id_or_url": "arXiv:2606.15359",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Training-free: at each denoising step, Tweedie-predicts the clean trajectory, solves a constrained optimization (hard safety constraints + soft task costs/rewards, off-the-shelf optimizers) on that prediction, and maps the refinement back into a controlled update of the noisy iterate; executes first M steps, replans. 100% constraint satisfaction on D3IL/PushT.",
+   "relevance": "The nearest thing to joint hard-safety + soft-task inside denoising \u2014 but it is a state-trajectory PLANNER with known constraint geometry and optimizer-in-the-loop per denoise step (not jittable, not a VLA, no vision-conditioned action chunks, no policy self-signals). Its 'constrain only the Tweedie prediction' choice independently validates our x1-prediction shaping."
+  },
+  {
+   "name": "Provably Safe Generative Sampling with Constricting Barrier Functions",
+   "id_or_url": "arXiv:2602.21429",
+   "venue_year": "arXiv Feb 2026",
+   "mechanism": "Time-varying 'constricting' barrier functions wrap the diffusion sampling process so the feasible set shrinks onto the safe set as noise anneals, yielding formal sample-level safety guarantees; demonstrated on motion planning and constrained latent-diffusion image generation.",
+   "relevance": "New guarantee style (constriction schedule tied to noise level) beyond SafeDiffuser \u2014 worth citing as the sharpest safety-side competitor. Doesn't fill the gap: safety enforced independently of any task objective, generic generative models not policies, sample-level (not execution-level) guarantees, no chunked receding-horizon story."
+  },
+  {
+   "name": "Safety-Guided Flow: Energy-Based Negative Guidance",
+   "id_or_url": "arXiv:2603.13300",
+   "venue_year": "arXiv Mar 2026",
+   "mechanism": "Adds -grad MMD-energy repulsion from an unsafe dataset to the flow velocity; unifies Shielded Diffusion/Safe Denoiser as energy guidance; key finding: negative guidance only helps in an early critical time window t in [1.0,0.78] and must decay.",
+   "relevance": "Image-generation domain, but its critical-time-window result is transferable evidence for denoising-time schedules (matches our schedule design). Doesn't fill the gap: data-driven repulsion not analytic barriers, no task objective, not robotics."
+  },
+  {
+   "name": "Any-Body Guard: Universal Safeguarding via Action Masking",
+   "id_or_url": "arXiv:2606.22278",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Policy-agnostic post-hoc layer: CBF-based action masking filters unsafe actions from any manipulation policy across morphologies without retraining, in MuJoCo.",
+   "relevance": "June-2026 evidence the post-hoc-shield lane is crowded (with PaCo-VLA arXiv:2606.00515 passivity shields). Doesn't fill the gap: pure action-space masking after generation \u2014 exactly the mode-destroying, task-blind intervention our denoising-time approach supersedes; no task signal, no chunk awareness."
+  },
+  {
+   "name": "AEGIS: A Backup Reflex for Physical AI",
+   "id_or_url": "arXiv:2606.06660",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Cheap per-step early-warning probe on frozen VLA internals produces confidence scores; below a tuned threshold, control hands off to a conservative backup policy (rule-based or trained); threshold exposes an explicit safety-vs-success dial.",
+   "relevance": "The only found method exposing a tunable safety/task tradeoff at inference \u2014 but via discrete policy SWITCHING, not continuous joint steering; the tradeoff is a scalar threshold, not a Pareto-aware per-chunk arbitration; backup is task-specific trained."
+  },
+  {
+   "name": "Hide-and-Seek in Trajectories: Failure Signals for VLA Runtime Monitoring",
+   "id_or_url": "arXiv:2605.30834",
+   "venue_year": "arXiv May 2026",
+   "mechanism": "Coarsely-supervised contrastive learning (inter+intra trajectory) discovers failure-indicative action segments from trajectory-level labels only; conformal prediction calibrates an accuracy-timeliness tradeoff; SOTA failure detection on OpenVLA/pi0/pi0.5 across LIBERO, VLABench, real.",
+   "relevance": "Best-in-class failure DETECTION on our exact policy class (pi0.5), with conformal timing. Doesn't fill the gap: detection only \u2014 the paper explicitly avoids action resampling; no method consumes such detector outputs as a continuous term inside sampling. Same family: VLA-FAIL arXiv:2606.21386 (Mahalanobis + action-chunk-consistency signals)."
+  },
+  {
+   "name": "B2FF: Failure Recovery via Pre-Imagined Milestone Selection",
+   "id_or_url": "arXiv:2606.09258",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Pre-imagines milestone subgoal images along the nominal task at episode start; on failure, recovery = selecting the best familiar future milestone and conditioning the policy on it, instead of replanning from an unfamiliar off-distribution observation.",
+   "relevance": "Clever 'return to the data manifold' recovery \u2014 complementary to steering, and the pre-computation-at-episode-start pattern matches our VLM-once architecture. Doesn't fill the gap: episodic recovery after detected failure, image-conditioned policies, no safety constraints, no within-chunk mechanism."
+  },
+  {
+   "name": "ReStruct: Physically-Aware Reconfiguration of Task-Structure",
+   "id_or_url": "arXiv:2606.26588",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Decomposes a visuomotor policy into a state-machine skeleton + frozen residual controller; user preferences (object-centric or temporal-logic) are compiled into an automaton and composed with the skeleton via synchronous product, updating action priors while the controller stays frozen. Beats VLAs by up to 25% on success + preference-following.",
+   "relevance": "The only found method steering via discrete task-structure with temporal-logic constraints at inference \u2014 a symbolic axis orthogonal to our continuous barriers. Doesn't fill the gap: requires the special neural-automaton policy architecture (not applicable to off-the-shelf flow VLAs), preferences not analytic safety, no denoising-time mechanism."
+  },
+  {
+   "name": "Policy-DRIFT: Terminal Reward Guidance for Flow Steering",
+   "id_or_url": "arXiv:2605.14022",
+   "venue_year": "arXiv May 2026",
+   "mechanism": "A CNN reward predictor trained on intermediate ODE states (ramp-weighted toward late timesteps) supplies gradient corrections PRE-placed before each velocity evaluation, so the frozen flow model acts as implicit manifold projector (post-placement caused reward hacking); receding-horizon: guided CFM generates the target, a tracker executes.",
+   "relevance": "Fluid-control domain, but two transferable findings: (a) guide-then-project ordering prevents off-manifold reward hacking; (b) train-free-at-flow-level terminal-reward guidance works in few-step ODE regimes. Doesn't fill the gap: trained reward predictor, no safety constraints, not manipulation/VLA."
+  },
+  {
+   "name": "VGAS: Value-Guided Action-Chunk Selection",
+   "id_or_url": "arXiv:2602.07399",
+   "venue_year": "arXiv Feb 2026",
+   "mechanism": "Few-shot: trains a lightweight value model from limited target-domain data; best-of-N over sampled action chunks selects those both semantically faithful and geometrically precise.",
+   "relevance": "Chunk-level best-of-N with a learned value \u2014 the trained-verifier counterpart of our value-free best-of-K. Doesn't fill the gap: needs target-domain data, task-only, selection-only."
+  },
+  {
+   "name": "ProgressVLA / ProcVLM / SARM2 (trained progress-reward line)",
+   "id_or_url": "arXiv:2603.27670, arXiv:2605.08774, arXiv:2606.10305",
+   "venue_year": "arXiv Mar-Jun 2026",
+   "mechanism": "Learned dense task-progress/stage rewards: ProgressVLA guides diffusion sampling with a learned progress signal (faster completion + higher CALVIN success); ProcVLM pretrains a 20B-token progress-estimation VLM; SARM2 builds stage-aware MMoE reward heads for dense per-step rewards.",
+   "relevance": "Confirms dense progress signals materially improve guided sampling \u2014 but the entire line pays for it with large-scale reward-model training. None is value-free, none couples progress with safety, none exploits policy self-signals; they define the trained-alternative baseline our value-free approach must beat."
+  },
+  {
+   "name": "VLA Safety: Threats, Challenges, Evaluations, and Mechanisms (survey)",
+   "id_or_url": "arXiv:2604.23775",
+   "venue_year": "arXiv Apr 2026",
+   "mechanism": "April-2026 survey of VLA safety: taxonomizes runtime monitors, shields, red-teaming (RedVLA arXiv:2604.22591), and notes formal certification of neural policies remains open; documents that existing trajectory-level safety corrections act in action space during generation.",
+   "relevance": "Field-level confirmation of the gap: the survey's own taxonomy contains no entry for joint task+safety inference-time optimization of flow VLAs \u2014 monitors, shields, and task-side test-time scaling are catalogued as disjoint families."
+  }
+ ],
+ "gaps": "Across ~30 surveyed methods (Apr\u2013Jul 2026 emphasis), the following gaps survive; none is filled by any method found, and each matters directly for joint safety+task steering of a frozen flow VLA (pi0.5, H=10 chunks, 10 Euler steps).\n\nGAP 1 \u2014 No method couples safety repair and task steering inside the same denoising pass. The literature is cleanly split: safety-inside-denoising with task left to the prior (2607.01378, SafeDiffuser/SafeFlowMatcher, constricting barriers 2602.21429, our stack); task-inside-denoising with safety absent (VLS, VLA-Pilot, GAF, Policy-DRIFT, ProgressVLA); or joint scoring only at post-denoise selection (Pre-VLA, CoVer, TapSampling, best-of-N verifiers). DiRecT is the sole method with hard constraints + soft task cost per denoise step, but it is a state-trajectory planner with optimizer-in-the-loop, known constraint geometry, no vision conditioning, and is not jittable \u2014 not a chunked VLA policy. Critically, nobody treats safety-repair-induced task damage as a first-class quantity: when a barrier projection removes velocity components, no method restores task progress in the nullspace/tangent space of the active constraints within the same integration. For us this is the central opening: our repair already computes the active constraint set per Euler step; the complementary task-restoring direction is sitting unused.\n\nGAP 2 \u2014 Policy self-signals are used only as scalars deciding WHEN, never as vectors deciding WHERE. Entropy sets chunk length (AAC), denoising variance triggers replanning (2606.03847), phase sets execution horizon (PACE), latent drift triggers truncation (VLA-Corrector), probes trigger handoff (AEGIS), VFD (2606.18043) even gives a principled KL functional over velocity fields \u2014 yet every one is consumed as a monitor. The single method deriving a guidance VECTOR from internals (ACG's attention-ablated negative field) encodes smoothness, not task progress. No method converts the frozen policy's goal-token attention, cross-seed velocity dispersion, or destination-conditioned velocity differences into a value-free directional task field usable at every Euler step. This is exactly the signal class our ask requires (task steering without trained values or VLM latency).\n\nGAP 3 \u2014 All verifier-based test-time scaling scores fully-denoised chunks. CoVer, RoboMonkey, TapSampling, LBYL, Robot Critics, VGAS pay full denoising for every candidate and select afterward; no method scores partially-denoised candidates in the few-step regime to prune/reallocate compute mid-integration (FK/SMC machinery assumes long chains and has no safety). With K=8 seeds x 10 Euler steps and analytic barriers evaluable on x1-predictions at ANY step, early Pareto-pruning of seeds (safety margin x task progress at step 3, reallocate NFEs to survivors) is architecturally available to no one but us \u2014 nobody else controls the sampler end-to-end.\n\nGAP 4 \u2014 No per-chunk safety/task Pareto arbitration. AEGIS exposes one scalar switching threshold; SafeMind analyzes the tradeoff at training time; everything else hard-codes priority. No method maintains an online-adaptive tradeoff (e.g., epsilon-constraint: maximize progress subject to margin >= m, with m adapted from realized executed-prefix margins) \u2014 despite chunked execution providing a natural feedback loop: the realized margin of the just-executed prefix is measurable and could tune the next chunk's guidance strength. Cross-chunk methods (RTC, BID, ACG, native continuation) target only kinematic smoothness; none propagates safety certificates or progress commitments across chunk boundaries \u2014 steering is memoryless chunk-to-chunk (beyond our own claimed hysteresis).\n\nGAP 5 \u2014 Failure detectors never feed the sampler. Best-in-class detectors on pi0.5 (Hide-and-Seek's conformal contrastive signals, VLA-FAIL) trigger discrete interventions: halt, handoff, resample, recover-to-milestone (B2FF). No method consumes a calibrated failure probability as a continuous modulation term inside denoising (e.g., scaling task-guidance strength or seed diversity by conformal risk).\n\nGAP 6 \u2014 No honest task-side characterization anywhere. Safety-side proofs exist (sample-level: constricting barriers; execution-aware: ours). But every task-steering method \u2014 trained verifiers included \u2014 is best-effort with no statement of when steering helps, does nothing, or actively harms (Policy-DRIFT's reward-hacking finding shows harm is real). A method with even a weak guarantee (e.g., task guidance provably vanishes when the policy is unimodal-confident, or provably never decreases the safety margin) would be alone in the field \u2014 and matches our fail-honest constraint."
+}

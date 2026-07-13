@@ -1,0 +1,138 @@
+{
+ "findings": [
+  {
+   "name": "Guided Streaming Stochastic Interpolant Policy (SSIP/STEG)",
+   "id_or_url": "https://arxiv.org/abs/2605.10051",
+   "venue_year": "arXiv 2026",
+   "mechanism": "Derives the optimal guidance drift for stochastic interpolants via the Backward Kolmogorov / Feynman-Kac equation: db = 2*eps(t)*grad log u(x,t), where u is a desirability function (Doob h-transform, Girsanov-minimal relative-entropy correction). Estimated either training-free via N=32-64 parallel inference-time rollouts with backprop through unrolled dynamics (STEG) or via an offline-trained critic (CCG). Applied to streaming per-control-cycle action generation with additive trajectory costs including obstacle penalties.",
+   "relevance": "Closest existing 'principled steering law for a generative robot policy.' Breaks in our regime: the Doob correction requires stochastic sampling eps(t)>0 (pi0.5 is 10-step deterministic Euler, no Girsanov justification); needs particle ensembles inside the control loop; costs are soft/additive with no hard barrier certificates; streaming, not chunked; no joint lexicographic safety+task structure. Its BKE derivation is the template a deterministic few-step analogue would have to replace."
+  },
+  {
+   "name": "Adjoint Matching (memoryless SOC fine-tuning)",
+   "id_or_url": "https://arxiv.org/abs/2409.08861",
+   "venue_year": "ICLR 2025",
+   "mechanism": "Casts reward fine-tuning of flow/diffusion models as stochastic optimal control; solves a cheap 'lean adjoint' ODE backward along sampled trajectories and regresses the control onto the adjoint state; proves a memoryless noise schedule is required to remove noise-sample coupling bias in the tilted target.",
+   "relevance": "Proves adjoint states through the sampler are cheap and stable \u2014 in a 10-step regime a full adjoint pass is roughly one extra backward per chunk. Breaks: it is fine-tuning (violates frozen); the memoryless theorem assumes SDE sampling. The unexploited move is reusing its adjoint machinery purely at inference on the frozen sampler, with constraints instead of scalar reward."
+  },
+  {
+   "name": "OC-Flow: Training-Free Guided Flow Matching with Optimal Control",
+   "id_or_url": "https://arxiv.org/abs/2410.18070",
+   "venue_year": "ICLR 2025",
+   "mechanism": "Formulates guided generation as deterministic optimal control on the flow ODE: maximize terminal reward with running control cost; solves via Pontryagin's Maximum Principle with iterative co-state (adjoint) updates over the whole trajectory; convergence theory in Euclidean space and SO(3); subsumes backprop-through-ODE guidance (D-Flow) as a special case.",
+   "relevance": "The cleanest existing 'adjoint through the sampler at inference.' In the few-step regime each PMP iteration is only ~20 NFEs, so multiple outer iterations per chunk are feasible and jittable. What it lacks for us: no hard state constraints (barriers enter only as soft terminal reward), no feasibility/duality certificate for honest failure, no chunked receding-horizon coupling, never applied to policies or multimodal action distributions."
+  },
+  {
+   "name": "FMRG: Few-Step Alignment via Flow Map Reward Guidance",
+   "id_or_url": "https://arxiv.org/abs/2604.27147",
+   "venue_year": "arXiv 2026",
+   "mechanism": "Optimal deterministic feedback control u_t(x) = lambda * grad X_{t,1}(x)^T grad r(X_{t,1}(x)) using the exact flow-map endpoint; operator splitting alternates exact flow-map jumps with reward-gradient substeps; at very low NFE reuses the lookahead via linear interpolation. Training-free given a flow map.",
+   "relevance": "The direct 'steer a few-step/distilled sampler' theory. Breaks for us: fundamentally requires a pretrained flow-map network \u2014 pi0.5 is a plain velocity field, and the endpoint Jacobian is computed through the learned map, not through Euler steps; Jacobian backprop is memory-heavy; greedy guidance mode-collapses. Confirms that few-step deterministic guidance theory currently exists only for flow-map architectures, not frozen ordinary flows."
+  },
+  {
+   "name": "Meta Flow Maps",
+   "id_or_url": "https://arxiv.org/abs/2601.14430",
+   "venue_year": "arXiv 2026",
+   "mechanism": "Stochastic flow maps that emit i.i.d. one-step samples from the posterior p(x1|xt), giving a differentiable reparametrization x1 = Phi(eps; t, x) so grad V_t(x) = grad_x log E[exp r(Phi(eps;t,x))] is estimable without inner rollouts; trained from data or distilled from pretrained flows via GLASS reparametrization.",
+   "relevance": "Solves the core bottleneck of value-gradient estimation at noisy states for few-step steering. Breaks: requires training/distilling an auxiliary MFM (not frozen-only), Gaussian source assumption, dimension-dependent convergence. Marks the boundary: without such an auxiliary model, the only posterior estimate in our regime is the biased one-Euler x1 plug-in."
+  },
+  {
+   "name": "Feynman-Kac Correctors (FKC)",
+   "id_or_url": "https://arxiv.org/abs/2503.02819",
+   "venue_year": "ICML 2025",
+   "mechanism": "Shows naive score mixing (CFG, product, annealing) does not track the intermediate marginals of the intended tilted/product distribution; derives corrected weighted-SMC simulation schemes from the Feynman-Kac formula so particle-weighted marginals are exact for annealed, geometric-average, and product-of-experts targets. Related: RNE (arXiv 2506.05668) provides plug-and-play Radon-Nikodym density-ratio tracking for the same family.",
+   "relevance": "The principled recipe for 'policy x safety-expert x task-tilt' composition. Breaks in our regime: requires SDE sampling, per-particle importance weights and resampling \u2014 with 10 steps and K=8 shared-prefix seeds, weights are coarse, resampling breaks jittability and KV sharing, and weight computation needs density/energy access the frozen VLA does not expose."
+  },
+  {
+   "name": "SuperDiff: Superposition of Diffusion Models via the Ito Density Estimator",
+   "id_or_url": "https://arxiv.org/abs/2412.17762",
+   "venue_year": "ICLR 2025",
+   "mechanism": "A scalable Ito density estimator tracks each expert's log-density along the generated trajectory at no extra NFE cost, enabling provably correct inference-time composition of frozen pretrained velocity fields: mixture sampling (logical OR) and equal-density sampling (logical AND) via an automated per-step reweighting of velocities.",
+   "relevance": "Genuine 'velocity algebra' with exactness statements, inference-only, zero training \u2014 the strongest existing answer to 'what operations on velocity fields preserve marginals.' Breaks: both experts must be generative models with velocity/score access; an analytic barrier stack is not one; derivation is continuous-time SDE, discretization bias at 10 deterministic steps unquantified. Density tracking itself is an unexploited runtime observable (mode/OOD diagnostics) for policies."
+  },
+  {
+   "name": "Reduce, Reuse, Recycle (energy-based composition needs MCMC)",
+   "id_or_url": "https://arxiv.org/abs/2302.11552",
+   "venue_year": "ICML 2023",
+   "mechanism": "Proves reverse diffusion with summed scores does not sample products of the underlying distributions (intermediate marginals of a product are not products of marginals); fixes it with annealed MCMC correctors (ULA/HMC, Metropolis-adjusted when an energy parameterization exists).",
+   "relevance": "The no-go theorem constraining any naive product-of-experts velocity steering, including adding a 'safety velocity' to the policy velocity. In our regime MCMC correctors are jittable in principle but need an energy (frozen VLA exposes only velocity) and add per-step cost at chunk rate. Any exact policy-x-analytic-expert composition must either recover an energy or route around this theorem."
+  },
+  {
+   "name": "Are We Really Tilting? Mechanics of Reward Guidance",
+   "id_or_url": "https://arxiv.org/abs/2606.02884",
+   "venue_year": "arXiv 2026",
+   "mechanism": "Closed-form analysis (Gaussian / Gaussian-mixture targets, quadratic rewards) showing practical guidance = finite-particle plug-in estimation of the Doob h-function, with two separable failures: within-mode reward hacking and inability to re-select modes; derives a closed-form reward damping schedule correcting within-mode bias at zero extra compute, and shows best-of-n is what compensates mode-selection failure.",
+   "relevance": "Directly legitimizes and could replace our hand-tuned denoising-time schedule and explains why best-of-K seeds is load-bearing (mode selection) while gradient guidance handles within-mode shaping. Gaps it leaves: continuous-time, unconstrained scalar reward, no state constraints, no few-step discretization error, no policy/multimodal-action setting \u2014 exactly where a joint safety+task version is missing."
+  },
+  {
+   "name": "Reward-Guided Generation as Entropy-Regularized SOC / Doob h-transform (Uehara et al. line)",
+   "id_or_url": "https://arxiv.org/abs/2501.09685",
+   "venue_year": "arXiv 2025 (tutorial/review)",
+   "mechanism": "Unifies classifier guidance, CFG, SMC steering, value-based sampling, and fine-tuning as entropy-regularized stochastic optimal control, equivalently Doob h-transforms, with soft value functions V_t = log E[exp r(x1) | xt]; connects to linear Bellman/path-integral control.",
+   "relevance": "The canonical reward-as-drift frame; makes explicit that every member needs posterior samples or value approximations at noisy states. In the frozen 10-step deterministic regime the only available estimator is the one-Euler x1 plug-in whose bias is exactly the failure mode formalized by 2606.02884 \u2014 the few-step, hard-constraint instantiation of this theory does not exist."
+  },
+  {
+   "name": "DSRL: Steering Diffusion Policies with Latent-Noise-Space RL",
+   "id_or_url": "https://arxiv.org/abs/2506.15799",
+   "venue_year": "arXiv/NeurIPS 2025",
+   "mechanism": "Treats the initial noise of a frozen diffusion/flow policy as the action space of an RL problem; trains a noise-space policy with standard RL, steering behavior with only black-box access to the frozen BC policy.",
+   "relevance": "Proves the source/noise space is a sufficient, low-dimensional, on-distribution steering interface for frozen robot policies (mode selection without velocity tampering). Breaks: requires environment interaction and RL training per deployment (not zero-shot inference-time), no safety constraints or certificates, no analytic use of barrier/task geometry."
+  },
+  {
+   "name": "Golden Ticket: Single Noise Vector for Generative Robot Policies",
+   "id_or_url": "https://arxiv.org/abs/2603.15757",
+   "venue_year": "arXiv 2026",
+   "mechanism": "Shows a single well-chosen constant initial noise ('golden ticket'), found by offline search, outperforms i.i.d. Gaussian sampling for frozen diffusion/flow policies across tasks.",
+   "relevance": "Evidence the noise-space landscape of robot policies is highly structured and exploitable without touching weights. Breaks: offline, task-level, state-independent, task-success-only \u2014 no safety semantics, no online state-conditioned selection, no distributional guarantees."
+  },
+  {
+   "name": "Start Right, Arrive Right: Initial Noise Selection via Flow Inversion",
+   "id_or_url": "https://arxiv.org/abs/2606.19774",
+   "venue_year": "arXiv 2026",
+   "mechanism": "Training-free: constructs a desired action chunk by a repainting rule (prefix consistency for asynchronous chunked execution), then backward-Euler-inverts the frozen flow ODE to obtain the initial noise that natively generates it; no gradients or policy modification.",
+   "relevance": "Demonstrates the key unexploited primitive \u2014 pulling target sets back through the frozen flow to noise space via inversion \u2014 on flow VLAs at chunk boundaries. Breaks/gaps: objective is only boundary consistency plus task success; no safety sets, no analysis of whether selected noise stays on-distribution (Gaussianity/KL), no certificates, no joint optimization."
+  },
+  {
+   "name": "Follow the Mean: Reference-Guided Flow Matching (RMG)",
+   "id_or_url": "https://arxiv.org/abs/2605.10302",
+   "venue_year": "arXiv 2026",
+   "mechanism": "For affine interpolants, velocity is equivalent to the conditional endpoint mean: u_t(x) = (mu_t(x) - x)/(1-t). Steering = replacing mu_t with a convex combination (1-beta_t) mu_t + beta_t mu_t^ref, where the reference mean is a softmax-weighted average over a small reference bank; training-free, ~1x NFE, on frozen models.",
+   "relevance": "Closed-form 'mean-shift algebra' on velocity fields \u2014 deterministic, jittable, single-NFE, exactly matched to few-step Euler. Unexploited for policies: the reference bank could be barrier-projected endpoints, safe demonstrations, or destination-reaching action exemplars, giving example-based joint steering. Breaks: geometric-mixture semantics hold only under Gaussian-posterior assumptions; steering quality inherits reference quality; never applied to actions or constraints."
+  },
+  {
+   "name": "Real-Time Chunking (RTC)",
+   "id_or_url": "https://arxiv.org/abs/2506.07339",
+   "venue_year": "NeurIPS 2025",
+   "mechanism": "Inference-time inpainting for asynchronous chunked execution of flow VLAs: freeze actions guaranteed to execute, regenerate the remainder with partial attention; works on pi0/pi0.5 with no retraining.",
+   "relevance": "Canonical proof that chunked receding-horizon structure supports training-free algorithmic exploitation on exactly our policy class; any steering primitive should co-design with it. Breaks: addresses latency/continuity only \u2014 no safety, no task steering, no cross-chunk optimality, and follow-up work notes it induces spurious multimodal switching at chunk boundaries (an unmodeled mode-commitment problem)."
+  },
+  {
+   "name": "DualShield: Safe Model Predictive Diffusion via Reachability",
+   "id_or_url": "https://arxiv.org/abs/2601.15729",
+   "venue_year": "arXiv 2026",
+   "mechanism": "Precomputed Hamilton-Jacobi reachability value functions serve double duty: proactive guidance steering diffusion denoising toward safe dynamically-feasible regions, plus a reactive control-barrier-value-function shield on executed actions, for interactive autonomous driving.",
+   "relevance": "The only work marrying formal reachability certificates with diffusion sampling \u2014 a template for guidance+shield duality with real value functions. Breaks: HJ computation needs known low-dimensional dynamics offline; applied to a trajectory planner, not a frozen VLA; reachability is over environment dynamics, never over the denoising dynamics themselves; not few-step/jittable."
+  },
+  {
+   "name": "Contractive Diffusion Policies",
+   "id_or_url": "https://arxiv.org/abs/2601.01003",
+   "venue_year": "arXiv 2026",
+   "mechanism": "Imposes contraction on score-based sampling dynamics (minimal architectural/training modifications) so nearby denoising trajectories converge, yielding robustness to solver error and score inaccuracy in offline RL / real-robot control.",
+   "relevance": "Brings contraction analysis \u2014 the control-theoretic tool for tubes/funnels \u2014 to the sampler-as-dynamical-system view. Breaks: it is a training-time modification (violates frozen) and targets robustness, not constraint satisfaction. The inverse question (certifying bounded guidance perturbations of a frozen sampler via its empirical contraction properties) is untouched."
+  },
+  {
+   "name": "Schrodinger bridges in robot generation are training-time only (XFlowMP; Rectified SB Matching)",
+   "id_or_url": "https://arxiv.org/abs/2512.00022 ; https://arxiv.org/abs/2604.05673",
+   "venue_year": "arXiv 2025-2026",
+   "mechanism": "XFlowMP trains task-conditioned SB motion fields between informative priors and trajectory distributions; Rectified SB Matching trains few-step navigation policies by rectifying entropic-OT bridges. Both learn the bridge during training; classical IPF/Sinkhorn theory (e.g., SIAM Review 'Stochastic Control Liaisons') gives the half-bridge iteration structure.",
+   "relevance": "Documents that SB/entropic-OT machinery has reached robot policy generation only as a training objective. No method runs even one inference-time IPF half-bridge to retarget a frozen policy's path measure toward a safety/task-constrained terminal coupling \u2014 the 10-step regime makes each half-bridge sweep cheap, but the frozen-policy version of the theory (what can be retargeted without refitting the drift) does not exist."
+  },
+  {
+   "name": "Q-VGM: Q-Guided Value-Gradient Matching for Flow VLAs",
+   "id_or_url": "https://arxiv.org/abs/2606.08015",
+   "venue_year": "arXiv 2026",
+   "mechanism": "Trains a Cal-QL critic ensemble on logged rollouts, then fine-tunes pi0.5 by matching residual velocity corrections derived from critic gradients; bridges clean-action critics to noisy denoising states via a one-step Euler look-forward projection A_hat = x_k - t_k * v_base(x_k), gated by a denoising-time schedule s(t)=(1-t)^p.",
+   "relevance": "Confirms on pi0.5 that (i) the one-Euler x1 plug-in plus a denoising-time gate is the community's default bridge to noisy states and (ii) value gradients are unreliable outside data support (they clip and fall back to keep-best selection). Breaks: trains a critic and fine-tunes the policy \u2014 both violate frozen; value-based, whereas our task signal is value-free geometry."
+  }
+ ],
+ "gaps": "G1 \u2014 Bias-quantified steering for deterministic few-step Euler of a frozen velocity field. Every principled guidance law assumes stochastic dynamics or continuous time: SSIP's Doob-h drift needs eps(t)>0 and Girsanov; the Uehara SOC line needs posterior samples at noisy states; FKC/SuperDiff need SDE importance weights or Ito density tracking; FMRG covers few-step but only through a trained flow-map network. No result states: given frozen v_theta integrated by 10 Euler steps, an additive per-step perturbation g_k samples from distribution Q with a bound D(Q, intended tilt) <= f(||g||, step size, local Jacobians). \"Are we really tilting\" (2606.02884) is closest \u2014 closed-form within-mode damping, mode-selection impossibility \u2014 but is continuous-time, unconstrained, non-policy. This matters twice for joint steering: the task half of any joint objective is a distributional claim (honest failure requires knowing what you actually sample), and the bias analysis would derive the denoising-time guidance schedule we currently hand-tune, telling where in the 10 steps authority is cheapest.\n\nG2 \u2014 Constrained optimal control through the sampler with certificates. Ten steps make a full discrete-time adjoint pass roughly one extra backward per chunk, yet no method solves the constrained OCP whose dynamics are the Euler steps, controls are per-step velocity perturbations, terminal cost is a task potential, and hard constraints are analytic barriers on the decoded chunk. OC-Flow has PMP without state constraints or feasibility certificates; Adjoint Matching is training-time. Missing: KKT multipliers that jointly price safety against task, certify infeasibility (an honest fallback trigger), and expose sensitivity of task cost to safety tightening \u2014 plus cross-chunk co-state propagation through executed-prefix conditioning, which exists nowhere.\n\nG3 \u2014 Exact composition with a non-generative expert. SuperDiff/FKC compose learned experts with density access; RRR proves naive velocity addition mis-samples products. Nobody has derived the marginal-correct composed velocity when one expert is analytic: for affine interpolants the smoothed score grad log(N(0,sigma_t^2) * 1_C) of half-spaces/ellipsoids/superquadric complements is closed-form or cheap, so a safety-expert velocity and destination-expert velocity could be composed with the frozen policy velocity per Euler step \u2014 jittable, zero training \u2014 with conditions on when composition preserves the policy's reachable action support (no OOD actions). This theory is absent even from the generative-modeling literature.\n\nG4 \u2014 Certified online source-measure steering. Noise-space steering is RL-trained (DSRL), an offline constant (Golden Ticket), consistency-only seed selection via flow inversion (Start Right, Arrive Right), or Gaussianity-preserving video noise warping with no control objective. Missing: at each chunk boundary, computing a transport of the source Gaussian (mean shift, low-rank warp, or OT map) from the pullback of safety/task sets through the frozen flow's local Jacobian (10 cheap VJPs), with an explicit on-distribution guarantee (bounded KL to N(0,I) or exact Gaussianity preservation). Because it steers by mode selection rather than velocity distortion, it attacks precisely the failure gradient guidance provably cannot fix (mode re-selection, per 2606.02884), which best-of-K only patches stochastically.\n\nG5 \u2014 Guidance authority via reachability of the sampler itself. No reachability/controllability analysis of guided denoising exists: from seed z under frozen v_theta, which endpoint chunks are reachable with ||g_k|| <= gamma in 10 steps? A funnel/tube over denoising time would certify \"safety AND task jointly unreachable under authority gamma \u2192 fallback\" (turning brake-then-push into a certified statement), quantify per-step authority for schedule design, and select K seeds by funnel coverage of the safe-and-task set rather than i.i.d. draws. Contraction analysis exists only as training-time robustness (CDP); HJ certificates exist only over environment dynamics (DualShield), never over denoising dynamics. Differential-flatness-style structure over denoising time is completely unexplored.\n\nG6 \u2014 Cross-chunk receding-horizon steering theory. RTC exploits chunk structure training-free but only for latency/continuity, and is known to induce spurious mode switching at boundaries. No method treats the sequence of chunk flow maps plus prefix conditioning as a switched closed-loop system: multimodality-aware mode commitment across chunks, value/co-state handoff at boundaries, or episode-level (not chunk-level) lexicographic safety-task optimality. Deterministic, state-conditioned mode routing for multimodal action distributions in the few-step regime is entirely open."
+}
