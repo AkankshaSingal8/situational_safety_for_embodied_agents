@@ -27,6 +27,7 @@ CORRECTION_PENALTY=${CORRECTION_PENALTY:-0.02}
 ADAPTIVE_DISTANCE=${ADAPTIVE_DISTANCE:-0.20}
 ORACLE_HORIZON=${ORACLE_HORIZON:-2}
 TASK_INDICES=${TASK_INDICES:-}
+LEVELS=${LEVELS:-"I II"}
 OUT="$WT/viability_tournament/${MODE}_scale-${TRANSLATION_SCALE}_k${K}_p${PROGRESS_WEIGHT}_c${CLEARANCE_WEIGHT}_a${ADAPTIVE_DISTANCE}"
 mkdir -p "$OUT"
 
@@ -50,7 +51,7 @@ kill -0 "$SERVER_PID"
 conda activate openvla_libero_merged
 export MUJOCO_GL=egl
 export PYTHONPATH="$ROOT/SafeLIBERO/safelibero:$ROOT/.worktrees/flow-guidance-tier-gt/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
-for LEVEL in I II; do
+for LEVEL in $LEVELS; do
   TASK_ARGS=()
   if [[ -n "$TASK_INDICES" ]]; then
     read -r -a TASK_LIST <<< "$TASK_INDICES"
