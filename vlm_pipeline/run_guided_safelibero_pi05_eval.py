@@ -89,7 +89,7 @@ def parse_args():
     parser.add_argument("--task_indices", type=int, nargs="+", default=None)
     parser.add_argument("--disable_guidance", action="store_true",
                         help="Send enabled=0 (server sanity baseline through the same code path).")
-    parser.add_argument("--steering_mode", choices=["fixed", "phase_adaptive", "best_of_k", "semantic_best_of_k"],
+    parser.add_argument("--steering_mode", choices=["fixed", "phase_adaptive", "best_of_k", "semantic_best_of_k", "oracle_counterfactual"],
                         default="fixed")
     parser.add_argument("--num_candidates", type=int, default=4)
     parser.add_argument("--adaptive_distance", type=float, default=0.20,
@@ -184,6 +184,42 @@ def _candidate_score(candidate, eef_pos, phase_target, args):
         + args.progress_weight * progress
         - args.correction_penalty * correction
     )
+
+
+def _oracle_counterfactual_score(
+    env, candidate, snapshot, snapshot_timestep, obstacle_name,
+    manipulated_name, phase_target, current_target_distance,
+):
+    """Score a short candidate with an exact simulator fork (GT upper bound)."""
+    branch_obs = env.regenerate_obs_from_state(snapshot)
+    env.env.timestep = snapshot_timestep
+    branch_obstacle_start = np.asarray(branch_obs[f"{obstacle_name}_pos"]).copy()
+    collided = False
+    done = False
+    for action in np.asarray(candidate["actions"][:REPLAN_STEPS]):
+        branch_obs, _, done, _ = env.step(action.tolist())
+        displacement = np.sum(np.abs(
+            np.asarray(branch_obs[f"{obstacle_name}_pos"]) - branch_obstacle_start
+        ))
+        collided = collided or displacement > 0.001
+        if done:
+            break
+
+    if phase_target is None:
+        progress = 0.0
+    elif manipulated_name is not None and done:
+        progress = current_target_distance
+    else:
+        next_target_distance = float(np.linalg.norm(
+            np.asarray(branch_obs["robot0_eef_pos"]) - phase_target
+        ))
+        progress = current_target_distance - next_target_distance
+
+    diagnostic = candidate.get("guidance", {})
+    correction = float(diagnostic.get("correction_norm", 0.0))
+    # Lexicographic priorities represented with separated scales:
+    # avoid observed contact, then terminal success, then make phase progress.
+    return -10.0 * float(collided) + 3.0 * float(done) + progress - 0.001 * correction
 
 
 def _get_libero_env(task, resolution, seed):
@@ -321,7 +357,7 @@ def run_eval(args):
                             companion_scale = 1.0
                             if args.steering_mode in ("phase_adaptive", "best_of_k"):
                                 companion_scale = float(obstacle_distance >= args.adaptive_distance)
-                            elif args.steering_mode == "semantic_best_of_k" and manipulated_name is not None:
+                            elif args.steering_mode in ("semantic_best_of_k", "oracle_counterfactual") and manipulated_name is not None:
                                 phase = _semantic_phase(obs, manipulated_name, initial_manipulated_pos)
                                 object_position = np.asarray(obs[f"{manipulated_name}_pos"])
                                 phase_target = object_position if phase == "approach" else goal_position
@@ -340,9 +376,34 @@ def run_eval(args):
                                 "obstacle_radius": obstacle_radius(obstacle_name),
                                 "companion_scale": companion_scale,
                             }
-                        if args.steering_mode in ("best_of_k", "semantic_best_of_k"):
+                        if args.steering_mode in ("best_of_k", "semantic_best_of_k", "oracle_counterfactual"):
                             candidates = [client.infer(element) for _ in range(args.num_candidates)]
-                            if args.steering_mode == "semantic_best_of_k" and manipulated_name is not None:
+                            if args.steering_mode == "oracle_counterfactual" and obstacle_name is not None:
+                                snapshot = env.get_sim_state().copy()
+                                snapshot_timestep = env.env.timestep
+                                if manipulated_name is not None:
+                                    phase = _semantic_phase(obs, manipulated_name, initial_manipulated_pos)
+                                    object_position = np.asarray(obs[f"{manipulated_name}_pos"])
+                                    phase_target = object_position if phase == "approach" else goal_position
+                                else:
+                                    phase_target = None
+                                current_target_distance = (
+                                    float(np.linalg.norm(np.asarray(obs["robot0_eef_pos"]) - phase_target))
+                                    if phase_target is not None else 0.0
+                                )
+                                scores = [
+                                    _oracle_counterfactual_score(
+                                        env, candidate, snapshot, snapshot_timestep,
+                                        obstacle_name, manipulated_name, phase_target,
+                                        current_target_distance,
+                                    )
+                                    for candidate in candidates
+                                ]
+                                result = candidates[int(np.argmax(scores))]
+                                # Counterfactual rollouts must be observationally invisible.
+                                obs = env.regenerate_obs_from_state(snapshot)
+                                env.env.timestep = snapshot_timestep
+                            elif args.steering_mode == "semantic_best_of_k" and manipulated_name is not None:
                                 phase = _semantic_phase(obs, manipulated_name, initial_manipulated_pos)
                                 object_position = np.asarray(obs[f"{manipulated_name}_pos"])
                                 phase_target = object_position if phase == "approach" else goal_position
@@ -358,7 +419,10 @@ def run_eval(args):
                                     clearance = float(diagnostic.get("min_clearance", -1e6))
                                     correction = float(diagnostic.get("correction_norm", 1e6))
                                     return min(clearance, 0.05) - args.correction_penalty * correction
-                            result = max(candidates, key=candidate_score)
+                            if args.steering_mode != "oracle_counterfactual":
+                                result = max(candidates, key=candidate_score)
+                            elif obstacle_name is None:
+                                result = candidates[0]
                         else:
                             result = client.infer(element)
                         action_chunk = result["actions"][:REPLAN_STEPS]
