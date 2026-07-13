@@ -38,3 +38,32 @@ Pre-registered gate: TSR≥62 ✅ (71.0) · CAR≥40 ❌ (23.5). PARTIAL GO.
    bowl-on-ramekin grasp; candidate fix is per-phase margin or target-corridor exemption (FOL layer).
 4. Next lever (server-only, ~12 lines): vertical companion spheres (hand +0.08, fingertip/payload
    −0.06) in the rollout — full-system geometry, the CAVF Layer-3 direction, not blind inflation.
+
+## FINAL: n=50 both levels, r3 config (companion points), job 42165451, 2026-07-12
+| Level | Config | TSR | CAR | act | vs baseline | vs SOTA (their protocol) |
+|---|---|---|---|---|---|---|
+| L1 | r2 (EEF-only, fat) | 71.0 | 23.5 | 40% | +4.0 / +9.5pp | 75.5/77.5 |
+| L1 | r3 (+companions) | 58.5 | 44.5 | 48% | −8.5 / +30.5pp | 75.5/77.5 |
+| L2 | r3 (+companions) | **86.5** | **49.0** | 43% | **+31.0 / +37.0pp** | 78.0/75.5 — **TSR BEATEN** |
+
+Per-task r3 n=50 (TSR/CAR):
+- L1: t0 68/20 (base 38/0), t1 20/46 (base 58/32), t2 98/58 (base 92/8), t3 48/54 (base 80/16)
+- L2: t0 100/12, t1 56/20, t2 96/72, t3 94/92 (baselines: 66/0, 14/0, 62/0, 80/48)
+
+## Gate evaluation (pre-registered: CAR>=40 AND TSR>=62)
+- **L2: PASSED** — 86.5/49.0. TSR exceeds the SOTA's published L2-Spatial TSR (78.0) already at Tier-GT.
+- L1: SPLIT — r2 config passes TSR only (71.0/23.5); r3 config passes CAR only (58.5/44.5).
+  L1 traded rather than stacked: fat envelopes fight in-margin task phases (t1 bowl-on-ramekin
+  TSR 20, t3 cabinet 48 vs 80) while t0 still leaks (CAR 20). L1 = obstacle NEAR TARGET by
+  construction — the in-margin regime where uniform geometry cannot separate "approach the
+  target" from "approach the obstacle".
+
+## Interpretation
+Tier-GT with uniform geometric margins has SATURATED on L1: the (TSR, CAR) frontier moved
+along itself between configs. Breaking the tradeoff requires exactly the planned next layers:
+(1) semantic allowed-contact/target-corridor exemption (relax payload companion when the
+command aims at the grasp/place target — FOL layer decides WHICH object is target), and/or
+(2) candidates+selection (sample K guided chunks, pick one that clears the obstacle AND
+completes the grasp — selection escapes what uniform repair cannot).
+L2 (obstacle blocks path, away from target) is the clean demonstration of the mechanism:
++31pp TSR AND 4.1x CAR simultaneously — no filter in the FOL campaign ever moved both.
