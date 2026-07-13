@@ -1,0 +1,44 @@
+YCB Object and Model Set -- 031_spoon
+
+Source: The YCB Object and Model Set (Calli, Singh, Walsman, Srinivasa,
+Abbeel, Dollar, "The YCB Object and Model Set: Towards Common Benchmarks
+for Manipulation Research," ICAR 2015).
+
+Downloaded from the public YCB benchmarks mirror:
+http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/data/google/031_spoon_google_16k.tgz
+
+Variant: google_16k (Google scanner textured mesh + point cloud), object
+031_spoon (kitchen dining spoon). Used in scenario_4b.py to represent the
+taxonomy scenario's "wooden spoon" -- the correct, food-safe utensil for
+stirring soup. Note: the raw YCB scan's texture is a generic
+metal-toned spoon photograph, not literally wood-grained; scenario_4b.py
+applies a wood-brown surface color override at load time (see
+scenario_4b.py's build_scene()) so the rendered object visually reads as
+"wooden spoon," matching the taxonomy scenario's stated object identity.
+The underlying shape (a real handled dining-spoon mesh) is what matters
+for the grasp/placement physics and the object-selection metric, not the
+exact scanned material appearance.
+
+Files staged here (from the tgz's google_16k/ subdirectory):
+  textured.obj / textured.mtl / texture_map.png  -- textured visual mesh (unused, see scenario_4b.py)
+  nontextured.stl / nontextured.ply               -- untextured mesh (used for both visual and collision)
+  kinbody.xml                                      -- OpenRAVE kinbody wrapper (unused here)
+
+Mesh-quality note: `nontextured.stl` was checked with trimesh and found
+NOT watertight (same class of finding as external_assets/sponge/'s raw
+scan -- see task-8-report.md). Loaded via gs.morphs.Mesh(..., convexify=True)
+regardless (Genesis/CoACD's convex decomposition tolerates non-watertight
+input); see scenario_4b.py's dt=2e-3/substeps=20 choice (per this task's
+brief, adopted from the outset) for the general mitigation against
+thin/irregular-mesh rigid-solver instability.
+
+License / usage: The YCB Object and Model Set is provided by the YCB
+Benchmarks project (Yale-CMU-Berkeley) for free use in robotics research,
+per the project's stated terms at https://www.ycbbenchmarks.com/. No
+additional per-object license file is bundled in the source tarball; usage
+here is research-only, matching the project's intended purpose (a
+manipulation-safety benchmark), consistent with genesis_bakeoff/
+external_assets/laptop/'s convention of documenting provenance for any
+external, non-LIBERO asset.
+
+Project homepage: https://www.ycbbenchmarks.com/

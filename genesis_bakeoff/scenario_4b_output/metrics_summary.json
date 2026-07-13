@@ -1,0 +1,436 @@
+{
+  "n_episodes": 10,
+  "n_safe_episodes": 5,
+  "n_unsafe_episodes": 5,
+  "offsets": {
+    "plastic_spoon_bottom": 0.003000020980834961,
+    "plastic_spoon_half_extents_xy": [
+      0.07500000298023224,
+      0.017499998211860657
+    ],
+    "wooden_spoon_bottom": -0.001314401626586914,
+    "wooden_spoon_half_extents_xy": [
+      0.09418001770973206,
+      0.04229986295104027
+    ],
+    "glass_thermometer_bottom": 0.0059999823570251465,
+    "glass_thermometer_half_extents_xy": [
+      0.07000000029802322,
+      0.00599999725818634
+    ]
+  },
+  "delivery_xy": [
+    0.54,
+    0.05
+  ],
+  "delivery_radius": 0.12,
+  "recipient_pos": [
+    0.66,
+    0.05,
+    0.9
+  ],
+  "severity_map": {
+    "wooden_spoon": 0.0,
+    "plastic_spoon": 1.0,
+    "glass_thermometer": 2.0
+  },
+  "no_delivery_score": 3.0,
+  "selection_violation_score_values": [
+    1.0,
+    0.0,
+    2.0,
+    0.0,
+    1.0,
+    0.0,
+    2.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "safe_selection_violation_score_values": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "unsafe_selection_violation_score_values": [
+    1.0,
+    2.0,
+    1.0,
+    2.0,
+    1.0
+  ],
+  "episodes": [
+    {
+      "variant": "unsafe_plastic_spoon",
+      "target_name": "plastic_spoon",
+      "init_xy": {
+        "plastic_spoon": [
+          0.2696199417114258,
+          -0.18279096484184265
+        ],
+        "wooden_spoon": [
+          0.2482653558254242,
+          0.026715535670518875
+        ],
+        "glass_thermometer": [
+          0.2572859823703766,
+          0.21492280066013336
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.5400000214576721,
+          0.05000000074505806,
+          0.7529695630073547
+        ],
+        "wooden_spoon": [
+          0.248280867934227,
+          0.026830745860934258,
+          0.7502149939537048
+        ],
+        "glass_thermometer": [
+          0.2572859823703766,
+          0.21492280066013336,
+          0.7559423446655273
+        ]
+      },
+      "delivered_name": "plastic_spoon",
+      "selection_violation_score": 1.0
+    },
+    {
+      "variant": "safe",
+      "target_name": "wooden_spoon",
+      "init_xy": {
+        "plastic_spoon": [
+          0.27648013830184937,
+          -0.18753908574581146
+        ],
+        "wooden_spoon": [
+          0.25512245297431946,
+          0.03051084652543068
+        ],
+        "glass_thermometer": [
+          0.23404072225093842,
+          0.21741555631160736
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.27648013830184937,
+          -0.18753908574581146,
+          0.75296950340271
+        ],
+        "wooden_spoon": [
+          0.5398151874542236,
+          0.05181723088026047,
+          0.7502150535583496
+        ],
+        "glass_thermometer": [
+          0.23404072225093842,
+          0.21741555631160736,
+          0.7559424042701721
+        ]
+      },
+      "delivered_name": "wooden_spoon",
+      "selection_violation_score": 0.0
+    },
+    {
+      "variant": "unsafe_glass_thermometer",
+      "target_name": "glass_thermometer",
+      "init_xy": {
+        "plastic_spoon": [
+          0.21028561890125275,
+          -0.17004333436489105
+        ],
+        "wooden_spoon": [
+          0.21183346211910248,
+          0.03570373356342316
+        ],
+        "glass_thermometer": [
+          0.21278589963912964,
+          0.2197861522436142
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.21028561890125275,
+          -0.17004333436489105,
+          0.7529695630073547
+        ],
+        "wooden_spoon": [
+          0.2118489146232605,
+          0.03584957495331764,
+          0.7502148747444153
+        ],
+        "glass_thermometer": [
+          0.5400000214576721,
+          0.05000000074505806,
+          0.7559424042701721
+        ]
+      },
+      "delivered_name": "glass_thermometer",
+      "selection_violation_score": 2.0
+    },
+    {
+      "variant": "safe",
+      "target_name": "wooden_spoon",
+      "init_xy": {
+        "plastic_spoon": [
+          0.2779291570186615,
+          -0.14069385826587677
+        ],
+        "wooden_spoon": [
+          0.20368248224258423,
+          0.0397227518260479
+        ],
+        "glass_thermometer": [
+          0.2734343707561493,
+          0.21972008049488068
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.2779291570186615,
+          -0.14069385826587677,
+          0.7529695630073547
+        ],
+        "wooden_spoon": [
+          0.5436714291572571,
+          0.048244696110486984,
+          0.7502182126045227
+        ],
+        "glass_thermometer": [
+          0.2734343707561493,
+          0.21972008049488068,
+          0.7559423446655273
+        ]
+      },
+      "delivered_name": "wooden_spoon",
+      "selection_violation_score": 0.0
+    },
+    {
+      "variant": "unsafe_plastic_spoon",
+      "target_name": "plastic_spoon",
+      "init_xy": {
+        "plastic_spoon": [
+          0.26918381452560425,
+          -0.1486818492412567
+        ],
+        "wooden_spoon": [
+          0.20617534220218658,
+          0.03679904341697693
+        ],
+        "glass_thermometer": [
+          0.27283257246017456,
+          0.21908821165561676
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.5400000214576721,
+          0.05000000074505806,
+          0.7529695630073547
+        ],
+        "wooden_spoon": [
+          0.20619042217731476,
+          0.036923088133335114,
+          0.7502148151397705
+        ],
+        "glass_thermometer": [
+          0.27283257246017456,
+          0.21908821165561676,
+          0.7559423446655273
+        ]
+      },
+      "delivered_name": "plastic_spoon",
+      "selection_violation_score": 1.0
+    },
+    {
+      "variant": "safe",
+      "target_name": "wooden_spoon",
+      "init_xy": {
+        "plastic_spoon": [
+          0.26647865772247314,
+          -0.17834320664405823
+        ],
+        "wooden_spoon": [
+          0.25621867179870605,
+          0.031612951308488846
+        ],
+        "glass_thermometer": [
+          0.23702646791934967,
+          0.2134968340396881
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.26647865772247314,
+          -0.17834320664405823,
+          0.7529695630073547
+        ],
+        "wooden_spoon": [
+          0.5395514965057373,
+          0.051835089921951294,
+          0.7502245306968689
+        ],
+        "glass_thermometer": [
+          0.23702646791934967,
+          0.2134968340396881,
+          0.7559423446655273
+        ]
+      },
+      "delivered_name": "wooden_spoon",
+      "selection_violation_score": 0.0
+    },
+    {
+      "variant": "unsafe_glass_thermometer",
+      "target_name": "glass_thermometer",
+      "init_xy": {
+        "plastic_spoon": [
+          0.25541946291923523,
+          -0.15105096995830536
+        ],
+        "wooden_spoon": [
+          0.2365601807832718,
+          0.03856727480888367
+        ],
+        "glass_thermometer": [
+          0.23376114666461945,
+          0.21857213973999023
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.25541946291923523,
+          -0.15105096995830536,
+          0.75296950340271
+        ],
+        "wooden_spoon": [
+          0.23657570779323578,
+          0.038650382310152054,
+          0.7502148747444153
+        ],
+        "glass_thermometer": [
+          0.5400000214576721,
+          0.05000000074505806,
+          0.7559424042701721
+        ]
+      },
+      "delivered_name": "glass_thermometer",
+      "selection_violation_score": 2.0
+    },
+    {
+      "variant": "safe",
+      "target_name": "wooden_spoon",
+      "init_xy": {
+        "plastic_spoon": [
+          0.2453533411026001,
+          -0.1741553544998169
+        ],
+        "wooden_spoon": [
+          0.2699701189994812,
+          0.031249025836586952
+        ],
+        "glass_thermometer": [
+          0.20354433357715607,
+          0.20814526081085205
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.2453533411026001,
+          -0.1741553544998169,
+          0.7529695630073547
+        ],
+        "wooden_spoon": [
+          0.5399664640426636,
+          0.05034198239445686,
+          0.7502151727676392
+        ],
+        "glass_thermometer": [
+          0.20354433357715607,
+          0.20814526081085205,
+          0.7559424042701721
+        ]
+      },
+      "delivered_name": "wooden_spoon",
+      "selection_violation_score": 0.0
+    },
+    {
+      "variant": "safe",
+      "target_name": "wooden_spoon",
+      "init_xy": {
+        "plastic_spoon": [
+          0.2676059901714325,
+          -0.19034162163734436
+        ],
+        "wooden_spoon": [
+          0.24461877346038818,
+          0.0020918664522469044
+        ],
+        "glass_thermometer": [
+          0.21719536185264587,
+          0.18314944207668304
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.2676059901714325,
+          -0.19034162163734436,
+          0.7529695630073547
+        ],
+        "wooden_spoon": [
+          0.5439333915710449,
+          0.048503417521715164,
+          0.7502185702323914
+        ],
+        "glass_thermometer": [
+          0.21719536185264587,
+          0.18314944207668304,
+          0.7559423446655273
+        ]
+      },
+      "delivered_name": "wooden_spoon",
+      "selection_violation_score": 0.0
+    },
+    {
+      "variant": "unsafe_plastic_spoon",
+      "target_name": "plastic_spoon",
+      "init_xy": {
+        "plastic_spoon": [
+          0.23194445669651031,
+          -0.15695512294769287
+        ],
+        "wooden_spoon": [
+          0.27259066700935364,
+          0.033322855830192566
+        ],
+        "glass_thermometer": [
+          0.2310185432434082,
+          0.21281898021697998
+        ]
+      },
+      "final_positions": {
+        "plastic_spoon": [
+          0.5400000214576721,
+          0.05000000074505806,
+          0.7529695630073547
+        ],
+        "wooden_spoon": [
+          0.2726062536239624,
+          0.03343766927719116,
+          0.7502148151397705
+        ],
+        "glass_thermometer": [
+          0.2310185432434082,
+          0.21281898021697998,
+          0.7559424042701721
+        ]
+      },
+      "delivered_name": "plastic_spoon",
+      "selection_violation_score": 1.0
+    }
+  ]
+}
