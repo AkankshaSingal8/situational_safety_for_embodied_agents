@@ -24,6 +24,7 @@ Usage:
 
 import argparse
 import collections
+import copy
 import json
 import logging
 import math
@@ -177,6 +178,14 @@ def _candidate_score(candidate, eef_pos, phase_target, args):
     endpoint = np.asarray(eef_pos, dtype=np.float64) + np.sum(
         actions[:, :3] * args.controller_scale, axis=0
     )
+    progress = float(np.linalg.norm(np.asarray(eef_pos) - phase_target)) - float(
+        np.linalg.norm(endpoint - phase_target)
+    )
+    return (
+        args.clearance_weight * np.clip(clearance, -0.10, 0.05)
+        + args.progress_weight * progress
+        - args.correction_penalty * correction
+    )
 
 
 def _infer_diverse_candidates(client, element, count):
@@ -199,14 +208,50 @@ def _infer_diverse_candidates(client, element, count):
         request["guidance"] = guidance
         candidates.append(client.infer(request))
     return candidates
-    progress = float(np.linalg.norm(np.asarray(eef_pos) - phase_target)) - float(
-        np.linalg.norm(endpoint - phase_target)
-    )
-    return (
-        args.clearance_weight * np.clip(clearance, -0.10, 0.05)
-        + args.progress_weight * progress
-        - args.correction_penalty * correction
-    )
+
+
+def _inject_topology_experts(
+    candidates, obs, obstacle_name, manipulated_name, initial_object_pos, goal_position,
+):
+    """Replace tail samples with general lift-over and radial-away maneuvers."""
+    if len(candidates) < 4 or manipulated_name is None or obstacle_name is None:
+        return candidates
+    if _semantic_phase(obs, manipulated_name, initial_object_pos) != "transport":
+        return candidates
+
+    object_pos = np.asarray(obs[f"{manipulated_name}_pos"], dtype=np.float64)
+    obstacle_pos = np.asarray(obs[f"{obstacle_name}_pos"], dtype=np.float64)
+    if goal_position is None:
+        return candidates
+    goal = np.asarray(goal_position, dtype=np.float64)
+
+    # Lift-over expert: arrest horizontal motion and build vertical clearance.
+    lift = copy.deepcopy(candidates[0])
+    lift_actions = np.asarray(lift["actions"]).copy()
+    lift_actions[:REPLAN_STEPS, :2] = 0.0
+    lift_actions[:REPLAN_STEPS, 2] = np.maximum(lift_actions[:REPLAN_STEPS, 2], 0.9)
+    lift["actions"] = lift_actions
+    lift["expert"] = "lift_over"
+
+    # Radial-away expert: create clearance in the table plane before replanning.
+    radial = object_pos[:2] - obstacle_pos[:2]
+    norm = float(np.linalg.norm(radial))
+    if norm < 1e-6:
+        path = goal[:2] - object_pos[:2]
+        radial = np.array([-path[1], path[0]])
+        norm = float(np.linalg.norm(radial))
+    radial = radial / max(norm, 1e-6)
+    away = copy.deepcopy(candidates[0])
+    away_actions = np.asarray(away["actions"]).copy()
+    away_actions[:REPLAN_STEPS, :2] = 0.75 * radial
+    away_actions[:REPLAN_STEPS, 2] = np.maximum(away_actions[:REPLAN_STEPS, 2], 0.25)
+    away["actions"] = away_actions
+    away["expert"] = "radial_away"
+
+    result = list(candidates)
+    result[-2] = lift
+    result[-1] = away
+    return result
 
 
 def _oracle_counterfactual_score(
@@ -405,6 +450,11 @@ def run_eval(args):
                                 if args.steering_mode == "oracle_counterfactual"
                                 else [client.infer(element) for _ in range(args.num_candidates)]
                             )
+                            if args.steering_mode == "oracle_counterfactual":
+                                candidates = _inject_topology_experts(
+                                    candidates, obs, obstacle_name, manipulated_name,
+                                    initial_manipulated_pos, goal_position,
+                                )
                             if args.steering_mode == "oracle_counterfactual" and obstacle_name is not None:
                                 snapshot = env.get_sim_state().copy()
                                 snapshot_timestep = env.env.timestep

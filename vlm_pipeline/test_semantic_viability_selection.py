@@ -5,6 +5,7 @@ import numpy as np
 from run_guided_safelibero_pi05_eval import (
     _candidate_score,
     _infer_diverse_candidates,
+    _inject_topology_experts,
     _resolve_semantic_context,
     _semantic_phase,
 )
@@ -75,3 +76,19 @@ def test_diverse_candidates_include_nominal_and_geometry_modes():
     assert guidance[2]["companion_scale"] == 1.0
     assert guidance[3]["obstacle_radius"] < 0.1
     assert guidance[4]["obstacle_radius"] > 0.1
+
+
+def test_transport_phase_injects_lift_and_radial_experts():
+    obs = _obs()
+    initial = obs["akita_black_bowl_2_pos"].copy()
+    obs["akita_black_bowl_2_pos"] = initial + np.array([0.0, 0.0, 0.04])
+    obs["moka_obstacle_1_pos"] = np.array([0.08, 0.20, 1.0])
+    candidates = [{"actions": np.zeros((10, 7))} for _ in range(5)]
+    result = _inject_topology_experts(
+        candidates, obs, "moka_obstacle_1", "akita_black_bowl_2", initial,
+        np.array([0.20, 0.20, 0.90]),
+    )
+    assert result[-2]["expert"] == "lift_over"
+    assert np.all(result[-2]["actions"][:5, 2] == 0.9)
+    assert result[-1]["expert"] == "radial_away"
+    assert np.linalg.norm(result[-1]["actions"][0, :2]) > 0.7
