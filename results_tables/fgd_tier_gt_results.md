@@ -92,3 +92,19 @@ diagnosis: dev-cell failures are corridor/exemption-semantics problems (obstacle
 destination), not repair-timing problems. Schedule stays as a flag (no harm, higher activation);
 decision deferred to composed-system n=20. Next levers: A3 best-of-K (CAR) + corridor/destination
 exemption (TSR — now REQUIRED for Long L1 too, where the blocked entity is the DESTINATION).
+
+## Composed-system smoke (K=8 + ramp + corridor exemption + eef_r=0.12, n=5, job 42168138)
+| Cell | Composed | Prior best (uniform r3) | Baseline |
+|---|---|---|---|
+| Long L1 t0 | **60/80** | 0/38 (n=50) | 68/16 |
+| Long L1 t1 | 20/40 | 0/60 (n=50) | 28/8 |
+| Spatial L1 | 50/35 (t0 80/20) | 58.5/44.5 (n=50) | 67/14 |
+| Object L1 t1 | 40/0 | 18/0 (n=50); K8-thin smoke 80/0 | 8/0-ish |
+| Object L1 t2 | 20/0 | 48/0 (n=50); K8-thin 60/0 | 4/0-ish |
+
+VERDICT: destination-corridor exemption UNBLOCKS Long L1 (0%→40-60% TSR at CAR 0.4-0.8 —
+the semantic-layer thesis validated on its hardest cell). Spatial ~held (n=5 noise).
+Object L1 resists: obstacle sits ON the sanctioned corridor at the grasp point — exemption
+cannot help (hazard IS the path), fat margins hurt. Note SOTA's own Object S1 T3 CAR=46 —
+this cell family is hard for them too. Object L1 needs forensics (JSONL + video), not knobs.
+Next: n=20 composed confirmation on L1 suites.
