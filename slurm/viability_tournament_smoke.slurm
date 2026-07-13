@@ -4,7 +4,7 @@
 #SBATCH --gres=gpu:h100-80:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=62000M
-#SBATCH --exclude=w008,w009
+#SBATCH --exclude=w007,w008,w009
 #SBATCH --time=04:00:00
 #SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
 #SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
