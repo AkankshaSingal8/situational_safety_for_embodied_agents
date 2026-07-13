@@ -34,6 +34,22 @@ class GuidanceConfig:
     inflation_slope: float = 0.004  # extra margin per horizon step [m]
     translation_scale: float = 0.05  # metres per unit command per control step
     default_obstacle_radius: float = 0.065
+    num_denoise_steps: int = 10
+    repair_schedule: str = "ramp"  # "ramp" (trust early, exact late) | "uniform" (r3 behavior)
+
+
+def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
+    """repair_weight[k], margin_scale[k] over denoising steps. Last entry must be 1."""
+    margin = np.ones(n, dtype=np.float32)
+    if kind == "uniform":
+        return np.ones(n, dtype=np.float32), margin
+    if kind == "ramp":
+        w = np.ones(n, dtype=np.float32)
+        w[:2] = 0.0
+        ramp = np.linspace(0.2, 1.0, num=5, dtype=np.float32)  # steps 2..6
+        w[2 : 2 + len(ramp)] = ramp
+        return w, margin
+    raise ValueError(f"unknown repair_schedule {kind!r}")
 
 
 class GuidedPolicy(_policy.Policy):
@@ -59,6 +75,10 @@ class GuidedPolicy(_policy.Policy):
         self._q99 = np.asarray(action_stats.q99[:3], dtype=np.float32)
         logging.info("Guidance action quantiles: q01=%s q99=%s", self._q01, self._q99)
 
+        w, m = make_schedule(config.repair_schedule, config.num_denoise_steps)
+        self._repair_weight, self._margin_scale = w, m
+        logging.info("Repair schedule %s: w=%s", config.repair_schedule, np.round(w, 2))
+
         bound = types.MethodType(guided_sample_actions, self._model)
         self._sample_actions = nnx_utils.module_jit(bound)
 
@@ -81,6 +101,8 @@ class GuidedPolicy(_policy.Policy):
             q01=jnp.asarray(self._q01),
             q99=jnp.asarray(self._q99),
             translation_scale=jnp.float32(cfg.translation_scale),
+            repair_weight=jnp.asarray(self._repair_weight),
+            margin_scale=jnp.asarray(self._margin_scale),
         )
 
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]

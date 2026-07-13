@@ -48,16 +48,35 @@ class GuidanceParams(NamedTuple):
     q01: at.Float[at.Array, "3"]  # action quantile stats, translational dims
     q99: at.Float[at.Array, "3"]
     translation_scale: at.Float[at.Array, ""]  # metres of EEF motion per unit command
+    # Denoising-time schedule (length = num denoising steps). repair_weight
+    # scales the correction applied at Euler step k (0 = trust the flow, 1 =
+    # full repair); margin_scale scales r_eff at step k. Rationale: always-hard
+    # repair from pure noise is the documented SafeDiffuser-RoS trap pattern —
+    # trust early, correct softly mid, enforce exactly late. The LAST entry of
+    # both arrays must be 1.0 so the terminal chunk satisfies the exact chain.
+    repair_weight: at.Float[at.Array, "n"]
+    margin_scale: at.Float[at.Array, "n"]
 
 
-def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams) -> tuple[jnp.ndarray, dict]:
+def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.ndarray, dict]:
     """Repair the (B, H, action_dim) normalized chunk to satisfy the DCBF chain.
 
     Only dims 0:3 (translational commands) are modified. Returns the repaired
-    chunk and diagnostics. The correction is scaled by `g.enabled` so a single
-    jitted code path serves both guided and unguided requests.
+    chunk and diagnostics. The correction is scaled by `g.enabled` and by the
+    denoising-time schedule `g.repair_weight[step_idx]` so a single jitted code
+    path serves guided, unguided, and scheduled requests.
+
+    Repair channel is brake-then-push (PC-Diffuser insight): the correction is
+    applied along the radial escape direction, and if the |command|<=1 clamp
+    cannot realize the required push, the step falls back to a FULL BRAKE
+    (remove all motion toward the obstacle), which guarantees the barrier is
+    non-decreasing at that step — chain feasibility degrades gracefully to
+    non-worsening under actuation limits instead of executing a known-violating
+    step.
     """
     b, h, _ = x_t.shape
+    w_k = g.repair_weight[step_idx]
+    ms_k = g.margin_scale[step_idx]
 
     # normalized -> env command in [-1, 1] (quantile unnormalize, cf.
     # transforms.Unnormalize._unnormalize_quantile)
@@ -86,18 +105,37 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams) -> tuple[jnp.ndarray, dict
 
         def body(j, carry):
             disp_acc, p_prev, b_prev = carry
-            r_j = g.r_eff + g.inflation_slope * (j + 1.0)
-            p_j = p_prev + disp_acc[j]
+            r_j = ms_k * (g.r_eff + g.inflation_slope * (j + 1.0))
+            orig_step = disp_acc[j]
+            p_j = p_prev + orig_step
             dist, direction = _closest(p_j)
             b_j = dist - r_j
             need = (1.0 - g.gamma) * b_prev
             deficit = jnp.maximum(need - b_j, 0.0)
             # Push p_j (and, through the cumulative rollout, all later points)
             # away from the obstacle along the closest companion's direction.
-            new_step = disp_acc[j] + deficit * direction
-            # Respect the actuator range: |command| <= 1 per dim.
-            new_cmd = jnp.clip(new_step / g.translation_scale, -1.0, 1.0)
-            new_step = new_cmd * g.translation_scale
+            pushed = orig_step + deficit * direction
+            pushed_cmd = jnp.clip(pushed / g.translation_scale, -1.0, 1.0)
+            pushed = pushed_cmd * g.translation_scale
+            p_push = p_prev + pushed
+            dist_push, _ = _closest(p_push)
+            # FULL-BRAKE alternative: remove the toward-obstacle component of
+            # the original step. Its radial component is non-negative, so the
+            # barrier cannot decrease at this step — a clamp-independent floor.
+            approach = jnp.maximum(jnp.dot(orig_step, -direction), 0.0)
+            braked = orig_step + approach * direction
+            braked_cmd = jnp.clip(braked / g.translation_scale, -1.0, 1.0)
+            braked = braked_cmd * g.translation_scale
+            dist_brake, _ = _closest(p_prev + braked)
+            # Take whichever realizable step yields the larger barrier: the
+            # clamped push when it helps (incl. max-speed escape from inside
+            # the margin), the brake floor when per-dim clamping would make the
+            # push worse than simply not approaching.
+            better = jnp.where(dist_push >= dist_brake, pushed, braked)
+            # Only correct violating steps: deficit == 0 -> keep the original.
+            chosen = jnp.where(deficit > 0.0, better, orig_step)
+            # Denoising-time schedule: scale the CORRECTION, not the step.
+            new_step = orig_step + w_k * (chosen - orig_step)
             disp_acc = disp_acc.at[j].set(new_step)
             p_j = p_prev + new_step
             dist2, _ = _closest(p_j)
@@ -181,12 +219,14 @@ def guided_sample_actions(
         v_t = self.action_out_proj(suffix_out[:, -self.action_horizon :])
         return x_t + dt * v_t
 
-    def body(_, carry):
+    def body(k, carry):
         x_t, time, _ = carry
         x_t = euler_step(x_t, time)
-        x_t, diag = _dcbf_repair(x_t, guidance)
+        x_t, diag = _dcbf_repair(x_t, guidance, k)
         return x_t, time + dt, diag
 
-    _, init_diag = _dcbf_repair(noise, guidance._replace(enabled=jnp.zeros_like(guidance.enabled)))
+    _, init_diag = _dcbf_repair(
+        noise, guidance._replace(enabled=jnp.zeros_like(guidance.enabled)), num_steps - 1
+    )
     x_0, _, last_diag = jax.lax.fori_loop(0, num_steps, body, (noise, 1.0, init_diag))
     return x_0, last_diag

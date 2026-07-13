@@ -33,6 +33,8 @@ def make_params(eef, obstacle, r_eff=0.12, enabled=1.0):
         q01=jnp.asarray(Q01),
         q99=jnp.asarray(Q99),
         translation_scale=jnp.float32(SCALE),
+        repair_weight=jnp.ones(10, dtype=jnp.float32),
+        margin_scale=jnp.ones(10, dtype=jnp.float32),
     )
 
 
@@ -64,7 +66,7 @@ def barrier_chain(x, params):
 def test_noop_when_far():
     params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[5.0, 5.0, 5.0])
     x = chunk_toward([1.0, 0.0, 0.0])
-    x_new, diag = _dcbf_repair(x, params)
+    x_new, diag = _dcbf_repair(x, params, 9)
     np.testing.assert_allclose(np.asarray(x_new), np.asarray(x), atol=1e-6)
     assert float(diag["correction_norm"][0]) < 1e-6
     assert float(diag["max_residual"][0]) < 1e-6
@@ -73,14 +75,14 @@ def test_noop_when_far():
 def test_disabled_is_identity_even_when_violating():
     params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.15, 0.0, 1.0], enabled=0.0)
     x = chunk_toward([1.0, 0.0, 0.0])  # drives straight at the obstacle
-    x_new, _ = _dcbf_repair(x, params)
+    x_new, _ = _dcbf_repair(x, params, 9)
     np.testing.assert_allclose(np.asarray(x_new), np.asarray(x), atol=1e-6)
 
 
 def test_head_on_chunk_gets_repaired_to_satisfy_dcbf_chain():
     params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 1.0])
     x = chunk_toward([1.0, 0.0, 0.0])  # 4 cm/step straight at obstacle 20 cm away
-    x_new, diag = _dcbf_repair(x, params)
+    x_new, diag = _dcbf_repair(x, params, 9)
 
     b0, b = barrier_chain(x_new, params)
     chain = np.concatenate([[b0], b])
@@ -96,7 +98,7 @@ def test_tangential_chunk_barely_modified():
     # Path passes at ~18 cm lateral offset from an r_eff=0.12 obstacle: safe.
     params = make_params(eef=[0.0, 0.18, 1.0], obstacle=[0.15, 0.0, 1.0])
     x = chunk_toward([1.0, 0.0, 0.0], magnitude=0.5)
-    x_new, diag = _dcbf_repair(x, params)
+    x_new, diag = _dcbf_repair(x, params, 9)
     assert float(diag["correction_norm"][0]) < 1e-3
 
 
@@ -105,7 +107,7 @@ def test_starts_inside_margin_escapes_gradually():
     # the violation toward the boundary — no teleporting, monotone improvement.
     params = make_params(eef=[0.10, 0.0, 1.0], obstacle=[0.15, 0.0, 1.0])
     x = chunk_toward([1.0, 0.0, 0.0], magnitude=0.3)
-    x_new, diag = _dcbf_repair(x, params)
+    x_new, diag = _dcbf_repair(x, params, 9)
     b0, b = barrier_chain(x_new, params)
     assert b0 < 0
     chain = np.concatenate([[b0], b])
@@ -122,7 +124,7 @@ def test_starts_inside_margin_escapes_gradually():
 def test_command_clamp_respected():
     params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.08, 0.0, 1.0], r_eff=0.2)
     x = chunk_toward([1.0, 0.0, 0.0])
-    x_new, diag = _dcbf_repair(x, params)
+    x_new, diag = _dcbf_repair(x, params, 9)
     span = Q99 - Q01 + 1e-6
     cmd = (np.asarray(x_new)[0, :, :3] + 1.0) / 2.0 * span + Q01
     assert np.max(np.abs(cmd)) <= 1.0 + 1e-5
@@ -136,7 +138,7 @@ def test_only_translational_dims_touched():
     x = np.array(chunk_toward([1.0, 0.0, 0.0]))  # writable copy
     x[..., 3:] = rng.normal(size=x[..., 3:].shape).astype(np.float32)
     x = jnp.asarray(x)
-    x_new, _ = _dcbf_repair(x, params)
+    x_new, _ = _dcbf_repair(x, params, 9)
     np.testing.assert_allclose(np.asarray(x_new)[..., 3:], np.asarray(x)[..., 3:], atol=1e-7)
 
 
@@ -147,7 +149,7 @@ def test_below_path_obstacle_caught_by_companion_point():
     # n=50 r2 collisions (hand/fingers/carried object unmodeled).
     params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 0.87], r_eff=0.10)
     x = chunk_toward([1.0, 0.0, 0.0], magnitude=0.8)
-    x_new, diag = _dcbf_repair(x, params)
+    x_new, diag = _dcbf_repair(x, params, 9)
     assert float(diag["correction_norm"][0]) > 1e-3
     # min over companion points must be reflected in the clearance diagnostic.
     assert float(diag["min_clearance"][0]) > -1e-3
@@ -158,6 +160,31 @@ def test_batch_dimension():
     x1 = chunk_toward([1.0, 0.0, 0.0])
     x2 = chunk_toward([-1.0, 0.0, 0.0])  # moving away: should be untouched
     x = jnp.concatenate([x1, x2], axis=0)
-    x_new, diag = _dcbf_repair(x, params)
+    x_new, diag = _dcbf_repair(x, params, 9)
     assert float(diag["correction_norm"][0]) > 1e-3
     assert float(diag["correction_norm"][1]) < 1e-6
+
+
+def test_schedule_zero_weight_is_identity():
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 1.0])
+    params = params._replace(repair_weight=jnp.zeros(10, dtype=jnp.float32))
+    x = chunk_toward([1.0, 0.0, 0.0])
+    x_new, diag = _dcbf_repair(x, params, 3)
+    np.testing.assert_allclose(np.asarray(x_new), np.asarray(x), atol=1e-6)
+
+
+def test_brake_floor_barrier_never_below_no_approach():
+    # Property: the chosen step's barrier is >= the full-brake floor, i.e., the
+    # repair never executes a step worse than "stop approaching".
+    rng = np.random.default_rng(3)
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.12, 0.02, 1.0], r_eff=0.15)
+    for _ in range(5):
+        x = np.zeros((1, H, 32), dtype=np.float32)
+        x[0, :, :3] = rng.uniform(-1, 1, size=(H, 3)).astype(np.float32)
+        x_new, diag = _dcbf_repair(jnp.asarray(x), params, 9)
+        b0, b = barrier_chain(x_new, params)
+        chain = np.concatenate([[b0], b])
+        # Guaranteed floor: B_{j+1} >= min(B_j, (1-gamma)*B_j) — either the
+        # chain condition was met (push) or the step did not approach (brake).
+        floor = np.minimum(chain[:-1], (1.0 - GAMMA) * chain[:-1])
+        assert np.all(chain[1:] >= floor - 5e-3), (chain, floor)

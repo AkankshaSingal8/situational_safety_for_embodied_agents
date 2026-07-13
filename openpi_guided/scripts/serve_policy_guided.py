@@ -38,6 +38,7 @@ class Args:
     eef_radius: float = 0.09
     inflation_slope: float = 0.004
     translation_scale: float = 0.05
+    repair_schedule: str = "ramp"
 
 
 def main(args: Args) -> None:
@@ -59,6 +60,7 @@ def main(args: Args) -> None:
         eef_radius=args.eef_radius,
         inflation_slope=args.inflation_slope,
         translation_scale=args.translation_scale,
+        repair_schedule=args.repair_schedule,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)
