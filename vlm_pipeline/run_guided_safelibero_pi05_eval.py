@@ -374,7 +374,7 @@ def _oracle_counterfactual_score(
 def _oracle_depth2_scores(
     env, candidates, snapshot, snapshot_timestep, obstacle_name,
     initial_obstacle_pos, manipulated_name, phase_target,
-    current_target_distance, stage_horizon,
+    current_target_distance, stage_horizon, first_stage_scores=None,
 ):
     """Score first-stage repairs by their best distinct safe continuation.
 
@@ -384,7 +384,11 @@ def _oracle_depth2_scores(
     """
     first_scores = []
     best_continuations = []
-    for first in candidates:
+    for first_index, first in enumerate(candidates):
+        if first_stage_scores is not None and first_stage_scores[first_index] < -5.0:
+            first_scores.append(first_stage_scores[first_index])
+            best_continuations.append("first_stage_collision")
+            continue
         continuation_scores = []
         for second in candidates:
             composed = copy.deepcopy(first)
@@ -593,23 +597,27 @@ def run_eval(args):
                                     float(np.linalg.norm(np.asarray(obs["robot0_eef_pos"]) - phase_target))
                                     if phase_target is not None else 0.0
                                 )
-                                if args.oracle_depth == 2:
+                                stage_scores = [
+                                    _oracle_counterfactual_score(
+                                        env, candidate, snapshot, snapshot_timestep,
+                                        obstacle_name, initial_obstacle_pos,
+                                        manipulated_name, phase_target,
+                                        current_target_distance, args.oracle_horizon,
+                                    )
+                                    for candidate in candidates
+                                ]
+                                if args.oracle_depth == 2 and any(
+                                    score < -5.0 for score in stage_scores
+                                ):
                                     scores, continuations = _oracle_depth2_scores(
                                         env, candidates, snapshot, snapshot_timestep,
                                         obstacle_name, initial_obstacle_pos,
                                         manipulated_name, phase_target,
                                         current_target_distance, args.oracle_horizon,
+                                        stage_scores,
                                     )
                                 else:
-                                    scores = [
-                                        _oracle_counterfactual_score(
-                                            env, candidate, snapshot, snapshot_timestep,
-                                            obstacle_name, initial_obstacle_pos,
-                                            manipulated_name, phase_target,
-                                            current_target_distance, args.oracle_horizon,
-                                        )
-                                        for candidate in candidates
-                                    ]
+                                    scores = stage_scores
                                     continuations = ["n/a"] * len(candidates)
                                 selected_index = int(np.argmax(scores))
                                 result = candidates[selected_index]
