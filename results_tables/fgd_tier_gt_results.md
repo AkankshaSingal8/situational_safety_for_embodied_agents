@@ -122,3 +122,13 @@ composed smoke); t3 = obstacle-ON-path family (<6cm from the approach line) — 
 clearance impossible at any usable margin; recovery must come from curved approaches (K-selection
 can find these; E2 straight-line is a lower bound) or contact-adjacent acceptance. Object L1
 t1/t2 presumed same family. E2 gate (>=70%) PASSES for 3/4 tasks.
+
+## ★ FOUR-NUMBER WIN — Composed Spatial L2, n=50 (job 42182723, 2026-07-13)
+| | TSR | CAR |
+|---|---|---|
+| **Composed (GT tier)** | **85.0** | **76.5** |
+| Baseline pi0.5 | 55.5 | 12.0 |
+| SOTA published | 78.0 | 75.5 |
+**Beats baseline AND SOTA-published on BOTH axes.** Per-task: t0 100/72, t1 56/58, t2 88/82, t3 96/94.
+(Composed Spatial L1: 53.5/46.0 — best CAR yet, TSR below thin-config; L1 frontier still open.)
+Config: K=8, ramp schedule, corridor exemption, eef_r=0.12, companions. Self-run reimpl referee pending.
