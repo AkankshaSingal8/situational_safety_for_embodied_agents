@@ -43,7 +43,7 @@ kill -0 "$SERVER_PID"
 
 conda activate openvla_libero_merged
 export MUJOCO_GL=egl
-export PYTHONPATH="$ROOT/SafeLIBERO/safelibero:$WT/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
+export PYTHONPATH="$ROOT/SafeLIBERO/safelibero:$ROOT/.worktrees/flow-guidance-tier-gt/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
 for LEVEL in I II; do
   python -u "$WT/vlm_pipeline/run_guided_safelibero_pi05_eval.py" \
     --task_suite_name safelibero_spatial --safety_level "$LEVEL" \
