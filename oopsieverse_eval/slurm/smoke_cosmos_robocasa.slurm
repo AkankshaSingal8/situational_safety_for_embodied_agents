@@ -14,11 +14,18 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=63000M
 #SBATCH --time=01:30:00
-# w006 produced an unexplained "Aborted (core dumped)" crash (SIGABRT, no
-# Python traceback) during robosuite/MuJoCo controller loading on two
-# separate prior attempts (pi0.5 full-eval and this smoke test), while every
-# other node used across ~10 successful runs was fine -- excluding it as a
-# cheap, reversible mitigation pending further evidence one way or the other.
+# NOTE: an "Aborted (core dumped)" (SIGABRT, no Python traceback) has now
+# been seen on w006 (twice: pi0.5 full-eval, an earlier attempt of this job)
+# AND w008 (this job's most recent attempt) -- so it is NOT a single bad
+# node; --exclude=w006 below is left in only because it's free, not because
+# it's expected to fix anything. The w008 crash happened deep into the run
+# (server-side log shows 51 successful inference calls before it, ruling out
+# a startup-time issue) and Cosmos's RoboCasa client is the only one of the
+# four policies using 3 cameras (agentview_left + agentview_right +
+# eye_in_hand) instead of 2 -- suspect MuJoCo/EGL offscreen-render resource
+# exhaustion under sustained use, not yet confirmed. See PYTHONUNBUFFERED
+# and ulimit -c below: added to get a real crash location/core dump on the
+# next occurrence instead of guessing further.
 #SBATCH --exclude=w006
 #SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
 #SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
@@ -67,8 +74,22 @@ echo "Server ready!"
 # ── Run eval client (sim-host env) ───────────────────────────────────────
 conda activate /ocean/projects/cis250185p/asingal/envs/oopsieverse_robocasa
 export MUJOCO_GL=egl
+# Unbuffered: the last "Aborted (core dumped)" run showed ZERO episode
+# markers in this log despite the server having handled 51 successful
+# inference calls -- Python fully block-buffers stdout when it's not a
+# TTY (i.e. always, when redirected to a SLURM log file), so a native
+# SIGABRT can wipe out unflushed print() output and make the crash look
+# like it happened immediately when it actually happened much later.
+export PYTHONUNBUFFERED=1
+# Enable core dumps so a repeat crash leaves something to inspect (gdb
+# batch-mode backtrace, python-side frame info via `py-bt` if debug symbols
+# are available) instead of just "Aborted (core dumped)" with no detail.
+ulimit -c unlimited
+CORE_DIR="/ocean/projects/cis250185p/asingal/slurm_logs/cores_${SLURM_JOB_ID}"
+mkdir -p "$CORE_DIR"
+cd "$CORE_DIR"
 
-python "$EVAL_DIR/eval/run_robocasa_cosmos_eval.py" \
+python -u "$EVAL_DIR/eval/run_robocasa_cosmos_eval.py" \
     --tasks pick_egg turn_on_faucet \
     --num_trials 3 \
     --host localhost --port "$PORT" \
