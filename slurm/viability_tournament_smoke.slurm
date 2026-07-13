@@ -21,7 +21,11 @@ TRIALS=${TRIALS:-2}
 K=${K:-4}
 PORT=${PORT:-8130}
 TRANSLATION_SCALE=${TRANSLATION_SCALE:-0.05}
-OUT="$WT/viability_tournament/${MODE}_scale-${TRANSLATION_SCALE}_k${K}"
+PROGRESS_WEIGHT=${PROGRESS_WEIGHT:-4.0}
+CLEARANCE_WEIGHT=${CLEARANCE_WEIGHT:-1.0}
+CORRECTION_PENALTY=${CORRECTION_PENALTY:-0.02}
+ADAPTIVE_DISTANCE=${ADAPTIVE_DISTANCE:-0.20}
+OUT="$WT/viability_tournament/${MODE}_scale-${TRANSLATION_SCALE}_k${K}_p${PROGRESS_WEIGHT}_c${CLEARANCE_WEIGHT}_a${ADAPTIVE_DISTANCE}"
 mkdir -p "$OUT"
 
 echo "mode=$MODE trials=$TRIALS k=$K scale=$TRANSLATION_SCALE out=$OUT"
@@ -49,6 +53,9 @@ for LEVEL in I II; do
     --task_suite_name safelibero_spatial --safety_level "$LEVEL" \
     --num_trials_per_task "$TRIALS" --host 127.0.0.1 --port "$PORT" \
     --steering_mode "$MODE" --num_candidates "$K" \
+    --controller_scale "$TRANSLATION_SCALE" \
+    --progress_weight "$PROGRESS_WEIGHT" --clearance_weight "$CLEARANCE_WEIGHT" \
+    --correction_penalty "$CORRECTION_PENALTY" --adaptive_distance "$ADAPTIVE_DISTANCE" \
     --results_output_dir "$OUT/results"
 done
 echo "TOURNAMENT_COMPLETE mode=$MODE scale=$TRANSLATION_SCALE"

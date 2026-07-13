@@ -89,13 +89,101 @@ def parse_args():
     parser.add_argument("--task_indices", type=int, nargs="+", default=None)
     parser.add_argument("--disable_guidance", action="store_true",
                         help="Send enabled=0 (server sanity baseline through the same code path).")
-    parser.add_argument("--steering_mode", choices=["fixed", "phase_adaptive", "best_of_k"],
+    parser.add_argument("--steering_mode", choices=["fixed", "phase_adaptive", "best_of_k", "semantic_best_of_k"],
                         default="fixed")
     parser.add_argument("--num_candidates", type=int, default=4)
     parser.add_argument("--adaptive_distance", type=float, default=0.20,
                         help="Use EEF-only guidance inside this distance of the obstacle.")
     parser.add_argument("--correction_penalty", type=float, default=0.02)
+    parser.add_argument("--progress_weight", type=float, default=4.0)
+    parser.add_argument("--clearance_weight", type=float, default=1.0)
+    parser.add_argument("--controller_scale", type=float, default=0.00523)
     return parser.parse_args()
+
+
+def _named_positions(obs, fragment):
+    """Return stable object-name -> xyz entries matching a semantic fragment."""
+    result = {}
+    for key, value in obs.items():
+        if key.endswith("_pos") and fragment in key.lower():
+            xyz = np.asarray(value, dtype=np.float64)
+            if xyz.shape == (3,):
+                result[key[:-4]] = xyz
+    return result
+
+
+def _nearest_position(obs, fragment, reference):
+    positions = _named_positions(obs, fragment)
+    if not positions:
+        return None
+    return min(positions.values(), key=lambda p: float(np.linalg.norm(p - reference)))
+
+
+def _resolve_semantic_context(obs, instruction):
+    """Resolve manipulated bowl and destination from language plus object poses.
+
+    SafeLIBERO Spatial contains distractor black bowls. The relation in the
+    instruction identifies the active one without task-id-specific constants.
+    """
+    bowls = _named_positions(obs, "black_bowl")
+    if not bowls:
+        bowls = _named_positions(obs, "bowl")
+    if not bowls:
+        return None, None
+
+    text = instruction.lower()
+    support_fragments = []
+    if "between" in text and "plate" in text and "ramekin" in text:
+        support_fragments = ["plate", "ramekin"]
+    else:
+        for token in ("ramekin", "stove", "cabinet"):
+            if token in text:
+                support_fragments = [token]
+                break
+
+    support_positions = []
+    for fragment in support_fragments:
+        matches = _named_positions(obs, fragment)
+        if matches:
+            support_positions.append(next(iter(matches.values())))
+    if support_positions:
+        reference = np.mean(support_positions, axis=0)
+        bowl_name, bowl_pos = min(
+            bowls.items(), key=lambda item: float(np.linalg.norm(item[1] - reference))
+        )
+    else:
+        eef = np.asarray(obs["robot0_eef_pos"], dtype=np.float64)
+        bowl_name, bowl_pos = min(
+            bowls.items(), key=lambda item: float(np.linalg.norm(item[1] - eef))
+        )
+
+    goal = _nearest_position(obs, "plate", bowl_pos)
+    return bowl_name, goal
+
+
+def _semantic_phase(obs, object_name, initial_object_pos):
+    current = np.asarray(obs[f"{object_name}_pos"], dtype=np.float64)
+    moved = float(np.linalg.norm(current - initial_object_pos)) > 0.035
+    lifted = float(current[2] - initial_object_pos[2]) > 0.025
+    return "transport" if moved or lifted else "approach"
+
+
+def _candidate_score(candidate, eef_pos, phase_target, args):
+    diagnostic = candidate.get("guidance", {})
+    clearance = float(diagnostic.get("min_clearance", -1e6))
+    correction = float(diagnostic.get("correction_norm", 1e6))
+    actions = np.asarray(candidate["actions"][:REPLAN_STEPS], dtype=np.float64)
+    endpoint = np.asarray(eef_pos, dtype=np.float64) + np.sum(
+        actions[:, :3] * args.controller_scale, axis=0
+    )
+    progress = float(np.linalg.norm(np.asarray(eef_pos) - phase_target)) - float(
+        np.linalg.norm(endpoint - phase_target)
+    )
+    return (
+        args.clearance_weight * np.clip(clearance, -0.10, 0.05)
+        + args.progress_weight * progress
+        - args.correction_penalty * correction
+    )
 
 
 def _get_libero_env(task, resolution, seed):
@@ -189,6 +277,11 @@ def run_eval(args):
                     obstacle_name = name
                     break
             initial_obstacle_pos = obs[f"{obstacle_name}_pos"] if obstacle_name else None
+            manipulated_name, goal_position = _resolve_semantic_context(obs, task_description)
+            initial_manipulated_pos = (
+                np.asarray(obs[f"{manipulated_name}_pos"], dtype=np.float64).copy()
+                if manipulated_name is not None else None
+            )
             collide_flag = False
 
             replay_images = []
@@ -228,6 +321,18 @@ def run_eval(args):
                             companion_scale = 1.0
                             if args.steering_mode in ("phase_adaptive", "best_of_k"):
                                 companion_scale = float(obstacle_distance >= args.adaptive_distance)
+                            elif args.steering_mode == "semantic_best_of_k" and manipulated_name is not None:
+                                phase = _semantic_phase(obs, manipulated_name, initial_manipulated_pos)
+                                object_position = np.asarray(obs[f"{manipulated_name}_pos"])
+                                phase_target = object_position if phase == "approach" else goal_position
+                                near_target = (
+                                    phase_target is not None and
+                                    np.linalg.norm(np.asarray(obs["robot0_eef_pos"]) - phase_target)
+                                    < args.adaptive_distance
+                                )
+                                # Relax hand/payload companions only for the final
+                                # pre-grasp approach. Transport retains full geometry.
+                                companion_scale = float(not (phase == "approach" and near_target))
                             element["guidance"] = {
                                 "enabled": 0.0 if args.disable_guidance else 1.0,
                                 "eef_pos": np.asarray(obs["robot0_eef_pos"], dtype=np.float32),
@@ -235,15 +340,24 @@ def run_eval(args):
                                 "obstacle_radius": obstacle_radius(obstacle_name),
                                 "companion_scale": companion_scale,
                             }
-                        if args.steering_mode == "best_of_k":
+                        if args.steering_mode in ("best_of_k", "semantic_best_of_k"):
                             candidates = [client.infer(element) for _ in range(args.num_candidates)]
-                            def candidate_score(candidate):
-                                diagnostic = candidate.get("guidance", {})
-                                clearance = float(diagnostic.get("min_clearance", -1e6))
-                                correction = float(diagnostic.get("correction_norm", 1e6))
-                                # Viability proxy: maximize verified clearance while preserving
-                                # the VLA prior by penalizing large steering corrections.
-                                return min(clearance, 0.05) - args.correction_penalty * correction
+                            if args.steering_mode == "semantic_best_of_k" and manipulated_name is not None:
+                                phase = _semantic_phase(obs, manipulated_name, initial_manipulated_pos)
+                                object_position = np.asarray(obs[f"{manipulated_name}_pos"])
+                                phase_target = object_position if phase == "approach" else goal_position
+                                def candidate_score(candidate):
+                                    if phase_target is None:
+                                        return -float(candidate.get("guidance", {}).get("correction_norm", 1e6))
+                                    return _candidate_score(
+                                        candidate, obs["robot0_eef_pos"], phase_target, args
+                                    )
+                            else:
+                                def candidate_score(candidate):
+                                    diagnostic = candidate.get("guidance", {})
+                                    clearance = float(diagnostic.get("min_clearance", -1e6))
+                                    correction = float(diagnostic.get("correction_norm", 1e6))
+                                    return min(clearance, 0.05) - args.correction_penalty * correction
                             result = max(candidates, key=candidate_score)
                         else:
                             result = client.infer(element)
