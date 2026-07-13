@@ -228,6 +228,7 @@ def _infer_diverse_candidates(client, element, count):
 
 def _inject_topology_experts(
     candidates, obs, obstacle_name, manipulated_name, initial_object_pos, goal_position,
+    preferred_side=None,
 ):
     """Replace tail samples with opposite-side, context-conditioned detours."""
     if len(candidates) < 4 or manipulated_name is None or obstacle_name is None:
@@ -275,7 +276,9 @@ def _inject_topology_experts(
             )
         detour["actions"] = detour_actions
         detour["expert"] = label
-        detour["topology_required"] = topology_required
+        detour["topology_required"] = topology_required and (
+            preferred_side is None or label == preferred_side
+        )
         detours.append(detour)
 
     # Emergency viability expert: move directly out of the hazard's radial
@@ -458,6 +461,7 @@ def run_eval(args):
                 if manipulated_name is not None else None
             )
             collide_flag = False
+            topology_side = None
 
             replay_images = []
             t = 0
@@ -524,7 +528,7 @@ def run_eval(args):
                             if args.steering_mode == "oracle_counterfactual":
                                 candidates = _inject_topology_experts(
                                     candidates, obs, obstacle_name, manipulated_name,
-                                    initial_manipulated_pos, goal_position,
+                                    initial_manipulated_pos, goal_position, topology_side,
                                 )
                             if args.steering_mode == "oracle_counterfactual" and obstacle_name is not None:
                                 snapshot = env.get_sim_state().copy()
@@ -550,12 +554,19 @@ def run_eval(args):
                                 ]
                                 selected_index = int(np.argmax(scores))
                                 result = candidates[selected_index]
+                                selected_expert = result.get("expert", "unlabeled")
+                                if (
+                                    topology_side is None
+                                    and result.get("topology_required", False)
+                                    and selected_expert in ("tangent_left", "tangent_right")
+                                ):
+                                    topology_side = selected_expert
                                 logging.info(
                                     "  oracle phase=%s experts=%s scores=%s selected=%s",
                                     phase if manipulated_name is not None else "unknown",
                                     [c.get("expert", "unlabeled") for c in candidates],
                                     [round(score, 4) for score in scores],
-                                    result.get("expert", "unlabeled"),
+                                    selected_expert,
                                 )
                                 # Counterfactual rollouts must be observationally invisible.
                                 obs = env.regenerate_obs_from_state(snapshot)
