@@ -23,7 +23,8 @@ openvla_benchmark_smoke/
 pi05_benchmark_smoke/
 .worktrees/
 client_deps/
-fgd_smoke/
+fgd_smoke/*/videos/
+fgd_video/
 fgd_benchmark/
 fgd_video/
 fgd_n50/
