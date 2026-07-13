@@ -37,12 +37,29 @@ def build_env_action(robot, arm_delta: np.ndarray, gripper_value: float) -> np.n
     so navigation-dependent tasks are expected to be out of reach for an
     off-the-shelf single-arm-tuned policy; this is a known limitation, not a
     bug in this adapter.
+
+    IMPORTANT: the arm's key in `action_dict` must be the plain arm name
+    (e.g. "right"), NOT "{arm}_delta" -- `create_action_vector()` delegates
+    to the robot's composite controller, which looks up each part by its
+    literal name (confirmed via `robot.part_controllers.keys()` ==
+    ["right", "right_gripper", "base", "torso"] for PandaOmron). The
+    "_delta"/"_abs" suffix only exists in OopsieVerse's own teleop code as
+    an intermediate device-input dict key (io_utils.py's `input2action`);
+    by the time it's handed to `create_action_vector`, the key is already
+    just the arm name, with the controller's own (fixed) `input_type`
+    determining whether that value is interpreted as a delta or absolute
+    command. Using "{arm}_delta" here silently dropped every arm command
+    (not an error -- unrecognized dict keys are just ignored), which is why
+    every very first full-suite run showed 0% TSR and near-zero robot
+    motion across all four policies: confirmed directly by commanding a
+    forced max +x delta for 50 steps and observing ~0 displacement before
+    this fix, versus real motion after it.
     """
     arm = robot.arms[0]
     gripper_dof = robot.gripper[arm].dof
 
     action_dict = {
-        f"{arm}_delta": np.clip(np.asarray(arm_delta, dtype=np.float64), -1.0, 1.0),
+        arm: np.clip(np.asarray(arm_delta, dtype=np.float64), -1.0, 1.0),
         f"{arm}_gripper": np.array([gripper_value] * gripper_dof),
     }
     if robot.is_mobile:
