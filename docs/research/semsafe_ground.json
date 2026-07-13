@@ -1,0 +1,150 @@
+{
+ "methods": [
+  {
+   "name": "KnowNo (Robots That Ask For Help)",
+   "id_or_url": "arXiv:2307.01928",
+   "venue_year": "CoRL 2023 (best paper finalist)",
+   "mechanism": "Frames each LLM planning step as multiple-choice next-step selection; split conformal prediction over option likelihoods builds a prediction set with 1-epsilon coverage of the correct option; robot acts if the set is a singleton, asks a human otherwise. Statistical guarantee on task completion rate given a labeled calibration set.",
+   "hazard_coverage": "Instruction-level ambiguity/hazards only (which action or object the instruction intends). No geometric, property, relational, or damage coverage \u2014 perception is assumed correct.",
+   "failure_modes": "Guarantee holds only over the calibration distribution (exchangeability); requires the correct option to be in the candidate set; MCQA framing hides open-world errors; abstention target is a human, not a safe default; coverage is marginal, not per-scene.",
+   "relevance_to_us": "The canonical template for calibrating our router (refuse/redirect/proceed) and exemption gating: build a labeled offline calibration set (extend our 21-scene benchmark to a few hundred scenes), define a nonconformity score from VLM sampling consistency, and gate on conformal sets. Replace 'ask human' with our conservative default (default-deny stays on)."
+  },
+  {
+   "name": "IntroPlan (Introspective Planning)",
+   "id_or_url": "arXiv:2402.06529, github.com/kevinliang888/IntroPlan",
+   "venue_year": "NeurIPS 2024",
+   "mechanism": "Retrieval of post-hoc introspective rationalizations of human-approved safe/compliant plans guides the LLM to refine its own uncertainty; combined with conformal prediction this yields tighter prediction sets (fewer unnecessary clarifications) at the same statistical success guarantee. Introduces a safe mobile manipulation benchmark distinguishing compliance from safety.",
+   "hazard_coverage": "Instruction-level hazards explicitly (unsafe options flagged, not just ambiguous ones); indirectly relational via text descriptions. No geometric/perception coverage.",
+   "failure_modes": "Needs a curated introspection knowledge base; reasoning is text-level so grounded perception errors pass through untouched; safety labels come from the benchmark's own ontology.",
+   "relevance_to_us": "Closest existing work to a calibrated refusal policy for instruction-level hazards. Its compliance-vs-safety separation matches our router design; its result that introspective rationales tighten conformal sets suggests our FOL rule traces could serve the same set-shrinking role."
+  },
+  {
+   "name": "Uncertainty-Aware Policy Steering (When to Act, Ask, or Learn)",
+   "id_or_url": "arXiv:2602.22474",
+   "venue_year": "arXiv Feb 2026",
+   "mechanism": "Jointly handles semantic task uncertainty (VLM verifier) and low-level policy competence uncertainty; conformal prediction calibrates the composed VLM+base-policy system so the verifier's choice among act / clarify via language / request intervention carries statistical assurance.",
+   "hazard_coverage": "Instruction-level ambiguity plus policy-capability failures. Not hazard-taxonomy aware; no geometric or property hazards.",
+   "failure_modes": "Reports that overconfident VLM judgments remain a practical problem even after calibration; requires human in the loop for two of three branches; calibration of a composed system needs joint calibration data.",
+   "relevance_to_us": "The most recent KnowNo-lineage work and the first to calibrate the composition of a VLM verifier with a pretrained policy \u2014 the exact structural problem we face composing hazard-ID VLM with DCBF guidance. Cite as SOTA; differentiate by replacing human branches with autonomous conservative defaults."
+  },
+  {
+   "name": "SwPC (Seeing with Partial Certainty)",
+   "id_or_url": "arXiv:2501.04947",
+   "venue_year": "arXiv/ASCE i3CE 2025",
+   "mechanism": "Conformal prediction over VLM-based place/scene recognition; prediction sets trigger selective human help; no fine-tuning, works on black-box VLMs; validated on Matterport3D.",
+   "hazard_coverage": "Scene/semantic-context recognition uncertainty (which room/place); none of the manipulation hazard classes directly.",
+   "failure_modes": "Classification-style task with fixed label space; marginal coverage; navigation-scale semantics, not object-level grounding.",
+   "relevance_to_us": "Demonstrates conformal gating works on black-box VLM outputs (API-only) \u2014 relevant since our Qwen/GLM property attribution is sampled, not logit-accessible. Pattern: sample N responses, use frequency of modal answer as confidence score, conformalize."
+  },
+  {
+   "name": "CoFineLLM + ConformalNL2LTL",
+   "id_or_url": "arXiv:2511.06575; arXiv:2504.21022",
+   "venue_year": "arXiv Nov 2025; arXiv Apr 2025",
+   "mechanism": "ConformalNL2LTL translates natural-language instructions to LTL formulas with conformal correctness guarantees (abstains/asks when the translation prediction set is ambiguous). CoFineLLM is the first conformal-aware finetuning of LLM planners \u2014 trains to shrink prediction-set size, cutting help requests while keeping coverage.",
+   "hazard_coverage": "Instruction-level (formal-spec translation correctness). Relational hazards only insofar as they appear in the formula.",
+   "failure_modes": "Guarantees are on formula correctness w.r.t. a labeled calibration corpus, not on downstream physical safety; LTL vocabulary must be fixed in advance.",
+   "relevance_to_us": "Directly applicable to our runtime FOL rule composition: our VLM writes rules from a grounded predicate vocabulary \u2014 exactly the NL-to-formal-spec setting ConformalNL2LTL certifies. We can attach a per-rule conformal correctness gate: rules in the uncertain set are dropped in favor of default-deny rather than executed."
+  },
+  {
+   "name": "RoboGuard",
+   "id_or_url": "arXiv:2503.07885, robo-guard.github.io",
+   "venue_year": "RA-L 2026 (accepted Feb 2026)",
+   "mechanism": "Two-stage guardrail: a root-of-trust LLM (shielded from user prompts) grounds pre-defined safety rules into context-dependent temporal-logic specs via chain-of-thought; LTL control synthesis then minimally modifies unsafe plans. Reduces unsafe-plan execution from >92% to <3% under worst-case jailbreaks.",
+   "hazard_coverage": "Instruction-level hazards (including adversarial) and relational rules expressible in LTL over a semantic map. No continuous geometric margins, no property attribution, no calibration/UQ.",
+   "failure_modes": "Requires a hand-specified safety rule set and a world model to ground into; trust comes from architectural isolation, not statistical guarantees; plan-level (discrete), so continuous manipulation dynamics are out of scope.",
+   "relevance_to_us": "Architectural lesson: separate the safety-spec generator from the task-instruction channel (root-of-trust). Our hazard-ID VLM should be prompted independently of the (possibly unsafe) user instruction to resist instruction-level attacks \u2014 cheap to adopt, strong story for the refusal/redirect router."
+  },
+  {
+   "name": "Ask Before You Act (token-level VLA uncertainty)",
+   "id_or_url": "openreview.net/forum?id=NX0euXAv98",
+   "venue_year": "OpenReview 2025/26",
+   "mechanism": "Computes token-level entropy/perplexity of pi0-FAST action-token generation online; when uncertainty crosses a threshold the robot halts and requests a one-step human correction or blends joystick input via shared control.",
+   "hazard_coverage": "Policy-competence uncertainty only \u2014 no semantic hazard identification of any class.",
+   "failure_modes": "Uncalibrated threshold (hand-tuned); FAST-tokenized VLAs only (flow-matching pi0.5 lacks token logits); uncertainty correlates with OOD-ness, not with hazard presence \u2014 a confident policy heading into a hazard is missed.",
+   "relevance_to_us": "Establishes that VLA-internal uncertainty is usable as a gate but is orthogonal to hazard identification \u2014 supports our claim that semantic ID must be external. For pi0.5, the analog signal would be denoising residual/disagreement, a possible extra gating input."
+  },
+  {
+   "name": "FAIL-Detect",
+   "id_or_url": "arXiv:2503.08558",
+   "venue_year": "RSS 2025",
+   "mechanism": "Failure detection without failure data: distills policy inputs/outputs into scalar OOD/epistemic-uncertainty signals, then applies adaptive functional conformal prediction to obtain time-varying detection thresholds with statistical guarantees.",
+   "hazard_coverage": "Task-failure/damage precursors via OOD detection; no semantic hazard classes.",
+   "failure_modes": "Detects distributional novelty, not semantic unsafety \u2014 a nominal-looking trajectory toward a hot pan is in-distribution; guarantees are on false-alarm control, not on catching all failures.",
+   "relevance_to_us": "The functional-conformal-threshold machinery is the right tool to calibrate our runtime corridor-violation monitor (time-varying h(x) margins over an episode) using only successful calibration rollouts \u2014 which we have."
+  },
+  {
+   "name": "Perceive With Confidence (PwC)",
+   "id_or_url": "arXiv:2403.08185, perceive-with-confidence.github.io",
+   "venue_year": "CoRL 2024; IJRR 2025",
+   "mechanism": "Conformal calibration of a pretrained object detector so that, with probability 1-epsilon, calibrated detections (inflated regions) contain true obstacles; composed with any safe planner this yields an end-to-end statistical safety assurance robust to state distribution shift. Quadruped navigation: up to 40% empirical safety improvement; baselines collide on misdetections, PwC does not.",
+   "hazard_coverage": "Geometric obstacles only (presence + extent). No semantics.",
+   "failure_modes": "Conservative inflation costs task feasibility \u2014 tolerable in navigation, potentially fatal in cluttered tabletop manipulation where targets abut hazards; needs a calibration set of labeled scenes from the deployment distribution; marginal (not per-object) coverage.",
+   "relevance_to_us": "THE template for our calibrated default-deny geometry: conformalize RGB-D occupancy/detection error into keep-out inflation with a coverage guarantee. Our default-deny makes their conservatism the baseline state, and the interesting calibration moves to the exemption side \u2014 a framing no prior work has."
+  },
+  {
+   "name": "Conformalized Distance Fields",
+   "id_or_url": "arXiv:2607.00776",
+   "venue_year": "arXiv Jul 2026",
+   "mechanism": "Conformalizes an entire predicted signed-distance field as one functional object: distribution-free field-level lower bound on true obstacle distance (1-alpha everywhere), so any trajectory satisfying the tightened constraint is certified safe independent of control sampling; lightweight online rescaling handles drift.",
+   "hazard_coverage": "Geometric (static + predicted dynamic obstacles).",
+   "failure_modes": "Relies on low-rank structure of residual fields; assumes full observability and non-reactive obstacles; asymptotic closed-loop rates rather than per-step probabilities.",
+   "relevance_to_us": "Field-level calibration is exactly the right shape for our DCBF: h(x) is a field, and a conformal lower bound on h transfers directly into the in-denoising guidance constraint. Strongest available machinery for 'calibrated margins' in our enforcement layer."
+  },
+  {
+   "name": "Two-Step Conformal Bounding-Box Uncertainty",
+   "id_or_url": "arXiv:2403.07263",
+   "venue_year": "ECCV 2024 (oral)",
+   "mechanism": "Propagates class-label uncertainty into bounding-box conformal intervals (coverage valid even for misclassified objects); ensemble/quantile-regression scores make intervals adaptive to object size for balanced coverage.",
+   "hazard_coverage": "Geometric extent of detected objects, robust to classification error.",
+   "failure_modes": "Bonferroni-style corrections over-inflate; only covers detected objects \u2014 missed detections are uncovered by construction; closed label set.",
+   "relevance_to_us": "The class-to-geometry uncertainty propagation is the exact pattern we need for constraint-class assignment: uncertainty over 'fragile vs hot vs benign' should propagate into which margin/velocity-cap is applied, with coverage over misattributed properties. Nobody has applied this to semantic constraint classes \u2014 we can."
+  },
+  {
+   "name": "Your Model Already Knows (attention-guided safety filter)",
+   "id_or_url": "arXiv:2606.09749",
+   "venue_year": "arXiv Jun 2026 (UCLA)",
+   "mechanism": "Identifies a few grounding attention heads in manipulation VLAs that localize the currently intended target; treats everything else as obstacle, feeds locations to a CBF filter plus a lightweight tracker for moving obstacles. On SafeLIBERO: matches privileged-oracle filtering on static obstacles; +43% over oracle on dynamic ones (oracle target assignment goes stale).",
+   "hazard_coverage": "Geometric only, via an implicit default-deny with a single attention-derived exemption (the intended target). No property, relational, instruction, or damage hazards; no destination/support exemptions.",
+   "failure_modes": "Attention-head selection may not transfer across VLA architectures/checkpoints; the attention signal is used raw \u2014 no calibration, no abstention, no cross-check, so a mis-grounded head silently de-protects the wrong object; single-exemption logic breaks on place tasks (destination must be enterable).",
+   "relevance_to_us": "Our closest competitor and strongest evidence that policy internals carry grounding signal (validates asset (e)). Their gap is our thesis: they trust attention unilaterally; we fuse attention with external detector + semantic sanction (target/destination/support) and calibrate the agreement signal. Must cite and beat on place tasks and semantic hazards."
+  },
+  {
+   "name": "TouchSafeBench (Probing Collision Grounding in VLMs)",
+   "id_or_url": "arXiv:2605.31196",
+   "venue_year": "arXiv May 2026",
+   "mechanism": "Benchmark of 2,940 Habitat 3.0 episodes with multi-view RGB-D, calibration, and physics-derived contact labels; probes frontier VLMs on classifying current safety state and warning of imminent collision.",
+   "hazard_coverage": "Geometric/contact (diagnostic, not a method).",
+   "failure_modes": "Finding: best frontier VLM stays below 50% Macro-F1; providing explicit depth does not convert into collision evidence; robot-scene collisions harder than human-contact.",
+   "relevance_to_us": "Hard quantitative ammunition for our architecture: VLMs must not make geometric safety judgments \u2014 geometry belongs to calibrated RGB-D occupancy (default-deny), VLM only assigns semantics. Mirrors our own 0-10% direct-VLM-query result at scene scale."
+  },
+  {
+   "name": "Open-vocabulary grounding reliability cluster (GREC; OVD under shift; GDINO in grasping)",
+   "id_or_url": "arXiv:2308.16182; arXiv:2408.11221; arXiv:2405.14874",
+   "venue_year": "2023-2025",
+   "mechanism": "Diagnostic literature: GREC benchmark adds no-target and multi-target referring expressions; robustness studies of GroundingDINO/OWL under distribution shift; grasping pipelines quantify end-to-end cost of detector errors.",
+   "hazard_coverage": "Grounding-quality evidence for any hazard class that relies on open-vocab detection.",
+   "failure_modes": "Findings: classic REC precision collapses from ~85-90% (RefCOCO) to 30-50% on no-/multi-target splits; GroundingDINO returns high-confidence false positives for expressions with no true referent (returns the largest plausible region); FP confidences often exceed TP confidences (miscalibrated scores); grasp success <=60% with GDINO masks vs GT, degrading with clutter. Specialized region/count-aware models reach only 60-73%.",
+   "relevance_to_us": "Defines the reliability budget for our exemption grounding: no-target rejection is the dominant failure and detector confidence is not trustworthy. Justifies default-deny (a grounding FP costs liveness, not safety) and mandates an explicit absent-referent test in our exemption gate."
+  },
+  {
+   "name": "VLM/LLM confidence-calibration evidence + black-box conformal UQ",
+   "id_or_url": "arXiv:2405.02917; arXiv:2504.03440; arXiv:2606.25760; arXiv:2407.00499 (ConU); Kuhn et al. semantic entropy (ICLR 2023)",
+   "venue_year": "2023-2026",
+   "mechanism": "Verbalized-confidence studies (TrustNLP 2024; corrupted-image follow-up) measure ECE/NCE of stated confidence; the computer-use-agent benchmark (2606.25760) compares verbalized confidence, token logits, sampling consistency, and conformal methods for VLM grounding decisions; semantic entropy clusters sampled answers by meaning; ConU turns sampling self-consistency into a conformal score with correctness-coverage guarantees for black-box models.",
+   "hazard_coverage": "Cross-cutting: calibration quality of the confidence signal used for any hazard decision.",
+   "failure_modes": "Findings: LLMs and VLMs are systematically overconfident in verbalized uncertainty (high ECE), worse under image corruption; grounding confidence cannot be trusted raw; sampling-consistency scores rank errors better than verbalized ones; semantic-entropy hard clustering is unstable on overlapping meanings.",
+   "relevance_to_us": "Fixes our score design: gate exemptions and property attributions on sampling-consistency frequencies (our N=5 majority voting already produces these) conformalized ConU-style \u2014 never on the VLM's stated confidence. Upgrades our voting heuristic into a guaranteed-coverage mechanism at near-zero extra compute."
+  },
+  {
+   "name": "Confidence-Gated Robot Autonomy (When Does Uncertainty Actually Help?)",
+   "id_or_url": "arXiv:2605.18045",
+   "venue_year": "arXiv May 2026",
+   "mechanism": "Evaluates whether uncertainty signals change act/defer decisions (Spearman rank of errors, act/defer agreement, bootstrap equivalence) rather than ECE/AUROC; across benchmarks finds a competence regime below which all UQ signals give weak, unstable error ranking, and above which softmax/MC-dropout/ensembles gate nearly identically.",
+   "hazard_coverage": "Cross-cutting gating methodology (act vs conservative fallback).",
+   "failure_modes": "Finding: threshold choice dominates UQ-method choice; when competence cannot be established the system should revert to conservative fallback or a dedicated open-set mechanism \u2014 i.e., no UQ signal rescues an incompetent base model.",
+   "relevance_to_us": "Licenses simplicity: we don't need exotic UQ \u2014 a well-chosen (conformally set) threshold on sampling consistency suffices, and our conservative default (deny stays on) is exactly the recommended fallback when competence is unestablished. Also warns to verify our VLM is in its competence regime per hazard class (it is for our rule, per 21/21; it is not for direct queries)."
+  }
+ ],
+ "key_insights": "Six findings shape the trust recipe. (1) The field has converged on ONE mechanism with actual guarantees: split conformal prediction over a sampled-response confidence score, calibrated on a labeled offline set. The KnowNo lineage (KnowNo 2023 -> IntroPlan NeurIPS'24 -> SwPC'25 -> CoFineLLM/ConformalNL2LTL'25 -> Uncertainty-Aware Policy Steering Feb'26) applies it to plan/spec selection; Perceive-with-Confidence (CoRL'24/IJRR'25) and Conformalized Distance Fields (Jul'26) apply it to geometry. The guarantee is always marginal coverage over the calibration distribution \u2014 honest but distribution-bound; nobody has more than that, so claiming exchangeability-conditional guarantees on a SafeLIBERO-style calibration split is publication-standard. (2) Verbalized VLM confidence is disqualified for safety gating: systematic overconfidence (high ECE, worse under image corruption), and GroundingDINO-class detectors emit HIGH-confidence false positives on absent referents (GREC: REC precision 85-90% collapses to 30-50% with no-/multi-target expressions; FP scores often exceed TP scores; grasp success <=60% with GDINO masks). The trustworthy score is sampling/self-consistency frequency \u2014 which our N=5 majority voting already computes; ConU shows exactly how to conformalize it for black-box models. (3) VLMs cannot judge geometry: TouchSafeBench (May'26) shows frontier VLMs below 50% Macro-F1 on current/imminent collision even given depth. This independently validates our architecture split \u2014 calibrated RGB-D occupancy owns geometry, the VLM only assigns semantics \u2014 and echoes our own 0-10% direct-query result. (4) Confidence-Gated Robot Autonomy (May'26) shows threshold choice dominates UQ-method choice, and that below a competence regime no uncertainty signal helps \u2014 the mandated response is conservative fallback. This licenses a simple design and directly endorses default-deny as the abstention target: our system's 'ask for help' is 'keep the keep-out'. (5) Calibrated geometric margins are mature and drop-in for us: PwC conformalizes detector error into obstacle inflation with end-to-end safety composition (+40% empirical safety); Conformalized Distance Fields gives a field-level 1-alpha lower bound on distance \u2014 structurally identical to conformalizing our DCBF h(x); ECCV'24 two-step conformal propagates CLASS uncertainty into box size, the exact pattern for propagating property-attribution uncertainty into constraint-class margins. (6) The attention signal we planned to use as a cross-check is now a published competitor: 'Your Model Already Knows' (Jun'26, UCLA) reads grounding attention heads of a manipulation VLA, treats target as exempt and all else as CBF obstacles on SafeLIBERO \u2014 an uncalibrated, single-exemption, geometry-only version of our default-deny. They trust attention raw with no abstention and no external agreement check, and cannot handle destinations, supports, property hazards, or unsafe instructions. The SOTA trust recipe for gating a physical exemption is therefore: default-deny geometry from conformally inflated RGB-D; exemptions granted only when detector evidence, VLM sampled majority, and policy attention AGREE; agreement frequency conformalized on an offline calibration set (needs ~few hundred labeled scenes for meaningful 1-alpha); disagreement or empty/multi-target grounding -> exemption withheld (fail-safe), task degrades to slow/conservative mode rather than querying a human.",
+ "white_space": "Five gaps, all adjacent to our assets. (1) Calibrated EXEMPTION gating does not exist. Every conformal-robotics paper calibrates either what to add (obstacles, inflation \u2014 PwC, CDF) or which plan to pick (KnowNo lineage). Nobody calibrates the decision to REMOVE protection from a region \u2014 the default-deny exemption. The risk is asymmetric: a false exemption is the only unsafe error; a withheld exemption merely costs liveness. This maps onto conformal risk control (bound exemption false-positive rate at alpha, let liveness float) rather than vanilla coverage \u2014 a clean, novel formal object our corridor needs and no one has defined. (2) Nobody fuses policy attention with external grounding as an agreement/trust signal. Park et al. (2606.09749) use attention alone plus a tracker; the fusion literature fuses detector+language features for accuracy, not for deciding WHEN grounding is trustworthy. Defining a nonconformity score from three-way agreement (open-vocab detector, VLM sampled majority, VLA attention peak) and showing it dominates any single signal for exemption gating is open and cheap to demonstrate on SafeLIBERO. (3) Calibration coverage stops at geometry and instruction ambiguity. No paper gives guarantees for property attribution (hot/fragile/spillable) or relational-state hazards (towel-on-stove) \u2014 exactly the middle of our hazard taxonomy. Our multi-prompt majority voting (and Brunke's) is an uncalibrated heuristic; conformalizing per-predicate vote frequencies ConU-style would be the first calibrated semantic-hazard identifier. (4) The act-vs-CONSERVATIVE-DEFAULT policy (no human available) is essentially unstudied; the entire ask-for-help lineage assumes a human oracle. Formalizing abstention-to-safe-mode (bigger margins, velocity caps, refuse) with the same conformal machinery, and measuring the safety/liveness frontier it traces, is open \u2014 and is precisely what an autonomous benchmark like SafeLIBERO forces. (5) No end-to-end composition: semantic misidentification changes WHICH constraint class applies (margin vs velocity cap vs rotation lock), not just where a box is; the ECCV'24 class-to-box propagation pattern has never been applied to constraint-class selection feeding a CBF/DCBF. A two-stage conformal pipeline (predicate set -> union of implied constraints, enforce the worst-case constraint in the prediction set) would give the first identification-to-enforcement guarantee \u2014 the 'enforce the conformal hull of constraints' idea is a strong, defensible ICRA contribution that ties Direction 1 to our validated guidance layer."
+}

@@ -1,0 +1,168 @@
+{
+ "methods": [
+  {
+   "name": "Semantically Safe Robot Manipulation (Brunke et al.)",
+   "id_or_url": "https://arxiv.org/abs/2410.15185",
+   "venue_year": "RA-L 2025",
+   "mechanism": "Builds a 3D semantic map, then LLM contextual reasoning extracts unsafe spatial relationships (e.g., water cup above laptop), unsafe behaviors (caution), and unsafe poses (rotation lock); constraints compiled to CBF-based shielding that certifies inputs without modifying the policy. Multi-prompt querying with majority voting per constraint type.",
+   "hazard_coverage": "Relational (X-above-Y spill hazards), property (spillable/fragile via behavior+pose constraints), geometric (collision). No instruction-level refusal, no damage/force.",
+   "failure_modes": "Episodic: constraints extracted once at start, cannot track scene changes; requires accurate semantic 3D map; LLM misclassification directly becomes missing constraints (fails unsafe); relationship vocabulary fixed a priori.",
+   "relevance_to_us": "Our direct ancestor. Its constraint taxonomy (spatial/behavioral/pose) maps 1:1 to our constraint classes (keep-outs/velocity caps/rotation locks). We differ by runtime FOL composition, default-deny fallback, and denoising-time enforcement."
+  },
+  {
+   "name": "AEGIS / VLSA plug-and-play safety layer",
+   "id_or_url": "https://arxiv.org/abs/2512.11891",
+   "venue_year": "arXiv Dec 2025",
+   "mechanism": "GLM-4.5V is prompted to name exactly ONE non-robot object most likely to obstruct motion; GroundingDINO + dual-camera RGB-D lifts it to a point cloud; MVEE ellipsoid fitted; CBF-QP (alpha(h)=10h) minimally corrects VLA actions post-hoc. Evaluated on SafeLIBERO (their 32-scenario version): CAR 77.85% vs 18.69% baseline, TSR 68.13% vs 50.88% (pi0.5).",
+   "hazard_coverage": "Geometric obstacles ONLY. Explicitly does not handle thermal/fragile properties, relational hazards, unsafe instructions, or dynamic obstacles.",
+   "failure_modes": "Authors' own analysis: (1) perception errors \u2014 VLM misidentification, GroundingDINO mislocalization, aggressive point-cloud filtering under-estimating geometry, collisions with unmodeled arm links; (2) distribution shift \u2014 filtered trajectories enter OOD regions causing erratic policy behavior; (3) translation-only control. Single-obstacle assumption fails multi-hazard scenes.",
+   "relevance_to_us": "Primary SafeLIBERO competitor with published numbers. Its failure taxonomy proves identification (not control) is the bottleneck \u2014 exactly our Direction 1 thesis. Our 100%-vs-0-10% neuro-symbolic rule result attacks its weakest link (direct VLM obstacle query)."
+  },
+  {
+   "name": "CORE: Contextual Safety Reasoning and Grounding for Open-World Robots",
+   "id_or_url": "https://arxiv.org/abs/2602.19983",
+   "venue_year": "arXiv Feb 2026",
+   "mechanism": "VLM continuously reasons about context-dependent safety rules from visual observations (e.g., crowded vs empty hallway, emergency vs normal); spatial grounding converts rules into physically-defined safe sets; CBFs enforce with probabilistic guarantees accounting for perceptual uncertainty. Online/continual, not episodic.",
+   "hazard_coverage": "Contextual/geometric hazards in navigation-style open-world settings; context modulation of rules. Manipulation-grade property/relational hazards not the focus; no instruction-level refusal.",
+   "failure_modes": "VLM latency limits reasoning rate; perceptual uncertainty only handled probabilistically; predicate/rule vocabulary and grounding fidelity in cluttered tabletop manipulation untested.",
+   "relevance_to_us": "Closest 'VLM writes contextual rules -> grounded -> CBF' competitor. We differentiate via manipulation-specific grounded predicate vocabulary, heterogeneous constraint classes beyond keep-out, and fail-safe default-deny backstop."
+  },
+  {
+   "name": "Your Model Already Knows: Attention-Guided Safety Filter (Park et al.)",
+   "id_or_url": "https://arxiv.org/abs/2606.09749",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Finds that a small number of attention heads in a frozen VLA reliably localize the object the policy intends to approach; per-step target extraction at negligible cost, remainder of scene treated as obstacles, lightweight tracker handles motion, all fed to CBF filter. Training-free. Matches privileged-state oracle on static SafeLIBERO; +43% over it with moving obstacles.",
+   "hazard_coverage": "Geometric collision only \u2014 explicitly no semantic reasoning about properties (hot/fragile), relations, or instructions. Non-target objects treated uniformly.",
+   "failure_modes": "Exemption set = attention target only: destination and support surfaces would be flagged as obstacles unless attention shifts in time; depends on attention-head reliability across VLA architectures; no notion of hazard severity or constraint types beyond keep-out.",
+   "relevance_to_us": "Dual relevance: (1) validates our policy-attention-as-target-grounding cross-check; (2) NEAREST NEIGHBOR to our default-deny idea \u2014 it already does 'everything except target = obstacle' at object level. Our novelty must be the occupancy-level formulation plus the SEMANTIC exemption set (target/destination/support sanctioned by task semantics, not attention alone) and the fail-safe framing. Must cite and differentiate explicitly."
+  },
+  {
+   "name": "Neuro-Symbolic Safety Guidance via Constrained Flow Matching",
+   "id_or_url": "https://arxiv.org/abs/2607.01378",
+   "venue_year": "arXiv Jul 2026",
+   "mechanism": "Interleaves symbolic collision constraints with neural generation inside the flow-matching denoising loop of a VLA: analyzes predicted trajectory sequences during iterative denoising and applies corrections as minimum-norm constrained optimization \u2014 predictive rather than single-step-reactive shielding. SafeLIBERO: 82.8% collision avoidance (+6.3 over single-step), 81.6% task success (+19.8).",
+   "hazard_coverage": "Geometric collision avoidance only; identification of what is hazardous is not its contribution.",
+   "failure_modes": "Degrades on long-horizon tasks with compounding distribution shift; inherits whatever obstacle identification it is given; no property/relational/instruction coverage.",
+   "relevance_to_us": "CRITICAL contemporaneous overlap with our in-denoising DCBF guidance enforcement. Enforcement novelty is now shared territory \u2014 our paper's center of gravity must be the identification stack (Direction 1) and multi-class constraint compilation, with enforcement as validated plumbing."
+  },
+  {
+   "name": "RoboGuard: Safety Guardrails for LLM-Enabled Robots",
+   "id_or_url": "https://arxiv.org/abs/2503.07885",
+   "venue_year": "RA-L 2026 (arXiv 2025)",
+   "mechanism": "Two stages: (1) a root-of-trust LLM grounds PRE-DEFINED safety rules into the robot's current environment via chain-of-thought, emitting temporal-logic specs; (2) LTL control synthesis reconciles the (possibly jailbroken/hallucinated) plan with the specs, minimally violating user preferences. Unsafe-plan execution: 92% -> <2.5% under worst-case jailbreaks.",
+   "hazard_coverage": "Instruction-level hazards (malicious/jailbroken commands) and plan-level rule violations. Not continuous-control geometric/property hazards; no dense margins or velocity modulation.",
+   "failure_modes": "Rules are pre-defined, not scene-discovered \u2014 cannot cover hazards outside its rule set; operates on discrete plan actions with a world model, not raw perception; grounding LLM is a single point of trust.",
+   "relevance_to_us": "Blueprint for our refuse/redirect router tier. Its 'ground fixed rules' design is exactly what our runtime FOL composition improves on (VLM writes new rules from grounded predicate vocabulary per scene). Combining a RoboGuard-style governor with continuous CBF-class constraints in one stack is untaken white space."
+  },
+  {
+   "name": "Plug in the Safety Chip (LTL constraints for LLM agents)",
+   "id_or_url": "https://arxiv.org/abs/2309.09919",
+   "venue_year": "ICRA 2024",
+   "mechanism": "Encodes natural-language safety constraints as LTL; verifies LLM-generated plans against them, rejects/re-prompts violating plans, provides constraint feedback to the agent. Queryable, customizable constraint sets.",
+   "hazard_coverage": "Instruction/plan-level constraint violations; no perception-driven hazard discovery; no continuous control.",
+   "failure_modes": "Constraints authored by humans, not extracted from scenes; plan-granularity blind to continuous-trajectory hazards (near-misses, unsafe poses); LTL translation errors.",
+   "relevance_to_us": "Early evidence that formal-logic plan governance works; our FOL rule composition is the perception-grounded, runtime-authored generalization compiled down to continuous constraints, not just plan vetoes."
+  },
+  {
+   "name": "HazardArena + Safety Option Layer (SOL)",
+   "id_or_url": "https://arxiv.org/abs/2604.12447",
+   "venue_year": "arXiv Apr 2026",
+   "mechanism": "Benchmark of safe/unsafe twin scenarios (identical action requirements, differing only in semantic context), 2,000+ assets, 40 tasks over 7 hazard categories grounded in ISO 13482:2014 and AutoRT. Mitigation: SOL, a training-free inference-time layer gating action execution via (a) attribute-level constraints or (b) an external VLM judge; substantial unsafe-behavior reduction with minimal task impact.",
+   "hazard_coverage": "Property hazards (attributes: hot, sharp, fragile...) and semantic-context hazards; standards-grounded taxonomy. Gating granularity \u2014 not geometric margins or dense fields.",
+   "failure_modes": "Binary gate: blocks actions rather than minimally correcting them (task-destructive on borderline cases); VLM-judge latency; attribute constraints need reliable attribute attribution \u2014 same fragility as our property-attribution asset.",
+   "relevance_to_us": "Its attribute-level constraints legitimize our property->constraint-class compilation (hot->margin, fragile->velocity cap). Key benchmark to report on. We beat SOL's binary gating with minimal-deviation guidance."
+  },
+  {
+   "name": "LIBERO-Safety (benchmark + SSR track)",
+   "id_or_url": "https://arxiv.org/abs/2606.23686",
+   "venue_year": "arXiv Jun 2026",
+   "mechanism": "Keypose-driven data generation, ~20K collision-free demos; physical-safety tracks plus Semantic Safety Reasoning: L0 explicit harm ('strike the mug with the hammer'), L1 physical-commonsense violations hidden in benign requests, L2 subtle contextual traps via implicit environmental dependencies. Evaluated by refusal rate on image+instruction pairs. Best models: 80% at L0 but 20-36% at L2 (RoboBrain2.0 20%, RynnBrain Chain-of-Point 36%). Mitigation direction: explicit reasoning that simulates physical properties and hazard outcomes.",
+   "hazard_coverage": "Instruction-level hazards across three subtlety tiers; physical-safety tracks cover reactive geometric safety and HRI proximity.",
+   "failure_modes": "Refusal-only output \u2014 no constraint synthesis or safe-alternative execution; static single-observation assessment; contextual traps (L2) remain unsolved (all models weak).",
+   "relevance_to_us": "Our target benchmark for the instruction-level tier. The L2 gap (20-36%) is where our neuro-symbolic identification + physical grounding should shine; note our offline context recorded F1 0.31-0.46 \u2014 reconcile version numbers before citing."
+  },
+  {
+   "name": "Semantic-Metric Bayesian Risk Fields",
+   "id_or_url": "https://arxiv.org/abs/2512.08233",
+   "venue_year": "arXiv Dec 2025 (Chen, Swann, Schwager et al.)",
+   "mechanism": "Bayesian risk: prior from ChatGPT-generated pairwise object-risk ratings (~60K pairs, 338 categories, DINO-feature nearest-neighbor lookup); likelihood from a 52MB ViT trained on only 7 human demo videos, outputting Bezier-parameterized CDFs over safe interaction distances; produces pixel-dense risk images conditioned on the manipulated object. Downstream: risk -> 3D buffer radii on depth point clouds for trajectory optimization, or per-frame value signal for planners. 100% human-alignment on trajectory risk ranking vs 20-60% for SOTA VLMs.",
+   "hazard_coverage": "Property and object-pair relational hazards (spillage, crushing, fire, electrocution, water damage, HRI) as continuous spatial margins. No instruction-level, no discrete constraint types (rotation locks, velocity caps), no state-change hazards.",
+   "failure_modes": "Authors: tiny likelihood dataset limits generalization; LLM prior can be misaligned/common-sense-wrong; needs finetuning for test objects; not foundation-scale. Everything reduces to distance buffers \u2014 cannot express 'don't rotate' or 'slow down'.",
+   "relevance_to_us": "Strongest continuous-field competitor. Compiles only to our margin class; our discrete constraint classes + router are complementary and broader. Its ChatGPT pairwise-risk prior is a data recipe we could borrow for property attribution priors."
+  },
+  {
+   "name": "Language as Cost: Proactive Hazard Mapping",
+   "id_or_url": "https://arxiv.org/abs/2508.03138",
+   "venue_year": "arXiv Aug 2025",
+   "mechanism": "Zero-shot VLM scene interpretation assigns anticipatory risk costs to map regions before hazards materialize (e.g., near a dog, a doorway), producing risk-aware costmaps consumed by navigation planners.",
+   "hazard_coverage": "Property/contextual hazards for navigation as 2D cost inflation; anticipatory (pre-materialization) hazards.",
+   "failure_modes": "Navigation-only 2D costmaps; VLM call latency; no manipulation constraint types; cost weights uncalibrated.",
+   "relevance_to_us": "Evidence for anticipatory semantic costs; our margins generalize this to manipulation, but the costmap form does not compile to rotation locks or refusal."
+  },
+  {
+   "name": "Dynamic CBF Regulation with VLMs",
+   "id_or_url": "https://arxiv.org/abs/2603.21142",
+   "venue_year": "arXiv Mar 2026",
+   "mechanism": "VLM produces a bounded scalar risk estimate from the current camera view; this scalar dynamically retunes a CBF parameter (class-K aggressiveness) online, modulating conservatism of the safety filter during visual navigation.",
+   "hazard_coverage": "Scene-level risk intensity only \u2014 no spatial hazard identification, no properties/relations/instructions.",
+   "failure_modes": "Scalar bottleneck loses which object is risky; VLM rate-limits adaptation; navigation-focused.",
+   "relevance_to_us": "Direct precedent for our caution-velocity-cap class implemented as class-K modulation (Brunke also does 0.25h^2 caution alpha). Cite as the 'risk intensity knob' family; we do this per-constraint, not globally."
+  },
+  {
+   "name": "SafetyDetect ('Don't forget to put the milk back!')",
+   "id_or_url": "https://arxiv.org/abs/2404.08827",
+   "venue_year": "arXiv 2024",
+   "mechanism": "Scene graph (ON/INSIDE edges) extracted from perception; each object-relation string (e.g., 'medication INSIDE livingroom ON floor') classified by GPT-4 with chain-of-thought into normal/unsafe/unsanitary/unsafe-for-children. Classification-of-relations beats direct anomaly querying. 96% detection in sim (1,000 scenes, 13 hazard classes), 82.7% on a real TurtleBot.",
+   "hazard_coverage": "Relational-state hazards precisely (open stove, lit candle, spills, choking hazards) \u2014 the 'towel on stove' class. No geometry, no continuous constraints, no instruction hazards.",
+   "failure_modes": "Real-world drop driven by scene-graph generation errors; misses obstructions and spatial violations; cannot judge object states (rotten vs fresh); label-only output needs a separate compiler to actionable constraints.",
+   "relevance_to_us": "Validates the relation-classification route to relational hazards our FOL predicates cover (ON/NEAR-EDGE/ABOVE). Its sim-to-real perception gap warns that our predicate grounding (RGB-D) is the fragile link; its 'classify per-relation, not whole-scene' finding mirrors our multi-prompt decomposition evidence."
+  },
+  {
+   "name": "Context-Aware Risk Estimation in Home Environments",
+   "id_or_url": "https://arxiv.org/abs/2508.19788",
+   "venue_year": "arXiv Aug 2025",
+   "mechanism": "Object-level base risks from ~400K real accident reports (Japan CAA) with Bayesian smoothing; asymmetric risk propagation over a semantic scene graph weighted by accident correlation, spatial distance, and risk differential. 75% binary risk detection.",
+   "hazard_coverage": "Property + relational risk (cuts, fire, falls) via statistical priors rather than LLM common sense.",
+   "failure_modes": "Over-segmentation inflates risk; database causality inconsistencies; no object-state/pose info; blind to dynamic hazards (flames); no human-activity modeling.",
+   "relevance_to_us": "Rare non-LLM knowledge source (accident statistics) \u2014 a defensible prior we could cite for calibrating property-hazard severities; graph propagation is an alternative to per-object VLM attribution."
+  },
+  {
+   "name": "SafeManip: LTLf temporal-safety monitoring benchmark",
+   "id_or_url": "https://arxiv.org/abs/2605.12386",
+   "venue_year": "arXiv May 2026",
+   "mechanism": "Reusable LTLf safety templates over finite executions; rollouts mapped to symbolic predicate traces and checked by LTLf monitors across 8 categories (collision/contact, grasp stability, release stability, cross-contamination, action onset, mechanism recovery, containment, enclosure access). Evaluated pi0, pi0.5, GR00T on 50 RoboCasa365 tasks: many successful rollouts remain unsafe.",
+   "hazard_coverage": "Temporal/relational-state and damage-adjacent hazards (premature release, contamination) \u2014 as post-hoc monitoring, not prevention.",
+   "failure_modes": "Detection-only (no intervention); predicate extraction from observation is the weak link; templates human-authored.",
+   "relevance_to_us": "Its predicate-trace + temporal-template machinery is the monitoring twin of our runtime FOL rules; citing it supports 'safety is temporal-relational, success does not imply safety'. We can turn its monitor templates into enforceable constraints \u2014 that step is white space."
+  },
+  {
+   "name": "SafeVLA: constrained-learning safety alignment",
+   "id_or_url": "https://arxiv.org/abs/2503.03480",
+   "venue_year": "NeurIPS 2025",
+   "mechanism": "CMDP-based safe RL fine-tuning of VLA policies with modeled safety requirements and elicited unsafe behaviors; 83.6% average safety improvement, 3.85% task improvement in sim; sim-to-real transfer of safe behaviors shown.",
+   "hazard_coverage": "Whatever the training cost functions encode (largely geometric contact/collision); baked in, not scene-adaptive.",
+   "failure_modes": "Requires retraining per policy; no runtime identification of novel hazards; safety-performance tradeoff governed by fixed constraint budgets; cannot refuse instructions.",
+   "relevance_to_us": "The training-time alternative we argue against: not plug-and-play, not contextual. Useful contrast for motivation."
+  },
+  {
+   "name": "Refusal/guardrail benchmark cluster: SafeAgentBench, AgentSafe, SafeMind, ResponsibleRobotBench, ForesightSafety-VLA",
+   "id_or_url": "https://arxiv.org/abs/2412.13178 ; https://arxiv.org/abs/2506.14697 ; https://arxiv.org/abs/2509.25885 ; https://arxiv.org/abs/2512.04308 ; https://arxiv.org/abs/2606.27079",
+   "venue_year": "2024-2026",
+   "mechanism": "Benchmarks of hazardous-instruction handling for embodied LLM/VLA agents. SafeAgentBench: 750 tasks/10 hazards \u2014 best baseline 69% success on safe tasks but only 5-10% rejection of hazardous ones; input-moderation classifiers halt generation on detected malice. ForesightSafety-VLA: 13 safety categories in 3 families (Safe-Core force/thermal/spatial/collaborative/temporal, Safe-Lang unsafe-instruction/contradiction/ambiguity/goal-hijack, Safe-Vis perturbations); dual-threshold soft-warning scoring; best model only 42% safe-success.",
+   "hazard_coverage": "Instruction-level hazards; ForesightSafety adds force/thermal/temporal taxonomy and perturbation robustness.",
+   "failure_modes": "Refusal rates catastrophically low without dedicated reasoning; input moderation is instruction-only (blind to scene context); no connection to continuous control.",
+   "relevance_to_us": "Quantifies the instruction-tier gap our router addresses; ForesightSafety's ISO-adjacent taxonomy is a good coverage checklist for our hazard classes."
+  },
+  {
+   "name": "OGM-CBF: Occupancy-grid CBFs (nearest default-deny primitive)",
+   "id_or_url": "https://arxiv.org/abs/2405.10703",
+   "venue_year": "arXiv 2024",
+   "mechanism": "Defines CBFs from online occupancy grid maps + signed distance functions, enforcing avoidance of all occupied space of unknown shape in uncharted environments, with obstacle memory.",
+   "hazard_coverage": "Geometric only; all occupied space is keep-out; navigation-focused.",
+   "failure_modes": "No semantic exemptions \u2014 a manipulation robot could never touch anything (task-incompatible as-is); conservative-vs-feasible QP tension with multiple constraints.",
+   "relevance_to_us": "The engineering substrate for our default-deny occupancy idea. NOBODY combines it with a semantically sanctioned exemption set (target/destination/support) for manipulation \u2014 that combination is our claimable gap; cite this plus attention-filter as the two nearest neighbors."
+  }
+ ],
+ "key_insights": "The field has converged on a three-stage template \u2014 VLM identifies hazard, geometry module grounds it, CBF/QP enforces it \u2014 with Brunke RA-L25 as ancestor and AEGIS/VLSA (2512.11891) and CORE (2602.19983) as the current manipulation and open-world instantiations. Crucially, AEGIS's own failure analysis attributes remaining collisions to identification/perception, not control: the enforcement problem is considered solved, and identification is the acknowledged bottleneck. This directly validates making Direction 1 the paper's core.\n\nSecond, enforcement novelty just got crowded: Constrained Flow Matching (2607.01378, July 2026) already does symbolic collision constraints inside flow-matching denoising on SafeLIBERO (82.8% CA / 81.6% TS), overlapping our in-denoising DCBF guidance. Our numbers are competitive, but the differentiator must be identification breadth and constraint-class heterogeneity, not the guidance mechanism.\n\nThird, the identification literature is split into two non-communicating tiers. Continuous-control works (AEGIS, attention-guided filter 2606.09749, risk fields 2512.08233) handle only geometric keep-outs or distance margins and explicitly disclaim property/relational/instruction hazards. Instruction-tier works (RoboGuard, Safety Chip, SafeAgentBench, LIBERO-Safety SSR) refuse or veto plans but never emit continuous constraints. No published system routes a hazard to the right response modality (refuse vs redirect vs constrain vs modulate). Every ingredient of our compilation target already has isolated precedent \u2014 HazardArena's SOL uses attribute-level constraints, Brunke uses caution class-K modulation and rotation locks, 2603.21142 modulates CBF aggressiveness from a VLM risk scalar \u2014 but nobody unifies them behind one identification stack.\n\nFourth, per-step identification is displacing episodic VLM calls. The attention-guided filter shows a frozen VLA's attention heads localize the current target at negligible cost, beating a privileged oracle by 43% under moving obstacles, while episodic pipelines (Brunke, AEGIS) cannot track scene changes. This both validates our attention cross-check asset and raises the bar: our identification loop should have a per-step component.\n\nFifth, benchmark evidence uniformly shows contextual hazards are unsolved: LIBERO-Safety L2 contextual-trap refusal is 20-36% even for reasoning models; SafeAgentBench rejection rates are 5-10%; HazardArena's twins show policies trained safe act unsafe when only semantics change; SafeManip shows successful rollouts are frequently unsafe. Our 100% (21/21) neuro-symbolic OBSTACLE rule versus 0-10% direct VLM query is exactly the kind of decomposition these failures call for \u2014 SafetyDetect independently found classify-per-relation beats whole-scene querying (96% vs much lower), and Brunke's multi-prompt voting is the same lesson.\n\nFinally, relational-state hazard detection (towel-on-stove) works well symbolically (SafetyDetect 96% sim) but degrades to 82.7% under real scene-graph extraction \u2014 predicate grounding fidelity, not reasoning, is the fragile link, which favors our RGB-D grounded predicate vocabulary and fail-safe design.",
+ "white_space": "Nobody does default-deny with semantic exemption. The two nearest neighbors are (a) the attention-guided filter, which treats all non-target objects as obstacles but derives its exemption from a single attention peak \u2014 geometric only, no destination/support exemptions, no fail-safe framing \u2014 and (b) OGM-CBF, which makes all occupied space keep-out for navigation with zero semantic exemptions. A manipulation filter where occupancy is keep-out by default and a VLM sanctions an exemption set (target, destination, support surface) \u2014 so identification errors delete exemptions and fail SAFE rather than deleting keep-outs and failing UNSAFE \u2014 is unclaimed. The fail-safe error-direction argument itself is absent from every paper surveyed: all existing identification layers fail unsafe (missed hazard = collision).\n\nSecond gap: no unified identification stack covering all five hazard classes (geometric, property, relational-state, instruction-level, damage/force) compiling into heterogeneous constraint classes plus a router. Each competitor owns one slice \u2014 AEGIS/attention: geometric keep-out; risk fields: margins; Brunke/SOL: property attributes; SafetyDetect/SafeManip: relational monitoring without enforcement; RoboGuard/SSR: refusal without control. The compilation contract (hazard type -> keep-out geom / margin / velocity box / rotation lock / refuse / redirect) is our clearest architectural novelty.\n\nThird: runtime rule authorship. RoboGuard grounds pre-defined rules; Safety Chip and SafeManip use human-authored specs; SafetyDetect classifies post-hoc. A VLM writing new FOL rules per scene from a grounded predicate vocabulary, compiled to online monitors and continuous constraints, has no direct precedent.\n\nFourth: nobody converts temporal-safety monitors (SafeManip-style LTLf templates) into preventive constraints; monitoring and shielding remain separate literatures.\n\nRisks to novelty: CORE claims online contextual rule reasoning (navigation \u2014 differentiate on manipulation predicates and constraint heterogeneity); Constrained Flow Matching owns in-denoising enforcement (differentiate on identification); the attention paper must be cited as the default-deny-adjacent baseline, and beating or subsuming it (attention as one exemption oracle inside our sanctioning logic) is the strongest positioning."
+}
