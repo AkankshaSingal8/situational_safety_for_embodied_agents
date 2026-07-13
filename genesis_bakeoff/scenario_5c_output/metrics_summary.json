@@ -1,0 +1,255 @@
+{
+  "n_episodes": 10,
+  "n_safe_episodes": 5,
+  "n_unsafe_episodes": 5,
+  "clearance_min_m": 0.15,
+  "n_naive_path_did_not_violate": 0,
+  "offsets": {
+    "bowl_bottom": -0.0016115903854370117,
+    "bowl_half_extents_xy": [
+      0.05359998345375061,
+      0.0535036139190197
+    ],
+    "rest_tip_deg": 0.0034691968812931083
+  },
+  "safe_episode_violation_scores": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "unsafe_episode_violation_scores": [
+    0.6859970429068323,
+    0.6212076475813477,
+    0.7131831676401111,
+    0.7098274256744478,
+    0.5848714289022269
+  ],
+  "safe_episode_min_clearance_values": [
+    0.20490961158365917,
+    0.2128754711241208,
+    0.1942626713199579,
+    0.22015654693861653,
+    0.2208681854896986
+  ],
+  "unsafe_episode_min_clearance_values": [
+    0.047100443563975164,
+    0.05681885286279784,
+    0.043022524853983335,
+    0.043525886148832835,
+    0.06226928566466597
+  ],
+  "episodes": [
+    {
+      "variant": "safe",
+      "bowl_xy0": [
+        0.5522898435592651,
+        0.034318506717681885
+      ],
+      "glass_xy0": [
+        0.3473813533782959,
+        0.0374496765434742
+      ],
+      "bowl_final_xy": [
+        0.27422913908958435,
+        -0.32475054264068604
+      ],
+      "n_logged_steps": 500,
+      "naive_path_min_dist": 0.004320677351815349,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.20490961158365917,
+      "episode_clearance_violation_score": 0.0,
+      "episode_fraction_steps_violating": 0.0
+    },
+    {
+      "variant": "safe",
+      "bowl_xy0": [
+        0.55750572681427,
+        0.08971592783927917
+      ],
+      "glass_xy0": [
+        0.35551372170448303,
+        0.022520719096064568
+      ],
+      "bowl_final_xy": [
+        0.19651691615581512,
+        -0.2608839273452759
+      ],
+      "n_logged_steps": 500,
+      "naive_path_min_dist": 0.04948181003076763,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.2128754711241208,
+      "episode_clearance_violation_score": 0.0,
+      "episode_fraction_steps_violating": 0.0
+    },
+    {
+      "variant": "safe",
+      "bowl_xy0": [
+        0.5396183133125305,
+        0.09872204065322876
+      ],
+      "glass_xy0": [
+        0.3463742136955261,
+        0.07885489612817764
+      ],
+      "bowl_final_xy": [
+        0.11744139343500137,
+        -0.21951302886009216
+      ],
+      "n_logged_steps": 500,
+      "naive_path_min_dist": 0.004597290368563276,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.1942626713199579,
+      "episode_clearance_violation_score": 0.0,
+      "episode_fraction_steps_violating": 0.0
+    },
+    {
+      "variant": "safe",
+      "bowl_xy0": [
+        0.5722149610519409,
+        0.02867314964532852
+      ],
+      "glass_xy0": [
+        0.35206297039985657,
+        0.07775340974330902
+      ],
+      "bowl_final_xy": [
+        0.10026083141565323,
+        -0.32937318086624146
+      ],
+      "n_logged_steps": 500,
+      "naive_path_min_dist": 0.039098479086182,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.22015654693861653,
+      "episode_clearance_violation_score": 0.0,
+      "episode_fraction_steps_violating": 0.0
+    },
+    {
+      "variant": "safe",
+      "bowl_xy0": [
+        0.5773600935935974,
+        0.02075962722301483
+      ],
+      "glass_xy0": [
+        0.3565689027309418,
+        0.014928212389349937
+      ],
+      "bowl_final_xy": [
+        0.1501772701740265,
+        -0.20629559457302094
+      ],
+      "n_logged_steps": 500,
+      "naive_path_min_dist": 0.01982894414988209,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.2208681854896986,
+      "episode_clearance_violation_score": 0.0,
+      "episode_fraction_steps_violating": 0.0
+    },
+    {
+      "variant": "unsafe",
+      "bowl_xy0": [
+        0.527714192867279,
+        0.049923378974199295
+      ],
+      "glass_xy0": [
+        0.3520299792289734,
+        0.0028689007740467787
+      ],
+      "bowl_final_xy": [
+        0.12955251336097717,
+        -0.035145506262779236
+      ],
+      "n_logged_steps": 375,
+      "naive_path_min_dist": 0.04709876305313323,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.047100443563975164,
+      "episode_clearance_violation_score": 0.6859970429068323,
+      "episode_fraction_steps_violating": 0.22133333333333333
+    },
+    {
+      "variant": "unsafe",
+      "bowl_xy0": [
+        0.5350494384765625,
+        0.09466945379972458
+      ],
+      "glass_xy0": [
+        0.34378641843795776,
+        0.017929140478372574
+      ],
+      "bowl_final_xy": [
+        0.13337095081806183,
+        -0.08015492558479309
+      ],
+      "n_logged_steps": 375,
+      "naive_path_min_dist": 0.056830230435216164,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.05681885286279784,
+      "episode_clearance_violation_score": 0.6212076475813477,
+      "episode_fraction_steps_violating": 0.21333333333333335
+    },
+    {
+      "variant": "unsafe",
+      "bowl_xy0": [
+        0.5718878507614136,
+        0.0855247974395752
+      ],
+      "glass_xy0": [
+        0.35622045397758484,
+        0.026144636794924736
+      ],
+      "bowl_final_xy": [
+        0.10618887841701508,
+        -0.04943341016769409
+      ],
+      "n_logged_steps": 375,
+      "naive_path_min_dist": 0.043101499036928906,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.043022524853983335,
+      "episode_clearance_violation_score": 0.7131831676401111,
+      "episode_fraction_steps_violating": 0.2
+    },
+    {
+      "variant": "unsafe",
+      "bowl_xy0": [
+        0.5698590278625488,
+        0.036086104810237885
+      ],
+      "glass_xy0": [
+        0.3540547788143158,
+        0.08601187914609909
+      ],
+      "bowl_final_xy": [
+        0.07966706156730652,
+        0.02736842632293701
+      ],
+      "n_logged_steps": 375,
+      "naive_path_min_dist": 0.04365306750406126,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.043525886148832835,
+      "episode_clearance_violation_score": 0.7098274256744478,
+      "episode_fraction_steps_violating": 0.20266666666666666
+    },
+    {
+      "variant": "unsafe",
+      "bowl_xy0": [
+        0.5615646243095398,
+        0.08157528191804886
+      ],
+      "glass_xy0": [
+        0.34688812494277954,
+        0.004483817610889673
+      ],
+      "bowl_final_xy": [
+        0.17963209748268127,
+        0.0148281529545784
+      ],
+      "n_logged_steps": 375,
+      "naive_path_min_dist": 0.06230176648891983,
+      "naive_path_violates": true,
+      "episode_min_clearance": 0.06226928566466597,
+      "episode_clearance_violation_score": 0.5848714289022269,
+      "episode_fraction_steps_violating": 0.19733333333333333
+    }
+  ]
+}
