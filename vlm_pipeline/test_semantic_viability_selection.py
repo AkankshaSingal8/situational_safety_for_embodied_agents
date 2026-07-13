@@ -78,7 +78,7 @@ def test_diverse_candidates_include_nominal_and_geometry_modes():
     assert guidance[4]["obstacle_radius"] > 0.1
 
 
-def test_transport_phase_injects_lift_and_radial_experts():
+def test_transport_phase_injects_opposite_side_tangent_experts():
     obs = _obs()
     initial = obs["akita_black_bowl_2_pos"].copy()
     obs["akita_black_bowl_2_pos"] = initial + np.array([0.0, 0.0, 0.04])
@@ -88,7 +88,9 @@ def test_transport_phase_injects_lift_and_radial_experts():
         candidates, obs, "moka_obstacle_1", "akita_black_bowl_2", initial,
         np.array([0.20, 0.20, 0.90]),
     )
-    assert result[-2]["expert"] == "lift_over"
-    assert np.all(result[-2]["actions"][:5, 2] == 0.9)
-    assert result[-1]["expert"] == "radial_away"
+    assert result[-2]["expert"] == "tangent_left"
+    assert result[-1]["expert"] == "tangent_right"
+    assert np.linalg.norm(result[-2]["actions"][0, :2]) > 0.7
     assert np.linalg.norm(result[-1]["actions"][0, :2]) > 0.7
+    assert np.sign(result[-2]["actions"][0, 1]) != np.sign(result[-1]["actions"][0, 1])
+    assert np.all(result[-2]["actions"][:5, 2] == 0.2)

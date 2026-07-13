@@ -216,44 +216,48 @@ def _infer_diverse_candidates(client, element, count):
 def _inject_topology_experts(
     candidates, obs, obstacle_name, manipulated_name, initial_object_pos, goal_position,
 ):
-    """Replace tail samples with general lift-over and radial-away maneuvers."""
+    """Replace tail samples with opposite-side, context-conditioned detours."""
     if len(candidates) < 4 or manipulated_name is None or obstacle_name is None:
         return candidates
-    if _semantic_phase(obs, manipulated_name, initial_object_pos) != "transport":
-        return candidates
 
+    phase = _semantic_phase(obs, manipulated_name, initial_object_pos)
     object_pos = np.asarray(obs[f"{manipulated_name}_pos"], dtype=np.float64)
+    eef_pos = np.asarray(obs["robot0_eef_pos"], dtype=np.float64)
     obstacle_pos = np.asarray(obs[f"{obstacle_name}_pos"], dtype=np.float64)
     if goal_position is None:
         return candidates
     goal = np.asarray(goal_position, dtype=np.float64)
+    mover = eef_pos if phase == "approach" else object_pos
+    target = object_pos if phase == "approach" else goal
+    path = target[:2] - mover[:2]
+    path_norm = float(np.linalg.norm(path))
+    if path_norm < 1e-6:
+        return candidates
+    path_unit = path / path_norm
+    perpendicular = np.array([-path_unit[1], path_unit[0]])
+    clearance = obstacle_radius(obstacle_name) + 0.075
 
-    # Lift-over expert: arrest horizontal motion and build vertical clearance.
-    lift = copy.deepcopy(candidates[0])
-    lift_actions = np.asarray(lift["actions"]).copy()
-    lift_actions[:REPLAN_STEPS, :2] = 0.0
-    lift_actions[:REPLAN_STEPS, 2] = np.maximum(lift_actions[:REPLAN_STEPS, 2], 0.9)
-    lift["actions"] = lift_actions
-    lift["expert"] = "lift_over"
-
-    # Radial-away expert: create clearance in the table plane before replanning.
-    radial = object_pos[:2] - obstacle_pos[:2]
-    norm = float(np.linalg.norm(radial))
-    if norm < 1e-6:
-        path = goal[:2] - object_pos[:2]
-        radial = np.array([-path[1], path[0]])
-        norm = float(np.linalg.norm(radial))
-    radial = radial / max(norm, 1e-6)
-    away = copy.deepcopy(candidates[0])
-    away_actions = np.asarray(away["actions"]).copy()
-    away_actions[:REPLAN_STEPS, :2] = 0.75 * radial
-    away_actions[:REPLAN_STEPS, 2] = np.maximum(away_actions[:REPLAN_STEPS, 2], 0.25)
-    away["actions"] = away_actions
-    away["expert"] = "radial_away"
+    detours = []
+    for side, label in ((1.0, "tangent_left"), (-1.0, "tangent_right")):
+        waypoint = obstacle_pos[:2] + side * clearance * perpendicular
+        direction = waypoint - mover[:2]
+        direction_norm = float(np.linalg.norm(direction))
+        direction = direction / max(direction_norm, 1e-6)
+        detour = copy.deepcopy(candidates[0])
+        detour_actions = np.asarray(detour["actions"]).copy()
+        detour_actions[:REPLAN_STEPS, :2] = 0.80 * direction
+        # Preserve grasp/release and orientation intent from the VLA; only steer
+        # translation topology. During transport, maintain positive clearance.
+        if phase == "transport":
+            detour_actions[:REPLAN_STEPS, 2] = np.maximum(
+                detour_actions[:REPLAN_STEPS, 2], 0.20
+            )
+        detour["actions"] = detour_actions
+        detour["expert"] = label
+        detours.append(detour)
 
     result = list(candidates)
-    result[-2] = lift
-    result[-1] = away
+    result[-2:] = detours
     return result
 
 
