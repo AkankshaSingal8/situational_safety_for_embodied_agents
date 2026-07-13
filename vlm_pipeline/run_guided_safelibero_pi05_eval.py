@@ -195,18 +195,21 @@ def _infer_diverse_candidates(client, element, count):
     base_guidance = dict(element.get("guidance", {}))
     base_radius = float(base_guidance.get("obstacle_radius", DEFAULT_OBSTACLE_RADIUS))
     modes = (
-        {"enabled": 0.0},                         # nominal policy intent
-        {"enabled": 1.0, "companion_scale": 0.0},  # EEF-only maneuverability
-        {"enabled": 1.0, "companion_scale": 1.0},  # full system geometry
-        {"enabled": 1.0, "companion_scale": 1.0, "obstacle_radius": 0.85 * base_radius},
-        {"enabled": 1.0, "companion_scale": 1.0, "obstacle_radius": 1.15 * base_radius},
+        ("nominal", {"enabled": 0.0}),
+        ("eef_only", {"enabled": 1.0, "companion_scale": 0.0}),
+        ("full_geometry", {"enabled": 1.0, "companion_scale": 1.0}),
+        ("permissive", {"enabled": 1.0, "companion_scale": 1.0, "obstacle_radius": 0.85 * base_radius}),
+        ("conservative", {"enabled": 1.0, "companion_scale": 1.0, "obstacle_radius": 1.15 * base_radius}),
     )
     for index in range(count):
         request = dict(base)
         guidance = dict(base_guidance)
-        guidance.update(modes[index % len(modes)])
+        label, mode = modes[index % len(modes)]
+        guidance.update(mode)
         request["guidance"] = guidance
-        candidates.append(client.infer(request))
+        candidate = client.infer(request)
+        candidate["expert"] = label
+        candidates.append(candidate)
     return candidates
 
 
@@ -483,7 +486,15 @@ def run_eval(args):
                                         )
                                         for candidate in candidates
                                     ]
-                                    result = candidates[int(np.argmax(scores))]
+                                    selected_index = int(np.argmax(scores))
+                                    result = candidates[selected_index]
+                                    logging.info(
+                                        "  oracle phase=%s experts=%s scores=%s selected=%s",
+                                        phase if manipulated_name is not None else "unknown",
+                                        [c.get("expert", "unlabeled") for c in candidates],
+                                        [round(score, 4) for score in scores],
+                                        result.get("expert", "unlabeled"),
+                                    )
                                     # Counterfactual rollouts must be observationally invisible.
                                     obs = env.regenerate_obs_from_state(snapshot)
                                     env.env.timestep = snapshot_timestep
@@ -612,7 +623,11 @@ def run_eval(args):
         "safety_level": args.safety_level,
         "guidance_enabled": not args.disable_guidance,
         "steering_mode": args.steering_mode,
-        "num_candidates": args.num_candidates if args.steering_mode == "best_of_k" else 1,
+        "num_candidates": (
+            args.num_candidates
+            if args.steering_mode in ("best_of_k", "semantic_best_of_k", "oracle_counterfactual")
+            else 1
+        ),
         "total_episodes": total_episodes,
         "total_successes": total_successes,
         "total_collisions": total_collisions,
