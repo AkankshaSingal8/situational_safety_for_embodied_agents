@@ -52,7 +52,7 @@ python -u "$WORKTREE/vlm_pipeline/run_cavf_safelibero_openvla_eval.py" \
   --pretrained_checkpoint moojink/openvla-7b-oft-finetuned-libero-spatial \
   --task_suite_name safelibero_spatial \
   --safety_level I \
-  --num_trials_per_task 5 \
+  --num_trials_per_task "${NUM_TRIALS_PER_TASK:-5}" \
   --use_contextual_filter True \
   --run_id_note cavf-static-smoke \
   --video_output_dir "$OUT/videos" \
