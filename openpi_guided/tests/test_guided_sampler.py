@@ -40,6 +40,7 @@ def make_params(eef, obstacle, r_eff=0.12, enabled=1.0, target=None, dest=None,
         dest_pos=jnp.asarray(np.asarray(dest if dest is not None else [100.0, 100.0, 100.0], dtype=np.float32)),
         corridor_radius=jnp.float32(corridor_radius),
         corridor_relax=jnp.float32(corridor_relax),
+        companion_scale=jnp.float32(1.0),
     )
 
 

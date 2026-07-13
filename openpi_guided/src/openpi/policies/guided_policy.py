@@ -38,6 +38,7 @@ class GuidanceConfig:
     num_candidates: int = 1  # best-of-K noise seeds with executed-prefix selection
     corridor_radius: float = 0.07  # sanctioned-approach cylinder radius [m]
     corridor_relax: float = 0.6  # margin relaxation inside corridors (0 = off)
+    use_companions: bool = True  # False = EEF-point-only (SOTA-reimpl fidelity arm)
     repair_schedule: str = "ramp"  # "ramp" (trust early, exact late) | "uniform" (r3 behavior)
 
 
@@ -117,6 +118,7 @@ class GuidedPolicy(_policy.Policy):
             dest_pos=jnp.asarray(np.asarray(payload.get("dest_pos", FAR), dtype=np.float32)),
             corridor_radius=jnp.float32(cfg.corridor_radius),
             corridor_relax=jnp.float32(cfg.corridor_relax),
+            companion_scale=jnp.float32(1.0 if cfg.use_companions else 0.0),
         )
 
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]

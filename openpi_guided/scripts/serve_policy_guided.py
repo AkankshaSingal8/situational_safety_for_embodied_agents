@@ -42,6 +42,7 @@ class Args:
     num_candidates: int = 1
     corridor_radius: float = 0.07
     corridor_relax: float = 0.6
+    use_companions: bool = True
 
 
 def main(args: Args) -> None:
@@ -67,6 +68,7 @@ def main(args: Args) -> None:
         num_candidates=args.num_candidates,
         corridor_radius=args.corridor_radius,
         corridor_relax=args.corridor_relax,
+        use_companions=args.use_companions,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)

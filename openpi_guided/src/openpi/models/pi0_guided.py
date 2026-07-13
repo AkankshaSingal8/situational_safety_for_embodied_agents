@@ -66,6 +66,7 @@ class GuidanceParams(NamedTuple):
     dest_pos: at.Float[at.Array, "3"]
     corridor_radius: at.Float[at.Array, ""]  # cylinder radius [m]
     corridor_relax: at.Float[at.Array, ""]  # margin multiplier inside = (1 - relax)
+    companion_scale: at.Float[at.Array, ""]  # 1 = hand/payload points on; 0 = EEF-point-only (SOTA-reimpl fidelity)
 
 
 def _corridor_scale(p: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
@@ -126,7 +127,7 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
     # just the EEF frame origin: the hand/wrist body sits above the grip site
     # (v19 forensics: unmonitored hand plowed obstacles), fingers and a carried
     # object hang below. Each shares r_eff; the barrier is the min over points.
-    COMPANIONS = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]])
+    COMPANIONS = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]]) * g.companion_scale
 
     def _closest(p):
         """Min distance (and its direction) from any companion point to the obstacle."""
@@ -221,7 +222,7 @@ def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> 
     span = g.q99 - g.q01 + 1e-6
     cmd = (x_0[..., :3] + 1.0) / 2.0 * span + g.q01
     disp = cmd * g.translation_scale  # (K, H, 3)
-    companions = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]])
+    companions = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]]) * g.companion_scale
     p_traj = g.eef_pos + jnp.cumsum(disp, axis=1)  # (K, H, 3)
     dists = jnp.min(
         jnp.linalg.norm(p_traj[:, :, None, :] + companions[None, None] - g.obstacle_pos, axis=-1), axis=-1
