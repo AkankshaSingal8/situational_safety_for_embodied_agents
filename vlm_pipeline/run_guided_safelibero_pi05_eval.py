@@ -273,12 +273,8 @@ def _inject_topology_experts(
         detour = copy.deepcopy(candidates[0])
         detour_actions = np.asarray(detour["actions"]).copy()
         detour_actions[:REPLAN_STEPS, :2] = 0.80 * direction
-        # Preserve grasp/release and orientation intent from the VLA; only steer
-        # translation topology. During transport, maintain positive clearance.
-        if phase == "transport":
-            detour_actions[:REPLAN_STEPS, 2] = np.maximum(
-                detour_actions[:REPLAN_STEPS, 2], 0.20
-            )
+        # Preserve vertical, grasp/release, and orientation intent from the VLA;
+        # the topology expert is a horizontal residual, not a replacement policy.
         detour["actions"] = detour_actions
         detour["expert"] = label
         detour["topology_required"] = topology_required and not waypoint_reached and (
@@ -287,17 +283,12 @@ def _inject_topology_experts(
         detours.append(detour)
 
     # Emergency viability expert: move directly out of the hazard's radial
-    # basin while lifting a grasped payload. Unlike a tangent route, this can
-    # remain feasible when contact is one short horizon away.
+    # basin while retaining the VLA's learned vertical and gripper intent.
     radial = mover[:2] - obstacle_pos[:2]
     radial = radial / max(float(np.linalg.norm(radial)), 1e-6)
     retreat = copy.deepcopy(candidates[0])
     retreat_actions = np.asarray(retreat["actions"]).copy()
     retreat_actions[:REPLAN_STEPS, :2] = 0.85 * radial
-    if phase == "transport":
-        retreat_actions[:REPLAN_STEPS, 2] = np.maximum(
-            retreat_actions[:REPLAN_STEPS, 2], 0.60
-        )
     retreat["actions"] = retreat_actions
     retreat["expert"] = "radial_retreat"
     retreat["topology_required"] = topology_required and not preferred_route_cleared
@@ -648,13 +639,24 @@ def run_eval(args):
             task_successes += int(done)
             task_collisions += int(collide_flag)
             task_ets.append(t)
+            final_object_distance = (
+                float(np.linalg.norm(np.asarray(obs[f"{manipulated_name}_pos"]) - goal_position))
+                if manipulated_name is not None and goal_position is not None else None
+            )
+            final_eef_distance = (
+                float(np.linalg.norm(np.asarray(obs["robot0_eef_pos"]) - goal_position))
+                if goal_position is not None else None
+            )
             with open(episodes_log, "a") as ef:
                 ef.write(json.dumps({"task": task_id, "ep": ep_idx, "success": bool(done),
-                                     "collision": bool(collide_flag), "steps": t}) + "\n")
+                                     "collision": bool(collide_flag), "steps": t,
+                                     "final_object_goal_distance": final_object_distance,
+                                     "final_eef_goal_distance": final_eef_distance}) + "\n")
 
             logging.info(
                 f"  ep {ep_idx+1}/{args.num_trials_per_task}: "
-                f"success={done}, collision={collide_flag}, steps={t}"
+                f"success={done}, collision={collide_flag}, steps={t}, "
+                f"object_goal_distance={final_object_distance}, eef_goal_distance={final_eef_distance}"
             )
 
             if args.save_videos and replay_images:

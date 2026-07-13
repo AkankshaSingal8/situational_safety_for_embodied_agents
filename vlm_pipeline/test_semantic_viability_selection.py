@@ -101,7 +101,7 @@ def test_transport_phase_injects_opposite_side_tangent_experts():
     assert np.linalg.norm(left["actions"][0, :2]) > 0.7
     assert np.linalg.norm(right["actions"][0, :2]) > 0.7
     assert np.sign(left["actions"][0, 1]) != np.sign(right["actions"][0, 1])
-    assert np.all(left["actions"][:5, 2] == 0.2)
+    assert np.all(left["actions"][:5, 2] == 0.0)
     assert np.linalg.norm(retreat["actions"][0, :2]) > 0.8
-    assert np.all(retreat["actions"][:5, 2] >= 0.6)
+    assert np.all(retreat["actions"][:5, 2] == 0.0)
     assert all(experts[name]["topology_required"] for name in experts if name)
