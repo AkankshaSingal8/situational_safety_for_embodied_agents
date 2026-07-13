@@ -22,7 +22,7 @@ Q01 = np.full(3, -1.0, dtype=np.float32)
 Q99 = np.full(3, 1.0, dtype=np.float32)
 
 
-def make_params(eef, obstacle, r_eff=0.12, enabled=1.0):
+def make_params(eef, obstacle, r_eff=0.12, enabled=1.0, companion_scale=1.0):
     return GuidanceParams(
         enabled=jnp.float32(enabled),
         eef_pos=jnp.asarray(np.asarray(eef, dtype=np.float32)),
@@ -33,6 +33,7 @@ def make_params(eef, obstacle, r_eff=0.12, enabled=1.0):
         q01=jnp.asarray(Q01),
         q99=jnp.asarray(Q99),
         translation_scale=jnp.float32(SCALE),
+        companion_scale=jnp.float32(companion_scale),
     )
 
 
@@ -151,6 +152,16 @@ def test_below_path_obstacle_caught_by_companion_point():
     assert float(diag["correction_norm"][0]) > 1e-3
     # min over companion points must be reflected in the clearance diagnostic.
     assert float(diag["min_clearance"][0]) > -1e-3
+
+
+def test_eef_only_mode_relaxes_companion_constraint():
+    params = make_params(
+        eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 0.87],
+        r_eff=0.10, companion_scale=0.0,
+    )
+    x = chunk_toward([1.0, 0.0, 0.0], magnitude=0.8)
+    _, diag = _dcbf_repair(x, params)
+    assert float(diag["correction_norm"][0]) < 1e-3
 
 
 def test_batch_dimension():

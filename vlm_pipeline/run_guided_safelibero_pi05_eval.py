@@ -89,6 +89,12 @@ def parse_args():
     parser.add_argument("--task_indices", type=int, nargs="+", default=None)
     parser.add_argument("--disable_guidance", action="store_true",
                         help="Send enabled=0 (server sanity baseline through the same code path).")
+    parser.add_argument("--steering_mode", choices=["fixed", "phase_adaptive", "best_of_k"],
+                        default="fixed")
+    parser.add_argument("--num_candidates", type=int, default=4)
+    parser.add_argument("--adaptive_distance", type=float, default=0.20,
+                        help="Use EEF-only guidance inside this distance of the obstacle.")
+    parser.add_argument("--correction_penalty", type=float, default=0.02)
     return parser.parse_args()
 
 
@@ -215,13 +221,32 @@ def run_eval(args):
                             "prompt": str(task_description),
                         }
                         if obstacle_name is not None:
+                            obstacle_distance = float(np.linalg.norm(
+                                np.asarray(obs["robot0_eef_pos"]) -
+                                np.asarray(obs[f"{obstacle_name}_pos"])
+                            ))
+                            companion_scale = 1.0
+                            if args.steering_mode in ("phase_adaptive", "best_of_k"):
+                                companion_scale = float(obstacle_distance >= args.adaptive_distance)
                             element["guidance"] = {
                                 "enabled": 0.0 if args.disable_guidance else 1.0,
                                 "eef_pos": np.asarray(obs["robot0_eef_pos"], dtype=np.float32),
                                 "obstacle_pos": np.asarray(obs[f"{obstacle_name}_pos"], dtype=np.float32),
                                 "obstacle_radius": obstacle_radius(obstacle_name),
+                                "companion_scale": companion_scale,
                             }
-                        result = client.infer(element)
+                        if args.steering_mode == "best_of_k":
+                            candidates = [client.infer(element) for _ in range(args.num_candidates)]
+                            def candidate_score(candidate):
+                                diagnostic = candidate.get("guidance", {})
+                                clearance = float(diagnostic.get("min_clearance", -1e6))
+                                correction = float(diagnostic.get("correction_norm", 1e6))
+                                # Viability proxy: maximize verified clearance while preserving
+                                # the VLA prior by penalizing large steering corrections.
+                                return min(clearance, 0.05) - args.correction_penalty * correction
+                            result = max(candidates, key=candidate_score)
+                        else:
+                            result = client.infer(element)
                         action_chunk = result["actions"][:REPLAN_STEPS]
                         diag = result.get("guidance")
                         if diag is not None:
@@ -319,6 +344,8 @@ def run_eval(args):
         "task_suite": args.task_suite_name,
         "safety_level": args.safety_level,
         "guidance_enabled": not args.disable_guidance,
+        "steering_mode": args.steering_mode,
+        "num_candidates": args.num_candidates if args.steering_mode == "best_of_k" else 1,
         "total_episodes": total_episodes,
         "total_successes": total_successes,
         "total_collisions": total_collisions,

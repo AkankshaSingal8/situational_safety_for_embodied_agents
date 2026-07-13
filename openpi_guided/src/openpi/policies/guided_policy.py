@@ -81,6 +81,7 @@ class GuidedPolicy(_policy.Policy):
             q01=jnp.asarray(self._q01),
             q99=jnp.asarray(self._q99),
             translation_scale=jnp.float32(cfg.translation_scale),
+            companion_scale=jnp.float32(payload.get("companion_scale", 1.0)),
         )
 
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]

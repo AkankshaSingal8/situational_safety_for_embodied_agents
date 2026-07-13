@@ -48,6 +48,7 @@ class GuidanceParams(NamedTuple):
     q01: at.Float[at.Array, "3"]  # action quantile stats, translational dims
     q99: at.Float[at.Array, "3"]
     translation_scale: at.Float[at.Array, ""]  # metres of EEF motion per unit command
+    companion_scale: at.Float[at.Array, ""]  # 0=EEF only, 1=full hand/payload envelope
 
 
 def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams) -> tuple[jnp.ndarray, dict]:
@@ -70,6 +71,7 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams) -> tuple[jnp.ndarray, dict
     # (v19 forensics: unmonitored hand plowed obstacles), fingers and a carried
     # object hang below. Each shares r_eff; the barrier is the min over points.
     COMPANIONS = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]])
+    COMPANIONS = COMPANIONS * g.companion_scale
 
     def _closest(p):
         """Min distance (and its direction) from any companion point to the obstacle."""
