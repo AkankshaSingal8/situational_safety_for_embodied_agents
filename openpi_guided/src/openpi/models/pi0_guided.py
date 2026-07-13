@@ -56,6 +56,44 @@ class GuidanceParams(NamedTuple):
     # both arrays must be 1.0 so the terminal chunk satisfies the exact chain.
     repair_weight: at.Float[at.Array, "n"]
     margin_scale: at.Float[at.Array, "n"]
+    # Semantic corridor exemption: margins RELAX (never vanish) for rollout
+    # points inside a cylinder around the sanctioned approach segments
+    # eef->target and eef->destination. This is what lets fat protective
+    # envelopes coexist with grasping/placing next to an obstacle — a uniform
+    # envelope cannot distinguish sanctioned approach from hazard approach.
+    # Disable by placing target/dest far away (the client's default).
+    target_pos: at.Float[at.Array, "3"]
+    dest_pos: at.Float[at.Array, "3"]
+    corridor_radius: at.Float[at.Array, ""]  # cylinder radius [m]
+    corridor_relax: at.Float[at.Array, ""]  # margin multiplier inside = (1 - relax)
+
+
+def _corridor_scale(p: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
+    """Margin multiplier at point(s) p: 1 outside sanctioned corridors,
+    (1 - corridor_relax) inside the cylinder around eef->target or eef->dest.
+
+    p: (..., 3). Returns (...,). Segments shorter than 2 cm are ignored (the
+    far-away disable convention makes them ~17 m long instead).
+    """
+
+    def seg_dist(q):
+        v = q - g.eef_pos
+        vv = jnp.maximum(jnp.sum(v * v), 1e-8)
+        t_raw = jnp.einsum("...i,i->...", p - g.eef_pos, v) / vv
+        t = jnp.clip(t_raw, 0.0, 1.0)
+        proj = g.eef_pos + t[..., None] * v
+        d = jnp.linalg.norm(p - proj, axis=-1)
+        # Two validity gates: (a) the entity must be within workspace scale
+        # (the far-away disable convention), and (b) the point must lie a
+        # genuine fraction ALONG the segment — otherwise clamping at t=0 would
+        # turn the corridor into an exemption sphere around the EEF itself,
+        # relaxing protection in every direction including toward the hazard.
+        valid = (jnp.linalg.norm(q - g.eef_pos) < 2.0) & (t_raw > 0.15)
+        return jnp.where(valid, d, jnp.inf)
+
+    d_min = jnp.minimum(seg_dist(g.target_pos), seg_dist(g.dest_pos))
+    inside = (d_min < g.corridor_radius).astype(jnp.float32)
+    return 1.0 - g.corridor_relax * inside
 
 
 def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.ndarray, dict]:
@@ -105,9 +143,9 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
 
         def body(j, carry):
             disp_acc, p_prev, b_prev = carry
-            r_j = ms_k * (g.r_eff + g.inflation_slope * (j + 1.0))
             orig_step = disp_acc[j]
             p_j = p_prev + orig_step
+            r_j = ms_k * (g.r_eff + g.inflation_slope * (j + 1.0)) * _corridor_scale(p_j, g)
             dist, direction = _closest(p_j)
             b_j = dist - r_j
             need = (1.0 - g.gamma) * b_prev
@@ -189,7 +227,7 @@ def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> 
         jnp.linalg.norm(p_traj[:, :, None, :] + companions[None, None] - g.obstacle_pos, axis=-1), axis=-1
     )  # (K, H)
     h = disp.shape[1]
-    r_horizon = g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)
+    r_horizon = (g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)) * _corridor_scale(p_traj, g)
     b = dists - r_horizon  # (K, H)
     b0 = jnp.min(jnp.linalg.norm(g.eef_pos[None, :] + companions - g.obstacle_pos, axis=-1)) - g.r_eff
     chain = jnp.concatenate([jnp.broadcast_to(b0, (b.shape[0], 1)), b[:, :prefix_len]], axis=1)

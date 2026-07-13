@@ -36,6 +36,8 @@ class GuidanceConfig:
     default_obstacle_radius: float = 0.065
     num_denoise_steps: int = 10
     num_candidates: int = 1  # best-of-K noise seeds with executed-prefix selection
+    corridor_radius: float = 0.07  # sanctioned-approach cylinder radius [m]
+    corridor_relax: float = 0.6  # margin relaxation inside corridors (0 = off)
     repair_schedule: str = "ramp"  # "ramp" (trust early, exact late) | "uniform" (r3 behavior)
 
 
@@ -51,6 +53,9 @@ def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
         w[2 : 2 + len(ramp)] = ramp
         return w, margin
     raise ValueError(f"unknown repair_schedule {kind!r}")
+
+
+FAR = np.array([100.0, 100.0, 100.0])  # disables a corridor segment
 
 
 class GuidedPolicy(_policy.Policy):
@@ -108,6 +113,10 @@ class GuidedPolicy(_policy.Policy):
             translation_scale=jnp.float32(cfg.translation_scale),
             repair_weight=jnp.asarray(self._repair_weight),
             margin_scale=jnp.asarray(self._margin_scale),
+            target_pos=jnp.asarray(np.asarray(payload.get("target_pos", FAR), dtype=np.float32)),
+            dest_pos=jnp.asarray(np.asarray(payload.get("dest_pos", FAR), dtype=np.float32)),
+            corridor_radius=jnp.float32(cfg.corridor_radius),
+            corridor_relax=jnp.float32(cfg.corridor_relax),
         )
 
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]

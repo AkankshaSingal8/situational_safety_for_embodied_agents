@@ -22,7 +22,8 @@ Q01 = np.full(3, -1.0, dtype=np.float32)
 Q99 = np.full(3, 1.0, dtype=np.float32)
 
 
-def make_params(eef, obstacle, r_eff=0.12, enabled=1.0):
+def make_params(eef, obstacle, r_eff=0.12, enabled=1.0, target=None, dest=None,
+                corridor_radius=0.07, corridor_relax=0.6):
     return GuidanceParams(
         enabled=jnp.float32(enabled),
         eef_pos=jnp.asarray(np.asarray(eef, dtype=np.float32)),
@@ -35,6 +36,10 @@ def make_params(eef, obstacle, r_eff=0.12, enabled=1.0):
         translation_scale=jnp.float32(SCALE),
         repair_weight=jnp.ones(10, dtype=jnp.float32),
         margin_scale=jnp.ones(10, dtype=jnp.float32),
+        target_pos=jnp.asarray(np.asarray(target if target is not None else [100.0, 100.0, 100.0], dtype=np.float32)),
+        dest_pos=jnp.asarray(np.asarray(dest if dest is not None else [100.0, 100.0, 100.0], dtype=np.float32)),
+        corridor_radius=jnp.float32(corridor_radius),
+        corridor_relax=jnp.float32(corridor_relax),
     )
 
 
@@ -201,3 +206,39 @@ def test_prefix_acceptance_separates_candidates():
     assert float(acc["min_margin"][1]) > float(acc["min_margin"][0])
     # progress proxy is positive for the moving candidate
     assert float(acc["disp_norm"][1]) > 0.05
+
+
+def test_corridor_exemption_relaxes_along_sanctioned_approach():
+    # Obstacle adjacent to the target: without the corridor the head-on chunk
+    # is heavily repaired; with the target-corridor active the same chunk
+    # passes with a much smaller correction (margins relax inside the cone).
+    x = chunk_toward([1.0, 0.0, 0.0], magnitude=0.5)
+    p_no = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.22, 0.05, 1.0], r_eff=0.15)
+    p_yes = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.22, 0.05, 1.0], r_eff=0.15,
+                        target=[0.25, 0.0, 1.0])
+    _, d_no = _dcbf_repair(x, p_no, 9)
+    _, d_yes = _dcbf_repair(x, p_yes, 9)
+    assert float(d_yes["correction_norm"][0]) < float(d_no["correction_norm"][0]) - 1e-3
+
+
+def test_corridor_never_relaxes_off_axis():
+    # Same obstacle, but the sanctioned target lies in the OPPOSITE direction:
+    # the corridor must grant nothing to the hazard-side approach.
+    x = chunk_toward([1.0, 0.0, 0.0], magnitude=0.5)
+    p_no = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.22, 0.05, 1.0], r_eff=0.15)
+    p_opp = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.22, 0.05, 1.0], r_eff=0.15,
+                        target=[-0.25, 0.0, 1.0])
+    _, d_no = _dcbf_repair(x, p_no, 9)
+    _, d_opp = _dcbf_repair(x, p_opp, 9)
+    np.testing.assert_allclose(float(d_opp["correction_norm"][0]),
+                               float(d_no["correction_norm"][0]), atol=1e-4)
+
+
+def test_far_target_disables_corridor():
+    x = chunk_toward([1.0, 0.0, 0.0])
+    p_far = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 1.0])  # default FAR
+    p_ref = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 1.0])
+    _, d_far = _dcbf_repair(x, p_far, 9)
+    _, d_ref = _dcbf_repair(x, p_ref, 9)
+    np.testing.assert_allclose(float(d_far["correction_norm"][0]),
+                               float(d_ref["correction_norm"][0]), atol=1e-6)

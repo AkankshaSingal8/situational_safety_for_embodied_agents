@@ -24,12 +24,14 @@ PORT=${PORT:-8128}
 SCHEDULE=${SCHEDULE:-ramp}
 K=${K:-1}
 TAG=${TAG:-ramp}
+EEFR=${EEFR:-0.09}
+CORRIDOR=${CORRIDOR:-}
 
 conda activate aegis
 export XLA_PYTHON_CLIENT_MEM_FRACTION=0.85
 export PYTHONPATH="$WT/openpi_guided/src"
 python "$WT/openpi_guided/scripts/serve_policy_guided.py" \
-  --port "$PORT" --repair_schedule "$SCHEDULE" --num_candidates "$K" \
+  --port "$PORT" --repair_schedule "$SCHEDULE" --num_candidates "$K" --eef_radius "$EEFR" \
   --policy.config=pi05_libero \
   --policy.dir="$AEGIS/checkpoints/pi05_libero" &
 SERVER_PID=$!
@@ -47,13 +49,19 @@ export PYTHONPATH="$ROOT/SafeLIBERO/safelibero:$WT/client_deps:$WT/openpi_guided
 
 python "$WT/vlm_pipeline/run_guided_safelibero_pi05_eval.py" \
   --task_suite_name safelibero_spatial --safety_level I \
-  --num_trials_per_task 5 --host 127.0.0.1 --port "$PORT" \
+  --num_trials_per_task 5 --host 127.0.0.1 --port "$PORT" $CORRIDOR \
   --results_output_dir "$OUT/$TAG"
 
 python "$WT/vlm_pipeline/run_guided_safelibero_pi05_eval.py" \
   --task_suite_name safelibero_object --safety_level I \
   --num_trials_per_task 5 --task_indices 1 2 \
-  --host 127.0.0.1 --port "$PORT" \
+  --host 127.0.0.1 --port "$PORT" $CORRIDOR \
+  --results_output_dir "$OUT/$TAG"
+
+python "$WT/vlm_pipeline/run_guided_safelibero_pi05_eval.py" \
+  --task_suite_name safelibero_long --safety_level I \
+  --num_trials_per_task 5 --task_indices 0 1 \
+  --host 127.0.0.1 --port "$PORT" $CORRIDOR \
   --results_output_dir "$OUT/$TAG"
 
 echo "DEVCELLS_SMOKE_COMPLETE"

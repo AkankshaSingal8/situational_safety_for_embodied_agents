@@ -40,6 +40,8 @@ class Args:
     translation_scale: float = 0.05
     repair_schedule: str = "ramp"
     num_candidates: int = 1
+    corridor_radius: float = 0.07
+    corridor_relax: float = 0.6
 
 
 def main(args: Args) -> None:
@@ -63,6 +65,8 @@ def main(args: Args) -> None:
         translation_scale=args.translation_scale,
         repair_schedule=args.repair_schedule,
         num_candidates=args.num_candidates,
+        corridor_radius=args.corridor_radius,
+        corridor_relax=args.corridor_relax,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)

@@ -28,6 +28,7 @@ import json
 import logging
 import math
 import pathlib
+import re
 import time
 from datetime import datetime
 
@@ -69,6 +70,48 @@ OBSTACLE_RADII = {
 DEFAULT_OBSTACLE_RADIUS = 0.065
 
 
+GENERIC_NAME_TOKENS = {"1", "2", "g", "akita", "object"}
+DEST_PATTERN = re.compile(r"(?:\bon|\bin|\binto|\binside)\s+(?:the\s+)?([a-z ]+?)(?:\s+and\b|[.,]|$)")
+
+
+def parse_entities(task_description: str, obs) -> dict:
+    """Sanctioned-entity extraction for the corridor exemption (GT tier).
+
+    target  = mentioned, non-destination object nearest the EEF (refreshed per
+              chunk, which tracks sub-goal switches on Long tasks);
+    dest    = receptacle named in the final locative phrase, when it has a pos.
+    Missing entities simply grant no corridor (fail-safe direction).
+    """
+    text = task_description.lower()
+    words = set(re.findall(r"[a-z]+", text))
+    names = [k[:-4] for k in obs if k.endswith("_pos") and not k.startswith("robot0")]
+
+    def content_tokens(name):
+        return [t for t in re.split(r"[_ ]+", name.lower()) if t and t not in GENERIC_NAME_TOKENS and not t.isdigit()]
+
+    mentioned = [n for n in names if "obstacle" not in n and any(t in words for t in content_tokens(n))]
+
+    dest_name = None
+    m = list(DEST_PATTERN.finditer(text))
+    if m:
+        dest_words = set(m[-1].group(1).split())
+        for n in mentioned:
+            if any(t in dest_words for t in content_tokens(n)):
+                dest_name = n
+                break
+
+    eef = np.asarray(obs["robot0_eef_pos"])
+    targets = [n for n in mentioned if n != dest_name]
+    target_name = min(targets, key=lambda n: np.linalg.norm(np.asarray(obs[f"{n}_pos"]) - eef), default=None)
+
+    out = {}
+    if target_name is not None:
+        out["target_pos"] = np.asarray(obs[f"{target_name}_pos"], dtype=np.float32)
+    if dest_name is not None:
+        out["dest_pos"] = np.asarray(obs[f"{dest_name}_pos"], dtype=np.float32)
+    return out
+
+
 def obstacle_radius(name: str) -> float:
     label = name.lower().replace("_", " ")
     return next((r for key, r in OBSTACLE_RADII.items() if key in label), DEFAULT_OBSTACLE_RADIUS)
@@ -87,6 +130,8 @@ def parse_args():
     parser.add_argument("--save_videos", action="store_true")
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--task_indices", type=int, nargs="+", default=None)
+    parser.add_argument("--corridor", action="store_true",
+                        help="Send parsed target/destination positions for the corridor exemption (GT tier).")
     parser.add_argument("--disable_guidance", action="store_true",
                         help="Send enabled=0 (server sanity baseline through the same code path).")
     return parser.parse_args()
@@ -221,6 +266,8 @@ def run_eval(args):
                                 "obstacle_pos": np.asarray(obs[f"{obstacle_name}_pos"], dtype=np.float32),
                                 "obstacle_radius": obstacle_radius(obstacle_name),
                             }
+                            if args.corridor:
+                                element["guidance"].update(parse_entities(task_description, obs))
                         result = client.infer(element)
                         action_chunk = result["actions"][:REPLAN_STEPS]
                         diag = result.get("guidance")
