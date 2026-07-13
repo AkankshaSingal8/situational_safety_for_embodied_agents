@@ -35,6 +35,7 @@ class GuidanceConfig:
     translation_scale: float = 0.05  # metres per unit command per control step
     default_obstacle_radius: float = 0.065
     num_denoise_steps: int = 10
+    num_candidates: int = 1  # best-of-K noise seeds with executed-prefix selection
     repair_schedule: str = "ramp"  # "ramp" (trust early, exact late) | "uniform" (r3 behavior)
 
 
@@ -121,7 +122,10 @@ class GuidedPolicy(_policy.Policy):
 
         observation = _model.Observation.from_dict(inputs)
         start = time.monotonic()
-        actions, diag = self._sample_actions(sample_rng, observation, guidance=guidance, **sample_kwargs)
+        actions, diag = self._sample_actions(
+            sample_rng, observation, guidance=guidance,
+            num_candidates=self._config.num_candidates, **sample_kwargs,
+        )
         outputs = {"state": inputs["state"], "actions": actions}
         model_time = time.monotonic() - start
 

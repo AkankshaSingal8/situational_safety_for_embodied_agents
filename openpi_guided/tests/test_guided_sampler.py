@@ -12,7 +12,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from openpi.models.pi0_guided import GuidanceParams, _dcbf_repair
+from openpi.models.pi0_guided import GuidanceParams, _dcbf_repair, _prefix_acceptance
 
 H = 10
 GAMMA = 0.9
@@ -188,3 +188,16 @@ def test_brake_floor_barrier_never_below_no_approach():
         # chain condition was met (push) or the step did not approach (brake).
         floor = np.minimum(chain[:-1], (1.0 - GAMMA) * chain[:-1])
         assert np.all(chain[1:] >= floor - 5e-3), (chain, floor)
+
+
+def test_prefix_acceptance_separates_candidates():
+    params = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.20, 0.0, 1.0])
+    into = chunk_toward([1.0, 0.0, 0.0])          # drives at the obstacle
+    around = chunk_toward([0.0, 1.0, 0.0])        # detours laterally
+    x = jnp.concatenate([into, around], axis=0)
+    acc = _prefix_acceptance(x, params, prefix_len=5)
+    feas = np.asarray(acc["feasible"])
+    assert not feas[0] and feas[1], feas
+    assert float(acc["min_margin"][1]) > float(acc["min_margin"][0])
+    # progress proxy is positive for the moving candidate
+    assert float(acc["disp_norm"][1]) > 0.05

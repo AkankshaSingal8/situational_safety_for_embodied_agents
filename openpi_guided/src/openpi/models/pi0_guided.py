@@ -172,6 +172,34 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
     return x_new, diag
 
 
+def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> dict:
+    """Score each candidate chunk by its EXECUTED prefix (first `prefix_len`
+    steps — what the receding-horizon client actually runs).
+
+    Returns per-candidate: feasibility of the DCBF chain over the prefix at
+    full margins, the minimum prefix clearance margin, and total displacement
+    (a mild progress proxy so selection doesn't reward freezing).
+    """
+    span = g.q99 - g.q01 + 1e-6
+    cmd = (x_0[..., :3] + 1.0) / 2.0 * span + g.q01
+    disp = cmd * g.translation_scale  # (K, H, 3)
+    companions = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]])
+    p_traj = g.eef_pos + jnp.cumsum(disp, axis=1)  # (K, H, 3)
+    dists = jnp.min(
+        jnp.linalg.norm(p_traj[:, :, None, :] + companions[None, None] - g.obstacle_pos, axis=-1), axis=-1
+    )  # (K, H)
+    h = disp.shape[1]
+    r_horizon = g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)
+    b = dists - r_horizon  # (K, H)
+    b0 = jnp.min(jnp.linalg.norm(g.eef_pos[None, :] + companions - g.obstacle_pos, axis=-1)) - g.r_eff
+    chain = jnp.concatenate([jnp.broadcast_to(b0, (b.shape[0], 1)), b[:, :prefix_len]], axis=1)
+    viol = (1.0 - g.gamma) * chain[:, :-1] - chain[:, 1:]
+    feasible = jnp.max(viol, axis=1) <= 1e-4  # (K,)
+    min_margin = jnp.min(b[:, :prefix_len], axis=1)
+    disp_norm = jnp.linalg.norm(jnp.sum(disp[:, :prefix_len], axis=1), axis=-1)
+    return {"feasible": feasible, "min_margin": min_margin, "disp_norm": disp_norm}
+
+
 def guided_sample_actions(
     self,
     rng: at.KeyArrayLike,
@@ -179,6 +207,8 @@ def guided_sample_actions(
     *,
     guidance: GuidanceParams,
     num_steps: int = 10,
+    num_candidates: int = 1,
+    prefix_len: int = 5,
     noise: at.Float[at.Array, "b ah ad"] | None = None,
 ) -> tuple[_model.Actions, dict]:
     """`Pi0.sample_actions` with a DCBF repair after every Euler step.
@@ -192,23 +222,40 @@ def guided_sample_actions(
     """
     observation = _model.preprocess_observation(None, observation, train=False)
     dt = -1.0 / num_steps
-    batch_size = observation.state.shape[0]
+    obs_batch = observation.state.shape[0]
+    if obs_batch != 1 and num_candidates > 1:
+        raise ValueError("num_candidates > 1 requires a single-observation request.")
+    k_batch = num_candidates if noise is None else noise.shape[0]
     if noise is None:
-        noise = jax.random.normal(rng, (batch_size, self.action_horizon, self.action_dim))
+        noise = jax.random.normal(rng, (k_batch, self.action_horizon, self.action_dim))
 
+    # Prefix (vision + language) computed ONCE at the observation's batch size,
+    # then broadcast across candidates: the K suffix passes share one KV cache.
     prefix_tokens, prefix_mask, prefix_ar_mask = self.embed_prefix(observation)
     prefix_attn_mask = make_attn_mask(prefix_mask, prefix_ar_mask)
     positions = jnp.cumsum(prefix_mask, axis=1) - 1
     _, kv_cache = self.PaliGemma.llm([prefix_tokens, None], mask=prefix_attn_mask, positions=positions)
 
+    if k_batch != obs_batch:
+        reps = k_batch // obs_batch
+        # KVCache leaves are (layers, batch, seq, heads, head_dim): batch axis 1.
+        kv_cache = jax.tree.map(lambda x: jnp.repeat(x, reps, axis=1), kv_cache)
+        prefix_mask_k = jnp.repeat(prefix_mask, reps, axis=0)
+        # pi0.5's embed_suffix does not read observation content (no state
+        # token in the pi05 path), but tile defensively for shape consistency.
+        observation_k = jax.tree.map(lambda x: jnp.repeat(x, reps, axis=0), observation)
+    else:
+        prefix_mask_k = prefix_mask
+        observation_k = observation
+
     def euler_step(x_t, time):
         suffix_tokens, suffix_mask, suffix_ar_mask, adarms_cond = self.embed_suffix(
-            observation, x_t, jnp.broadcast_to(time, batch_size)
+            observation_k, x_t, jnp.broadcast_to(time, k_batch)
         )
         suffix_attn_mask = make_attn_mask(suffix_mask, suffix_ar_mask)
-        prefix_attn = einops.repeat(prefix_mask, "b p -> b s p", s=suffix_tokens.shape[1])
+        prefix_attn = einops.repeat(prefix_mask_k, "b p -> b s p", s=suffix_tokens.shape[1])
         full_attn_mask = jnp.concatenate([prefix_attn, suffix_attn_mask], axis=-1)
-        pos = jnp.sum(prefix_mask, axis=-1)[:, None] + jnp.cumsum(suffix_mask, axis=-1) - 1
+        pos = jnp.sum(prefix_mask_k, axis=-1)[:, None] + jnp.cumsum(suffix_mask, axis=-1) - 1
         (_, suffix_out), _ = self.PaliGemma.llm(
             [None, suffix_tokens],
             mask=full_attn_mask,
@@ -229,4 +276,17 @@ def guided_sample_actions(
         noise, guidance._replace(enabled=jnp.zeros_like(guidance.enabled)), num_steps - 1
     )
     x_0, _, last_diag = jax.lax.fori_loop(0, num_steps, body, (noise, 1.0, init_diag))
-    return x_0, last_diag
+
+    if k_batch == 1:
+        return x_0, last_diag
+
+    # Lexicographic selection over candidates via scalarization: executed-prefix
+    # feasibility dominates, then prefix clearance margin, then task progress.
+    acc = _prefix_acceptance(x_0, guidance, prefix_len)
+    score = 1e3 * acc["feasible"].astype(jnp.float32) + 10.0 * acc["min_margin"] + 0.1 * acc["disp_norm"]
+    best = jnp.argmax(score)
+    selected = jax.lax.dynamic_slice_in_dim(x_0, best, 1, axis=0)
+    diag = {k: jax.lax.dynamic_slice_in_dim(v, best, 1, axis=0) for k, v in last_diag.items()}
+    diag["feasible_count"] = jnp.broadcast_to(jnp.sum(acc["feasible"].astype(jnp.float32)), (1,))
+    diag["selected_margin"] = jax.lax.dynamic_slice_in_dim(acc["min_margin"], best, 1, axis=0)
+    return selected, diag

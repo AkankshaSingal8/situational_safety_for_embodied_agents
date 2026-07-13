@@ -39,6 +39,7 @@ class Args:
     inflation_slope: float = 0.004
     translation_scale: float = 0.05
     repair_schedule: str = "ramp"
+    num_candidates: int = 1
 
 
 def main(args: Args) -> None:
@@ -61,6 +62,7 @@ def main(args: Args) -> None:
         inflation_slope=args.inflation_slope,
         translation_scale=args.translation_scale,
         repair_schedule=args.repair_schedule,
+        num_candidates=args.num_candidates,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)
