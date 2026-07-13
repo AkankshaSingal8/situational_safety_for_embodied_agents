@@ -606,9 +606,19 @@ def run_eval(args):
                                     )
                                     for candidate in candidates
                                 ]
+                                obstacle_position = np.asarray(obs[f"{obstacle_name}_pos"])
+                                viability_positions = [np.asarray(obs["robot0_eef_pos"])]
+                                if manipulated_name is not None and phase == "transport":
+                                    viability_positions.append(
+                                        np.asarray(obs[f"{manipulated_name}_pos"])
+                                    )
+                                near_viability_boundary = min(
+                                    float(np.linalg.norm(position - obstacle_position))
+                                    for position in viability_positions
+                                ) < 0.22
                                 if args.oracle_depth == 2 and any(
                                     score < -5.0 for score in stage_scores
-                                ):
+                                ) or (args.oracle_depth == 2 and near_viability_boundary):
                                     scores, continuations = _oracle_depth2_scores(
                                         env, candidates, snapshot, snapshot_timestep,
                                         obstacle_name, initial_obstacle_pos,
