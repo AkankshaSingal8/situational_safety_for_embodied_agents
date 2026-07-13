@@ -42,6 +42,29 @@ Components layered on it (each a flag, each tested):
 **SABRE-Flow novel components (the named-method play, +4–5 days):** (i) barrier-certified flow sampling — CBF condition on the denoising ODE with closed-form correction → forward-invariance theorem for the generation process (the schedule+brake design is its discretization); (ii) semantic Riemannian correction metric (min‖δ‖_M, M from the constraint compiler — corridor/caution/rotation as one object); (iii) persistent noise inheritance across chunks (route hysteresis in noise space; chunk-boundary coherence unaddressed in all surveyed work); (iv) dual-dynamics guidance strength (multiplier carry = integral action, replaces tuned η).
 **Direction-2 novelty statement:** the composition — scheduled soft-then-hard enforcement + actuation-aware provable repair + seed selection + executed-prefix certificate + semantic anisotropy, on a frozen 3B flow VLA — is occupied by nobody (BayesFP lacks the hard layer; SLSQP-SOTA lacks schedules/seeds/corridors/companions and has no code, no ablations, GT-only). SOTA is recoverable as our degenerate ablation row (`--no-use_companions --repair_schedule uniform`, K=1, corridor off).
 
+## 3b. Steering: related work, baselines, and the novelty ledger
+
+### The must-cite map (full mechanism details in `steer_theory.json` / `steer_robotics.json`)
+**Direct competitors (safety steering of VLAs, SafeLIBERO):**
+| Paper | Mechanism | Why we win / differ |
+|---|---|---|
+| **2607.01378** (SOTA) | min-norm SLSQP per Euler step, GT spheres, EEF-only | our degenerate ablation row; no schedule/seeds/companions/semantics/code/ablations |
+| AEGIS/VLSA 2512.11891 | post-hoc per-step CBF-QP, vision | TSR ceiling (68.1); the benchmark authors' own OOD-drift admission |
+| Attention-guided 2606.09749 | post-hoc CBF, attention picks target | per-step reactive; single uncalibrated exemption; we cite for the attention-grounding idea |
+| BayesFP | FK particle tilt on π0.5 | soft-only — no hard layer, no certificate; becomes our soft-only ablation |
+**Enforcement-mechanism lineage (cited as foundations):** SafeDiffuser (ICLR25; CBF-in-denoising for planners + the local-trap analysis our schedule answers), SafeFlowMatcher (ICLR26; executed-path-only verification, vanishing-correction schedule), TouchGuide (classifier guidance on π0.5 — mechanism precedent), OmniGuide 2603.10052 (VLM energy guidance in π0.5/GR00T denoising — closest semantic-guidance neighbor, no barriers/no safety benchmark), VLS, QPILOTS, GAF, DynaGuide (critic/dynamics-gradient steering), PC-Diffuser (velocity-channel corrections → our brake), ITPS (sampling beats gradient guidance on drift — motivates best-of-K), Guided Flows 2311.13443 + Feng et al. 2502.02150 (FM guidance theory; x₁-prediction gradients, softened hinges), FK-Steering ICML25 / TDS / FPS / FK-Flow 2509.01543 (particle steering; harmonic early down-weighting; soft potentials only), Ma et al. CVPR25 (noise-space search), RoboMonkey/TACO/MG-Select (best-of-N with task verifiers), BOKBO 2605.30660 (conformal abstention, **standard LIBERO only** — verified), Latent Policy Barrier, PolyFlow (constraint embedding — needs retraining; cited as why inference-time constraints require our route), FRS (reverse-flow informed seeds).
+
+### Novelty ledger (component-by-component, hostile-reviewer honest)
+**Borrowed with citation (not ours):** the enforcement locus (per-step correction in denoising); the schedule *concept*; best-of-N *concept*; executed-path verification *concept*.
+**Novel — unclaimed per both surveys (re-verify at submission; field moves weekly):**
+1. **Actuation-aware provable repair**: brake-then-push with barrier-max fallback ⇒ chain feasibility degrades *provably* to non-worsening under per-dim |cmd|≤1 clamps. No surveyed method handles actuator limits inside its guarantee — SOTA's SLSQP can emit unexecutable corrections silently.
+2. **Executed-prefix lexicographic certificate** for chunked receding-horizon VLAs (feasible→margin→progress; resample-not-abstain). BOKBO abstains and is std-LIBERO; FK methods certify nothing per-rollout.
+3. **Semantic corridor/destination exemption inside guidance** — anisotropic margins derived from task semantics (sanctioned approach segments with an along-segment gate). OmniGuide has goal *attractors*; nobody modulates *safety margins* by task sanction. Empirically decisive (Long L1 0→65 TSR).
+4. **Manipulated-system companion geometry in guidance** (hand/payload points) — every SafeLIBERO method is EEF-only; worth +21pp CAR at n=50.
+5. **Jittable exact in-order sweep** (constraint j depends only on steps ≤j ⇒ one pass is exact) — replaces the host QP; engineering novelty enabling per-step × per-particle × terminal reuse.
+6. (If built) **SABRE components**: generation-process forward-invariance theorem; semantic Riemannian metric; cross-chunk noise inheritance; dual-dynamics strength.
+**The defensible headline**: not any single component but the *composition* — scheduled soft→hard enforcement + seed selection + prefix certificate + semantic anisotropy + provable actuation-aware repair on a frozen 3B flow VLA, with the SOTA as a literal ablation row and public code. **Reviewer attack & answer**: "engineering composition" → answered by the ablation table (each component earns its row), the clamp-feasibility proof, the fail-direction figure (E5), and the two-tier privilege results no competitor attempts.
+
 ## 4. Direction 1 — identifying contextual/semantic safety (state: candidates chosen, E-protocol running)
 Hazard taxonomy to cover: geometric · property (hot/fragile/liquid/sharp) · relational-state (towel-ON-stove, knife-NEAR-edge) · instruction-level (refuse/redirect) · damage/force. Output contract: identification compiles into constraint classes (keep-out geometry, margins, velocity boxes, rotation locks) + router decisions.
 **Candidates (from `semsafe_synth.json`; no headline commitment yet):**
