@@ -40,7 +40,7 @@ def reset_to_state(env, state: np.ndarray) -> dict:
 def main() -> None:
     args = parse_args()
     benchmark_dict = benchmark.get_benchmark_dict()
-    task_suite = benchmark_dict[args.suite](args.level)
+    task_suite = benchmark_dict[args.suite](safety_level=args.level)
     task = task_suite.get_task(args.task_id)
     initial_states = task_suite.get_task_init_states(args.task_id)
     env, instruction = get_safelibero_env(
