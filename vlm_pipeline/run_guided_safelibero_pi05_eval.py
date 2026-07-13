@@ -256,7 +256,7 @@ def _inject_topology_experts(
         obstacle_pos[:2], mover[:2], target[:2]
     ) < clearance
     hazard_near = float(np.linalg.norm(mover - obstacle_pos)) < clearance + 0.05
-    topology_required = corridor_blocked or hazard_near
+    topology_required = corridor_blocked or (phase == "transport" and hazard_near)
 
     detours = []
     for side, label in ((1.0, "tangent_left"), (-1.0, "tangent_right")):
