@@ -255,6 +255,8 @@ def _inject_topology_experts(
     corridor_blocked = _segment_distance_2d(
         obstacle_pos[:2], mover[:2], target[:2]
     ) < clearance
+    hazard_near = float(np.linalg.norm(mover - obstacle_pos)) < clearance + 0.05
+    topology_required = corridor_blocked or hazard_near
 
     detours = []
     for side, label in ((1.0, "tangent_left"), (-1.0, "tangent_right")):
@@ -273,11 +275,28 @@ def _inject_topology_experts(
             )
         detour["actions"] = detour_actions
         detour["expert"] = label
-        detour["topology_required"] = corridor_blocked
+        detour["topology_required"] = topology_required
         detours.append(detour)
+
+    # Emergency viability expert: move directly out of the hazard's radial
+    # basin while lifting a grasped payload. Unlike a tangent route, this can
+    # remain feasible when contact is one short horizon away.
+    radial = mover[:2] - obstacle_pos[:2]
+    radial = radial / max(float(np.linalg.norm(radial)), 1e-6)
+    retreat = copy.deepcopy(candidates[0])
+    retreat_actions = np.asarray(retreat["actions"]).copy()
+    retreat_actions[:REPLAN_STEPS, :2] = 0.85 * radial
+    if phase == "transport":
+        retreat_actions[:REPLAN_STEPS, 2] = np.maximum(
+            retreat_actions[:REPLAN_STEPS, 2], 0.60
+        )
+    retreat["actions"] = retreat_actions
+    retreat["expert"] = "radial_retreat"
+    retreat["topology_required"] = topology_required
 
     result = list(candidates)
     result[-2:] = detours
+    result.append(retreat)
     return result
 
 

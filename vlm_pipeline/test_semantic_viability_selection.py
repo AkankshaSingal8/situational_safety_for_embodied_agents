@@ -94,11 +94,14 @@ def test_transport_phase_injects_opposite_side_tangent_experts():
         candidates, obs, "moka_obstacle_1", "akita_black_bowl_2", initial,
         np.array([0.20, 0.20, 0.90]),
     )
-    assert result[-2]["expert"] == "tangent_left"
-    assert result[-1]["expert"] == "tangent_right"
-    assert np.linalg.norm(result[-2]["actions"][0, :2]) > 0.7
-    assert np.linalg.norm(result[-1]["actions"][0, :2]) > 0.7
-    assert np.sign(result[-2]["actions"][0, 1]) != np.sign(result[-1]["actions"][0, 1])
-    assert np.all(result[-2]["actions"][:5, 2] == 0.2)
-    assert result[-2]["topology_required"]
-    assert result[-1]["topology_required"]
+    experts = {candidate.get("expert"): candidate for candidate in result}
+    left = experts["tangent_left"]
+    right = experts["tangent_right"]
+    retreat = experts["radial_retreat"]
+    assert np.linalg.norm(left["actions"][0, :2]) > 0.7
+    assert np.linalg.norm(right["actions"][0, :2]) > 0.7
+    assert np.sign(left["actions"][0, 1]) != np.sign(right["actions"][0, 1])
+    assert np.all(left["actions"][:5, 2] == 0.2)
+    assert np.linalg.norm(retreat["actions"][0, :2]) > 0.8
+    assert np.all(retreat["actions"][:5, 2] >= 0.6)
+    assert all(experts[name]["topology_required"] for name in experts if name)
