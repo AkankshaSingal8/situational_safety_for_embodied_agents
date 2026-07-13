@@ -13,6 +13,7 @@ def _obs(eef=(0.0, 0.0, 0.9), obstacle=(0.12, 0.0, 0.9)):
 def _filter(obs):
     safety_filter = CAVFStaticSafetyFilter(
         CAVFStaticConfig(
+            translation_scale=0.050,
             safety_margin=0.015,
             influence_distance=0.050,
             smoothing=0.0,

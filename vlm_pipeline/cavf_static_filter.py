@@ -26,6 +26,10 @@ from contextual_predictive_filter import (
 
 @dataclass
 class CAVFStaticConfig(PredictiveFilterConfig):
+    # Empirically measured in SafeLIBERO (controller_response.json):
+    # x=0.00462, y=0.00546, z=0.00562 metres per normalized command.
+    # A scalar preserves the existing filter interface for this smoke test.
+    translation_scale: float = 0.00523
     payload_radius: float = 0.015
     route_gain: float = 1.20
     route_sigma_fraction: float = 0.22
@@ -80,6 +84,11 @@ class CAVFStaticSafetyFilter:
             for name in PredictiveFilterConfig.__dataclass_fields__
             if hasattr(source, name)
         }
+        # The baseline evaluator constructs PredictiveFilterConfig whose legacy
+        # 0.05 scale is an uncalibrated assumption. Do not copy that value into
+        # this calibrated POC; all other shared options remain evaluator-driven.
+        if not isinstance(source, CAVFStaticConfig):
+            values.pop("translation_scale", None)
         self.config = CAVFStaticConfig(**values)
         self.context_provider = context_provider or ObservationContextProvider()
         self.context = SafetyContext("", ())
