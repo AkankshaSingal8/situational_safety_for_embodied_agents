@@ -260,9 +260,14 @@ def _inject_topology_experts(
     topology_required = corridor_blocked or (phase == "transport" and hazard_near)
 
     detours = []
+    preferred_route_cleared = False
     for side, label in ((1.0, "tangent_left"), (-1.0, "tangent_right")):
-        waypoint = obstacle_pos[:2] + side * clearance * perpendicular
-        direction = waypoint - mover[:2]
+        waypoint = obstacle_pos[:2] + side * 1.5 * clearance * perpendicular
+        waypoint_reached = float(np.linalg.norm(waypoint - mover[:2])) < 0.075
+        if label == preferred_side and waypoint_reached:
+            preferred_route_cleared = True
+        steering_target = target[:2] if waypoint_reached else waypoint
+        direction = steering_target - mover[:2]
         direction_norm = float(np.linalg.norm(direction))
         direction = direction / max(direction_norm, 1e-6)
         detour = copy.deepcopy(candidates[0])
@@ -276,7 +281,7 @@ def _inject_topology_experts(
             )
         detour["actions"] = detour_actions
         detour["expert"] = label
-        detour["topology_required"] = topology_required and (
+        detour["topology_required"] = topology_required and not waypoint_reached and (
             preferred_side is None or label == preferred_side
         )
         detours.append(detour)
@@ -295,7 +300,7 @@ def _inject_topology_experts(
         )
     retreat["actions"] = retreat_actions
     retreat["expert"] = "radial_retreat"
-    retreat["topology_required"] = topology_required
+    retreat["topology_required"] = topology_required and not preferred_route_cleared
 
     result = list(candidates)
     result[-2:] = detours
