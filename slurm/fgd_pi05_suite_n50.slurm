@@ -20,15 +20,21 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 ROOT=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
 WT="$ROOT/.worktrees/flow-guidance-tier-gt"
 AEGIS="$ROOT/vlsa-aegis"
-OUT="$WT/fgd_n50"
+OUT="$WT/fgd_n50_$TAG"
 SUITE=${SUITE:-safelibero_goal}
 PORT=${PORT:-8125}
+K=${K:-1}
+SCHEDULE=${SCHEDULE:-uniform}
+EEFR=${EEFR:-0.09}
+CORRIDOR=${CORRIDOR:-}
+COMPANIONS=${COMPANIONS:-True}
+TAG=${TAG:-r3}
 
 conda activate aegis
 export XLA_PYTHON_CLIENT_MEM_FRACTION=0.85
 export PYTHONPATH="$WT/openpi_guided/src"
 python "$WT/openpi_guided/scripts/serve_policy_guided.py" \
-  --port "$PORT" \
+  --port "$PORT" --repair_schedule "$SCHEDULE" --num_candidates "$K" --eef_radius "$EEFR" --use_companions "$COMPANIONS" \
   --policy.config=pi05_libero \
   --policy.dir="$AEGIS/checkpoints/pi05_libero" &
 SERVER_PID=$!
@@ -50,7 +56,7 @@ for LEVEL in I II; do
 python "$WT/vlm_pipeline/run_guided_safelibero_pi05_eval.py" \
   --task_suite_name "$SUITE" --safety_level "$LEVEL" \
   --num_trials_per_task 50 \
-  --host 127.0.0.1 --port "$PORT" \
+  --host 127.0.0.1 --port "$PORT" $CORRIDOR \
   --results_output_dir "$OUT/results"
 done
 
