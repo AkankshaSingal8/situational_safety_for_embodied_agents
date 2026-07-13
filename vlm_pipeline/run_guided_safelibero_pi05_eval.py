@@ -344,7 +344,12 @@ def _oracle_counterfactual_score(
     # contact, then terminal success. Inside the safe set, prefer candidates that
     # increase physical margin before task progress; this lets a detour begin
     # before contact is unavoidable inside the short rollout horizon.
-    separation_score = 0.0 if not np.isfinite(minimum_separation) else minimum_separation
+    # Clearance is a constraint, not an objective to maximize without bound.
+    # Saturation prevents the oracle from carrying the payload away from both
+    # the hazard and the task goal after a viable margin has been established.
+    separation_score = (
+        0.0 if not np.isfinite(minimum_separation) else min(minimum_separation, 0.25)
+    )
     topology_bonus = float(candidate.get("topology_required", False))
     return (
         -10.0 * float(collided)
