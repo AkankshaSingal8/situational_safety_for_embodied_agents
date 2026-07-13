@@ -67,3 +67,28 @@ command aims at the grasp/place target — FOL layer decides WHICH object is tar
 completes the grasp — selection escapes what uniform repair cannot).
 L2 (obstacle blocks path, away from target) is the clean demonstration of the mechanism:
 +31pp TSR AND 4.1x CAR simultaneously — no filter in the FOL campaign ever moved both.
+
+## PHASE-1 COMPLETE: full 8-condition table (r3 config, n=50/task, job series 42162199-42166471)
+| Condition | Ours TSR/CAR | Baseline | Both-axes vs baseline? | SOTA published |
+|---|---|---|---|---|
+| Spatial L1 | 71.0/23.5 (thin) · 58.5/44.5 (fat) | 67.0/14.0 | ⚠️ one per config | 75.5/77.5 |
+| Spatial L2 | 86.5/49.0 | 55.5/12.0 | ✅ | 78.0/75.5 (TSR beaten) |
+| Goal L1 | 71.5/30.5 | 51.0/23.0 | ✅ | 91.0/94.0 |
+| Goal L2 | 69.0/58.0 | 66.5/35.0 | ✅ | 83.5/82.5 |
+| Object L1 | 51.0/22.5 | 40.5/14.0 | ✅ | 90.5/82.5 |
+| Object L2 | 85.5/40.5 | 74.0/25.0 | ✅ | 81.0/85.5 (TSR beaten) |
+| Long L1 | 23.0/55.0 | 58.0/15.0 | ❌ TSR −35pp (t0/t1 = 0.00!) | 81.5/82.0 |
+| Long L2 | 47.0/77.0 | 51.0/16.5 | ⚠️ TSR −4 / CAR +60.5 | 72.0/83.0 |
+
+Long L1 diagnosis: dual-object → basket tasks; fat envelope near the DESTINATION basket blocks
+placement on both sub-goals (t0/t1 TSR 0.00 at CAR 0.38-0.60) — the destination-exemption problem,
+amplified by two placements per episode. Long L2 CAR 77.0 approaches SOTA's 83.0.
+
+## Dev-cell schedule A/B (ramp vs uniform, n=5, job 42167494)
+Spatial L1: ramp 60/35 act 0.54 vs uniform 60/35 act 0.47 — outcomes identical, corrections differ.
+Object L1: t1 0.2/0.0, t2 0.6/0.0 (uniform n50: 0.18/0.00, 0.48/0.00) — no change.
+VERDICT: schedule alone is outcome-neutral at n=5 on dev cells. Consistent with the deeper
+diagnosis: dev-cell failures are corridor/exemption-semantics problems (obstacle at grasp or
+destination), not repair-timing problems. Schedule stays as a flag (no harm, higher activation);
+decision deferred to composed-system n=20. Next levers: A3 best-of-K (CAR) + corridor/destination
+exemption (TSR — now REQUIRED for Long L1 too, where the blocked entity is the DESTINATION).
