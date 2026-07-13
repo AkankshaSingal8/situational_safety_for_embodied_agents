@@ -177,6 +177,28 @@ def _candidate_score(candidate, eef_pos, phase_target, args):
     endpoint = np.asarray(eef_pos, dtype=np.float64) + np.sum(
         actions[:, :3] * args.controller_scale, axis=0
     )
+
+
+def _infer_diverse_candidates(client, element, count):
+    """Sample a mixture of policy intent and safety-envelope experts."""
+    candidates = []
+    base = dict(element)
+    base_guidance = dict(element.get("guidance", {}))
+    base_radius = float(base_guidance.get("obstacle_radius", DEFAULT_OBSTACLE_RADIUS))
+    modes = (
+        {"enabled": 0.0},                         # nominal policy intent
+        {"enabled": 1.0, "companion_scale": 0.0},  # EEF-only maneuverability
+        {"enabled": 1.0, "companion_scale": 1.0},  # full system geometry
+        {"enabled": 1.0, "companion_scale": 1.0, "obstacle_radius": 0.85 * base_radius},
+        {"enabled": 1.0, "companion_scale": 1.0, "obstacle_radius": 1.15 * base_radius},
+    )
+    for index in range(count):
+        request = dict(base)
+        guidance = dict(base_guidance)
+        guidance.update(modes[index % len(modes)])
+        request["guidance"] = guidance
+        candidates.append(client.infer(request))
+    return candidates
     progress = float(np.linalg.norm(np.asarray(eef_pos) - phase_target)) - float(
         np.linalg.norm(endpoint - phase_target)
     )
@@ -189,18 +211,18 @@ def _candidate_score(candidate, eef_pos, phase_target, args):
 
 def _oracle_counterfactual_score(
     env, candidate, snapshot, snapshot_timestep, obstacle_name,
-    manipulated_name, phase_target, current_target_distance, oracle_horizon,
+    initial_obstacle_pos, manipulated_name, phase_target,
+    current_target_distance, oracle_horizon,
 ):
     """Score a short candidate with an exact simulator fork (GT upper bound)."""
     branch_obs = env.regenerate_obs_from_state(snapshot)
     env.env.timestep = snapshot_timestep
-    branch_obstacle_start = np.asarray(branch_obs[f"{obstacle_name}_pos"]).copy()
     collided = False
     done = False
     for action in np.asarray(candidate["actions"][:oracle_horizon]):
         branch_obs, _, done, _ = env.step(action.tolist())
         displacement = np.sum(np.abs(
-            np.asarray(branch_obs[f"{obstacle_name}_pos"]) - branch_obstacle_start
+            np.asarray(branch_obs[f"{obstacle_name}_pos"]) - initial_obstacle_pos
         ))
         collided = collided or displacement > 0.001
         if done:
@@ -378,7 +400,11 @@ def run_eval(args):
                                 "companion_scale": companion_scale,
                             }
                         if args.steering_mode in ("best_of_k", "semantic_best_of_k", "oracle_counterfactual"):
-                            candidates = [client.infer(element) for _ in range(args.num_candidates)]
+                            candidates = (
+                                _infer_diverse_candidates(client, element, args.num_candidates)
+                                if args.steering_mode == "oracle_counterfactual"
+                                else [client.infer(element) for _ in range(args.num_candidates)]
+                            )
                             if args.steering_mode == "oracle_counterfactual" and obstacle_name is not None:
                                 snapshot = env.get_sim_state().copy()
                                 snapshot_timestep = env.env.timestep
@@ -401,7 +427,8 @@ def run_eval(args):
                                     scores = [
                                         _oracle_counterfactual_score(
                                             env, candidate, snapshot, snapshot_timestep,
-                                            obstacle_name, manipulated_name, phase_target,
+                                            obstacle_name, initial_obstacle_pos,
+                                            manipulated_name, phase_target,
                                             current_target_distance, args.oracle_horizon,
                                         )
                                         for candidate in candidates

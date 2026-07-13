@@ -4,6 +4,7 @@ import numpy as np
 
 from run_guided_safelibero_pi05_eval import (
     _candidate_score,
+    _infer_diverse_candidates,
     _resolve_semantic_context,
     _semantic_phase,
 )
@@ -54,3 +55,23 @@ def test_candidate_score_rewards_safe_task_progress():
     eef = np.array([0.0, 0.0, 0.0])
     target = np.array([0.2, 0.0, 0.0])
     assert _candidate_score(toward, eef, target, args) > _candidate_score(away, eef, target, args)
+
+
+def test_diverse_candidates_include_nominal_and_geometry_modes():
+    class Client:
+        def __init__(self):
+            self.requests = []
+
+        def infer(self, request):
+            self.requests.append(request)
+            return {"actions": np.zeros((5, 7)), "guidance": request["guidance"]}
+
+    client = Client()
+    element = {"guidance": {"enabled": 1.0, "companion_scale": 1.0, "obstacle_radius": 0.1}}
+    _infer_diverse_candidates(client, element, 5)
+    guidance = [request["guidance"] for request in client.requests]
+    assert guidance[0]["enabled"] == 0.0
+    assert guidance[1]["companion_scale"] == 0.0
+    assert guidance[2]["companion_scale"] == 1.0
+    assert guidance[3]["obstacle_radius"] < 0.1
+    assert guidance[4]["obstacle_radius"] > 0.1
