@@ -26,6 +26,7 @@ CLEARANCE_WEIGHT=${CLEARANCE_WEIGHT:-1.0}
 CORRECTION_PENALTY=${CORRECTION_PENALTY:-0.02}
 ADAPTIVE_DISTANCE=${ADAPTIVE_DISTANCE:-0.20}
 ORACLE_HORIZON=${ORACLE_HORIZON:-2}
+ORACLE_DEPTH=${ORACLE_DEPTH:-1}
 TASK_INDICES=${TASK_INDICES:-}
 LEVELS=${LEVELS:-"I II"}
 OUT="$WT/viability_tournament/${MODE}_scale-${TRANSLATION_SCALE}_k${K}_p${PROGRESS_WEIGHT}_c${CLEARANCE_WEIGHT}_a${ADAPTIVE_DISTANCE}"
@@ -65,6 +66,7 @@ for LEVEL in $LEVELS; do
     --progress_weight "$PROGRESS_WEIGHT" --clearance_weight "$CLEARANCE_WEIGHT" \
     --correction_penalty "$CORRECTION_PENALTY" --adaptive_distance "$ADAPTIVE_DISTANCE" \
     --oracle_horizon "$ORACLE_HORIZON" \
+    --oracle_depth "$ORACLE_DEPTH" \
     "${TASK_ARGS[@]}" \
     --results_output_dir "$OUT/results"
 done

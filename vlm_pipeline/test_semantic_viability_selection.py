@@ -1,11 +1,13 @@
 from types import SimpleNamespace
 
 import numpy as np
+import run_guided_safelibero_pi05_eval as evaluator
 
 from run_guided_safelibero_pi05_eval import (
     _candidate_score,
     _infer_diverse_candidates,
     _inject_topology_experts,
+    _oracle_depth2_scores,
     _resolve_semantic_context,
     _segment_distance_2d,
     _semantic_phase,
@@ -82,6 +84,24 @@ def test_diverse_candidates_include_nominal_and_geometry_modes():
     assert guidance[2]["companion_scale"] == 1.0
     assert guidance[3]["obstacle_radius"] < 0.1
     assert guidance[4]["obstacle_radius"] > 0.1
+
+
+def test_depth2_scores_first_repairs_by_best_continuation(monkeypatch):
+    candidates = [
+        {"actions": np.ones((5, 7)), "expert": "one"},
+        {"actions": 2.0 * np.ones((5, 7)), "expert": "two"},
+    ]
+
+    def score_composed(_env, candidate, *_args):
+        return float(np.sum(candidate["actions"][:, 0]))
+
+    monkeypatch.setattr(evaluator, "_oracle_counterfactual_score", score_composed)
+    scores, continuations = _oracle_depth2_scores(
+        None, candidates, None, 0, "obstacle", np.zeros(3),
+        None, None, 0.0, 5,
+    )
+    assert scores == [15.0, 20.0]
+    assert continuations == ["two", "two"]
 
 
 def test_transport_phase_injects_opposite_side_tangent_experts():

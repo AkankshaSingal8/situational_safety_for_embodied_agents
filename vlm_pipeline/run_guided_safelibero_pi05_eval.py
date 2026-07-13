@@ -100,6 +100,7 @@ def parse_args():
     parser.add_argument("--clearance_weight", type=float, default=1.0)
     parser.add_argument("--controller_scale", type=float, default=0.00523)
     parser.add_argument("--oracle_horizon", type=int, default=2)
+    parser.add_argument("--oracle_depth", type=int, choices=[1, 2], default=1)
     return parser.parse_args()
 
 
@@ -370,6 +371,49 @@ def _oracle_counterfactual_score(
     )
 
 
+def _oracle_depth2_scores(
+    env, candidates, snapshot, snapshot_timestep, obstacle_name,
+    initial_obstacle_pos, manipulated_name, phase_target,
+    current_target_distance, stage_horizon,
+):
+    """Score first-stage repairs by their best distinct safe continuation.
+
+    Candidate actions are composed as a small repair lattice. This tests the
+    receding-horizon viability property missing from an open-loop rollout: a
+    repair is valuable only if it leaves at least one safe next repair.
+    """
+    first_scores = []
+    best_continuations = []
+    for first in candidates:
+        continuation_scores = []
+        for second in candidates:
+            composed = copy.deepcopy(first)
+            composed["actions"] = np.concatenate((
+                np.asarray(first["actions"][:stage_horizon]),
+                np.asarray(second["actions"][:stage_horizon]),
+            ))
+            first_guidance = first.get("guidance", {})
+            second_guidance = second.get("guidance", {})
+            composed["guidance"] = dict(first_guidance)
+            composed["guidance"]["correction_norm"] = (
+                float(first_guidance.get("correction_norm", 0.0))
+                + float(second_guidance.get("correction_norm", 0.0))
+            )
+            composed["topology_required"] = bool(
+                first.get("topology_required", False)
+                or second.get("topology_required", False)
+            )
+            continuation_scores.append(_oracle_counterfactual_score(
+                env, composed, snapshot, snapshot_timestep,
+                obstacle_name, initial_obstacle_pos, manipulated_name,
+                phase_target, current_target_distance, 2 * stage_horizon,
+            ))
+        best_index = int(np.argmax(continuation_scores))
+        first_scores.append(continuation_scores[best_index])
+        best_continuations.append(candidates[best_index].get("expert", "unlabeled"))
+    return first_scores, best_continuations
+
+
 def _get_libero_env(task, resolution, seed):
     task_description = task.language
     task_bddl_file = (
@@ -549,15 +593,24 @@ def run_eval(args):
                                     float(np.linalg.norm(np.asarray(obs["robot0_eef_pos"]) - phase_target))
                                     if phase_target is not None else 0.0
                                 )
-                                scores = [
-                                    _oracle_counterfactual_score(
-                                        env, candidate, snapshot, snapshot_timestep,
+                                if args.oracle_depth == 2:
+                                    scores, continuations = _oracle_depth2_scores(
+                                        env, candidates, snapshot, snapshot_timestep,
                                         obstacle_name, initial_obstacle_pos,
                                         manipulated_name, phase_target,
                                         current_target_distance, args.oracle_horizon,
                                     )
-                                    for candidate in candidates
-                                ]
+                                else:
+                                    scores = [
+                                        _oracle_counterfactual_score(
+                                            env, candidate, snapshot, snapshot_timestep,
+                                            obstacle_name, initial_obstacle_pos,
+                                            manipulated_name, phase_target,
+                                            current_target_distance, args.oracle_horizon,
+                                        )
+                                        for candidate in candidates
+                                    ]
+                                    continuations = ["n/a"] * len(candidates)
                                 selected_index = int(np.argmax(scores))
                                 result = candidates[selected_index]
                                 selected_expert = result.get("expert", "unlabeled")
@@ -568,11 +621,12 @@ def run_eval(args):
                                 ):
                                     topology_side = selected_expert
                                 logging.info(
-                                    "  oracle phase=%s experts=%s scores=%s selected=%s",
+                                    "  oracle phase=%s experts=%s scores=%s selected=%s continuation=%s",
                                     phase if manipulated_name is not None else "unknown",
                                     [c.get("expert", "unlabeled") for c in candidates],
                                     [round(score, 4) for score in scores],
                                     selected_expert,
+                                    continuations[selected_index],
                                 )
                                 # Counterfactual rollouts must be observationally invisible.
                                 obs = env.regenerate_obs_from_state(snapshot)
