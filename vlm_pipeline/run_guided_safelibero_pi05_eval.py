@@ -293,9 +293,19 @@ def _inject_topology_experts(
     retreat["expert"] = "radial_retreat"
     retreat["topology_required"] = topology_required and not preferred_route_cleared
 
+    lifted_retreat = copy.deepcopy(retreat)
+    lifted_actions = np.asarray(lifted_retreat["actions"]).copy()
+    if phase == "transport":
+        lifted_actions[:REPLAN_STEPS, 2] = np.maximum(
+            lifted_actions[:REPLAN_STEPS, 2], 0.60
+        )
+    lifted_retreat["actions"] = lifted_actions
+    lifted_retreat["expert"] = "radial_lift_retreat"
+
     result = list(candidates)
     result[-2:] = detours
     result.append(retreat)
+    result.append(lifted_retreat)
     return result
 
 
