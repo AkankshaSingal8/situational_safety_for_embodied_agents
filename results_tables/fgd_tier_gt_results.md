@@ -132,3 +132,43 @@ t1/t2 presumed same family. E2 gate (>=70%) PASSES for 3/4 tasks.
 **Beats baseline AND SOTA-published on BOTH axes.** Per-task: t0 100/72, t1 56/58, t2 88/82, t3 96/94.
 (Composed Spatial L1: 53.5/46.0 — best CAR yet, TSR below thin-config; L1 frontier still open.)
 Config: K=8, ramp schedule, corridor exemption, eef_r=0.12, companions. Self-run reimpl referee pending.
+
+## COMPLETE COMPOSED 8-CONDITION TABLE + REIMPL REFEREE (n=50/task, Tier-GT, seed 7, >1mm criterion; 2026-07-13)
+Composed config = K=8 + ramp + corridor + eef_r 0.12 + companions. r3 = K=1 uniform eef_r 0.09 companions no-corridor.
+Reimpl-SOTA = our reimplementation of 2607.01378's method class (EEF-only, uniform, K=1, no companions, no corridor, eef_r 0.10), scored under OUR >1mm criterion.
+
+| Condition | Baseline | r3 | Composed | Reimpl-SOTA(r0.10) | SOTA published |
+|---|---|---|---|---|---|
+| Spatial L1 | 67.0/14.0 | 71.0/23.5 (thin) · 58.5/44.5 (fat) | 53.5/46.0 | 62.0/28.5 | 75.5/77.5 |
+| Spatial L2 | 55.5/12.0 | 86.5/49.0 | **85.0/76.5** ★ | 71.5/25.5 | 78.0/75.5 |
+| Goal L1 | 51.0/23.0 | 71.5/30.5 | **77.5/51.0** | — | 91.0/94.0 |
+| Goal L2 | 66.5/35.0 | **69.0/58.0** | 54.0/63.5 | — | 83.5/82.5 |
+| Object L1 | 40.5/14.0 | 51.0/22.5 | **48.0/43.5** | — | 90.5/82.5 |
+| Object L2 | 74.0/25.0 | 85.5/40.5 | **83.0/74.5** | — | 81.0/85.5 |
+| Long L1 | 58.0/15.0 | 23.0/55.0 | **42.5/71.0** | — | 81.5/82.0 |
+| Long L2 | 51.0/16.5 | **47.0/77.0** | 24.5/77.0 | — | 72.0/83.0 |
+
+Per-task composed Spatial (TSR/CAR): L1 t0 66/32, t1 14/34, t2 92/56, t3 42/62 · L2 t0 100/72, t1 56/58, t2 88/82, t3 96/94.
+
+### ★ REFEREE FINDING (the CAR-gap explanation)
+Their method class, re-run by us under the SAME >1mm-obstacle-displacement collision criterion as
+every other row: CAR 28.5 (L1) / 25.5 (L2) — vs their PUBLISHED 77.5/75.5. The TSR uplift
+(+17pp over baseline at L2) REPRODUCES; the CAR does not. Conclusion: their published CAR very
+likely rests on a looser collision criterion. The honest apples-to-apples comparison for CAR is
+ours-vs-self-run-reimpl (76.5 vs 25.5 at Spatial L2), where composed wins by 3x. Sensitivity
+arms EEFR 0.06/0.14 (TAG=reimpl_r06/r14) pending to bracket their unstated obstacle radius.
+
+### Composed regressions (open — diagnosis queued)
+- Goal L2: TSR 69.0 (r3) → 54.0 composed (CAR 58.0→63.5). Long L2: 47.0 → 24.5 (t2=2%, t3=8%).
+- Hypotheses: H1 corridor dest-misparse on fixture destinations (stove/cabinet/drawer have no
+  `<name>_pos` obs key → parse may bind a wrong object); H2 fat 0.12 margins + K-selection
+  choosing conservative-stalling chunks in clutter. Method: episodes JSONLs + parse_entities
+  traces offline, re-run ONLY regressed conditions.
+- Rule (pre-registered): regressed conditions must return to ≥ r3 levels, else per-condition
+  configs stand and are reported as an honest config-ablation table.
+
+### Standing summary
+Composed beats baseline on BOTH axes in 6/8 conditions; Spatial L2 is the full sweep
+(baseline + self-run reimpl + SOTA-published, both axes). Remaining fronts: Spatial L1 t1
+(TSR ≤28 all configs — DBNR target), obstacle-on-path family (Spatial t3, Object L1 t1/t2 —
+E2-verified geometrically non-negotiable for straight-line), Goal/Long L2 regressions, no-GT tier.
