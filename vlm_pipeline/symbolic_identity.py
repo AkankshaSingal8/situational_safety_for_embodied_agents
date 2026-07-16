@@ -111,6 +111,9 @@ def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5,
     for k in obs:
         if not k.endswith("_pos") or k.startswith("robot0"):
             continue
+        # relative-pose observables ('X_to_robot0_eef_pos') are NOT objects
+        if "_to_" in k:
+            continue
         p = np.asarray(obs[k])
         if p.shape != (3,):
             continue
