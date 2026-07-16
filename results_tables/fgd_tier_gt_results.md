@@ -382,6 +382,20 @@ both significant TSR LOSSES, the cc3f766 fix targets), and it significantly RAIS
 on Long L1. The regression fix, if confirmed at n=20/n=50, makes composed strictly
 dominant or neutral everywhere vs r3.
 
+## ★ E3 GEOMETRY-SWAP SMOKE — first Tier-Percep(geometry) rows (job 42239625, n=5/task)
+Composed config unchanged; ONLY the obstacle position swapped from sim state to runtime
+RGB-D back-projection (agentview, z−0.03; identity still GT). 40/40 episodes estimated
+(zero GT fallbacks), localization err median 5.7 cm, max 9.2 cm.
+
+| Condition | Tier-GT composed (n=50) | Tier-Percep-geom (n=5) |
+|---|---|---|
+| Spatial L1 | 53.5 / 46.0 | 50 / 50 |
+| Spatial L2 | 85.0 / 76.5 | **85 / 70** |
+
+Reading: the geometry leg of the no-GT tier is ≈FREE at Spatial L2 — TSR identical, CAR
+−6.5 within n=5 noise. Promotion to n=20 submitted (job 42239799). Remaining no-GT legs:
+identity (symbolic grounder reuse) and non-spatial suites.
+
 ## NO-GT TIER GROUNDWORK — RGB-D localization floor (2026-07-16, offline)
 Tool: `vlm_pipeline/validate_depth_backprojection.py` on the 40 saved
 vlm_inputs/safelibero_spatial episodes (GT seg region as detector stand-in, so this is
