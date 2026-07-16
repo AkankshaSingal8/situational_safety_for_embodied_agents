@@ -407,6 +407,18 @@ Reading: the geometry leg of the no-GT tier is ≈FREE at Spatial L2 — TSR ide
 −6.5 within n=5 noise. Promotion to n=20 submitted (job 42239799). Remaining no-GT legs:
 identity (symbolic grounder reuse) and non-spatial suites.
 
+### ★ FULL NO-GT ARM SMOKE (job 42240496, n=5/task): identity+geometry BOTH swapped
+Symbolic identity (40/40 correct) + percep positions, composed config, Spatial:
+
+| Condition | Tier-GT composed (n=50) | FULL no-GT (n=5) |
+|---|---|---|
+| Spatial L1 | 53.5 / 46.0 | 50 / 50 |
+| Spatial L2 | 85.0 / 76.5 | **85 / 70** |
+
+The complete no-GT stack costs ≈nothing on Spatial — identical to the geometry-only
+swap because identity is perfect there. The acceptance bar's second tier is REAL on
+Spatial; other suites gated on identity v3 (hazard-prior scoring).
+
 ### Identity generalization smoke v1 (job 42240503, live-sim, 3 eps × 4 tasks/suite)
 Symbolic grounder beyond Spatial: **Spatial 12/12, Goal 5/12, Object 0/12, Long 3/12.**
 Failure modes: (a) MECHANICAL — relative-pose obs keys (`X_to_robot0_eef_pos`) polluted
