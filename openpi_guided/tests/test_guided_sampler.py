@@ -23,7 +23,7 @@ Q99 = np.full(3, 1.0, dtype=np.float32)
 
 
 def make_params(eef, obstacle, r_eff=0.12, enabled=1.0, target=None, dest=None,
-                corridor_radius=0.07, corridor_relax=0.6, dbnr_beta0=0.0):
+                corridor_radius=0.07, corridor_relax=0.6, dbnr_beta0=0.0, hdc_scale=0.0):
     return GuidanceParams(
         enabled=jnp.float32(enabled),
         eef_pos=jnp.asarray(np.asarray(eef, dtype=np.float32)),
@@ -42,6 +42,7 @@ def make_params(eef, obstacle, r_eff=0.12, enabled=1.0, target=None, dest=None,
         corridor_relax=jnp.float32(corridor_relax),
         companion_scale=jnp.float32(1.0),
         dbnr_beta0=jnp.float32(dbnr_beta0),
+        hdc_scale=jnp.float32(hdc_scale),
     )
 
 
@@ -244,3 +245,25 @@ def test_far_target_disables_corridor():
     _, d_ref = _dcbf_repair(x, p_ref, 9)
     np.testing.assert_allclose(float(d_far["correction_norm"][0]),
                                float(d_ref["correction_norm"][0]), atol=1e-6)
+
+
+def test_hdc_bias_pattern_and_magnitude():
+    from openpi.models.pi0_guided import _hdc_bias
+
+    g = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.2, 0.0, 1.0], hdc_scale=0.01)
+    bias = np.asarray(_hdc_bias(g, 8))
+    assert bias.shape == (8, 3)
+    # pattern [none, left, right, none] x2: exactly 4 unbiased candidates
+    assert np.allclose(bias[[0, 3, 4, 7]], 0.0)
+    # left/right are opposite and nonzero
+    assert np.allclose(bias[1], -bias[2])
+    assert np.linalg.norm(bias[1]) > 0
+    # lateral: orthogonal to eef->obstacle in the metric displacement space
+    span = np.asarray(Q99) - np.asarray(Q01) + 1e-6
+    disp = bias[1] * span * SCALE / 2.0
+    assert abs(np.dot(disp, [1.0, 0.0, 0.0])) < 1e-8
+    assert np.isclose(np.linalg.norm(disp), 0.01)
+    # K=1 (and hdc_scale=0) are never biased
+    assert np.allclose(np.asarray(_hdc_bias(g, 1)), 0.0)
+    g0 = make_params(eef=[0.0, 0.0, 1.0], obstacle=[0.2, 0.0, 1.0], hdc_scale=0.0)
+    assert np.allclose(np.asarray(_hdc_bias(g0, 8)), 0.0)

@@ -76,6 +76,14 @@ class GuidanceParams(NamedTuple):
     # the nullspace projector is exactly I - dd^T with no other faces to
     # protect). 0 = off (default; matches every existing config/ablation row).
     dbnr_beta0: at.Float[at.Array, ""]
+    # HDC (Homotopy-Diverse Candidates, DBNR successor — see ledger 2026-07-16):
+    # bias a fixed subset of the K noise candidates with a lateral (left/right
+    # around the obstacle) per-step velocity bias during mid denoising steps,
+    # so executed-prefix acceptance can SELECT a different route homotopy on
+    # obstacle-on-path scenes instead of repairing inside the blocked one.
+    # Value = desired lateral displacement in meters PER ACTION STEP for the
+    # biased candidates (0 = off; K=1 requests are never biased).
+    hdc_scale: at.Float[at.Array, ""]
 
 
 def _corridor_scale(p: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
@@ -344,6 +352,27 @@ def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> 
     return {"feasible": feasible, "min_margin": min_margin, "disp_norm": disp_norm}
 
 
+def _hdc_bias(g: GuidanceParams, k_batch: int) -> jnp.ndarray:
+    """HDC per-candidate normalized-action bias, shape (K, 3).
+
+    Lateral unit vector around the obstacle in the table plane; candidate side
+    pattern [none, left, right, none] repeating, so K=8 keeps 4 unbiased
+    seeds (and K=1 is never biased). The returned delta, summed over the
+    denoising window's unit weight, equals `hdc_scale` meters of lateral
+    displacement per action step. The repair runs AFTER the bias each step,
+    so biased candidates stay margin-certified.
+    """
+    to_obs = g.obstacle_pos - g.eef_pos
+    lat = jnp.cross(to_obs, jnp.array([0.0, 0.0, 1.0]))
+    lat = lat / (jnp.linalg.norm(lat) + 1e-8)
+    sides = jnp.tile(jnp.array([0.0, 1.0, -1.0, 0.0]), (k_batch + 3) // 4)[:k_batch]
+    span3 = g.q99 - g.q01 + 1e-6
+    return (
+        2.0 * (sides[:, None] * lat[None, :]) * g.hdc_scale
+        / (span3[None, :] * g.translation_scale)
+    )
+
+
 def guided_sample_actions(
     self,
     rng: at.KeyArrayLike,
@@ -410,9 +439,13 @@ def guided_sample_actions(
         v_t = self.action_out_proj(suffix_out[:, -self.action_horizon :])
         return x_t + dt * v_t
 
+    hdc_norm_bias = _hdc_bias(guidance, k_batch)  # (K, 3)
+
     def body(k, carry):
         x_t, time, _ = carry
         x_t = euler_step(x_t, time)
+        w_hdc = jnp.where((k >= 2) & (k <= 5), 0.25, 0.0) * guidance.enabled
+        x_t = x_t.at[..., :3].add(w_hdc * hdc_norm_bias[:, None, :])
         x_t, diag = _dcbf_repair(x_t, guidance, k)
         return x_t, time + dt, diag
 
