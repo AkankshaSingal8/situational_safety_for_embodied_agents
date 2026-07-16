@@ -331,6 +331,19 @@ the GEOMETRY floor — detector errors add on top).
 - Multi-view fusion (agentview+backview mean): med 0.067, p90 0.152. Backview alone:
   med 0.081, p90 0.147, resolves 39/40. Fusion helps but the floor stays ≈ obstacle
   radius — both views share the body-origin/occlusion systematics.
+- RUNTIME smoke (job 42239326, `percep_obstacle.py` live-sim, Spatial t0/t1 ×3 eps):
+  agentview-only errors 0.045–0.084 m — BETTER than the offline floor (no orientation
+  ambiguity at runtime), with a consistent +0.03–0.05 z bias (elevated camera sees the
+  top surface). One calibrated z-offset ⇒ expected ~0.02–0.05 m. Birdview fusion HURTS
+  (top-down z bias) — use agentview-only + z-correction for Phase 5 v1.
+- REUSE (from `.worktrees/fol-safety-filter/fol_grounding_accuracy/`): the FOL campaign
+  already measured the identity leg — direct VLM obstacle identification is 0–10%
+  accurate (Qwen2.5-VL 3B and 7B-4bit, 3 prompt variants, 21 scenes), while the v17
+  SYMBOLIC grounder (`fol_safety_filter/vlm_grounder.py: symbolic_obstacle_id`) got
+  21/21; its visual-triangulated positions (`runtime_ground4_3b.json`) land at
+  2.7–16.3 cm error (xy 0.8–16.2) — consistent with our back-projection floor. Phase 5
+  identity therefore reuses the symbolic grounder, NOT holistic VLM prompting; E1's
+  identity baseline row (direct-VLM ≈0%) is already measured.
 - Design consequence (pre-registered for Phase 5): the no-GT tier needs (a) multi-view
   fusion (backview + eye_in_hand are already captured), and/or (b) support-height priors,
   and/or (c) margin inflation by the calibrated localization quantile (conformal:
