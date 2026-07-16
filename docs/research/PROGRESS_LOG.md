@@ -204,3 +204,28 @@ smoke/reimpl-sweep jobs were in flight, since the kill-test greenlit it and it's
   same coarse heuristic as the corridor module and inherits its failure modes (e.g. no notion of
   gripper phase — restoring "toward destination" motion during a regrasp/retreat could be wrong,
   per the spec's own failure-mode list).
+
+## 2026-07-15/16 — Tier-GT closeout + no-GT tier stand-up (single marathon session)
+- Reimpl radius sweep (r06/r14) closed the referee question: no r reproduces SOTA-published
+  (TSR,CAR) on both levels under our >1mm criterion. Ledger has the full table.
+- Statistics tooling (`stats_tests.py`): Spatial L2 four-number win significant on every
+  component (CAR vs baseline p=2.8e-41; paired vs reimpl p=1.0e-29). Full 8-condition
+  paired McNemar: composed's only significant TSR losses are exactly the two known-bug
+  conditions; collision reductions significant in 5/8 at zero TSR cost.
+- Pre-registered rule APPLIED after fix n=20 arbiter: per-condition best-config table
+  stands (composed ×5, r3 ×3). Tier-GT is closed. 6/8 both-axes wins vs baseline.
+- Mechanism verdicts (all pre-registered): DBNR KILLED (τ≈0 at every β — repairs remove
+  no task velocity; stalls are homotopy-structural). HDC v1 KILLED (lateral candidate
+  bias gives no dev-cell lift — no cross-chunk route commitment). TECV RETIRED without
+  build (no strength-shaped failure mode remains).
+- Epistemic signals VALIDATED: K-dispersion/margin-spread predict near-obstacle stall
+  AUC 0.88–0.91 (Spatial); suite-dependent (0.6–0.67 Goal/Long). Telemetry now in every run.
+- ROCS v1 mechanism implemented + tested (release parse, forbidden-release, delay clamp);
+  gripper convention verified (+1 close / −1 open, passthrough).
+- No-GT tier: runtime RGB-D localization 4.5–8.4 cm (agentview, z−0.03); E3 geometry-swap
+  smoke ≈ FREE at Spatial L2 (85/70 vs 85.0/76.5); symbolic identity vendored (39/39
+  spatial offline; 12/12 live) but generalization gap found (Object 0/12 — needs
+  hazard-class property prior); client has --obstacle_id_source/--obstacle_pos_source
+  with GT-anchored scoring.
+- LIBERO-Safety: cloned, assets+pi0.5-safety weights downloaded (22 GB), config yaml
+  written, end-to-end smoke script ready (recon + baseline rollout).
