@@ -127,7 +127,17 @@ class GuidedPolicy(_policy.Policy):
 
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]
         obs = dict(obs)
+        payload = obs.get("guidance", None)
         guidance = self._make_params(obs.pop("guidance", None))
+        # ROCS release barrier (semantic-outcome steering, LIBERO-Safety):
+        # active only when the client supplies a forbidden release region.
+        rocs_center = None
+        rocs_radius = 0.0
+        rocs_eef = None
+        if isinstance(payload, dict) and "forbidden_center" in payload:
+            rocs_center = np.asarray(payload["forbidden_center"], dtype=np.float32)
+            rocs_radius = float(payload.get("forbidden_radius", 0.10))
+            rocs_eef = np.asarray(payload.get("eef_pos", np.zeros(3)), dtype=np.float32)
 
         inputs = jax.tree.map(lambda x: x, obs)
         inputs = self._input_transform(inputs)
@@ -152,6 +162,18 @@ class GuidedPolicy(_policy.Policy):
         outputs = self._output_transform(outputs)
         outputs["policy_timing"] = {"infer_ms": model_time * 1000}
         outputs["guidance"] = {k: float(np.asarray(v)[0]) for k, v in diag.items()}
+        if rocs_center is not None and rocs_radius > 0.0:
+            from openpi.models import rocs as _rocs
+
+            chunk = jnp.asarray(outputs["actions"], dtype=jnp.float32)[None, ...]
+            chunk_new, rdiag = _rocs.delay_release(
+                chunk, jnp.asarray(rocs_eef), self._config.translation_scale,
+                jnp.asarray(rocs_center), jnp.float32(rocs_radius), jnp.float32(1.0),
+            )
+            outputs["actions"] = np.asarray(chunk_new[0])
+            outputs["guidance"].update(
+                {k: float(np.asarray(v)[0]) for k, v in rdiag.items()}
+            )
         return outputs
 
 
