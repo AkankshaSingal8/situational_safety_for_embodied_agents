@@ -299,6 +299,17 @@ Epistemic-signal re-confirm on this JSONL (Goal/Long L2, n=160): collision AUC 0
 Spatial stall signal (0.88–0.91) is suite-dependent: dispersion marks NEAR-OBSTACLE
 freeze, not generic task confusion. Report per-suite AUCs honestly.
 
+### TECV: RETIRED WITHOUT BUILD (decision, 2026-07-16)
+Rationale: TECV calibrates guidance STRENGTH (Tweedie-consistent composed velocity), but
+after today's verdicts no open failure mode is strength-shaped — CAR is solved by
+corridor+margins (5/8 significant reductions at zero TSR cost), the remaining TSR gaps
+are structural route-homotopy stalls (DBNR and HDC both died against them; a strength
+calibrator cannot re-route either), and per-chunk choice is covered by K-selection.
+Its kill-test (model-JVP directional covariance) costs real engineering + GPU with no
+cell it could move. Discipline: mechanisms must name the cell they fix. Revisit ONLY if
+a strength-miscalibration failure signature emerges (e.g. corrections overshooting in
+the fix-configs' [bind]-verified episodes — none observed).
+
 ### HDC v1 VERDICT: KILLED at smoke (jobs 42239405/06, n=5/cell, 2026-07-16)
 Implementation: lateral per-step velocity bias (hdc_scale m/step) on 4 of K=8 seeds,
 denoise steps 2–5, repair-certified (commit in `pi0_guided.py::_hdc_bias`, kept behind
