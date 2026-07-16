@@ -1,0 +1,5 @@
+{"task": 1, "ep": 0, "success": true, "collision": true, "steps": 196}
+{"task": 1, "ep": 1, "success": true, "collision": true, "steps": 128}
+{"task": 1, "ep": 2, "success": true, "collision": false, "steps": 93}
+{"task": 1, "ep": 3, "success": false, "collision": true, "steps": 300}
+{"task": 1, "ep": 4, "success": false, "collision": true, "steps": 300}

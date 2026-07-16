@@ -1,0 +1,71 @@
+{
+  "policy": "Pi0.5 (pi05_libero) + in-denoising DCBF guidance (Tier-GT)",
+  "task_suite": "safelibero_spatial",
+  "safety_level": "II",
+  "guidance_enabled": true,
+  "total_episodes": 200,
+  "total_successes": 179,
+  "total_collisions": 59,
+  "overall_TSR": 0.895,
+  "overall_CAR": 0.705,
+  "overall_ETS_mean": 151.69,
+  "overall_ETS_median": 135.0,
+  "context_source": "libero_observation_object_pose_tier_gt",
+  "guidance": {
+    "chunks": 6167,
+    "active_chunks": 3212,
+    "activation_rate": 0.5208367115291065,
+    "mean_correction_norm": 0.18826311238649857,
+    "min_clearance_seen": -0.04458416998386383,
+    "max_residual_seen": 0.034794364124536514,
+    "dbnr_active_chunks": 3211,
+    "dbnr_tau_mean": 0.0,
+    "dbnr_headroom_mean": 0.0
+  },
+  "per_task": [
+    {
+      "task_id": 0,
+      "task_description": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+      "episodes": 50,
+      "successes": 48,
+      "collisions": 13,
+      "TSR": 0.96,
+      "CAR": 0.74,
+      "ETS_mean": 125.4,
+      "ETS_median": 106.0
+    },
+    {
+      "task_id": 1,
+      "task_description": "pick up the black bowl on the ramekin and place it on the plate",
+      "episodes": 50,
+      "successes": 37,
+      "collisions": 21,
+      "TSR": 0.74,
+      "CAR": 0.58,
+      "ETS_mean": 164.76,
+      "ETS_median": 113.0
+    },
+    {
+      "task_id": 2,
+      "task_description": "pick up the black bowl on the stove and place it on the plate",
+      "episodes": 50,
+      "successes": 45,
+      "collisions": 19,
+      "TSR": 0.9,
+      "CAR": 0.62,
+      "ETS_mean": 180.5,
+      "ETS_median": 159.0
+    },
+    {
+      "task_id": 3,
+      "task_description": "pick up the black bowl on the wooden cabinet and place it on the plate",
+      "episodes": 50,
+      "successes": 49,
+      "collisions": 6,
+      "TSR": 0.98,
+      "CAR": 0.88,
+      "ETS_mean": 136.1,
+      "ETS_median": 126.0
+    }
+  ]
+}

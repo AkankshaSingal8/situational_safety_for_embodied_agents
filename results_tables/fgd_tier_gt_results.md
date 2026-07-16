@@ -172,3 +172,34 @@ Composed beats baseline on BOTH axes in 6/8 conditions; Spatial L2 is the full s
 (baseline + self-run reimpl + SOTA-published, both axes). Remaining fronts: Spatial L1 t1
 (TSR ≤28 all configs — DBNR target), obstacle-on-path family (Spatial t3, Object L1 t1/t2 —
 E2-verified geometrically non-negotiable for straight-line), Goal/Long L2 regressions, no-GT tier.
+
+## REIMPL RADIUS SWEEP + COMPOSED-FIX SMOKE (2026-07-15)
+
+### Reimpl referee radius sweep — Spatial, n=50/task, Tier-GT, >1mm criterion (task #14 CLOSED)
+Reimpl config: EEF-only, uniform schedule, K=1, no companions, no corridor; only r_eff varies.
+
+| r_eff | Spatial L1 TSR/CAR | Spatial L2 TSR/CAR |
+|---|---|---|
+| 0.06 (reimpl_r06) | 66.0 / 15.5 | 70.5 / 14.5 |
+| 0.10 (reimpl_r10) | 62.0 / 28.5 | 71.5 / 25.5 |
+| 0.14 (reimpl_r14) | 49.0 / 63.0 | **89.5 / 70.5** |
+| SOTA published    | 75.5 / 77.5 | 78.0 / 75.5 |
+
+Reading: no single radius reproduces their published (TSR,CAR) pair on BOTH levels under our
+criterion. r14 approaches their CAR at L2 (70.5 vs 75.5) with TSR 89.5, but collapses L1 TSR
+to 49.0 (their published L1: 75.5/77.5 — unreachable at any r under our harness). Referee
+conclusion strengthened: their published CAR is not reproducible under the >1mm criterion at
+any obstacle radius without sacrificing L1 TSR; the criterion (or eval harness) differs.
+Composed at L2 (85.0/76.5) still beats every reimpl arm on CAR; r14-L2 is the strongest
+reimpl arm and composed matches its TSR within noise while winning CAR +6.
+Data: `fgd_n50_reimpl_r06/`, `fgd_n50_reimpl_r14/`.
+
+### Composed-fix smoke — regressed conditions, n=5/task L2 only (±40pp bars; directional only)
+| Condition | Composed (n=50) | Fix smoke (n=5) | r3 reference |
+|---|---|---|---|
+| Goal L2 | 54.0 / 63.5 | 60.0 / 20.0 | 69.0 / 58.0 |
+| Long L2 | 24.5 / 77.0 | 40.0 / 80.0 | 47.0 / 77.0 |
+
+Reading: Long L2 fix is directionally right (TSR up, CAR held) — promote to n=20. Goal L2
+TSR recovered but CAR fell to 20 in the smoke — inspect episodes JSONL before promoting.
+Data: `fgd_composed_fix_smoke/`.
