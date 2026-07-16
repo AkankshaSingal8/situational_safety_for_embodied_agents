@@ -273,3 +273,23 @@ paired exact McNemar on (task, ep) for our own runs (shared seed 7 + official in
 Reading: the corridor-exempted composed config buys its CAR gain at ZERO statistically
 detectable TSR cost over r3 (p=0.70), and beats the reimplemented SOTA on both axes with
 paired significance. All four-number-win components are individually significant.
+
+Full paired McNemar, composed vs r3, all 8 conditions (n=200 pairs each; discordant
+counts comp-only/r3-only, exact p):
+
+| Condition | TSR discordants (p) | Collision discordants (p) |
+|---|---|---|
+| Spatial L1 | 12/22 (0.12) | 12/15 (0.70) |
+| Spatial L2 | 12/15 (0.70) | 4/59 (1.4e-13) ✓ |
+| Goal L1 | 33/21 (0.13) | 11/52 (1.7e-07) ✓ |
+| Goal L2 | 18/48 (2.9e-04) ✗TSR | 20/31 (0.16) |
+| Object L1 | 38/44 (0.58) | 0/42 (4.5e-13) ✓ |
+| Object L2 | 21/26 (0.56) | 7/75 (1.7e-15) ✓ |
+| Long L1 | 55/16 (3.8e-06) ✓TSR | 12/44 (2.1e-05) ✓ |
+| Long L2 | 8/53 (3.0e-09) ✗TSR | 24/24 (1.0) |
+
+Reading: composed delivers significant collision reductions in 5/8 conditions at zero
+significant TSR cost — EXCEPT precisely the two known-bug conditions (Goal L2, Long L2,
+both significant TSR LOSSES, the cc3f766 fix targets), and it significantly RAISES TSR
+on Long L1. The regression fix, if confirmed at n=20/n=50, makes composed strictly
+dominant or neutral everywhere vs r3.
