@@ -39,6 +39,12 @@ conda activate aegis
 export XLA_PYTHON_CLIENT_MEM_FRACTION=0.9
 export PYTHONPATH="$AEGIS/openpi/src:${PYTHONPATH:-}"
 
+# Kill any stale process on port 8000 left by a previous job on this node.
+# Without this, the new server gets EADDRINUSE but nc -z still sees the old
+# server — client connects to the zombie, which dies mid-run and corrupts results.
+fuser -k 8000/tcp 2>/dev/null || true
+sleep 2
+
 echo "Starting Pi0.5 server..."
 python "$AEGIS/openpi/scripts/serve_policy.py" \
     policy:checkpoint \

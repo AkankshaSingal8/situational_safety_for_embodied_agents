@@ -44,9 +44,10 @@ from eval_utils.policy_client import WebsocketClientPolicy  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
-# DreamZero server config (from test_client_AR.py and policy_server.py)
-DREAMZERO_IMG_H = 180
-DREAMZERO_IMG_W = 320
+# Libero model was trained on 128x128 images (metadata.json: agentview/eye_in_hand resolution).
+# VideoToTensor validates input at this resolution before Crop→Resize in the server pipeline.
+DREAMZERO_IMG_H = 128
+DREAMZERO_IMG_W = 128
 DREAMZERO_DEFAULT_PORT = 8000
 DREAMZERO_ACTION_OUT_DIM = 8  # 7 joints + 1 gripper
 LIBERO_ACTION_DIM = 7          # [dx, dy, dz, droll, dpitch, dyaw, gripper]
@@ -93,14 +94,15 @@ def _build_gripper_position(obs: dict) -> np.ndarray:
     return np.array(obs["robot0_gripper_qpos"][:1], dtype=np.float32)
 
 
-def _dreamzero_to_libero_action(action_8d: np.ndarray) -> np.ndarray:
-    """Map DreamZero (8,) action to LIBERO 7-DoF.
+def _dreamzero_to_libero_action(raw_action: np.ndarray) -> np.ndarray:
+    """Map DreamZero action to LIBERO 7-DoF.
 
-    DreamZero: [joint1..joint7, gripper] (8,)
-    LIBERO:    [dx, dy, dz, droll, dpitch, dyaw, gripper] (7,)
-    Zero-shot mapping: first 6 joint dims as EEF delta, action[7] as gripper.
+    Libero native (7,): [dx, dy, dz, droll, dpitch, dyaw, gripper] — use directly.
+    oxe_droid (8,): [joint1..7, gripper] — take first 6 + dim 7 as gripper.
     """
-    return np.concatenate([action_8d[:6], action_8d[7:8]]).astype(np.float32)
+    if raw_action.shape[0] == 7:
+        return raw_action.astype(np.float32)
+    return np.concatenate([raw_action[:6], raw_action[7:8]]).astype(np.float32)
 
 
 class DreamZeroClient:
@@ -184,6 +186,8 @@ class DreamZeroClient:
             "observation/joint_position":         _build_joint_position(obs),      # (7,)
             "observation/cartesian_position":     _build_cartesian_position(obs),  # (6,)
             "observation/gripper_position":       _build_gripper_position(obs),    # (1,)
+            # Full gripper qpos (2,) needed for libero state.gripper
+            "observation/gripper_qpos": np.array(obs["robot0_gripper_qpos"][:2], dtype=np.float32),
             "prompt":     self._language,
             "session_id": self._session_id,
         }

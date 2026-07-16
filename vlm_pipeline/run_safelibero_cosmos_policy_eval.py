@@ -58,11 +58,7 @@ from cosmos_policy.experiments.robot.cosmos_utils import (
 from cosmos_policy.experiments.robot.robot_utils import DATE_TIME
 from cosmos_policy.utils.utils import set_seed_everywhere
 
-from safelibero_utils import (
-    get_safelibero_env,
-    get_safelibero_image,
-    get_safelibero_wrist_image,
-)
+from safelibero_utils import get_safelibero_env
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -126,8 +122,8 @@ class EvalConfig:
     ar_future_prediction:          bool = False
     ar_value_prediction:           bool = False
     ar_qvalue_prediction:          bool = False
-    # NOTE: flip_images=False here because get_safelibero_image already rotates
-    # 180° to match training distribution; Cosmos flip would double-flip.
+    # NOTE: flip_images=False here because _cosmos_flip() in build_cosmos_obs already
+    # applies the correct vertical flip (np.flipud) for Cosmos training convention.
     flip_images:                   bool = False
     deterministic:                 bool = True
     deterministic_reset:           bool = False
@@ -165,7 +161,7 @@ class EvalConfig:
     num_steps_wait:      int = 20
     num_trials_per_task: int = 50
     initial_states_path: str = "DEFAULT"
-    env_img_res:         int = 1024
+    env_img_res:         int = 256
 
     # ── Output ─────────────────────────────────────────────────────────────────
     video_output_dir:   str = "cosmos_video"
@@ -213,15 +209,42 @@ def log_message(msg: str, log_file=None) -> None:
         log_file.flush()
 
 
+def _cosmos_flip(img: np.ndarray) -> np.ndarray:
+    """Apply Cosmos-correct image preprocessing: vertical flip only (np.flipud).
+
+    Cosmos Policy was trained with np.flipud (vertical flip only) to correct for
+    MuJoCo's upside-down rendering. get_safelibero_image() applies a 180° rotation
+    (img[::-1, ::-1]) which is correct for OpenVLA-OFT but introduces an extra
+    horizontal mirror for Cosmos, causing it to servo in the wrong direction.
+    """
+    return np.ascontiguousarray(img[::-1])
+
+
+def _validate_image(img: np.ndarray, name: str = "image") -> None:
+    """Raise ValueError if image looks corrupted (solid color or uniform noise)."""
+    if img is None or img.size == 0:
+        raise ValueError(f"Invalid {name}: empty or None")
+    if img.std() < 5.0:
+        raise ValueError(f"Invalid {name}: solid color (std={img.std():.2f})")
+    hist, _ = np.histogram(img.flatten(), bins=32, range=(0, 256))
+    threshold = img.size / 300
+    if hist.std() < threshold:
+        raise ValueError(f"Invalid {name}: uniform noise (hist_std={hist.std():.0f} < {threshold:.0f})")
+
+
 def build_cosmos_obs(obs, cfg: EvalConfig) -> dict:
     """Build the Cosmos Policy observation dict from a SafeLIBERO env observation.
 
-    get_safelibero_image / get_safelibero_wrist_image both rotate 180° already,
-    matching LIBERO training preprocessing. flip_images in cfg is kept False to
-    avoid a second flip inside get_action → prepare_images_for_model.
+    Cosmos was trained with np.flipud (vertical flip only), not the 180° rotation
+    that get_safelibero_image applies for OpenVLA-OFT. We apply the correct flip here
+    and do NOT call get_safelibero_image to avoid the extra horizontal mirror.
     """
-    primary_img = get_safelibero_image(obs, validate=True)
-    wrist_img = get_safelibero_wrist_image(obs, validate=True)
+    primary_raw = obs["agentview_image"]
+    wrist_raw = obs["robot0_eye_in_hand_image"]
+    _validate_image(primary_raw, "agentview_image")
+    _validate_image(wrist_raw, "wrist_image")
+    primary_img = _cosmos_flip(primary_raw)
+    wrist_img = _cosmos_flip(wrist_raw)
 
     # Order matches Cosmos Policy LIBERO training data construction (line 334 of
     # cosmos_policy/experiments/robot/libero/run_libero_eval.py):
@@ -242,11 +265,11 @@ def build_cosmos_obs(obs, cfg: EvalConfig) -> dict:
 def build_cosmos_obs_fallback(obs, last_primary, last_wrist, cfg: EvalConfig) -> dict:
     """Fallback for corrupted frames: reuse last valid images."""
     try:
-        primary_img = get_safelibero_image(obs, validate=False)
+        primary_img = _cosmos_flip(obs["agentview_image"])
     except Exception:
         primary_img = last_primary
     try:
-        wrist_img = get_safelibero_wrist_image(obs, validate=False)
+        wrist_img = _cosmos_flip(obs["robot0_eye_in_hand_image"])
     except Exception:
         wrist_img = last_wrist
 
@@ -315,6 +338,10 @@ def run_episode(
 
     try:
         while t < max_steps:
+            # Match original Cosmos eval: reset seed to 0 every step for fully deterministic diffusion sampling
+            if os.environ.get("DETERMINISTIC", "").lower() == "true":
+                set_seed_everywhere(0)
+
             # Build observation, with fallback for corrupted frames
             try:
                 cosmos_obs = build_cosmos_obs(obs, cfg)
@@ -430,6 +457,9 @@ def run_task(
 def eval_safelibero(cfg: EvalConfig) -> dict:
     """Evaluate Cosmos Policy on all tasks of a SafeLIBERO suite + safety level."""
     validate_config(cfg)
+    # Match original Cosmos eval: set DETERMINISTIC env var so per-step seeding triggers in run_episode
+    if cfg.deterministic:
+        os.environ["DETERMINISTIC"] = "True"
     set_seed_everywhere(cfg.seed)
 
     # Load Cosmos Policy model and auxiliary data

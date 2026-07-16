@@ -1,0 +1,13 @@
+/ocean/projects/cis250185p/asingal/envs/genesis_env/lib/python3.10/site-packages/genesis/__init__.py:39: UserWarning: 'torch<2.8.0' is not supported. Please upgrade pytorch manually: https://pytorch.org/get-started/locally/
+  warn("'torch<2.8.0' is not supported. Please upgrade pytorch manually: https://pytorch.org/get-started/locally/")
+--- Importing genesis ---
+--- Initializing genesis (gpu backend) ---
+[38;5;226m[Genesis] [04:26:21] [WARNING] 'torch<2.8.0' is not supported. Please upgrade pytorch manually: https://pytorch.org/get-started/locally/[0m
+--- Building minimal rigid-body scene ---
+--- Building scene (this triggers GPU kernel compilation) ---
+--- Stepping physics 50 steps ---
+--- Rendering headless RGB + depth frame ---
+RGB shape: (256, 256, 3), dtype: uint8
+Depth shape: (256, 256), dtype: float32
+Box final position after 50 steps (should have fallen from z=0.5): tensor([-3.6557e-10,  2.3999e-09,  2.4885e-02], device='cuda:0')
+SMOKE_TEST_RESULT: PASS

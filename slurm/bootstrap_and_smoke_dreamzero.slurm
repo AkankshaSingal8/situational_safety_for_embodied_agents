@@ -5,8 +5,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=120G
-#SBATCH --time=10:00:00
+#SBATCH --mem=240G
+#SBATCH --time=14:00:00
 #SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
 #SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
 #SBATCH --mail-user=asingal2@andrew.cmu.edu
@@ -28,6 +28,9 @@ mkdir -p $LOG_DIR
 mkdir -p $REPO/dream_benchmark
 
 export HF_HOME=$HF_CACHE
+export HF_HUB_CACHE=$HF_CACHE          # huggingface-cli downloads to $HF_CACHE/models--*, not $HF_CACHE/hub/models--*; this aligns hf_hub_download lookup
+export HF_HUB_OFFLINE=1                 # compute nodes have no internet; prevent hf_hub_download from hanging on network requests
+export TRANSFORMERS_OFFLINE=1
 export TRANSFORMERS_CACHE=$HF_CACHE
 export MUJOCO_GL=egl
 
@@ -85,7 +88,9 @@ if [ ! -d "$ENV_PATH" ]; then
         "datasets==3.6.0" \
         "wandb" \
         "dm_tree" \
-        "albumentations==1.4.18"
+        "albumentations==1.4.18" \
+        "ftfy" \
+        "matplotlib"
 
     echo "--- Installing DreamZero repo (editable, no-deps to skip unavailable NVIDIA packages) ---"
     pip install -e "$DREAMZERO_DIR" --no-deps
@@ -155,6 +160,7 @@ CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.run \
     --port "$SERVER_PORT" \
     --model-path "$LORA_CKPT" \
     --enable-dit-cache \
+    --embodiment-tag libero \
     > "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log" 2>&1 &
 
 SERVER_PID=$!
@@ -162,8 +168,8 @@ echo "Server PID: $SERVER_PID"
 
 # ── Step 4: Wait for server ready ────────────────────────────────────────────
 # First run downloads Wan2.1-I2V-14B-480P (~40GB); allow up to 90 minutes.
-echo "Waiting for DreamZero server (up to 90 minutes — first run downloads Wan2.1)..."
-for i in $(seq 1 1080); do
+echo "Waiting for DreamZero server (up to 180 minutes — loading 72GB from local cache)..."
+for i in $(seq 1 2160); do
     sleep 5
     # websockets library logs "server listening on 0.0.0.0:PORT" — match this
     # specifically to avoid false positives from traceback text containing "run/running".
@@ -181,8 +187,8 @@ for i in $(seq 1 1080); do
         echo "Still waiting ($((i*5))s elapsed). Last server log line:"
         tail -1 "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log" 2>/dev/null || echo "(no log yet)"
     fi
-    if [ $i -eq 1080 ]; then
-        echo "ERROR: Server did not start in 90 minutes. Last 30 lines:"
+    if [ $i -eq 2160 ]; then
+        echo "ERROR: Server did not start in 180 minutes. Last 30 lines:"
         tail -30 "$LOG_DIR/server_bootstrap_${SLURM_JOB_ID}.log"
         kill $SERVER_PID 2>/dev/null
         exit 1
@@ -197,6 +203,9 @@ echo "=========================================="
 conda activate /ocean/projects/cis250185p/asingal/envs/libero
 export MUJOCO_GL=egl
 export PYTHONPATH=$REPO/vlm_pipeline:$REPO/SafeLIBERO/safelibero:${PYTHONPATH:-}
+# The system libstdc++ only has GLIBCXX up to 3.4.26; libLerc.so.4 (Pillow dep) needs 3.4.29.
+# Prepend the conda env's own libstdc++ so Pillow/robosuite can load.
+export LD_LIBRARY_PATH=/ocean/projects/cis250185p/asingal/envs/libero/lib:${LD_LIBRARY_PATH:-}
 
 # Install WebSocket + client deps into libero env if missing
 pip install --quiet "websockets>=13.0" opencv-python-headless openpi-client 2>/dev/null || true
