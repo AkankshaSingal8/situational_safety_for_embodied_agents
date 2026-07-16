@@ -258,3 +258,18 @@ honest config ablation.
 
 Standing: 6/8 conditions beat baseline on both axes with the per-condition best; the two
 misses are Long, driven by timeout-stall (liveness) not collisions — DBNR's regime.
+
+### Significance tests — headline claims (tooling: `vlm_pipeline/stats_tests.py`)
+Spatial L2, n=200/arm. Unpaired Fisher exact (baseline predates episode logging);
+paired exact McNemar on (task, ep) for our own runs (shared seed 7 + official inits).
+
+| Comparison | TSR p | CAR p |
+|---|---|---|
+| Composed vs baseline (Fisher) | 1.2e-10 | 2.8e-41 |
+| Composed vs self-run reimpl r10 (Fisher) | 1.5e-03 | 4.8e-25 |
+| Composed vs reimpl r10 (paired McNemar) | 9.0e-04 (45 vs 18 discordant) | 1.0e-29 (1 vs 103) |
+| Composed vs r3 (paired McNemar) | 0.70 — indistinguishable | 1.4e-13 (4 vs 59) |
+
+Reading: the corridor-exempted composed config buys its CAR gain at ZERO statistically
+detectable TSR cost over r3 (p=0.70), and beats the reimplemented SOTA on both axes with
+paired significance. All four-number-win components are individually significant.
