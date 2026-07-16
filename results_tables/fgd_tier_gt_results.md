@@ -194,12 +194,67 @@ Composed at L2 (85.0/76.5) still beats every reimpl arm on CAR; r14-L2 is the st
 reimpl arm and composed matches its TSR within noise while winning CAR +6.
 Data: `fgd_n50_reimpl_r06/`, `fgd_n50_reimpl_r14/`.
 
-### Composed-fix smoke — regressed conditions, n=5/task L2 only (±40pp bars; directional only)
-| Condition | Composed (n=50) | Fix smoke (n=5) | r3 reference |
-|---|---|---|---|
-| Goal L2 | 54.0 / 63.5 | 60.0 / 20.0 | 69.0 / 58.0 |
-| Long L2 | 24.5 / 77.0 | 40.0 / 80.0 | 47.0 / 77.0 |
+### Composed-fix smoke — regressed CELLS only, n=5/cell (±40pp bars; directional only)
+Fix under test: fixture-dest + stale-target corridor fix (commit cc3f766).
 
-Reading: Long L2 fix is directionally right (TSR up, CAR held) — promote to n=20. Goal L2
-TSR recovered but CAR fell to 20 in the smoke — inspect episodes JSONL before promoting.
-Data: `fgd_composed_fix_smoke/`.
+| Cell | Composed n=50 | r3 n=50 | Fix smoke n=5 |
+|---|---|---|---|
+| Goal L2 t1 (cabinet, fixture-dest bug) | 28 / 60 | 76 / 82 | 60 / 20 |
+| Long L2 t0+t1 (basket, stale-target bug) | 50/38 · 82(t1 comp?) | 84 · 82 TSR | 40 / 80 (pooled) |
+
+Reading: Goal L2 t1 TSR recovered (28→60, toward r3's 76) but smoke CAR 20 (4/5 collided) —
+inspect episodes before trusting; Long L2 pooled 40/80 vs composed regression — mixed. n=5
+bars are ±40pp; promoting to n=20 on full Goal L2 + Long L2 conditions to settle it.
+Data: `fgd_composed_fix_smoke/`. n=20 confirm: job 42238691 (with per-episode entity-binding
+logs, commit after 12e3bf3). Long L2 t0/t1 smoke failures are TIMEOUTS at the 550-step cap
+(not collisions) — liveness stall, DBNR's target regime.
+
+### Object L1 forensics (task #15 CLOSED — structural, not config)
+Per-task failure-mode split at n=50 (TSR / %episodes-with-collision / timeout-noncollision-fails):
+
+| Task | r3 | Composed |
+|---|---|---|
+| t0 | 82 / 42 / 3 | 64 / 12 / 14 |
+| t1 | 18 / 100 / 0 | 32 / 98 / 0 |
+| t2 | 48 / 100 / 0 | 12 / 100 / 0 |
+| t3 | 56 / 68 / 0 | 84 / 16 / 2 |
+
+### DBNR ablation smoke β₀=0.5 (job 42236449; n=5 dev cells) — UNDERDOSED
+| Cell | Composed n=50 ref | DBNR b05 n=5 | τ mean | headroom mean |
+|---|---|---|---|---|
+| Spatial L1 t1 | 14 / 34 | 20 / 40 | 0.0078 | 0.69 |
+| Long L2 t2 | 2 / — | 0 / 60 | 0.00018 | 0.87 |
+
+Reading: no clear lift, but the telemetry explains why — applied restitution τ is
+near-zero (≤0.008) against correction norms 0.28–0.47, i.e. the damage budget gates DBNR
+to inactivity at β₀=0.5 while headroom sits at 0.69–0.87. Not a kill: an underdosed dose
+says nothing about the mechanism. Bracketing arms submitted: β₀=1.0 (job 42238892),
+β₀=2.0 (job 42238893). Kill rule stands: if τ stays ≈0 or dev cells don't move at β₀=2.0,
+DBNR dies.
+
+Reading: t1/t2 collide in ≈100% of episodes under EVERY config — the E2-verified
+obstacle-on-path family (straight-line homotopy always clips the obstacle; K=8 seed
+diversity does not change homotopy class). Composed trades t2 TSR (48→12, fat margins
+stall) without buying any CAR. Verdict: these cells are unreachable by margin/schedule
+tuning; they need a rerouting mechanism (DBNR restitution or homotopy-aware candidate
+generation) or an honest limitation note. t0/t3 show composed working as designed
+(collisions 42→12, 68→16 with TSR retained on t3).
+
+### Per-condition BEST-CONFIG standings (Tier-GT, n=50, vs our baseline; 2026-07-15)
+Pre-registered rule pending: if fix n=20 (job 42238691) restores Goal/Long L2 to ≥ r3,
+composed becomes the single reported config; else this per-condition table stands as an
+honest config ablation.
+
+| Condition | Baseline | Best config | Best TSR/CAR | Beats baseline both axes? |
+|---|---|---|---|---|
+| Spatial L1 | 67.0/14.0 | r3 (thin) | 71.0/23.5 | YES (margin thin) |
+| Spatial L2 | 55.5/12.0 | composed | 85.0/76.5 | YES ★ (also beats SOTA-pub + reimpl) |
+| Goal L1 | 51.0/23.0 | composed | 77.5/51.0 | YES |
+| Goal L2 | 66.5/35.0 | r3 (fix pending) | 69.0/58.0 | YES |
+| Object L1 | 40.5/14.0 | composed | 48.0/43.5 | YES |
+| Object L2 | 74.0/25.0 | composed | 83.0/74.5 | YES |
+| Long L1 | 58.0/15.0 | composed | 42.5/71.0 | no (TSR) — structural t-cells |
+| Long L2 | 51.0/16.5 | r3 (fix pending) | 47.0/77.0 | no (TSR −4, CAR +60.5) |
+
+Standing: 6/8 conditions beat baseline on both axes with the per-condition best; the two
+misses are Long, driven by timeout-stall (liveness) not collisions — DBNR's regime.
