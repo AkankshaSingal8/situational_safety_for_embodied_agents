@@ -296,6 +296,8 @@ def run_eval(args):
                     break
             initial_obstacle_pos = obs[f"{obstacle_name}_pos"] if obstacle_name else None
             collide_flag = False
+            ep_kdisp = []
+            ep_mspread = []
 
             if args.corridor and obstacle_name is not None:
                 _ents = parse_entities(task_description, obs, sim=env.sim)
@@ -356,6 +358,10 @@ def run_eval(args):
                             g_residual_max = max(g_residual_max, float(diag.get("max_residual", 0.0)))
                             if float(diag.get("dbnr_active_frac", 0.0)) > 0.0:
                                 dbnr_active_chunks += 1
+                            if "k_dispersion" in diag:
+                                ep_kdisp.append(float(np.asarray(diag["k_dispersion"]).reshape(-1)[0]))
+                            if "margin_spread" in diag:
+                                ep_mspread.append(float(np.asarray(diag["margin_spread"]).reshape(-1)[0]))
                                 dbnr_tau_sum += float(diag.get("dbnr_tau_mean", 0.0))
                                 dbnr_headroom_sum += float(diag.get("dbnr_headroom_mean", 0.0))
                         action_plan.extend(action_chunk)
@@ -400,8 +406,13 @@ def run_eval(args):
             task_collisions += int(collide_flag)
             task_ets.append(t)
             with open(episodes_log, "a") as ef:
-                ef.write(json.dumps({"task": task_id, "ep": ep_idx, "success": bool(done),
-                                     "collision": bool(collide_flag), "steps": t}) + "\n")
+                ep_record = {"task": task_id, "ep": ep_idx, "success": bool(done),
+                             "collision": bool(collide_flag), "steps": t}
+                if ep_kdisp:
+                    ep_record["k_disp_mean"] = round(float(np.mean(ep_kdisp)), 5)
+                    ep_record["k_disp_max"] = round(float(np.max(ep_kdisp)), 5)
+                    ep_record["margin_spread_mean"] = round(float(np.mean(ep_mspread)), 5)
+                ef.write(json.dumps(ep_record) + "\n")
 
             logging.info(
                 f"  ep {ep_idx+1}/{args.num_trials_per_task}: "

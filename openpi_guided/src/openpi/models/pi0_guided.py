@@ -433,4 +433,14 @@ def guided_sample_actions(
     diag = {k: jax.lax.dynamic_slice_in_dim(v, best, 1, axis=0) for k, v in last_diag.items()}
     diag["feasible_count"] = jnp.broadcast_to(jnp.sum(acc["feasible"].astype(jnp.float32)), (1,))
     diag["selected_margin"] = jax.lax.dynamic_slice_in_dim(acc["min_margin"], best, 1, axis=0)
+    # Epistemic telemetry: cross-candidate dispersion of the executed-prefix
+    # translation (normalized action space) and margin spread across seeds.
+    # Training-free OOD signals — logged only, never used for control here.
+    prefix_xyz = x_0[:, :prefix_len, :3]
+    diag["k_dispersion"] = jnp.broadcast_to(
+        jnp.mean(jnp.linalg.norm(jnp.std(prefix_xyz, axis=0), axis=-1)), (1,)
+    )
+    diag["margin_spread"] = jnp.broadcast_to(
+        jnp.max(acc["min_margin"]) - jnp.min(acc["min_margin"]), (1,)
+    )
     return selected, diag
