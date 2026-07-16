@@ -232,6 +232,26 @@ says nothing about the mechanism. Bracketing arms submitted: β₀=1.0 (job 4223
 β₀=2.0 (job 42238893). Kill rule stands: if τ stays ≈0 or dev cells don't move at β₀=2.0,
 DBNR dies.
 
+### ★ DBNR VERDICT: KILLED (β-bracket complete, 2026-07-16)
+| Arm | Spatial L1 t1 (n=5) | Long L2 t2 (n=5) | τ mean sp/long |
+|---|---|---|---|
+| β₀=0.5 | 20 / 40 | 0 / 60 | 0.0078 / 0.0002 |
+| β₀=1.0 | 20 / 40 | 0 / 60 | 0.0056 / 0.00001 |
+| β₀=2.0 | **0** / 20 | 0 / 60 | 0.0015 / 0.0 |
+
+Post-mortem: τ is a property of the REPAIR (task-aligned velocity the correction removes),
+independent of β₀ — and it reads ≈0. The corrections are already nearly orthogonal to the
+goal direction, so there is nothing for nullspace restitution to restore; the dev-cell
+stall is the POLICY re-planning into the blocked straight-line homotopy each chunk, which
+restitution cannot change. Higher β₀ only destabilizes (Spatial t1 TSR 20→0). The original
+kill-test greenlight over-read "τ nonzero": 0.008 against translation_scale 0.05 was never
+material. Mechanism retired; ablation preserved in `fgd_dbnr_ablation_b{05,10,20}/`.
+
+Successor hypothesis (pre-registered): the stuck cells need HOMOTOPY-DIVERSE candidate
+generation — e.g. per-candidate detour attractors (2 of K=8 seeds biased left-around, 2
+right-around the obstacle) so prefix acceptance can SELECT a different route class, rather
+than post-hoc velocity surgery inside the same blocked route.
+
 Reading: t1/t2 collide in ≈100% of episodes under EVERY config — the E2-verified
 obstacle-on-path family (straight-line homotopy always clips the obstacle; K=8 seed
 diversity does not change homotopy class). Composed trades t2 TSR (48→12, fat margins
