@@ -53,3 +53,93 @@ All in-jit, each behind a flag, 15/15 unit tests, committed on `flow-guidance-ti
 
 ## Process/infra lessons banked
 Bridges2 cwd resets between calls; SLURM scripts are read at RUN time (in-flight edits affect pending jobs); tyro bools are flags; module_jit needs bound methods + static_argnames for shape args; account-level job cancellations from parallel sessions — pause and ask rather than fight; one blocking monitor per job (token discipline); smoke n=5 = routing only (±40pp/cell), n=20 = confirmation, n=50 = claims, paired stats via episode JSONLs.
+
+## Phase 6 — Session resume, ledger recovery, regression root-cause (2026-07-15/16)
+**Mission reaffirmed by user**: beat baseline AND SOTA-published on both TSR and CAR, all 8
+conditions (4 suites x 2 levels), Tier-GT, n=50, then proceed to no-GT tier. "LOCK IN" —
+continue autonomously until this bar is met, maintaining this log with actions/assumptions/caveats.
+
+### Housekeeping
+- The `git log origin/flow-guidance-tier-gt..HEAD` check the handoff flagged as unverified was
+  CONFIRMED true: the "COMPLETE COMPOSED 8-CONDITION TABLE" ledger append (§3 of the handoff) had
+  never landed in a commit. Recovered + committed (`4a42558`): ledger text plus the underlying
+  goal/long/object/spatial-II composed result JSONs and the reimpl_r10 spatial results that were
+  sitting untracked in the worktree.
+- Push to `origin/flow-guidance-tier-gt` still blocked — no stored git credential in this shell
+  (`fatal: could not read Username for 'https://github.com'`). Fetch/read works fine (public repo).
+  Commits are safe locally; push is queued as task #1 pending fresh auth from the user.
+- **Infra note**: the Bash tool itself failed twice mid-session (exit 254 on every command,
+  including `true`/no-ops) for a few-minute stretch each time, unrelated to any runaway process on
+  the host (`ps -u asingal` was clean). Recovered on its own / after a user nudge without a full
+  Claude Code restart the second time. Not a Bridges2/SLURM issue — flagging in case it recurs.
+
+### Regression root-cause: Goal L2 / Long L2 (composed vs r3, from the n=50 8-condition table)
+Read `parse_entities()` (`vlm_pipeline/run_guided_safelibero_pi05_eval.py`), the client-side
+corridor/destination entity parser, plus the LIBERO env's `_setup_observables` (SafeLIBERO
+submodule, `bddl_base_domain.py`), plus per-task result breakdowns from the composed n=50 JSONs
+vs the prior r3 n=50 JSONs. Two independent bugs found and fixed (commit `cc3f766`):
+
+1. **Fixture-destination blind spot** (H1 confirmed). `_setup_observables` only creates a
+   `{name}_pos` sensor for `:objects` in the bddl (`for (i, obj) in enumerate(self.objects)`) —
+   never for `:fixtures` (cabinets, stoves, drawers, sinks...). `parse_entities` only ever looked
+   for `dest_pos` among keys ending in `_pos`, so any destination phrase naming a fixture
+   ("on top of the cabinet", "on the stove") silently resolved to no destination and thus no
+   corridor exemption for the whole carry-to-destination leg. This is exactly 2 of 4 Goal tasks
+   (cabinet, stove) and matches the per-task damage: Goal L2 task1 "put bowl on top of cabinet"
+   TSR 76.0(r3)->28.0(composed), CAR 82.0->60.0 — by far the largest single-task swing in the
+   whole 8-condition table, and it single-handedly explains most of the Goal L2 aggregate drop
+   (69.0->54.0). Confirmed empirically (not just by code reading): spun up the live env for this
+   task and checked `obs` keys ending in `_pos` (`wooden_cabinet_1` absent) plus
+   `env.sim.model.body_names` (fixture sub-bodies ARE present in the sim, e.g.
+   `wooden_cabinet_1_cabinet_top`). Fix: new `_fixture_dest_pos()` helper — when no object gives a
+   `_pos` match for the destination phrase, scan live sim body names directly (every mujoco body,
+   fixture or object, always has one) for a token match, preferring a sub-body matching a
+   destination qualifier (top/bottom/middle/burner/drawer) over the fixture's base body. Verified:
+   for the cabinet task, resolved `dest_pos` now matches `wooden_cabinet_1_cabinet_top`'s position
+   exactly (bit-for-bit modulo float noise).
+2. **Stale-target selection on multi-object tasks** (new finding, not in the handoff's hypothesis
+   list — H2 as stated ["fat margins + K-selection conservatism"] wasn't the mechanism found).
+   `target_name` was "nearest mentioned object to EEF" with no notion of "already delivered." On
+   Long's two-object tasks ("put both the alphabet soup and the cream cheese box in the basket"),
+   once the first object is placed in the basket it can sit physically nearer to the EEF/basket
+   than the still-unplaced second object — so the corridor kept sanctioning the approach to the
+   ALREADY-DONE object throughout the second pick-and-place leg instead of the real target. Matches
+   the per-task damage: both basket tasks cratered (TSR 84->50 and 82->38; the two mug/plate long
+   tasks, already near the TSR floor at 8%/14%, moved only -6pp each — consistent with this bug
+   being basket-specific, not a general fat-margin tax). Fix: exclude any mentioned object already
+   within `DELIVERED_RADIUS=0.10m` of `dest_pos` from the target candidate pool. Verified against a
+   live env: with `alphabet_soup` obs position patched to sit inside the basket, target correctly
+   switches to `cream_cheese`.
+- **Caveat**: `_fixture_dest_pos`'s body-name matching is a heuristic (token match + qualifier
+  hint), same fail-safe philosophy as the rest of `parse_entities` ("missing entities simply grant
+  no corridor") — it is not guaranteed to pick the geometrically ideal sub-body on fixtures outside
+  the four goal-suite ones inspected (cabinet, stove; drawer/sink untested — drawer task exists in
+  the bddl set but was NOT in the active 4-task goal run, so unverified live). `DELIVERED_RADIUS`
+  (0.10m) is a hand-picked threshold, not calibrated against basket/plate geometry beyond a rough
+  eyeball; if it proves too tight/loose the smoke below will show it (e.g. target flips back to a
+  just-placed object because 0.10m undershoots the true basket radius, or excludes the correct
+  live target because it starts within 0.10m of dest by scene-randomization coincidence).
+- Did NOT chase the smaller Long L2 mug/plate regressions (t2 8->2, t3 14->8 TSR) — both already
+  near the TSR floor pre-fix, and DEST_PATTERN's "last locative phrase wins" (relevant for these
+  two-subgoal tasks: "on the left plate ... on the right plate") is a separate, lower-priority
+  latent issue not addressed here.
+
+### In flight (2026-07-16)
+- **42234773** `fgd_composed_fix_smoke`: n=5 routing smoke of the fix on Goal L2 task1 (cabinet)
+  + Long L2 tasks 0,1 (baskets) — composed config (K=8/ramp/corridor/eef_r=0.12/companions).
+  Purpose: cheap route-check before committing the ~3h n=50 rerun. Gate: task must not still be
+  catastrophically below r3 (n=5 noise band is wide, ±40pp/cell per project convention — looking
+  for directional recovery, not a final number).
+- **42234774 / 42234779** `fgd_reimpl_r06` / `fgd_reimpl_r14`: reimpl-SOTA EEFR bracket sweep
+  (task #2 from the handoff's §4 next-steps), Spatial suite both levels, K=1/uniform/no-corridor/
+  no-companions, r_obs=0.06 and 0.14 respectively — brackets the SOTA reimpl's unstated obstacle
+  radius (r=0.10 already run, in the ledger).
+- All 3 jobs queued (Priority, GPU-shared H100) as of this write; one blocking monitor armed
+  (poll squeue every 60s, single job-id-left-queue notification each, per the "minimize monitoring
+  tokens" standing instruction). Noticed one pre-existing `bash` job (42234572, running on v007,
+  not submitted by this session) already on the shared account — left untouched per the
+  parallel-sessions courtesy rule.
+- **Next after these land**: if smoke shows recovery, launch composed n=50 rerun of Goal + Long
+  (both levels) with the fix (task #4); fold reimpl r06/r14 into the ledger sweep table; then
+  DBNR/TECV kill-tests (tasks #5/#6); then lock final per-condition configs and confirm all 8
+  conditions at n=50 against the four-number bar (task #7).
