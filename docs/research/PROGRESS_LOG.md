@@ -168,3 +168,39 @@ exactly as used for the headroom diagnostic — no Cholesky/stack machinery need
   specifically a lever for Spatial L1 (currently the single worst-performing condition against
   SOTA: composed 53.5/46.0 vs SOTA-published 75.5/77.5, both axes far short) and, per the spec,
   Long/L2 repair-heavy cells generally.
+
+### DBNR restitution: implemented (commit 03a934a, 2026-07-16)
+Went ahead and implemented the full restitution (not just diagnostics) while the regression-fix
+smoke/reimpl-sweep jobs were in flight, since the kill-test greenlit it and it's additive/gated:
+- New `GuidanceParams.dbnr_beta0` (default 0.0 = off), threaded through `GuidanceConfig` and the
+  server CLI (`--dbnr_beta0`). At any step the sweep corrects, adds
+  `dbnr_beta0 * ||correction_this_step|| * w_perp` to the repaired step, where `w_perp` is the
+  unit task direction (toward dest_pos, falling back to target_pos) projected orthogonal to that
+  step's push direction — provably zero-cost to the certified margin before the actuator clamp
+  (single-active-constraint case: nullspace projector is exactly `I - dd^T`).
+- **Correctness bug caught before it shipped**: my first draft unconditionally re-clipped
+  `new_step` to actuator bounds even when `dbnr_beta0=0`. The prior code never re-clamped
+  `new_step` (only its `pushed`/`braked` candidates), so this would have silently changed
+  behavior for every existing config/ablation row, not just DBNR-enabled ones. Fixed by gating the
+  entire modification on `do_restitute` (`deficit>0 & have_goal & beta0>0`) so `beta0=0`
+  reproduces the exact prior `new_step` — caught by re-reading my own diff before committing, not
+  by a test run (pytest still hangs on this login node, see infra note above).
+- Verified via numpy dry-run of the exact tensor ops on a synthetic near-obstacle scenario:
+  `beta0=0` exactly reproduces the no-DBNR baseline; `beta0 in {0.3,1.0,5.0,50,500}` never
+  decreased the achieved barrier margin (in fact improved it, since a purely-orthogonal
+  displacement from a point/spherical obstacle increases Euclidean distance at second order) and
+  correctly saturates at the translation-scale actuator limit for large beta0.
+- Queued `fgd_dbnr_ablation_smoke` (job 42236449, TAG=b05, `dbnr_beta0=0.5`) on the same two
+  pre-registered dev cells (Spatial L1 t1, Long L2 t2), n=5, to route an actual TSR/CAR effect
+  before committing to n=20/n=50. Only submitted ONE beta0 value for now (queue courtesy — already
+  had 3 other jobs in flight; will sweep more values only if 0.5 looks directionally positive).
+- **Caveats / what's unvalidated**: (1) `beta0=0.5` is a hand-picked starting point, not tuned —
+  the dry-run only confirms the mechanism is safe, not that 0.5 is a good operating point; (2) the
+  "damage-proportional, no cross-step debt" simplification vs the full spec (which carries debt
+  `D_k` across steps/chunks) means restitution authority resets every step — if a single step's
+  damage is small but sustained over many steps, this simplified version won't accumulate a bigger
+  restitution the way the full spec would; that's a known, deliberate scope-cut for the kill-test
+  timeline, not an oversight; (3) the task-direction proxy (`dest_pos` else `target_pos`) is the
+  same coarse heuristic as the corridor module and inherits its failure modes (e.g. no notion of
+  gripper phase — restoring "toward destination" motion during a regrasp/retreat could be wrong,
+  per the spec's own failure-mode list).
