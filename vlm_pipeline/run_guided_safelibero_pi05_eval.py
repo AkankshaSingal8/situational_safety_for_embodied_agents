@@ -297,6 +297,15 @@ def run_eval(args):
             initial_obstacle_pos = obs[f"{obstacle_name}_pos"] if obstacle_name else None
             collide_flag = False
 
+            if args.corridor and obstacle_name is not None:
+                _ents = parse_entities(task_description, obs, sim=env.sim)
+                logging.info(
+                    "  [bind] ep %d obstacle=%s target=%s dest=%s",
+                    ep_idx, obstacle_name,
+                    np.round(np.asarray(_ents.get("target_pos", [])), 3).tolist(),
+                    np.round(np.asarray(_ents.get("dest_pos", [])), 3).tolist(),
+                )
+
             replay_images = []
             t = 0
             done = False
