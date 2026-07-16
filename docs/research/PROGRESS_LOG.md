@@ -143,3 +143,28 @@ vs the prior r3 n=50 JSONs. Two independent bugs found and fixed (commit `cc3f76
   (both levels) with the fix (task #4); fold reimpl r06/r14 into the ledger sweep table; then
   DBNR/TECV kill-tests (tasks #5/#6); then lock final per-condition configs and confirm all 8
   conditions at n=50 against the four-number bar (task #7).
+
+### DBNR kill-test verdict: GREENLIT (job 42236032, n=5, 2026-07-16)
+Pre-registered dev cells, composed config (K=8/ramp/corridor/eef_r=0.12/companions):
+| Cell | TSR/CAR | dbnr_active_chunks | dbnr_tau_mean [m] | dbnr_headroom_mean |
+|---|---|---|---|---|
+| Spatial L1 t1 | 20.0/60.0 | 124/258 chunks | 0.0128 | 0.560 |
+| Long L2 t2 | 0.0/80.0 | 202/550 chunks | 0.0033 | 0.899 |
+Both cells: tau clearly nonzero (not noise-floor) and headroom large (56-90% of the unit task
+direction lies orthogonal to the repair's push direction — plenty of room to restore task motion
+without touching the active constraint). Kill criterion (tau~=0) NOT met on either cell ->
+**greenlight full DBNR restitution** (docs/research/inv_invB.json methods[1], ~30-line addition
+to `_dcbf_repair`'s per-step body per its own implementation estimate: masked nullspace projector
+already trivial here since this repair has at most one active constraint per step, so P = I - dd^T
+exactly as used for the headroom diagnostic — no Cholesky/stack machinery needed).
+- **Caveat**: n=5 is routing-only (the project's own convention: n=5 = ±40pp/cell noise band on
+  OUTCOME metrics; tau/headroom are per-chunk geometric quantities with much larger effective
+  sample size (124-202 chunks) so the greenlight itself is fairly solid, but the *expected TSR
+  gain* (+5-15pp per the spec's own estimate) is unvalidated until an actual restitution
+  implementation is run at n>=20).
+- **Not yet implemented**: this was diagnostics-only per the kill-test's scope. Full restitution
+  (actually adding `r_k` back into `disp_new`) is new work, not yet started — queued after the
+  regression-fix reruns (task #4) since that's the path to the core four-number bar; DBNR is
+  specifically a lever for Spatial L1 (currently the single worst-performing condition against
+  SOTA: composed 53.5/46.0 vs SOTA-published 75.5/77.5, both axes far short) and, per the spec,
+  Long/L2 repair-heavy cells generally.
