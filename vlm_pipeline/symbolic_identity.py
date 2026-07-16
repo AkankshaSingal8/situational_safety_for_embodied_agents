@@ -12,10 +12,16 @@ eef→target reach path. Object names+positions come from the sim (Tier-SemID);
 a detector/VLM supplies them in the full Tier-Percep stack.
 """
 
+import os
 import re
 from typing import Dict, List, Optional
 
 import numpy as np
+
+# E5 fail-direction stress test (fail-safe figure): corrupt the METHOD's
+# identity on purpose and measure which axis (CAR vs TSR) absorbs the error.
+# Activated ONLY via env var — default behavior is bit-identical.
+_E5_CORRUPT = os.environ.get("E5_CORRUPT", "")
 
 
 def _clean_object_name(obs_key: str) -> str:
@@ -177,7 +183,10 @@ def scored_obstacle_id(
                 * float(np.exp(-d_path(k) ** 2 / (2 * sigma ** 2)))
                 * (1.0 - 0.8 * fracs[k]))
 
-    return max(partial, key=score)
+    ranking = sorted(partial, key=score, reverse=True)
+    if _E5_CORRUPT in ("identity", "both") and len(ranking) > 1:
+        return ranking[1]  # deliberate second-best pick
+    return ranking[0]
 
 
 def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5, 0.5))) -> Optional[str]:

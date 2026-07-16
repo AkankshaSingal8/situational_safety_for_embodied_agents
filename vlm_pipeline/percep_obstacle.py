@@ -17,7 +17,15 @@ med 0.067 m / p90 0.152 m with 2-view fusion (see ledger, 2026-07-16);
 runtime should do no worse.
 """
 
+import os
+
 import numpy as np
+
+# E5 fail-direction stress test: deterministic position corruption, env-gated
+# (default off). Direction rotates per call so errors cover the xy plane.
+_E5_CORRUPT = os.environ.get("E5_CORRUPT", "")
+_E5_POS_NOISE = float(os.environ.get("E5_POS_NOISE", "0.08"))
+_e5_call_count = 0
 
 
 def _camera_transform(sim, camera_name, camera_height, camera_width):
@@ -109,7 +117,13 @@ def estimate_obstacle_pos(sim, obstacle_name, cameras=("agentview", "birdview"),
             ests.append(est)
     if not ests:
         return None, 0
-    return np.mean(ests, axis=0), len(ests)
+    fused = np.mean(ests, axis=0)
+    if _E5_CORRUPT in ("position", "both"):
+        global _e5_call_count
+        ang = _e5_call_count * 2.399963  # golden-angle rotation, deterministic
+        _e5_call_count += 1
+        fused = fused + _E5_POS_NOISE * np.array([np.cos(ang), np.sin(ang), 0.0])
+    return fused, len(ests)
 
 
 if __name__ == "__main__":
