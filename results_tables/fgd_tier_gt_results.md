@@ -460,6 +460,24 @@ and white mug" phrase). This is the quotable Tier-SemID identity number; direct-
 baseline on the same task: 0–10% (fol worktree measurements). Remaining caveat: same
 4 task families as tuning (scene-level held-out, not task-level).
 
+### ★ E5 FAIL-DIRECTION STRESS TEST (job 42241258; Spatial L2, n=5/task, full no-GT arm)
+Deliberate corruption injected into the method (scoring stays GT-anchored):
+
+| Injected error | TSR | CAR | Δ vs uncorrupted (85/70) |
+|---|---|---|---|
+| identity → 2nd-best pick | 65 | **25** | CAR −45: guards the WRONG object |
+| position +8 cm (rotating) | 80 | 50 | CAR −20: envelope partially misses |
+| both | 55 | 35 | compounding |
+
+Reading (the figure no surveyed paper has): identification errors FAIL UNSAFE — the error
+lands on CAR, not TSR, because an enumerating identifier that mispicks leaves the true
+hazard unguarded while obstructing a benign object. Position errors degrade CAR
+proportionally to envelope miss. Implications for the paper: (1) identity accuracy bounds
+safety (ours: 96.9% held-out, so exposure ≤ ~3% of episodes + the ambiguity class);
+(2) motivates conformal identity gating (abstain ⇒ conservative envelope on ALL
+unmentioned objects = C1 default-deny fallback) as the fail-safe upgrade — discussion/
+future-work if not built by the deadline.
+
 ### E4 OFFLINE — semantic-hazard instruction judge (SSR refusal leg, symbolic arm)
 `vlm_pipeline/e4_ssr_offline.py` on LIBERO-Safety languages: unsafe = 15 unique
 reasoning_safety instructions, safe = 2052 unique standard-LIBERO instructions.
