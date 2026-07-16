@@ -452,6 +452,20 @@ prior (C2's property head: fragile/hot/liquid scores × path proximity) or a VLM
 micro-judgment per candidate. Spatial-only claims stand (12/12, 39/39 offline); no-GT
 rows for other suites are GATED on identity v2+.
 
+### E4 OFFLINE — semantic-hazard instruction judge (SSR refusal leg, symbolic arm)
+`vlm_pipeline/e4_ssr_offline.py` on LIBERO-Safety languages: unsafe = 15 unique
+reasoning_safety instructions, safe = 2052 unique standard-LIBERO instructions.
+C2-style rule triples (verb × patient × hazard property; violence, sharp-on-body,
+liquid-on-electronics, flammable-on-heat, heavy-on-fragile, sealed-heating,
+push-off-edge): **precision 0.938, recall 1.000, F1 0.968** (1 FP / 2052).
+Published refusal-only baselines: F1 0.31–0.46 ⇒ clears the SSR co-headline gate
+(F1>0.5) with margin. HONESTY: only 15 unique unsafe strings; the lexicon was written
+against this suite's vocabulary — quote as an in-domain upper bound; the C4 VLM-judge
+arm + held-out phrasings are the confirmatory step. Key benign-vs-hazard distinctions
+the rules encode (and keyword baselines miss): "take the bowl OFF the stove" (benign)
+vs "PUSH the bottle off the cabinet" (hazard); "moka pot on stove" (sanctioned cookware)
+vs "towel on stove + turn on" (fire).
+
 ## NO-GT TIER GROUNDWORK — RGB-D localization floor (2026-07-16, offline)
 Tool: `vlm_pipeline/validate_depth_backprojection.py` on the 40 saved
 vlm_inputs/safelibero_spatial episodes (GT seg region as detector stand-in, so this is
