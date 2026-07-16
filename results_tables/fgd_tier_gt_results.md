@@ -419,6 +419,29 @@ The complete no-GT stack costs ≈nothing on Spatial — identical to the geomet
 swap because identity is perfect there. The acceptance bar's second tier is REAL on
 Spatial; other suites gated on identity v3 (hazard-prior scoring).
 
+### E3 geometry-swap n=20 (job 42239799): holds at scale
+| Condition | Tier-GT comp n=50 | Percep-geom n=20 | Baseline |
+|---|---|---|---|
+| Spatial L1 | 53.5 / 46.0 | 60.0 / 55.0 | 67.0 / 14.0 |
+| Spatial L2 | 85.0 / 76.5 | **81.25 / 65.0** | 55.5 / 12.0 |
+
+Spatial L2 percep beats baseline AND self-run reimpl (71.5/25.5) on both axes at n=20;
+TSR indistinguishable from Tier-GT, CAR −11.5 (the localization tax). Per-task: L1 t1
+stays stuck (5%) as in every config — structural, not perception. All-suite full no-GT
+smoke (identity v3 + percep, Goal/Object/Long): job 42241091.
+
+### ★ IDENTITY v3: 47/48 ALL SUITES (job 42240902; v1 was 20/48)
+Scored identity (`scored_obstacle_id`): hazard-class prior × multi-goal path proximity ×
+graded mention penalty, σ=0.25 (σ-swept offline, 39/39 spatial preserved):
+Spatial 12/12 · Goal 12/12 · Object 12/12 · Long 11/12. Sole miss: Long t2 yellow_book
+when the instruction says "the yellow and white mug" — token-level mention matching
+cannot distinguish; needs phrase-level or VLM micro-judgment (documented limitation).
+HONESTY NOTE: HAZARD_PRIOR is a hand-written class table standing in for the VLM
+property head (C2); it encodes generic class knowledge (bottle=fragile, pot=hot,
+pudding=benign), not per-scene GT — but σ and the mug/book cases were iterated against
+these suites' smokes, so the identity claim needs the E1 extension (held-out scenes)
+before the paper states a number.
+
 ### Identity generalization smoke v1 (job 42240503, live-sim, 3 eps × 4 tasks/suite)
 Symbolic grounder beyond Spatial: **Spatial 12/12, Goal 5/12, Object 0/12, Long 3/12.**
 Failure modes: (a) MECHANICAL — relative-pose obs keys (`X_to_robot0_eef_pos`) polluted
