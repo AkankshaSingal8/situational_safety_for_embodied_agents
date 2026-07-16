@@ -7,9 +7,13 @@ running guided no-GT arms on Goal/Object/Long.
 """
 
 import json
+import os
 import sys
 
 import numpy as np
+
+EP_START = int(os.environ.get("EP_START", "0"))
+EP_END = int(os.environ.get("EP_END", "3"))  # exclusive
 
 sys.path.insert(0, "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/flow-guidance-tier-gt/vlm_pipeline")
 from symbolic_identity import identify_obstacle  # noqa: E402
@@ -38,7 +42,7 @@ def main():
                 continue
             env.reset()
             desc = task.language
-            for ep in range(3):
+            for ep in range(EP_START, min(EP_END, len(init_states))):
                 obs = env.set_init_state(init_states[ep])
                 for _ in range(10):
                     obs, _, _, _ = env.step([0.0] * 6 + [-1.0])
