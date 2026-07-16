@@ -73,13 +73,64 @@ DEFAULT_OBSTACLE_RADIUS = 0.065
 GENERIC_NAME_TOKENS = {"1", "2", "g", "akita", "object"}
 DEST_PATTERN = re.compile(r"(?:\bon|\bin|\binto|\binside)\s+(?:the\s+)?([a-z ]+?)(?:\s+and\b|[.,]|$)")
 
+# LIBERO fixtures (cabinets, stoves, drawers, sinks, microwaves...) are never
+# given a `{name}_pos` observable — only `:objects` are (bddl_base_domain.py
+# _setup_observables loops over self.objects only). A destination phrase that
+# names a fixture therefore always missed the object-obs path below and fell
+# back to no corridor at all, at exactly the goal-condition tasks it mattered
+# most for (Goal L2 "on top of the cabinet": TSR 76->28, CAR 82->60 composed
+# vs r3). FIXTURE_BODY_HINTS maps a destination content-token to a substring
+# preferred when picking among a fixture's multiple sim bodies (e.g. the
+# cabinet's top shelf body rather than its base) so the exemption centers
+# near the actual placement surface instead of the fixture's overall centroid.
+FIXTURE_BODY_HINTS = {
+    "top": "top",
+    "bottom": "bottom",
+    "middle": "middle",
+    "stove": "burner",
+    "drawer": "drawer",
+}
+FIXTURE_BODY_EXCLUDE = {"collision", "vis", "site"}
 
-def parse_entities(task_description: str, obs) -> dict:
+
+def _fixture_dest_pos(dest_words, sim):
+    """Fallback destination lookup for fixtures with no `_pos` observable.
+
+    Scans live sim body names (always present for every mujoco body,
+    fixture or object) for one matching a destination content-token, and
+    returns its world position. Returns None if nothing matches (fail-safe:
+    missing entities simply grant no corridor).
+    """
+    if sim is None:
+        return None
+    candidates = []
+    for body_name in sim.model.body_names:
+        tokens = [t for t in re.split(r"[_ ]+", body_name.lower())
+                  if t and t not in GENERIC_NAME_TOKENS and not t.isdigit()
+                  and t not in FIXTURE_BODY_EXCLUDE]
+        if any(t in dest_words for t in tokens):
+            candidates.append(body_name)
+    if not candidates:
+        return None
+    hinted = [c for c in candidates if any(h in c.lower() for w, h in FIXTURE_BODY_HINTS.items() if w in dest_words)]
+    pick = hinted[0] if hinted else min(candidates, key=len)  # shortest ~ the fixture's main body
+    body_id = sim.model.body_name2id(pick)
+    return np.asarray(sim.data.body_xpos[body_id], dtype=np.float32)
+
+
+def parse_entities(task_description: str, obs, sim=None) -> dict:
     """Sanctioned-entity extraction for the corridor exemption (GT tier).
 
-    target  = mentioned, non-destination object nearest the EEF (refreshed per
-              chunk, which tracks sub-goal switches on Long tasks);
-    dest    = receptacle named in the final locative phrase, when it has a pos.
+    target  = mentioned, non-destination, NOT-YET-DELIVERED object nearest the
+              EEF (refreshed per chunk, which tracks sub-goal switches on Long
+              tasks — "not-yet-delivered" additionally guards against
+              re-targeting an already-placed item that happens to now sit
+              close to the eef/destination, the multi-object Long-task bug:
+              composed Long L2 "both...in the basket" tasks TSR 84->50/82->38);
+    dest    = receptacle named in the final locative phrase — first checked
+              among movable objects (has a `_pos` obs key), then among sim
+              fixture bodies directly (`_fixture_dest_pos`) since fixtures
+              never get an obs key.
     Missing entities simply grant no corridor (fail-safe direction).
     """
     text = task_description.lower()
@@ -92,6 +143,8 @@ def parse_entities(task_description: str, obs) -> dict:
     mentioned = [n for n in names if "obstacle" not in n and any(t in words for t in content_tokens(n))]
 
     dest_name = None
+    dest_pos = None
+    dest_words = None
     m = list(DEST_PATTERN.finditer(text))
     if m:
         dest_words = set(m[-1].group(1).split())
@@ -99,16 +152,23 @@ def parse_entities(task_description: str, obs) -> dict:
             if any(t in dest_words for t in content_tokens(n)):
                 dest_name = n
                 break
+        if dest_name is not None:
+            dest_pos = np.asarray(obs[f"{dest_name}_pos"], dtype=np.float32)
+        else:
+            dest_pos = _fixture_dest_pos(dest_words, sim)
 
     eef = np.asarray(obs["robot0_eef_pos"])
+    DELIVERED_RADIUS = 0.10  # object already within one basket/plate-width of dest ~= already placed
     targets = [n for n in mentioned if n != dest_name]
+    if dest_pos is not None:
+        targets = [n for n in targets if np.linalg.norm(np.asarray(obs[f"{n}_pos"], dtype=np.float32) - dest_pos) > DELIVERED_RADIUS]
     target_name = min(targets, key=lambda n: np.linalg.norm(np.asarray(obs[f"{n}_pos"]) - eef), default=None)
 
     out = {}
     if target_name is not None:
         out["target_pos"] = np.asarray(obs[f"{target_name}_pos"], dtype=np.float32)
-    if dest_name is not None:
-        out["dest_pos"] = np.asarray(obs[f"{dest_name}_pos"], dtype=np.float32)
+    if dest_pos is not None:
+        out["dest_pos"] = dest_pos
     return out
 
 
@@ -267,7 +327,7 @@ def run_eval(args):
                                 "obstacle_radius": obstacle_radius(obstacle_name),
                             }
                             if args.corridor:
-                                element["guidance"].update(parse_entities(task_description, obs))
+                                element["guidance"].update(parse_entities(task_description, obs, sim=env.sim))
                         result = client.infer(element)
                         action_chunk = result["actions"][:REPLAN_STEPS]
                         diag = result.get("guidance")
