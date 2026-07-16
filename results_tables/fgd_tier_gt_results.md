@@ -308,8 +308,14 @@ the GEOMETRY floor — detector errors add on top).
 - DATA BUG found: saved depth/seg arrays have inconsistent vertical orientation across
   tasks (task_1/3 v-flipped vs task_0/2); validator auto-orients via an EEF
   depth-consistency landmark test.
+- Multi-view fusion (agentview+backview mean): med 0.067, p90 0.152. Backview alone:
+  med 0.081, p90 0.147, resolves 39/40. Fusion helps but the floor stays ≈ obstacle
+  radius — both views share the body-origin/occlusion systematics.
 - Design consequence (pre-registered for Phase 5): the no-GT tier needs (a) multi-view
   fusion (backview + eye_in_hand are already captured), and/or (b) support-height priors,
   and/or (c) margin inflation by the calibrated localization quantile (conformal:
   inflate r_eff by the p90 localization error, trading FAR for retained CAR). Straight
-  single-view swap-in would poison E3.
+  single-view swap-in would poison E3. Given r14 (r_eff 0.14) already collapses Spatial
+  L1 TSR to 49, option (c) alone (r_eff + 0.15) is NOT viable — perception must improve
+  (temporal averaging over episode frames is the cheapest untested lever) or margins
+  must inflate selectively (only along the low-clearance direction).
