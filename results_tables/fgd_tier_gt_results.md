@@ -252,6 +252,27 @@ generation — e.g. per-candidate detour attractors (2 of K=8 seeds biased left-
 right-around the obstacle) so prefix acceptance can SELECT a different route class, rather
 than post-hoc velocity surgery inside the same blocked route.
 
+### EPISTEMIC SIGNALS VALIDATED (task #16; Spatial L1 fix n=20 JSONL, n=80 episodes)
+Training-free K=8 telemetry (`k_dispersion`, `margin_spread`, logged per episode) vs
+outcomes, pooled AUC (gate: ≥0.65 on collision or timeout_stall):
+
+| Signal | collision AUC | timeout_stall AUC |
+|---|---|---|
+| k_disp_mean | 0.585 | **0.879** |
+| k_disp_max | 0.617 | **0.806** |
+| margin_spread_mean | 0.506 | **0.907** |
+
+Reading: candidate disagreement is a STALL predictor (AUC 0.88–0.91), not a collision
+predictor — exactly the liveness failure mode of Long L2 and the stuck cells. This is
+the paper's epistemic-gating evidence: high dispersion ⇒ policy conflicted ⇒ trigger a
+graduated response (replan/prefix-shorten), rather than uniform conservatism. Note:
+all failures in this run are timeouts, so failure_any == timeout_stall here; re-confirm
+on Goal/Long L2 n=20 when it lands (job 42238691).
+
+Spatial L1 fix n=20 aside: 57.5/43.75 (composed n=50: 53.5/46.0) — the cc3f766 fix does
+NOT move Spatial L1 ([bind] logs show correct target/dest), confirming its TSR gap is
+H2 (fat margins + K-selection), not H1. Per-condition best for Spatial L1 stays r3-thin.
+
 ### HDC v1 VERDICT: KILLED at smoke (jobs 42239405/06, n=5/cell, 2026-07-16)
 Implementation: lateral per-step velocity bias (hdc_scale m/step) on 4 of K=8 seeds,
 denoise steps 2–5, repair-certified (commit in `pi0_guided.py::_hdc_bias`, kept behind
