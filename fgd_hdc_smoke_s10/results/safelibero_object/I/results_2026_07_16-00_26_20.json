@@ -1,0 +1,49 @@
+{
+  "policy": "Pi0.5 (pi05_libero) + in-denoising DCBF guidance (Tier-GT)",
+  "task_suite": "safelibero_object",
+  "safety_level": "I",
+  "guidance_enabled": true,
+  "total_episodes": 10,
+  "total_successes": 1,
+  "total_collisions": 10,
+  "overall_TSR": 0.1,
+  "overall_CAR": 0.0,
+  "overall_ETS_mean": 295.2,
+  "overall_ETS_median": 300.0,
+  "context_source": "libero_observation_object_pose_tier_gt",
+  "guidance": {
+    "chunks": 591,
+    "active_chunks": 287,
+    "activation_rate": 0.4856175972927242,
+    "mean_correction_norm": 0.20893918502407022,
+    "min_clearance_seen": -0.06932283937931061,
+    "max_residual_seen": 0.0635611042380333,
+    "dbnr_active_chunks": 287,
+    "dbnr_tau_mean": 0.008934040269877304,
+    "dbnr_headroom_mean": 0.5801293766612791
+  },
+  "per_task": [
+    {
+      "task_id": 1,
+      "task_description": "pick up the chocolate pudding and place it in the basket",
+      "episodes": 5,
+      "successes": 1,
+      "collisions": 5,
+      "TSR": 0.2,
+      "CAR": 0.0,
+      "ETS_mean": 290.4,
+      "ETS_median": 300.0
+    },
+    {
+      "task_id": 2,
+      "task_description": "pick up the milk and place it in the basket",
+      "episodes": 5,
+      "successes": 0,
+      "collisions": 5,
+      "TSR": 0.0,
+      "CAR": 0.0,
+      "ETS_mean": 300.0,
+      "ETS_median": 300.0
+    }
+  ]
+}

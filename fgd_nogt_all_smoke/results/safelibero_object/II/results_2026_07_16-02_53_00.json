@@ -1,0 +1,71 @@
+{
+  "policy": "Pi0.5 (pi05_libero) + in-denoising DCBF guidance (Tier-GT)",
+  "task_suite": "safelibero_object",
+  "safety_level": "II",
+  "guidance_enabled": true,
+  "total_episodes": 20,
+  "total_successes": 16,
+  "total_collisions": 2,
+  "overall_TSR": 0.8,
+  "overall_CAR": 0.9,
+  "overall_ETS_mean": 195.0,
+  "overall_ETS_median": 177.5,
+  "context_source": "libero_observation_object_pose_tier_gt",
+  "guidance": {
+    "chunks": 790,
+    "active_chunks": 319,
+    "activation_rate": 0.40379746835443037,
+    "mean_correction_norm": 0.16169991851951704,
+    "min_clearance_seen": -0.10514546930789948,
+    "max_residual_seen": 0.09724117815494537,
+    "dbnr_active_chunks": 319,
+    "dbnr_tau_mean": 0.009483414603675333,
+    "dbnr_headroom_mean": 0.48418453013448504
+  },
+  "per_task": [
+    {
+      "task_id": 0,
+      "task_description": "pick up the orange juice and place it in the basket",
+      "episodes": 5,
+      "successes": 4,
+      "collisions": 0,
+      "TSR": 0.8,
+      "CAR": 1.0,
+      "ETS_mean": 168.2,
+      "ETS_median": 141.0
+    },
+    {
+      "task_id": 1,
+      "task_description": "pick up the chocolate pudding and place it in the basket",
+      "episodes": 5,
+      "successes": 5,
+      "collisions": 0,
+      "TSR": 1.0,
+      "CAR": 1.0,
+      "ETS_mean": 171.8,
+      "ETS_median": 173.0
+    },
+    {
+      "task_id": 2,
+      "task_description": "pick up the milk and place it in the basket",
+      "episodes": 5,
+      "successes": 4,
+      "collisions": 1,
+      "TSR": 0.8,
+      "CAR": 0.8,
+      "ETS_mean": 186.6,
+      "ETS_median": 174.0
+    },
+    {
+      "task_id": 3,
+      "task_description": "pick up the bbq sauce and place it in the basket",
+      "episodes": 5,
+      "successes": 3,
+      "collisions": 1,
+      "TSR": 0.6,
+      "CAR": 0.8,
+      "ETS_mean": 253.4,
+      "ETS_median": 263.0
+    }
+  ]
+}

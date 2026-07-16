@@ -1,0 +1,5 @@
+{"task": 2, "ep": 0, "success": false, "collision": true, "steps": 550, "k_disp_mean": 0.1811, "k_disp_max": 0.62387, "margin_spread_mean": 0.02563}
+{"task": 2, "ep": 1, "success": false, "collision": true, "steps": 550, "k_disp_mean": 0.11706, "k_disp_max": 0.41837, "margin_spread_mean": 0.02449}
+{"task": 2, "ep": 2, "success": false, "collision": false, "steps": 550, "k_disp_mean": 0.16856, "k_disp_max": 0.56584, "margin_spread_mean": 0.01774}
+{"task": 2, "ep": 3, "success": false, "collision": false, "steps": 550, "k_disp_mean": 0.12682, "k_disp_max": 0.32666, "margin_spread_mean": 0.01166}
+{"task": 2, "ep": 4, "success": false, "collision": false, "steps": 550, "k_disp_mean": 0.16193, "k_disp_max": 0.60642, "margin_spread_mean": 0.02289}

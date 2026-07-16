@@ -452,7 +452,22 @@ prior (C2's property head: fragile/hot/liquid scores × path proximity) or a VLM
 micro-judgment per candidate. Spatial-only claims stand (12/12, 39/39 offline); no-GT
 rows for other suites are GATED on identity v2+.
 
-### ★ E1 HELD-OUT IDENTITY: 155/160 (96.9%) — job 42241220
+### ALL-SUITE FULL NO-GT SMOKE (job 42241091; n=5/task, identity v3 + percep, composed)
+| Condition | Tier-GT (best cfg, n=50) | no-GT smoke (n=5) |
+|---|---|---|
+| Goal L1 | 77.5 / 51.0 | 65 / 70 |
+| Goal L2 | 69.0 / 58.0 (r3) | 55 / 60 |
+| Object L1 | 48.0 / 43.5 | 35 / 90 |
+| Object L2 | 83.0 / 74.5 | 80 / 90 |
+| Long L1 | 42.5 / 71.0 | 5 / 70 |
+| Long L2 | 47.0 / 77.0 (r3) | 25 / 70 |
+
+Live identity 114/120 (95%). Reading: no-GT tracks Tier-GT composed within smoke bars on
+Goal/Object (CAR often HIGHER — localization error acts as extra margin), but Long L1
+TSR collapses (5%) — percep noise compounds the stall pathology. Note these no-GT rows
+use the composed config; Goal L2/Long L2's Tier-GT best is r3, so matched-config no-GT
+r3 arms are the fair finals for those two conditions. Promotion plan: n=20 on
+Goal/Object; Long no-GT pending the cap-800 verdict.
 Identity v3 on init states 3–12 (DISJOINT from the eps 0–2 used during v3 iteration),
 10 eps × 4 tasks × 4 suites: Spatial 40/40 · Goal 40/40 · Object 40/40 · Long 35/40.
 All 5 misses are the single known language-ambiguity case (yellow_book vs "the yellow
