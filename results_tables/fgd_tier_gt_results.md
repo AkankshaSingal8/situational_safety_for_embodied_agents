@@ -293,3 +293,23 @@ significant TSR cost — EXCEPT precisely the two known-bug conditions (Goal L2,
 both significant TSR LOSSES, the cc3f766 fix targets), and it significantly RAISES TSR
 on Long L1. The regression fix, if confirmed at n=20/n=50, makes composed strictly
 dominant or neutral everywhere vs r3.
+
+## NO-GT TIER GROUNDWORK — RGB-D localization floor (2026-07-16, offline)
+Tool: `vlm_pipeline/validate_depth_backprojection.py` on the 40 saved
+vlm_inputs/safelibero_spatial episodes (GT seg region as detector stand-in, so this is
+the GEOMETRY floor — detector errors add on top).
+
+- Single-view (agentview) mask-median back-projection: **3D err median ≈ 0.08 m,
+  p90 0.15–0.24 m** — the same size as obstacle radii (0.065–0.08) and corridor radius
+  (0.07). NOT sufficient to inherit Tier-GT guidance unchanged.
+- Error is scene-dependent, not class-constant: leave-one-out per-class offset
+  calibration does not fix it (pooled 0.151→0.119). task_1-style scenes (obstacle on a
+  raised support, partial occlusion) contribute +0.1–0.24 m dz errors.
+- DATA BUG found: saved depth/seg arrays have inconsistent vertical orientation across
+  tasks (task_1/3 v-flipped vs task_0/2); validator auto-orients via an EEF
+  depth-consistency landmark test.
+- Design consequence (pre-registered for Phase 5): the no-GT tier needs (a) multi-view
+  fusion (backview + eye_in_hand are already captured), and/or (b) support-height priors,
+  and/or (c) margin inflation by the calibrated localization quantile (conformal:
+  inflate r_eff by the p90 localization error, trading FAR for retained CAR). Straight
+  single-view swap-in would poison E3.
