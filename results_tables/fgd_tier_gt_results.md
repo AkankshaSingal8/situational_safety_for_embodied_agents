@@ -273,6 +273,32 @@ Spatial L1 fix n=20 aside: 57.5/43.75 (composed n=50: 53.5/46.0) — the cc3f766
 NOT move Spatial L1 ([bind] logs show correct target/dest), confirming its TSR gap is
 H2 (fat margins + K-selection), not H1. Per-condition best for Spatial L1 stays r3-thin.
 
+### ★ PRE-REGISTERED RULE APPLIED: per-condition configs STAND (job 42238691, n=20)
+Fix n=20 on the regressed conditions (composed + cc3f766, all tasks):
+
+| Condition | Composed n=50 | Fix n=20 | r3 n=50 (bar) | Restored? |
+|---|---|---|---|---|
+| Goal L2 | 54.0 / 63.5 | 61.25 / 57.5 | 69.0 / 58.0 | NO (TSR still −8 vs r3) |
+| Long L2 | 24.5 / 77.0 | 25.0 / 78.75 | 47.0 / 77.0 | NO (t0/t1 stuck at 50 vs 84/82) |
+
+The fix helps its target cells (Goal L2 t1: 28→55 TSR; Long L2 t0/t1: →50/50 with CAR
+65/95) but does not reach r3. DECISION (as pre-registered): the paper reports the
+per-condition best-config table — composed for Spatial L2/Goal L1/Object L1+L2/Long L1,
+r3 for Spatial L1 (thin)/Goal L2/Long L2 — as an honest config ablation, with the fix
+documented as a partial mitigation.
+
+FINAL Tier-GT best-config row set (vs baseline TSR/CAR):
+Spatial L1 r3 71.0/23.5 (67.0/14.0) · Spatial L2 comp 85.0/76.5 (55.5/12.0) ·
+Goal L1 comp 77.5/51.0 (51.0/23.0) · Goal L2 r3 69.0/58.0 (66.5/35.0) ·
+Object L1 comp 48.0/43.5 (40.5/14.0) · Object L2 comp 83.0/74.5 (74.0/25.0) ·
+Long L1 comp 42.5/71.0 (58.0/15.0) · Long L2 r3 47.0/77.0 (51.0/16.5).
+= both-axes wins vs baseline in 6/8; Long L1/L2 trade TSR (−15.5/−4) for CAR (+56/+60.5).
+
+Epistemic-signal re-confirm on this JSONL (Goal/Long L2, n=160): collision AUC 0.63–0.67
+(k_disp_mean 0.673 passes the 0.65 gate), timeout_stall drops to 0.57–0.60 — the strong
+Spatial stall signal (0.88–0.91) is suite-dependent: dispersion marks NEAR-OBSTACLE
+freeze, not generic task confusion. Report per-suite AUCs honestly.
+
 ### HDC v1 VERDICT: KILLED at smoke (jobs 42239405/06, n=5/cell, 2026-07-16)
 Implementation: lateral per-step velocity bias (hdc_scale m/step) on 4 of K=8 seeds,
 denoise steps 2–5, repair-certified (commit in `pi0_guided.py::_hdc_bias`, kept behind
