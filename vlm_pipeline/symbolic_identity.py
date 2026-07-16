@@ -104,6 +104,82 @@ def symbolic_obstacle_id(
     return min(unmentioned, key=dist_to_path)
 
 
+# Hazard-class property prior (C2's property head, name-token based; the VLM
+# supplies these attributes in the full Tier-Percep stack). Higher = more
+# hazard-like; groceries/servingware are benign manipulanda.
+HAZARD_PRIOR = {
+    "bottle": 0.9, "wine": 0.9, "glass": 0.9,
+    "pot": 0.9, "moka": 0.9, "kettle": 0.9, "pan": 0.85,
+    "mug": 0.7, "cup": 0.7,
+    "milk": 0.7, "storage": 0.6, "box": 0.5, "book": 0.5,
+    "plate": 0.1, "bowl": 0.15, "basket": 0.1, "ramekin": 0.15, "tray": 0.1,
+    "pudding": 0.2, "cheese": 0.2, "butter": 0.2, "sauce": 0.2, "soup": 0.2,
+    "ketchup": 0.2, "juice": 0.2, "cookies": 0.2, "bbq": 0.2, "cream": 0.2,
+}
+_HAZARD_DEFAULT = 0.4
+
+
+def _hazard_weight(name: str) -> float:
+    toks = _clean_object_name(name).lower().split()
+    ws = [HAZARD_PRIOR[t] for t in toks if t in HAZARD_PRIOR]
+    return max(ws) if ws else _HAZARD_DEFAULT
+
+
+def scored_obstacle_id(
+    task_description: str,
+    candidate_positions: Dict[str, "np.ndarray"],
+    eef_pos: Optional["np.ndarray"] = None,
+    sigma: float = 0.25,
+) -> Optional[str]:
+    """v3 identity for distractor-rich scenes: soft scoring instead of hard
+    mention exclusion.
+
+    score(x) = hazard_prior(x) · exp(−d_path(x)²/2σ²) · (1 − 0.8·mention_frac(x))
+
+    where mention_frac = fraction of the name's content tokens present in the
+    instruction (full mention ⇒ hard-excluded), and d_path = min xy distance
+    to any reach segment eef→mentioned-object (multi-goal aware — fixes Long
+    tasks where the obstacle blocks the SECOND goal's path).
+    """
+    task = task_description.lower()
+
+    def mention_frac(key: str) -> float:
+        toks = [w for w in _clean_object_name(key).lower().split() if len(w) >= 3]
+        if not toks:
+            return 0.0
+        return sum(w in task for w in toks) / len(toks)
+
+    fracs = {k: mention_frac(k) for k in candidate_positions}
+    partial = {k for k, f in fracs.items() if f < 1.0}
+    if not partial:
+        return None
+    goals = [k for k, f in fracs.items() if f >= 0.5]
+
+    spos = np.asarray(eef_pos)[:2] if eef_pos is not None else np.array([-0.21, 0.0])
+    segs = []
+    for g in goals:
+        segs.append((spos, np.asarray(candidate_positions[g])[:2]))
+    if not segs:
+        segs.append((spos, np.array([0.0, 0.15])))
+
+    def d_path(k: str) -> float:
+        p = np.asarray(candidate_positions[k])[:2]
+        best = np.inf
+        for s, e in segs:
+            seg = e - s
+            l2 = float(seg @ seg)
+            t = 0.0 if l2 < 1e-9 else float(np.clip((p - s) @ seg / l2, 0.0, 1.0))
+            best = min(best, float(np.linalg.norm(p - (s + t * seg))))
+        return best
+
+    def score(k: str) -> float:
+        return (_hazard_weight(k)
+                * float(np.exp(-d_path(k) ** 2 / (2 * sigma ** 2)))
+                * (1.0 - 0.8 * fracs[k]))
+
+    return max(partial, key=score)
+
+
 def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5, 0.5))) -> Optional[str]:
     """Client entry point: candidates from `*_pos` obs keys (workspace-filtered,
     robot excluded), target via the pickup-phrase heuristic, then symbolic id."""
@@ -122,6 +198,5 @@ def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5,
             cands[k[:-4]] = p
     if not cands:
         return None
-    target = parse_target_heuristic(task_description, list(cands))
-    return symbolic_obstacle_id(task_description, cands, target,
-                                np.asarray(obs["robot0_eef_pos"]))
+    return scored_obstacle_id(task_description, cands,
+                              np.asarray(obs["robot0_eef_pos"]))
