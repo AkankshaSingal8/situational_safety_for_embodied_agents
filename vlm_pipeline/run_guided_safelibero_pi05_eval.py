@@ -192,6 +192,14 @@ def parse_args():
     parser.add_argument("--task_indices", type=int, nargs="+", default=None)
     parser.add_argument("--corridor", action="store_true",
                         help="Send parsed target/destination positions for the corridor exemption (GT tier).")
+    parser.add_argument("--obstacle_pos_source", type=str, default="gt",
+                        choices=["gt", "percep"],
+                        help="'percep' = RGB-D back-projection at episode start "
+                             "(Tier-SemID geometry arm for E3); identity stays GT. "
+                             "Falls back to GT on estimator failure (logged + counted).")
+    parser.add_argument("--percep_z_correction", type=float, default=-0.03,
+                        help="Surface-to-center z offset for percep estimates "
+                             "(runtime smoke 42239326: est z biased +0.02..0.05).")
     parser.add_argument("--disable_guidance", action="store_true",
                         help="Send enabled=0 (server sanity baseline through the same code path).")
     return parser.parse_args()
@@ -299,6 +307,25 @@ def run_eval(args):
             ep_kdisp = []
             ep_mspread = []
 
+            # E3 geometry arm: obstacle position from RGB-D perception instead
+            # of sim state. Estimated ONCE per episode (obstacles are static);
+            # GT fallback is logged and counted so contamination is reportable.
+            guidance_obstacle_pos = initial_obstacle_pos
+            percep_fallback = False
+            if args.obstacle_pos_source == "percep" and obstacle_name is not None:
+                from percep_obstacle import estimate_obstacle_pos
+                est, n_views = estimate_obstacle_pos(
+                    env.sim, obstacle_name, cameras=("agentview",))
+                if est is not None:
+                    est = est + np.array([0.0, 0.0, args.percep_z_correction])
+                    err = float(np.linalg.norm(est - initial_obstacle_pos))
+                    logging.info(f"  [percep] ep {ep_idx} views={n_views} "
+                                 f"err_vs_gt={err:.3f}m est={np.round(est,3).tolist()}")
+                    guidance_obstacle_pos = est
+                else:
+                    percep_fallback = True
+                    logging.warning(f"  [percep] ep {ep_idx} estimator failed — GT fallback")
+
             if args.corridor and obstacle_name is not None:
                 _ents = parse_entities(task_description, obs, sim=env.sim)
                 logging.info(
@@ -341,7 +368,9 @@ def run_eval(args):
                             element["guidance"] = {
                                 "enabled": 0.0 if args.disable_guidance else 1.0,
                                 "eef_pos": np.asarray(obs["robot0_eef_pos"], dtype=np.float32),
-                                "obstacle_pos": np.asarray(obs[f"{obstacle_name}_pos"], dtype=np.float32),
+                                "obstacle_pos": np.asarray(
+                                    guidance_obstacle_pos if args.obstacle_pos_source == "percep"
+                                    else obs[f"{obstacle_name}_pos"], dtype=np.float32),
                                 "obstacle_radius": obstacle_radius(obstacle_name),
                             }
                             if args.corridor:
@@ -412,6 +441,8 @@ def run_eval(args):
                     ep_record["k_disp_mean"] = round(float(np.mean(ep_kdisp)), 5)
                     ep_record["k_disp_max"] = round(float(np.max(ep_kdisp)), 5)
                     ep_record["margin_spread_mean"] = round(float(np.mean(ep_mspread)), 5)
+                if args.obstacle_pos_source == "percep":
+                    ep_record["percep_fallback"] = percep_fallback
                 ef.write(json.dumps(ep_record) + "\n")
 
             logging.info(
