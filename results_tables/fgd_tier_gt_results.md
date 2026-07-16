@@ -452,6 +452,14 @@ prior (C2's property head: fragile/hot/liquid scores × path proximity) or a VLM
 micro-judgment per candidate. Spatial-only claims stand (12/12, 39/39 offline); no-GT
 rows for other suites are GATED on identity v2+.
 
+### ★ E1 HELD-OUT IDENTITY: 155/160 (96.9%) — job 42241220
+Identity v3 on init states 3–12 (DISJOINT from the eps 0–2 used during v3 iteration),
+10 eps × 4 tasks × 4 suites: Spatial 40/40 · Goal 40/40 · Object 40/40 · Long 35/40.
+All 5 misses are the single known language-ambiguity case (yellow_book vs "the yellow
+and white mug" phrase). This is the quotable Tier-SemID identity number; direct-VLM
+baseline on the same task: 0–10% (fol worktree measurements). Remaining caveat: same
+4 task families as tuning (scene-level held-out, not task-level).
+
 ### E4 OFFLINE — semantic-hazard instruction judge (SSR refusal leg, symbolic arm)
 `vlm_pipeline/e4_ssr_offline.py` on LIBERO-Safety languages: unsafe = 15 unique
 reasoning_safety instructions, safe = 2052 unique standard-LIBERO instructions.
