@@ -252,6 +252,27 @@ generation — e.g. per-candidate detour attractors (2 of K=8 seeds biased left-
 right-around the obstacle) so prefix acceptance can SELECT a different route class, rather
 than post-hoc velocity surgery inside the same blocked route.
 
+### HDC v1 VERDICT: KILLED at smoke (jobs 42239405/06, n=5/cell, 2026-07-16)
+Implementation: lateral per-step velocity bias (hdc_scale m/step) on 4 of K=8 seeds,
+denoise steps 2–5, repair-certified (commit in `pi0_guided.py::_hdc_bias`, kept behind
+hdc_scale=0 default).
+
+| Cell (composed n=50 ref) | s10 (0.010) | s20 (0.020) |
+|---|---|---|
+| Spatial L1 t1 (14/34) | 20 / 40 | 0 / 40 |
+| Long L2 t2 (2/—) | 0 / 60 | 0 / 60 |
+| Object L1 t1 (32/~0) | 20 / 0 | 40 / 0 |
+| Object L1 t2 (12/0) | 0 / 0 | 20 / 0 |
+
+Kill rule (≥ +20pp TSR on ≥1 cell, no CAR loss): NOT met — best is +8pp inside n=5
+noise, and s20 zeroes Spatial t1. Post-mortem: a constant lateral drift is not a route
+commitment — the next chunk's policy replans straight back (no hysteresis), and biased
+candidates lose prefix acceptance on progress/margin. v2 candidates (NOT scheduled):
+persistent side commitment across chunks (winning-seed noise inheritance) or explicit
+detour waypoint sequencing. For the paper, the obstacle-on-path family (Spatial t3,
+Object L1 t1/t2, Long L2 t2) is reported as a structural limitation of single-chunk
+in-denoising guidance — E2 corroborates (≤11% straight-line clearance).
+
 Reading: t1/t2 collide in ≈100% of episodes under EVERY config — the E2-verified
 obstacle-on-path family (straight-line homotopy always clips the obstacle; K=8 seed
 diversity does not change homotopy class). Composed trades t2 TSR (48→12, fat margins
