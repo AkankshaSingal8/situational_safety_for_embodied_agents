@@ -252,6 +252,13 @@ def run_eval(args):
     g_correction_sum = 0.0
     g_min_clearance = float("inf")
     g_residual_max = 0.0
+    # DBNR kill-test instrumentation (CONTEXT_HANDOFF.md #4.5): read-only
+    # diagnostics from _dbnr_diagnostics in pi0_guided.py, present in every
+    # `guidance` response regardless of --corridor. Aggregated over chunks
+    # where dbnr_active_frac > 0 (the repair actually fired).
+    dbnr_active_chunks = 0
+    dbnr_tau_sum = 0.0
+    dbnr_headroom_sum = 0.0
 
     for task_id in task_ids:
         task = task_suite.get_task(task_id)
@@ -338,6 +345,10 @@ def run_eval(args):
                             g_active_chunks += int(corr > 1e-5)
                             g_min_clearance = min(g_min_clearance, float(diag.get("min_clearance", np.inf)))
                             g_residual_max = max(g_residual_max, float(diag.get("max_residual", 0.0)))
+                            if float(diag.get("dbnr_active_frac", 0.0)) > 0.0:
+                                dbnr_active_chunks += 1
+                                dbnr_tau_sum += float(diag.get("dbnr_tau_mean", 0.0))
+                                dbnr_headroom_sum += float(diag.get("dbnr_headroom_mean", 0.0))
                         action_plan.extend(action_chunk)
 
                     action = action_plan.popleft()
@@ -441,6 +452,9 @@ def run_eval(args):
             "mean_correction_norm": g_correction_sum / g_chunks if g_chunks else 0.0,
             "min_clearance_seen": g_min_clearance if g_chunks else None,
             "max_residual_seen": g_residual_max,
+            "dbnr_active_chunks": dbnr_active_chunks,
+            "dbnr_tau_mean": dbnr_tau_sum / dbnr_active_chunks if dbnr_active_chunks else 0.0,
+            "dbnr_headroom_mean": dbnr_headroom_sum / dbnr_active_chunks if dbnr_active_chunks else 0.0,
         },
         "per_task": per_task_results,
     }

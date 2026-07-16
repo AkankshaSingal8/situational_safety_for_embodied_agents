@@ -208,7 +208,64 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
         "min_clearance": jnp.min(clearance, axis=-1),  # (B,)
         "max_residual": jnp.max(residual, axis=-1),  # (B,)
     }
+    diag.update(_dbnr_diagnostics(disp, disp_new, p_traj, g))
     return x_new, diag
+
+
+def _dbnr_diagnostics(disp: jnp.ndarray, disp_new: jnp.ndarray, p_traj: jnp.ndarray, g: GuidanceParams) -> dict:
+    """DBNR kill-test instrumentation (read-only; does not affect x_new).
+
+    Estimates, per step, how much task-aligned velocity the repair just
+    removed (tau) and how much headroom exists to restore it without
+    touching the active constraint (headroom = the component of the unit
+    task direction orthogonal to the repair's push direction, i.e.
+    ||(I - dd^T) w_hat|| for push direction d). This is the single-obstacle
+    approximation of the general nullspace-projector story in the DBNR spec
+    (docs/research/inv_invB.json methods[1]): with one active constraint per
+    step the projector collapses to I - d d^T, no Cholesky/stack needed.
+
+    Kill criterion (pre-registered, CONTEXT_HANDOFF.md #4.5): if tau ~= 0
+    across active steps, the repair isn't removing meaningful task motion
+    and DBNR has nothing to restore -> kill. If tau > 0 and headroom > 0,
+    there is recoverable task progress -> implement the full restitution.
+    """
+    correction = disp_new - disp  # (B, H, 3) — what the repair actually changed
+    corr_norm = jnp.linalg.norm(correction, axis=-1)  # (B, H)
+    active = corr_norm > 1e-5
+
+    p_prev = jnp.concatenate([jnp.broadcast_to(g.eef_pos, p_traj[:, :1, :].shape), p_traj[:, :-1, :]], axis=1)
+
+    valid_dest = jnp.linalg.norm(g.dest_pos - g.eef_pos) < 2.0
+    valid_target = jnp.linalg.norm(g.target_pos - g.eef_pos) < 2.0
+    goal = jnp.where(valid_dest, g.dest_pos, jnp.where(valid_target, g.target_pos, g.eef_pos))
+    have_goal = valid_dest | valid_target
+
+    w = goal[None, None, :] - p_prev  # (B, H, 3)
+    w_hat = w / (jnp.linalg.norm(w, axis=-1, keepdims=True) + 1e-8)
+
+    # tau: task-aligned velocity the correction removed (positive = opposed task direction)
+    tau = jnp.maximum(0.0, -jnp.sum(correction * w_hat, axis=-1))  # (B, H)
+
+    # push direction actually used by the repair, recovered post-hoc from the
+    # geometry (companion offsets omitted here — a coarse but adequate proxy
+    # for a routing-level diagnostic): points away from the obstacle.
+    push_dir = p_traj - g.obstacle_pos[None, None, :]
+    push_dir = push_dir / (jnp.linalg.norm(push_dir, axis=-1, keepdims=True) + 1e-8)
+    headroom = jnp.linalg.norm(w_hat - jnp.sum(w_hat * push_dir, axis=-1, keepdims=True) * push_dir, axis=-1)  # (B, H)
+
+    mask = active & have_goal
+    n_active = jnp.maximum(jnp.sum(mask.astype(jnp.float32), axis=-1), 1.0)  # (B,)
+    tau_mean = jnp.sum(jnp.where(mask, tau, 0.0), axis=-1) / n_active
+    tau_max = jnp.max(jnp.where(mask, tau, 0.0), axis=-1)
+    headroom_mean = jnp.sum(jnp.where(mask, headroom, 0.0), axis=-1) / n_active
+    active_frac = jnp.mean(active.astype(jnp.float32), axis=-1)
+
+    return {
+        "dbnr_tau_mean": tau_mean,  # (B,)
+        "dbnr_tau_max": tau_max,  # (B,)
+        "dbnr_headroom_mean": headroom_mean,  # (B,), in [0, 1]
+        "dbnr_active_frac": active_frac,  # (B,)
+    }
 
 
 def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> dict:
