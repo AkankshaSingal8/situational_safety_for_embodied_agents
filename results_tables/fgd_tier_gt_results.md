@@ -407,6 +407,16 @@ Reading: the geometry leg of the no-GT tier is ≈FREE at Spatial L2 — TSR ide
 −6.5 within n=5 noise. Promotion to n=20 submitted (job 42239799). Remaining no-GT legs:
 identity (symbolic grounder reuse) and non-spatial suites.
 
+### Identity generalization smoke v1 (job 42240503, live-sim, 3 eps × 4 tasks/suite)
+Symbolic grounder beyond Spatial: **Spatial 12/12, Goal 5/12, Object 0/12, Long 3/12.**
+Failure modes: (a) MECHANICAL — relative-pose obs keys (`X_to_robot0_eef_pos`) polluted
+the candidate set (fixed; smoke v2 = job 42240661); (b) REAL — distractor-rich Object
+scenes have many unmentioned objects and ¬mentioned∧nearest-to-path picks a distractor
+food item over the wine-bottle hazard: the FOL rule needs the hazard-class property
+prior (C2's property head: fragile/hot/liquid scores × path proximity) or a VLM
+micro-judgment per candidate. Spatial-only claims stand (12/12, 39/39 offline); no-GT
+rows for other suites are GATED on identity v2+.
+
 ## NO-GT TIER GROUNDWORK — RGB-D localization floor (2026-07-16, offline)
 Tool: `vlm_pipeline/validate_depth_backprojection.py` on the 40 saved
 vlm_inputs/safelibero_spatial episodes (GT seg region as detector stand-in, so this is
