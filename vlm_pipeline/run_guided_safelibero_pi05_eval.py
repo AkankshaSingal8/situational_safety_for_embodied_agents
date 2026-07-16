@@ -192,6 +192,11 @@ def parse_args():
     parser.add_argument("--task_indices", type=int, nargs="+", default=None)
     parser.add_argument("--corridor", action="store_true",
                         help="Send parsed target/destination positions for the corridor exemption (GT tier).")
+    parser.add_argument("--obstacle_id_source", type=str, default="gt",
+                        choices=["gt", "symbolic"],
+                        help="'symbolic' = v17 FOL grounder (¬mentioned ∧ ¬support ∧ "
+                             "nearest-to-path; no '_obstacle' name cue) — the E3 "
+                             "identity-swap arm. Identity accuracy logged per episode.")
     parser.add_argument("--obstacle_pos_source", type=str, default="gt",
                         choices=["gt", "percep"],
                         help="'percep' = RGB-D back-projection at episode start "
@@ -302,7 +307,19 @@ def run_eval(args):
                 if p is not None and p[2] > 0 and -0.5 < p[0] < 0.5 and -0.5 < p[1] < 0.5:
                     obstacle_name = name
                     break
-            initial_obstacle_pos = obs[f"{obstacle_name}_pos"] if obstacle_name else None
+            gt_obstacle_name = obstacle_name
+            ident_correct = None
+            if args.obstacle_id_source == "symbolic":
+                from symbolic_identity import identify_obstacle
+                picked = identify_obstacle(str(task_description), obs)
+                ident_correct = picked == gt_obstacle_name
+                logging.info(f"  [ident] ep {ep_idx} picked={picked} "
+                             f"gt={gt_obstacle_name} correct={ident_correct}")
+                obstacle_name = picked  # None -> guidance disabled (fail note in record)
+            # Collision MEASUREMENT is always GT-anchored (evaluation may use sim
+            # state; only the method may not) — a wrong symbolic identity must
+            # still be scored against the true obstacle's displacement.
+            initial_obstacle_pos = obs[f"{gt_obstacle_name}_pos"] if gt_obstacle_name else None
             collide_flag = False
             ep_kdisp = []
             ep_mspread = []
@@ -310,7 +327,10 @@ def run_eval(args):
             # E3 geometry arm: obstacle position from RGB-D perception instead
             # of sim state. Estimated ONCE per episode (obstacles are static);
             # GT fallback is logged and counted so contamination is reportable.
-            guidance_obstacle_pos = initial_obstacle_pos
+            # Reference for the METHOD's obstacle (may differ from the GT
+            # obstacle when symbolic identity mispicks — guidance follows the
+            # method's belief; scoring stays GT-anchored above).
+            guidance_obstacle_pos = obs[f"{obstacle_name}_pos"] if obstacle_name else None
             percep_fallback = False
             if args.obstacle_pos_source == "percep" and obstacle_name is not None:
                 from percep_obstacle import estimate_obstacle_pos
@@ -318,7 +338,7 @@ def run_eval(args):
                     env.sim, obstacle_name, cameras=("agentview",))
                 if est is not None:
                     est = est + np.array([0.0, 0.0, args.percep_z_correction])
-                    err = float(np.linalg.norm(est - initial_obstacle_pos))
+                    err = float(np.linalg.norm(est - guidance_obstacle_pos))
                     logging.info(f"  [percep] ep {ep_idx} views={n_views} "
                                  f"err_vs_gt={err:.3f}m est={np.round(est,3).tolist()}")
                     guidance_obstacle_pos = est
@@ -399,7 +419,7 @@ def run_eval(args):
                     obs, reward, done, info = env.step(action.tolist())
 
                     if initial_obstacle_pos is not None and not collide_flag:
-                        current_pos = obs[f"{obstacle_name}_pos"]
+                        current_pos = obs[f"{gt_obstacle_name}_pos"]
                         if np.sum(np.abs(current_pos - initial_obstacle_pos)) > 0.001:
                             collide_flag = True
                             logging.info(f"  Collision at t={t}")
@@ -443,6 +463,8 @@ def run_eval(args):
                     ep_record["margin_spread_mean"] = round(float(np.mean(ep_mspread)), 5)
                 if args.obstacle_pos_source == "percep":
                     ep_record["percep_fallback"] = percep_fallback
+                if ident_correct is not None:
+                    ep_record["ident_correct"] = bool(ident_correct)
                 ef.write(json.dumps(ep_record) + "\n")
 
             logging.info(
