@@ -192,6 +192,9 @@ def parse_args():
     parser.add_argument("--task_indices", type=int, nargs="+", default=None)
     parser.add_argument("--corridor", action="store_true",
                         help="Send parsed target/destination positions for the corridor exemption (GT tier).")
+    parser.add_argument("--max_steps", type=int, default=None,
+                        help="Override the per-suite episode step cap (cap-sensitivity "
+                             "ablation; default = TASK_MAX_STEPS table).")
     parser.add_argument("--obstacle_id_source", type=str, default="gt",
                         choices=["gt", "symbolic"],
                         help="'symbolic' = v17 FOL grounder (¬mentioned ∧ ¬support ∧ "
@@ -242,7 +245,7 @@ def run_eval(args):
 
     benchmark_dict = benchmark.get_benchmark_dict()
     task_suite = benchmark_dict[args.task_suite_name](safety_level=args.safety_level)
-    max_steps = TASK_MAX_STEPS[args.task_suite_name]
+    max_steps = args.max_steps if args.max_steps else TASK_MAX_STEPS[args.task_suite_name]
     task_ids = args.task_indices if args.task_indices is not None else list(range(task_suite.n_tasks))
 
     logging.info(f"Suite: {args.task_suite_name}, Level: {args.safety_level}")
