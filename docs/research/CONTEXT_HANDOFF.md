@@ -1,5 +1,41 @@
 # COMPREHENSIVE CONTEXT & NEXT-STEPS FILE
-**Written 2026-07-13 (late). Purpose: complete working context for any session (human or Claude) continuing this project. Read this FIRST, then the doc map in §9.**
+**Written 2026-07-13 (late), MAJOR UPDATE 2026-07-16. Purpose: complete working context for any session (human or Claude) continuing this project. Read this FIRST, then the doc map in §9.**
+
+## ⚡ 2026-07-16 STATE DELTA (supersedes §3–§6 below; full detail in the worktree ledger)
+**Tier-GT is CLOSED.** Pre-registered rule applied after the fix n=20 arbiter (job 42238691):
+the paper reports the per-condition best-config table — composed for Spatial L2 / Goal L1 /
+Object L1+L2 / Long L1; r3 for Spatial L1(thin) / Goal L2 / Long L2. 6/8 beat baseline on
+both axes; Long L1/L2 trade TSR (−15.5/−4) for CAR (+56/+60.5). Spatial L2 = full
+four-number win (85.0/76.5), every component individually significant
+(`vlm_pipeline/stats_tests.py`; Fisher + paired McNemar in ledger).
+- **Referee closed** (#14): no obstacle radius reproduces SOTA-published (TSR,CAR) on both
+  levels under our >1mm criterion (r06/r10/r14 swept); honest CAR comparison = self-run reimpl.
+- **DBNR KILLED** (β-bracket 0.5/1.0/2.0: τ≈0 — repairs remove almost no task-velocity;
+  stalls are route-homotopy, not velocity loss). **HDC v1 KILLED** (lateral candidate bias,
+  no dev-cell lift — no route commitment across chunks). **TECV RETIRED without build**
+  (no strength-shaped failure mode remains). All post-mortems in ledger = ablation narrative.
+- **Epistemic signals VALIDATED** (#16): K-dispersion/margin-spread telemetry (now logged in
+  every run) predicts near-obstacle stall AUC 0.88–0.91 on Spatial (0.6–0.67 on Goal/Long —
+  suite-dependent, report per-suite). `vlm_pipeline/analyze_uncertainty_signals.py`.
+- **ROCS v1 mechanism DONE** (#17): gripper convention verified (+1 close/−1 open,
+  passthrough); release parse + forbidden-release + delay clamp in
+  `openpi_guided/src/openpi/models/rocs.py` (tests in tests/test_rocs.py). Server
+  integration awaits LIBERO-Safety harness (not yet cloned).
+- **No-GT tier is WELL UNDERWAY** (#20): (a) runtime RGB-D localization
+  (`vlm_pipeline/percep_obstacle.py`) — agentview-only 4.5–8.4 cm, z−0.03 correction,
+  live-sim validated; (b) **E3 geometry-swap smoke: Spatial L2 85/70 vs Tier-GT 85.0/76.5 —
+  geometry leg ≈ free**; n=20 promotion = job 42239799; (c) identity = v17 symbolic grounder
+  VENDORED (`vlm_pipeline/symbolic_identity.py`, 39/39 offline on spatial; direct-VLM
+  prompting is 0–10% — measured in fol worktree `fol_grounding_accuracy/`); client has
+  `--obstacle_id_source symbolic` + `--obstacle_pos_source percep` (GT-anchored scoring,
+  method-belief guidance); full no-GT smoke = job 42240496; all-suite identity smoke =
+  job 42240503. Saved-capture data bug found: vlm_inputs arrays have inconsistent vertical
+  orientation across tasks (runtime unaffected).
+- **Next steps (current order)**: (1) read the 3 pending job verdicts (percep n=20, full
+  no-GT smoke, all-suite identity); (2) no-GT n=20→n=50 on all conditions where identity
+  holds; (3) clone LIBERO-Safety, ROCS server integration, E4 SSR offline; (4) E5
+  fail-direction stress test (inject identity/position errors, measure CAR-vs-TSR error
+  direction); (5) paper assembly (Table 1 = baseline | reimpl | ours-GT | ours-no-GT).
 
 ---
 
