@@ -67,6 +67,15 @@ class GuidanceParams(NamedTuple):
     corridor_radius: at.Float[at.Array, ""]  # cylinder radius [m]
     corridor_relax: at.Float[at.Array, ""]  # margin multiplier inside = (1 - relax)
     companion_scale: at.Float[at.Array, ""]  # 1 = hand/payload points on; 0 = EEF-point-only (SOTA-reimpl fidelity)
+    # DBNR (Damage-Budgeted Nullspace Restitution, docs/research/inv_invB.json
+    # methods[1]): on a step the sweep just corrected, restore task-aligned
+    # velocity in the exact nullspace of THIS step's push direction, budgeted
+    # proportionally to the correction just applied. Single-obstacle
+    # simplification of the general spec (no cross-step debt, no multi-face
+    # slack cap — this repair has at most one active constraint per step, so
+    # the nullspace projector is exactly I - dd^T with no other faces to
+    # protect). 0 = off (default; matches every existing config/ablation row).
+    dbnr_beta0: at.Float[at.Array, ""]
 
 
 def _corridor_scale(p: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
@@ -136,6 +145,14 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
         k = jnp.argmin(dists)
         return dists[k], diffs[k] / (dists[k] + 1e-8)
 
+    # DBNR task direction: toward dest_pos, falling back to target_pos, reused
+    # from the corridor module's FAR-disable convention. Loop-invariant (goal
+    # doesn't move within a chunk), computed once.
+    valid_dest = jnp.linalg.norm(g.dest_pos - g.eef_pos) < 2.0
+    valid_target = jnp.linalg.norm(g.target_pos - g.eef_pos) < 2.0
+    dbnr_goal = jnp.where(valid_dest, g.dest_pos, jnp.where(valid_target, g.target_pos, g.eef_pos))
+    dbnr_have_goal = valid_dest | valid_target
+
     def repair_one(disp_b):
         """Sweep j = 0..H-1 enforcing B_j >= (1-gamma) * B_{j-1}."""
         p0 = g.eef_pos
@@ -175,6 +192,37 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
             chosen = jnp.where(deficit > 0.0, better, orig_step)
             # Denoising-time schedule: scale the CORRECTION, not the step.
             new_step = orig_step + w_k * (chosen - orig_step)
+
+            # DBNR restitution: restore task-aligned velocity in the exact
+            # nullspace of THIS step's push direction, budgeted proportionally
+            # to the damage the repair just did. w_perp is provably orthogonal
+            # to `direction` (dot(w_perp, direction) == 0 by construction), so
+            # adding gamma * w_perp cannot reduce dist(p_j, obstacle) along the
+            # repair's own escape axis — the certified margin from `chosen` is
+            # preserved BEFORE the final actuator clamp (property (i) of the
+            # spec, single-constraint case). The clamp below can reintroduce a
+            # small component along `direction` under saturation; that residual
+            # is caught by next step's repair exactly like any other
+            # linearization error in this sweep (same honesty contract as the
+            # base repair, per the spec's own caveat).
+            p_j_repaired = p_prev + new_step
+            w_vec = dbnr_goal - p_j_repaired
+            w_hat = w_vec / (jnp.linalg.norm(w_vec) + 1e-8)
+            w_perp = w_hat - jnp.dot(w_hat, direction) * direction
+            damage = jnp.linalg.norm(w_k * (chosen - orig_step))
+            do_restitute = (deficit > 0.0) & dbnr_have_goal & (g.dbnr_beta0 > 0.0)
+            restitution = g.dbnr_beta0 * damage * w_perp
+            new_step_restituted = new_step + restitution
+            new_step_restituted_cmd = jnp.clip(new_step_restituted / g.translation_scale, -1.0, 1.0)
+            new_step_restituted = new_step_restituted_cmd * g.translation_scale
+            # Gate the WHOLE modification (not just restitution -> 0) on
+            # do_restitute so dbnr_beta0=0 (every pre-DBNR config/ablation
+            # row) reproduces the exact prior new_step bit-for-bit — the prior
+            # code never re-clamped new_step, only its `pushed`/`braked`
+            # candidates, so an unconditional clip here would silently change
+            # behavior for every existing row even with restitution == 0.
+            new_step = jnp.where(do_restitute, new_step_restituted, new_step)
+
             disp_acc = disp_acc.at[j].set(new_step)
             p_j = p_prev + new_step
             dist2, _ = _closest(p_j)

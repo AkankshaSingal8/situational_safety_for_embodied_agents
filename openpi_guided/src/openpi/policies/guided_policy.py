@@ -40,6 +40,7 @@ class GuidanceConfig:
     corridor_relax: float = 0.6  # margin relaxation inside corridors (0 = off)
     use_companions: bool = True  # False = EEF-point-only (SOTA-reimpl fidelity arm)
     repair_schedule: str = "ramp"  # "ramp" (trust early, exact late) | "uniform" (r3 behavior)
+    dbnr_beta0: float = 0.0  # DBNR restitution budget (0 = off; kill-test greenlit, see PROGRESS_LOG Phase 6)
 
 
 def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
@@ -119,6 +120,7 @@ class GuidedPolicy(_policy.Policy):
             corridor_radius=jnp.float32(cfg.corridor_radius),
             corridor_relax=jnp.float32(cfg.corridor_relax),
             companion_scale=jnp.float32(1.0 if cfg.use_companions else 0.0),
+            dbnr_beta0=jnp.float32(cfg.dbnr_beta0),
         )
 
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]

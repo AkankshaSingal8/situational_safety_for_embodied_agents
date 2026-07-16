@@ -43,6 +43,7 @@ class Args:
     corridor_radius: float = 0.07
     corridor_relax: float = 0.6
     use_companions: bool = True
+    dbnr_beta0: float = 0.0
 
 
 def main(args: Args) -> None:
@@ -69,6 +70,7 @@ def main(args: Args) -> None:
         corridor_radius=args.corridor_radius,
         corridor_relax=args.corridor_relax,
         use_companions=args.use_companions,
+        dbnr_beta0=args.dbnr_beta0,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)

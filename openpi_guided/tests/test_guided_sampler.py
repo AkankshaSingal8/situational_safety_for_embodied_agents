@@ -23,7 +23,7 @@ Q99 = np.full(3, 1.0, dtype=np.float32)
 
 
 def make_params(eef, obstacle, r_eff=0.12, enabled=1.0, target=None, dest=None,
-                corridor_radius=0.07, corridor_relax=0.6):
+                corridor_radius=0.07, corridor_relax=0.6, dbnr_beta0=0.0):
     return GuidanceParams(
         enabled=jnp.float32(enabled),
         eef_pos=jnp.asarray(np.asarray(eef, dtype=np.float32)),
@@ -41,6 +41,7 @@ def make_params(eef, obstacle, r_eff=0.12, enabled=1.0, target=None, dest=None,
         corridor_radius=jnp.float32(corridor_radius),
         corridor_relax=jnp.float32(corridor_relax),
         companion_scale=jnp.float32(1.0),
+        dbnr_beta0=jnp.float32(dbnr_beta0),
     )
 
 
