@@ -28,6 +28,59 @@ _E5_POS_NOISE = float(os.environ.get("E5_POS_NOISE", "0.08"))
 _e5_call_count = 0
 
 
+WORKSPACE = {"x": (-0.6, 0.6), "y": (-0.6, 0.6), "z": (0.60, 1.45)}
+
+
+def _in_workspace(p):
+    return (WORKSPACE["x"][0] < p[0] < WORKSPACE["x"][1]
+            and WORKSPACE["y"][0] < p[1] < WORKSPACE["y"][1]
+            and WORKSPACE["z"][0] < p[2] < WORKSPACE["z"][1])
+
+
+def make_gdino_detector(
+    python_bin="/ocean/projects/cis250185p/asingal/envs/gdino_py310/bin/python",
+    service=None, box_threshold=0.30, workdir=None,
+):
+    """Persistent GroundingDINO subprocess detector (heavyweight torch env
+    stays out of the eval process). Returns detector(rgb, name) ->
+    [((x0,y0,x1,y1), logit), ...] sorted handling left to the caller.
+    Returns None on service failure (caller falls back / skips the view).
+    """
+    import json as _json
+    import pathlib
+    import subprocess
+    import tempfile
+
+    if service is None:
+        service = str(pathlib.Path(__file__).parent / "gdino_service.py")
+    workdir = pathlib.Path(workdir or tempfile.mkdtemp(prefix="gdino_"))
+    proc = subprocess.Popen([python_bin, service], stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, text=True, bufsize=1)
+    for line in proc.stdout:
+        if line.strip() == "READY":
+            break
+
+    _n = [0]
+
+    def detector(rgb, name):
+        from PIL import Image
+        _n[0] += 1
+        img_path = workdir / f"det_{_n[0] % 4}.png"
+        Image.fromarray(rgb).save(img_path)
+        proc.stdin.write(_json.dumps({
+            "image": str(img_path),
+            "phrase": name.replace("_obstacle", "").replace("_", " "),
+            "box_threshold": box_threshold}) + "\n")
+        proc.stdin.flush()
+        resp = _json.loads(proc.stdout.readline())
+        if "error" in resp:
+            return None
+        return list(zip([tuple(b) for b in resp["boxes"]], resp["logits"]))
+
+    detector.proc = proc  # for lifecycle management by the caller
+    return detector
+
+
 def _camera_transform(sim, camera_name, camera_height, camera_width):
     from robosuite.utils.camera_utils import (
         get_camera_extrinsic_matrix,
@@ -103,12 +156,27 @@ def estimate_obstacle_pos(sim, obstacle_name, cameras=("agentview", "birdview"),
         elif region_source == "detector":
             rgb = sim.render(camera_name=cam, height=camera_height,
                              width=camera_width)[::-1]
-            bbox = detector(rgb, obstacle_name) if detector else None
-            if bbox is None:
+            cands = detector(rgb, obstacle_name) if detector else None
+            if not cands:
                 continue
-            x0, y0, x1, y1 = [int(round(b)) for b in bbox]
-            region = np.zeros(depth.shape, dtype=bool)
-            region[max(0, y0):y1, max(0, x0):x1] = True
+            if isinstance(cands, (tuple, list)) and len(cands) == 4 \
+                    and np.isscalar(cands[0]):
+                cands = [(cands, 1.0)]  # legacy single-bbox detectors
+            # Try boxes in logit order; keep the first whose back-projection
+            # lands inside the workspace (kills wall/background false
+            # positives — the dominant open-vocab failure mode).
+            est_c = None
+            for bbox, _logit in sorted(cands, key=lambda c: -c[1]):
+                x0, y0, x1, y1 = [int(round(b)) for b in bbox]
+                region = np.zeros(depth.shape, dtype=bool)
+                region[max(0, y0):y1, max(0, x0):x1] = True
+                e = _region_estimate(depth, region, K, T)
+                if e is not None and _in_workspace(e):
+                    est_c = e
+                    break
+            if est_c is not None:
+                ests.append(est_c)
+            continue
         else:
             raise ValueError(region_source)
 

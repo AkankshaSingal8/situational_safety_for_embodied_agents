@@ -208,6 +208,13 @@ def parse_args():
     parser.add_argument("--percep_z_correction", type=float, default=-0.03,
                         help="Surface-to-center z offset for percep estimates "
                              "(runtime smoke 42239326: est z biased +0.02..0.05).")
+    parser.add_argument("--mask_source", type=str, default="gt_seg",
+                        choices=["gt_seg", "detector"],
+                        help="Pixel-region source for ALL percep estimates: "
+                             "'detector' = GroundingDINO subprocess with "
+                             "depth+workspace-filtered box selection "
+                             "(Tier-Percep-D, closes the last privilege); "
+                             "'gt_seg' = GT instance masks (Tier-Percep).")
     parser.add_argument("--entity_pos_source", type=str, default="gt",
                         choices=["gt", "percep"],
                         help="'percep' = ALL object positions consumed by symbolic "
@@ -250,6 +257,12 @@ def _quat2axisangle(quat):
 
 def run_eval(args):
     np.random.seed(args.seed)
+
+    gdino_detector = None
+    if args.mask_source == "detector":
+        from percep_obstacle import make_gdino_detector
+        gdino_detector = make_gdino_detector()
+        logging.info("GroundingDINO detector service started (Tier-Percep-D)")
 
     benchmark_dict = benchmark.get_benchmark_dict()
     task_suite = benchmark_dict[args.task_suite_name](safety_level=args.safety_level)
@@ -333,6 +346,7 @@ def run_eval(args):
                 percep_entity_pos = {
                     f"{n}_pos": p for n, p in estimate_object_positions(
                         env.sim, _obj_names, cameras=("agentview",),
+                        region_source=args.mask_source, detector=gdino_detector,
                         z_correction=args.percep_z_correction).items()}
                 logging.info(f"  [entity-percep] ep {ep_idx} localized "
                              f"{len(percep_entity_pos)}/{len(_obj_names)} objects")
@@ -373,7 +387,8 @@ def run_eval(args):
             if args.obstacle_pos_source == "percep" and obstacle_name is not None:
                 from percep_obstacle import estimate_obstacle_pos
                 est, n_views = estimate_obstacle_pos(
-                    env.sim, obstacle_name, cameras=("agentview",))
+                    env.sim, obstacle_name, cameras=("agentview",),
+                    region_source=args.mask_source, detector=gdino_detector)
                 if est is not None:
                     est = est + np.array([0.0, 0.0, args.percep_z_correction])
                     err = float(np.linalg.norm(est - guidance_obstacle_pos))
