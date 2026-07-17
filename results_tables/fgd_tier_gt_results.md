@@ -624,3 +624,13 @@ per-task orientation inconsistency; runtime renders are clean).
   by percep_obstacle region_source="detector"; multi-phrase caption gives all
   object names in one call. Tier naming: Tier-Percep-D (detector masks) vs
   current Tier-Percep (gt_seg masks).
+
+### Gap-cell iteration 2 verdict (n=20, job 42268242)
+| Cell | Arm | Result | Bar | Verdict |
+|---|---|---|---|---|
+| Goal L2 | composed-thin @ eef_r 0.10 | **77.5 / 57.5** | 75.0/49.5 (reimpl) | **CLEARS both axes** → n=50 final |
+| Spatial L1 | r3-thin + corridor | 66.3 / 35.0 | TSR ≥67.0 (base), CAR ≥28.5 | TSR short by 1 episode (n=20 noise; r3-thin n=50 TSR=71.0) → decide at n=50 |
+Both n=50 finals submitted as job 42268817 (two-server: K1/uniform/0.09+corridor
+for Spatial L1; K8/ramp/0.10+corridor for Goal L2).
+If both land: 8/8 conditions beat baseline AND SOTA-reimpl on both axes at Tier-GT
+(Long already cleared vs reimpl; baseline-TSR caveat documented).
