@@ -596,3 +596,15 @@ Config: eef_r 0.09 + corridor + K=8 + ramp + companions.
 Reading: thin margins + corridor deliver the CAR the fat composed config bought,
 but K=8+ramp costs Spatial L1 TSR vs r3-thin (60 vs 71); Goal L2 wants one
 radius notch more CAR. Iter2 arms target exactly those deltas.
+
+### FULL Tier-Percep smoke (entity positions from RGB-D too; n=5, job 42268129)
+--obstacle_pos_source percep --obstacle_id_source symbolic --entity_pos_source percep:
+the method reads ZERO obs['*_pos'] values (remaining privilege: gt_seg pixel masks).
+| Cell | full-percep | entity=gt reference (n=50) |
+|---|---|---|
+| Spatial L1 | 55.0 / 50.0 | 49.5 / 55.5 |
+| Spatial L2 | 85.0 / 60.0 | 87.0 / 68.5 |
+Identity with percep candidate positions: 39/40 (vs 40/40 with GT positions);
+6-7 objects localized/scene, no candidate-set failures. VERDICT: entity-position
+privilege tax ~ zero — promote --entity_pos_source percep to the default no-GT
+configuration for all future finals. Last privilege to close: gt_seg -> detector.
