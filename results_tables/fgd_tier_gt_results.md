@@ -658,3 +658,15 @@ S2 modernizes the v17 referee row: whole-scene VLM identification 18-64% vs
 100% decomposed-symbolic — the decomposition claim holds with current models.
 Pre-registered rule → NO-GO for local VLMs; table stays. API arm (frontier
 models) pending credits/keys; a frontier NO-GO would strengthen the claim.
+
+### no-GT Goal/Object n=50 FINALS (job 42267789)
+| Cell | no-GT n=50 | baseline | reimpl | Verdict |
+|---|---|---|---|---|
+| Goal L1 | **77.5 / 67.5** | 51.0/23.0 | 71.0/27.5 | **WIN both refs** |
+| Goal L2 | 67.5 / 69.0 | 66.5/35.0 | 75.0/49.5 | beats baseline; reimpl TSR gap (same as GT pre-fix) |
+| Object L1 | 37.0 / 84.5 | 40.5/14.0 | 53.0/15.5 | CAR-dominant; TSR sagged (fat-margin tax) |
+| Object L2 | **77.0 / 86.0** | 74.0/25.0 | 76.0/33.5 | **WIN both refs** |
+no-GT clean sweeps at n>=50: Spatial L2, Goal L1, Object L2 (3/8).
+Follow-up job 42269999 (n=20): the GT-tier per-cell winning configs applied to
+the no-GT weak cells — Spatial L1 r3-thin+corridor, Goal L2 composed-thin@0.10,
+Object L1 composed-thin@0.09, all with percep+symbolic sources.
