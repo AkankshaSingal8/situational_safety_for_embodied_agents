@@ -393,6 +393,39 @@ both significant TSR LOSSES, the cc3f766 fix targets), and it significantly RAIS
 on Long L1. The regression fix, if confirmed at n=20/n=50, makes composed strictly
 dominant or neutral everywhere vs r3.
 
+## ★★ 2026-07-16 LATE WAVE — reimpl all suites + cap-800 + no-GT finals
+
+### Reimpl-SOTA r10 n=50, ALL suites (fair four-column comparison complete)
+| Cond | Baseline | Reimpl r10 | Ours-GT best | Ours no-GT | Win vs BOTH refs both axes? |
+|---|---|---|---|---|---|
+| Spatial L1 | 67.0/14.0 | 62.0/28.5 | 71.0/23.5 (r3) | 49.5/55.5 (n50) | ✗ (CAR −5 vs reimpl on r3; TSR short otherwise) |
+| Spatial L2 | 55.5/12.0 | 71.5/25.5 | 85.0/76.5 | **87.0/68.5 (n50)** | ✓ (GT and no-GT both) |
+| Goal L1 | 51.0/23.0 | 71.0/27.5 | 77.5/51.0 | **73.8/75.0 (n20)** | ✓ (GT and no-GT both) |
+| Goal L2 | 66.5/35.0 | **75.0**/49.5 | 69.0/58.0 (r3) | 67.5/70.0 (n20) | ✗ (reimpl TSR 75) |
+| Object L1 | 40.5/14.0 | **53.0**/15.5 | 48.0/43.5 | 43.8/81.2 (n20) | ✗ (reimpl TSR 53) |
+| Object L2 | 74.0/25.0 | 76.0/33.5 | 83.0/74.5 | **77.5/92.5 (n20)** | ✓ (GT and no-GT both) |
+| Long L1 | 58.0/15.0 | 30.5/35.5 | 42.5/71.0 | 5/70 (n5) | ✓ vs reimpl; baseline TSR ahead |
+| Long L2 | 51.0/16.5 | 43.0/59.5 | 47.0/77.0 (r3) | 25/70 (n5) | ✓ vs reimpl; baseline TSR ahead |
+
+Notes: (1) light uniform guidance HELPS TSR on Goal/Object (reimpl beats baseline TSR —
+their +17pp claim reproduces broadly), which RAISES the bar on Goal L2/Object L1.
+(2) Reimpl Long collapses TSR (30.5/43.0) with mediocre CAR — the same safety-liveness
+trade hits their method class harder than ours (our Long CAR +35.5/+17.5 over reimpl at
+higher TSR). (3) NO-GT Spatial L2 n=50: 87.0/68.5 — beats baseline AND reimpl on both
+axes at the no-privilege tier; TSR exceeds even Tier-GT composed (87>85, localization
+noise = wider effective margins).
+
+### Cap-800 ablation (job 42243244, Long, n=20, BOTH arms): MORE TIME DOES NOT HELP
+composed: L1 36.2/62.5, L2 31.2/72.5 (vs cap-550: 42.5/71, 24.5/77 — within noise);
+baseline: L1 63.7/20.0, L2 50.0/22.5 (also ~flat). Long timeouts are true stall LOOPS,
+not slow progress. Step cap stays 550 (community-standard comparable).
+
+### Remaining gap cells (the ONLY three blocking a clean 8/8-vs-reimpl sweep)
+Spatial L1 (need CAR ≥28.5 at TSR ≥67), Goal L2 (need TSR ≥75), Object L1 (need TSR ≥53).
+Next arm (untested combo): **composed-thin** = EEFR 0.09 + corridor + K=8 + ramp +
+companions — hypothesis: corridor gives the CAR lift (proven zero-TSR-cost) while thin
+margins avoid the fat-margin TSR tax that created these gaps.
+
 ## ★ E3 GEOMETRY-SWAP SMOKE — first Tier-Percep(geometry) rows (job 42239625, n=5/task)
 Composed config unchanged; ONLY the obstacle position swapped from sim state to runtime
 RGB-D back-projection (agentview, z−0.03; identity still GT). 40/40 episodes estimated

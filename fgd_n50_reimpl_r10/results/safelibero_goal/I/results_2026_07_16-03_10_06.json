@@ -1,0 +1,71 @@
+{
+  "policy": "Pi0.5 (pi05_libero) + in-denoising DCBF guidance (Tier-GT)",
+  "task_suite": "safelibero_goal",
+  "safety_level": "I",
+  "guidance_enabled": true,
+  "total_episodes": 200,
+  "total_successes": 142,
+  "total_collisions": 145,
+  "overall_TSR": 0.71,
+  "overall_CAR": 0.275,
+  "overall_ETS_mean": 197.56,
+  "overall_ETS_median": 186.0,
+  "context_source": "libero_observation_object_pose_tier_gt",
+  "guidance": {
+    "chunks": 7987,
+    "active_chunks": 2630,
+    "activation_rate": 0.3292850882684362,
+    "mean_correction_norm": 0.089054602153939,
+    "min_clearance_seen": -0.003249645233154297,
+    "max_residual_seen": 5.646515637636185e-05,
+    "dbnr_active_chunks": 2630,
+    "dbnr_tau_mean": 0.0,
+    "dbnr_headroom_mean": 0.0
+  },
+  "per_task": [
+    {
+      "task_id": 0,
+      "task_description": "put the bowl on the plate",
+      "episodes": 50,
+      "successes": 31,
+      "collisions": 41,
+      "TSR": 0.62,
+      "CAR": 0.18,
+      "ETS_mean": 192.48,
+      "ETS_median": 168.5
+    },
+    {
+      "task_id": 1,
+      "task_description": "put the bowl on top of the cabinet",
+      "episodes": 50,
+      "successes": 50,
+      "collisions": 27,
+      "TSR": 1.0,
+      "CAR": 0.46,
+      "ETS_mean": 115.3,
+      "ETS_median": 109.0
+    },
+    {
+      "task_id": 2,
+      "task_description": "put the bowl on the stove",
+      "episodes": 50,
+      "successes": 27,
+      "collisions": 44,
+      "TSR": 0.54,
+      "CAR": 0.12,
+      "ETS_mean": 226.42,
+      "ETS_median": 273.5
+    },
+    {
+      "task_id": 3,
+      "task_description": "open the top drawer and put the bowl inside",
+      "episodes": 50,
+      "successes": 34,
+      "collisions": 33,
+      "TSR": 0.68,
+      "CAR": 0.34,
+      "ETS_mean": 256.04,
+      "ETS_median": 268.0
+    }
+  ]
+}
