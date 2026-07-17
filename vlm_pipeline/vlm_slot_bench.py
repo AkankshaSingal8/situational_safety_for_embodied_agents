@@ -116,6 +116,8 @@ def load_episodes(suites, limit_per_task):
                     ob = json.load(open(ep / "obstacle.json"))["active_obstacle"]
                 except Exception:  # noqa: BLE001
                     continue
+                if ob is None:  # episodes captured with no active obstacle
+                    continue
                 cands = {n: np.array(o["position"]) for n, o in md["objects"].items()}
                 cands[ob["name"]] = np.array(ob["position"])
                 # drop parked (off-table) distractors, same filter as runtime
