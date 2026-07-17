@@ -585,3 +585,14 @@ Failure split: timeouts 19/40, collisions 12/40, successes 6/40. Diagnosis: NOT 
 identity problem — percep error (~6cm) + fat eef_r 0.12 → oversized keep-out on
 multi-stage routes → stalls. Hypothesis: composed-thin (eef_r 0.09) recovers TSR;
 gated on the GT gap-cell verdict (job 42267752) before spending a no-GT Long arm.
+
+### composed-thin gap-cell verdict (n=20, job 42267752, 2026-07-16)
+Config: eef_r 0.09 + corridor + K=8 + ramp + companions.
+| Cell | composed-thin | Bar (beat reimpl AND baseline both axes) | Verdict |
+|---|---|---|---|
+| Object L1 | 58.8 / 18.8 | TSR ≥53.0, CAR ≥15.5 (reimpl 53.0/15.5) | **CLEARS** → n=50 final (job 42268241) |
+| Goal L2 | 75.0 / 48.8 | TSR ≥75.0, CAR ≥49.5 (reimpl 75.0/49.5) | hair short (tie TSR, CAR −0.7) → iter2: eef_r 0.10 (job 42268242 arm B) |
+| Spatial L1 | 60.0 / 35.0 | TSR ≥67.0 (baseline), CAR ≥28.5 (reimpl) | CAR clears, TSR −7 → iter2: r3-thin + corridor (job 42268242 arm A) |
+Reading: thin margins + corridor deliver the CAR the fat composed config bought,
+but K=8+ramp costs Spatial L1 TSR vs r3-thin (60 vs 71); Goal L2 wants one
+radius notch more CAR. Iter2 arms target exactly those deltas.
