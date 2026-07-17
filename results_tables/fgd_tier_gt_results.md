@@ -578,3 +578,10 @@ the GEOMETRY floor — detector errors add on top).
   L1 TSR to 49, option (c) alone (r_eff + 0.15) is NOT viable — perception must improve
   (temporal averaging over episode frames is the cheapest untested lever) or margins
   must inflate selectively (only along the low-clearance direction).
+
+### no-GT Long forensics (smoke n=5, 2026-07-16)
+Per-task: identity 35/40 correct (task 2 weakest, 3/5 both levels), gt_fallback 0.
+Failure split: timeouts 19/40, collisions 12/40, successes 6/40. Diagnosis: NOT an
+identity problem — percep error (~6cm) + fat eef_r 0.12 → oversized keep-out on
+multi-stage routes → stalls. Hypothesis: composed-thin (eef_r 0.09) recovers TSR;
+gated on the GT gap-cell verdict (job 42267752) before spending a no-GT Long arm.
