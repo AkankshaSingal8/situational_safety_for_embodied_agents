@@ -19,7 +19,7 @@ cd "$WT"
 for B in qwen3b qwen7b; do
   for S in s1 s2; do
     python vlm_pipeline/vlm_slot_bench.py --backend "$B" --slot "$S" \
-      --n_votes 5 --limit_per_task 5 \
+      --n_votes 5 --limit_per_task 50 \
       --out "results_tables/vlm_bench_${S}_${B}.jsonl"
   done
 done
