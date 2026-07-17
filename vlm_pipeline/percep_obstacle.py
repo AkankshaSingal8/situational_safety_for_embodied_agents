@@ -126,5 +126,27 @@ def estimate_obstacle_pos(sim, obstacle_name, cameras=("agentview", "birdview"),
     return fused, len(ests)
 
 
+def estimate_object_positions(sim, names, cameras=("agentview",),
+                              camera_height=256, camera_width=256,
+                              region_source="gt_seg", detector=None,
+                              z_correction=-0.03):
+    """Batch per-object localization for the full Tier-Percep entity stack.
+
+    Returns {name: pos} for every object whose estimate succeeded; failures
+    are simply absent (fail-safe: an unlocalized object cannot become an
+    identity candidate or grant a corridor). One render pass per object per
+    camera — called once per episode, so cost is negligible.
+    """
+    out = {}
+    for name in names:
+        pos, n_views = estimate_obstacle_pos(
+            sim, name, cameras=cameras,
+            camera_height=camera_height, camera_width=camera_width,
+            region_source=region_source, detector=detector)
+        if pos is not None:
+            out[name] = pos + np.array([0.0, 0.0, z_correction])
+    return out
+
+
 if __name__ == "__main__":
     print(__doc__)

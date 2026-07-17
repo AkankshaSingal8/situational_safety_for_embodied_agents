@@ -208,6 +208,14 @@ def parse_args():
     parser.add_argument("--percep_z_correction", type=float, default=-0.03,
                         help="Surface-to-center z offset for percep estimates "
                              "(runtime smoke 42239326: est z biased +0.02..0.05).")
+    parser.add_argument("--entity_pos_source", type=str, default="gt",
+                        choices=["gt", "percep"],
+                        help="'percep' = ALL object positions consumed by symbolic "
+                             "identity and corridor entity binding come from RGB-D "
+                             "back-projection (episode-start snapshot) instead of "
+                             "obs['*_pos'] — the full Tier-Percep entity stack. "
+                             "Objects that fail localization are dropped from the "
+                             "candidate/entity set (fail-safe: no corridor granted).")
     parser.add_argument("--disable_guidance", action="store_true",
                         help="Send enabled=0 (server sanity baseline through the same code path).")
     return parser.parse_args()
@@ -311,10 +319,37 @@ def run_eval(args):
                     obstacle_name = name
                     break
             gt_obstacle_name = obstacle_name
+
+            # Full Tier-Percep entity stack: replace every object position the
+            # METHOD consumes (identity candidates, corridor target/dest) with
+            # an episode-start RGB-D estimate. Snapshot semantics: percep
+            # entity positions are static within the episode (objects the
+            # robot has not yet moved); robot0 proprioception stays live.
+            percep_entity_pos = None
+            if args.entity_pos_source == "percep":
+                from percep_obstacle import estimate_object_positions
+                _obj_names = [k[:-4] for k in obs if k.endswith("_pos")
+                              and not k.startswith("robot0") and "_to_" not in k]
+                percep_entity_pos = {
+                    f"{n}_pos": p for n, p in estimate_object_positions(
+                        env.sim, _obj_names, cameras=("agentview",),
+                        z_correction=args.percep_z_correction).items()}
+                logging.info(f"  [entity-percep] ep {ep_idx} localized "
+                             f"{len(percep_entity_pos)}/{len(_obj_names)} objects")
+
+            def entity_view(cur_obs):
+                """The observation dict as the METHOD is allowed to see it."""
+                if percep_entity_pos is None:
+                    return cur_obs
+                merged = {k: v for k, v in cur_obs.items()
+                          if not (k.endswith("_pos") and not k.startswith("robot0"))}
+                merged.update(percep_entity_pos)
+                return merged
+
             ident_correct = None
             if args.obstacle_id_source == "symbolic":
                 from symbolic_identity import identify_obstacle
-                picked = identify_obstacle(str(task_description), obs)
+                picked = identify_obstacle(str(task_description), entity_view(obs))
                 ident_correct = picked == gt_obstacle_name
                 logging.info(f"  [ident] ep {ep_idx} picked={picked} "
                              f"gt={gt_obstacle_name} correct={ident_correct}")
@@ -350,7 +385,7 @@ def run_eval(args):
                     logging.warning(f"  [percep] ep {ep_idx} estimator failed — GT fallback")
 
             if args.corridor and obstacle_name is not None:
-                _ents = parse_entities(task_description, obs, sim=env.sim)
+                _ents = parse_entities(task_description, entity_view(obs), sim=env.sim)
                 logging.info(
                     "  [bind] ep %d obstacle=%s target=%s dest=%s",
                     ep_idx, obstacle_name,
@@ -397,7 +432,8 @@ def run_eval(args):
                                 "obstacle_radius": obstacle_radius(obstacle_name),
                             }
                             if args.corridor:
-                                element["guidance"].update(parse_entities(task_description, obs, sim=env.sim))
+                                element["guidance"].update(
+                                    parse_entities(task_description, entity_view(obs), sim=env.sim))
                         result = client.infer(element)
                         action_chunk = result["actions"][:REPLAN_STEPS]
                         diag = result.get("guidance")
@@ -466,6 +502,8 @@ def run_eval(args):
                     ep_record["margin_spread_mean"] = round(float(np.mean(ep_mspread)), 5)
                 if args.obstacle_pos_source == "percep":
                     ep_record["percep_fallback"] = percep_fallback
+                if percep_entity_pos is not None:
+                    ep_record["entity_percep_n"] = len(percep_entity_pos)
                 if ident_correct is not None:
                     ep_record["ident_correct"] = bool(ident_correct)
                 ef.write(json.dumps(ep_record) + "\n")
