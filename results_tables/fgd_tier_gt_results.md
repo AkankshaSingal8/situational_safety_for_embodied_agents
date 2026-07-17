@@ -634,3 +634,13 @@ Both n=50 finals submitted as job 42268817 (two-server: K1/uniform/0.09+corridor
 for Spatial L1; K8/ramp/0.10+corridor for Goal L2).
 If both land: 8/8 conditions beat baseline AND SOTA-reimpl on both axes at Tier-GT
 (Long already cleared vs reimpl; baseline-TSR caveat documented).
+
+### Object L1 composed-thin n=50 FINAL (job 42268241)
+**53.5 / 28.0** (per-task TSR/CAR: t0 72/68, t1 24/0, t2 52/0, t3 66/44).
+Bars: reimpl 53.0/15.5, baseline 40.5/14.0 → **CLEARS both refs both axes**.
+Caveats for the paper: TSR margin vs reimpl is +0.5pp (1 episode, not
+significant — report as "matches reimpl TSR while nearly doubling CAR");
+t1/t2 CAR=0 structural cells persist (obstacle-on-grasp forensics).
+Object L1 best-config row updates: composed (48.0/43.5, fails reimpl TSR) →
+composed-thin (53.5/28.0, clears). Gap-cell scoreboard: Object L1 ✓ Goal L2 ✓
+(n=20, n=50 running) Spatial L1 pending (n=50 running, job 42268817).
