@@ -1,0 +1,161 @@
+{
+ "summary": {
+  "n": 11,
+  "no_detection": 0,
+  "any_box_hit_rate": 0.8181818181818182,
+  "top_box_hit_rate": 0.2727272727272727,
+  "mean_n_det": 2.8181818181818183
+ },
+ "rows": [
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_0/episode_00",
+   "obstacle": "moka_pot_obstacle_1",
+   "prompt": "moka pot .",
+   "n_det": 6,
+   "orientation": "asis",
+   "any_box_hit": true,
+   "top_box_hit": false,
+   "top_center_off_px": 199.0146673545864,
+   "top_logit": 0.4196071922779083,
+   "hit_logits": [
+    0.344
+   ]
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_0/episode_01",
+   "obstacle": "white_storage_box_obstacle_1",
+   "prompt": "white storage box .",
+   "n_det": 1,
+   "orientation": "h",
+   "any_box_hit": true,
+   "top_box_hit": true,
+   "top_center_off_px": 40.10683255150434,
+   "top_logit": 0.7873089909553528,
+   "hit_logits": [
+    0.787
+   ]
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_0/episode_02",
+   "obstacle": "milk_obstacle_1",
+   "prompt": "milk .",
+   "n_det": 5,
+   "orientation": "h",
+   "any_box_hit": true,
+   "top_box_hit": false,
+   "top_center_off_px": 172.68738085946913,
+   "top_logit": 0.43808579444885254,
+   "hit_logits": [
+    0.333
+   ]
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_1/episode_00",
+   "obstacle": "moka_pot_obstacle_1",
+   "prompt": "moka pot .",
+   "n_det": 1,
+   "orientation": null,
+   "any_box_hit": false,
+   "top_box_hit": false,
+   "top_center_off_px": 211.06754710713162,
+   "top_logit": 0.3482886552810669,
+   "hit_logits": []
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_1/episode_01",
+   "obstacle": "white_storage_box_obstacle_1",
+   "prompt": "white storage box .",
+   "n_det": 2,
+   "orientation": "asis",
+   "any_box_hit": true,
+   "top_box_hit": false,
+   "top_center_off_px": 435.2609697890106,
+   "top_logit": 0.6896906495094299,
+   "hit_logits": [
+    0.346
+   ]
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_1/episode_02",
+   "obstacle": "milk_obstacle_1",
+   "prompt": "milk .",
+   "n_det": 5,
+   "orientation": "h",
+   "any_box_hit": true,
+   "top_box_hit": false,
+   "top_center_off_px": 178.8053360704437,
+   "top_logit": 0.3996114432811737,
+   "hit_logits": [
+    0.327
+   ]
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_2/episode_00",
+   "obstacle": "moka_pot_obstacle_1",
+   "prompt": "moka pot .",
+   "n_det": 5,
+   "orientation": "asis",
+   "any_box_hit": true,
+   "top_box_hit": false,
+   "top_center_off_px": 117.57292611022267,
+   "top_logit": 0.4044514298439026,
+   "hit_logits": [
+    0.391
+   ]
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_2/episode_01",
+   "obstacle": "white_storage_box_obstacle_1",
+   "prompt": "white storage box .",
+   "n_det": 1,
+   "orientation": "h",
+   "any_box_hit": true,
+   "top_box_hit": true,
+   "top_center_off_px": 35.2587435024512,
+   "top_logit": 0.7644664645195007,
+   "hit_logits": [
+    0.764
+   ]
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_2/episode_02",
+   "obstacle": "milk_obstacle_1",
+   "prompt": "milk .",
+   "n_det": 2,
+   "orientation": null,
+   "any_box_hit": false,
+   "top_box_hit": false,
+   "top_center_off_px": 181.1284982776612,
+   "top_logit": 0.4374832212924957,
+   "hit_logits": []
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_3/episode_00",
+   "obstacle": "wine_bottle_obstacle_1",
+   "prompt": "wine bottle .",
+   "n_det": 1,
+   "orientation": "h",
+   "any_box_hit": true,
+   "top_box_hit": true,
+   "top_center_off_px": 88.59091173994287,
+   "top_logit": 0.9254634380340576,
+   "hit_logits": [
+    0.925
+   ]
+  },
+  {
+   "ep": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlm_inputs/safelibero_spatial/level_I/task_3/episode_02",
+   "obstacle": "yellow_book_obstacle_1",
+   "prompt": "yellow book .",
+   "n_det": 2,
+   "orientation": "h",
+   "any_box_hit": true,
+   "top_box_hit": false,
+   "top_center_off_px": 224.49635584255878,
+   "top_logit": 0.5837168097496033,
+   "hit_logits": [
+    0.346
+   ]
+  }
+ ]
+}

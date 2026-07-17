@@ -608,3 +608,19 @@ Identity with percep candidate positions: 39/40 (vs 40/40 with GT positions);
 6-7 objects localized/scene, no candidate-set failures. VERDICT: entity-position
 privilege tax ~ zero — promote --entity_pos_source percep to the default no-GT
 configuration for all future finals. Last privilege to close: gt_seg -> detector.
+
+### GroundingDINO offline validation v1 (detector leg, 2026-07-16)
+Setup: GDINO SwinT (vlsa-aegis ckpt) CPU env gdino_py310; saved Spatial captures
+(11 eps, 4-orientation GT-projection scoring — saved captures have the known
+per-task orientation inconsistency; runtime renders are clean).
+- any-box hit rate 81.8% (GT pixel inside >=1 detected box), top-logit-box 27.3%,
+  mean 2.8 det/prompt, 0 no-detection episodes.
+- DIAGNOSIS: detection recall OK; naive top-logit selection fails (background
+  false positives, e.g. wall box at logit 0.42 vs true pot at 0.34) — the REC
+  precision collapse the survey predicted. FIX (runtime): back-project every
+  box via depth, discard boxes landing outside workspace bounds, take highest
+  logit among survivors. Wall/background boxes die at the workspace filter.
+- Plan: subprocess detector service (gdino_py310 env) called once per episode
+  by percep_obstacle region_source="detector"; multi-phrase caption gives all
+  object names in one call. Tier naming: Tier-Percep-D (detector masks) vs
+  current Tier-Percep (gt_seg masks).
