@@ -670,3 +670,17 @@ no-GT clean sweeps at n>=50: Spatial L2, Goal L1, Object L2 (3/8).
 Follow-up job 42269999 (n=20): the GT-tier per-cell winning configs applied to
 the no-GT weak cells — Spatial L1 r3-thin+corridor, Goal L2 composed-thin@0.10,
 Object L1 composed-thin@0.09, all with percep+symbolic sources.
+
+### GT gap FINALS n=50 (job 42268817) — 2026-07-17
+| Cell | Arm | n=50 | Bars (base / reimpl) | Verdict |
+|---|---|---|---|---|
+| Goal L2 | composed-thin @0.10 | **76.0 / 60.0** | 66.5/35.0 / 75.0/49.5 | **CLOSED — beats both refs both axes** |
+| Spatial L1 | r3-thin + corridor | 59.0 / 40.5 | TSR ≥67, CAR ≥28.5 | FAILS TSR — corridor costs −12 TSR on this suite (71.0→59.0); n=20 near-miss was noise |
+GT-tier scoreboard: **5/8 strict four-number wins** (Spatial L2, Goal L1,
+Goal L2, Object L1, Object L2); Long L1/L2 beat reimpl both axes (baseline-TSR
+caveat + cap-800 verdict); Spatial L1 = last open cell (r3-thin 71.0/23.5,
+needs +5 CAR without corridor's TSR tax).
+Iter3 (job 42270028): r3 @ eef_r 0.10 WITH companions, Spatial L1+L2 n=50
+(reimpl@0.10 no-companions = 62.0/28.5; hypothesis: companions close the CAR
+gap while TSR stays ≥67).
+Goal L2 best-config row updates: r3 (69.0/58.0) → composed-thin@0.10 (76.0/60.0).
