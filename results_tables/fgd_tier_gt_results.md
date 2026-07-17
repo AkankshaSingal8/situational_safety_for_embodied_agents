@@ -644,3 +644,17 @@ t1/t2 CAR=0 structural cells persist (obstacle-on-grasp forensics).
 Object L1 best-config row updates: composed (48.0/43.5, fails reimpl TSR) →
 composed-thin (53.5/28.0, clears). Gap-cell scoreboard: Object L1 ✓ Goal L2 ✓
 (n=20, n=50 running) Spatial L1 pending (n=50 running, job 42268817).
+
+### VLM go/no-go ablation — local arm VERDICT: NO-GO (job 42268944, 39 scenes)
+| backend | S1 property-head identity | S2 whole-scene id |
+|---|---|---|
+| hazard table (incumbent) | **100%** (39/39) | — |
+| Qwen2.5-VL-7B | 79.5% (8 misses, ALL fail-unsafe) | 64.1% |
+| Qwen2.5-VL-3B | 46.2% (cookies fixation) | 17.9% |
+Failure anatomy: 7B compresses hazard ratings (wine 0.34 / moka 0.38 vs table
+0.90 — no class separation; vote sd 0.1-0.3 = uncalibrated verbalized scores,
+as the survey predicted); 3B rates cookies 0.61 and picks them in 21/21 errors.
+S2 modernizes the v17 referee row: whole-scene VLM identification 18-64% vs
+100% decomposed-symbolic — the decomposition claim holds with current models.
+Pre-registered rule → NO-GO for local VLMs; table stays. API arm (frontier
+models) pending credits/keys; a frontier NO-GO would strengthen the claim.
