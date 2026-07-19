@@ -684,3 +684,45 @@ Iter3 (job 42270028): r3 @ eef_r 0.10 WITH companions, Spatial L1+L2 n=50
 (reimpl@0.10 no-companions = 62.0/28.5; hypothesis: companions close the CAR
 gap while TSR stays ≥67).
 Goal L2 best-config row updates: r3 (69.0/58.0) → composed-thin@0.10 (76.0/60.0).
+
+## ★ 2026-07-19 — no-GT gap arms scored, no-GT n=50 finals wave 2, Spatial L1 iter3/iter4 verdicts, detector smoke
+
+### No-GT gap arms (job 42269999, n=20/task, percep pos + symbolic id, entity=gt)
+| Cell | Arm | n=80 | Bars (base / reimpl) | Verdict |
+|---|---|---|---|---|
+| Spatial L1 | r3-thin + corridor | 60.0 / 40.0 | 67.0/14.0 · 62.0/28.5 | FAILS TSR — corridor kills TSR at no-GT too |
+| Goal L2 | composed @ 0.10 | 73.8 / 68.8 | 66.5/35.0 · 75.0/49.5 | TSR 1.2pp short of reimpl → n=50 final |
+| Object L1 | composed-thin | 63.7 / 72.5 | 40.5/14.0 · 53.0/15.5 | CLEARS both refs both axes → n=50 final |
+
+### No-GT n=50 finals wave 2 (job 42315084, FULL Tier-Percep: +entity_pos_source percep)
+| Cell | Config | n=200 | Bars (base / reimpl) | Verdict |
+|---|---|---|---|---|
+| Goal L2 | composed @ 0.10 | **74.0 / 68.0** | 66.5/35.0 · 75.0/49.5 | beats baseline both axes; TSR −1.0pp vs reimpl (2 eps, not significant) with CAR +18.5 |
+| Object L1 | composed-thin | **56.5 / 80.5** | 40.5/14.0 · 53.0/15.5 | **CLEARS both refs both axes** ★ |
+
+No-GT scoreboard: 4/8 clean four-number wins (Spatial L2 87.0/68.5, Goal L1
+77.5/67.5, Object L1 56.5/80.5, Object L2 77.0/86.0); Goal L2 near-miss
+(74.0 vs 75.0 reimpl TSR). Object L1 no-GT (56.5/80.5) BEATS the GT-tier
+best (53.5/28.0) on both axes — percep noise acts as beneficial margin
+inflation on this suite.
+
+### Spatial L1 GT gap — iter3 + iter4 both FAIL, mechanism identified
+| Iter | Config | n=200 (L1) | Verdict vs bar 67.0/28.5 |
+|---|---|---|---|
+| iter3 (42270028) | K1/uniform/0.10 + companions | 58.0 / 51.5 | FAILS TSR (−13 vs r3@0.09) |
+| iter4 (42315054) | K8/ramp/0.09 + companions, no corridor | 60.0 / 41.5 | FAILS TSR |
+Mechanism: Spatial L1 is uniquely TSR-fragile — best-of-K/ramp costs ~11 TSR
+(vs r3's K1/uniform), radius 0.09→0.10 costs 13 TSR. Only r3 (71.0/23.5)
+holds the TSR bar; CAR gap is 5pp. Iter5 (42405001): r3 @ eef_r 0.095 —
+the last interpolation knob. Bonus rows: iter3 L2 86.5/61.5, iter4 L2 84.5/46.5
+(neither beats composed L2 85.0/76.5 on CAR; no update).
+
+### Tier-Percep-D first runtime smoke (job 42315086, Spatial L1 n=5/task)
+Detector masks (GDINO service) end-to-end: 40.0/50.0 vs full-percep ref
+55.0/50.0 — detector-mask tax = −15 TSR, CAR unchanged. Pipeline works;
+TSR loss consistent with offline top-box precision collapse (27.3%).
+Next lever if pursued: better box selection (workspace-filter already in;
+try text-threshold sweep or per-name query batching).
+
+Ops: LIBERO-Safety unzip moved into CPU SLURM job (42405002, qos=low) after
+repeated login-node kills; chains smoke sbatch on success.
