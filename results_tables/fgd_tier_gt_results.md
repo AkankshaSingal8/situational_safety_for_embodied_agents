@@ -821,3 +821,14 @@ points) is the pending integration — DEFERRED until the 4 queued jobs start
 (module-edit race lesson).
 
 ### Scene-graph V1 + G5 + stats: see block above (commit 2d10d69).
+
+### Prior-file bake-off (offline): haiku-anchored is production
+| prior file | argmax | top-2 guard set | top-3 |
+|---|---|---|---|
+| hand table | 19/19 | 19/19 | — |
+| haiku-anchored + floor .5 | 16/19 | **19/19** | 19/19 |
+| gemini-anchored + floor .5 | 16/19 | 17/19 | 19/19 |
+Gemini's higher argmax on the sonnet-weight benchmark did not carry to its
+own ratings (over-rates fragile distractors → GT pushed to rank 3 twice).
+Haiku-anchored + floor + top-2 guard set = general config with full recall;
+pending prior-swap smoke (42405131) already runs the haiku file.
