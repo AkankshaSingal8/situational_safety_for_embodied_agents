@@ -15,8 +15,7 @@
 # sphere reference is 71.0/23.5 at n=50. Hypothesis: taller barrier kills the
 # low-flyover CAR hits, thinner sides preserve TSR.
 set -euo pipefail
-module load anaconda3
-source "$(conda info --base)/etc/profile.d/conda.sh"
+source /jet/home/asingal/miniconda3/etc/profile.d/conda.sh
 ROOT=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
 WT="$ROOT/.worktrees/flow-guidance-tier-gt"
 AEGIS="$ROOT/vlsa-aegis"

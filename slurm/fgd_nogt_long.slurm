@@ -13,8 +13,7 @@
 # no-GT Object L1 winner. Full Tier-Percep (pos/id/entity all percep).
 # Bars: baseline 58.0/15.0 (L1), 51.0/16.5 (L2).
 set -euo pipefail
-module load anaconda3
-source "$(conda info --base)/etc/profile.d/conda.sh"
+source /jet/home/asingal/miniconda3/etc/profile.d/conda.sh
 ROOT=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
 WT="$ROOT/.worktrees/flow-guidance-tier-gt"
 AEGIS="$ROOT/vlsa-aegis"
