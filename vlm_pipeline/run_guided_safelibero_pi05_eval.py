@@ -177,6 +177,55 @@ def obstacle_radius(name: str) -> float:
     return next((r for key, r in OBSTACLE_RADII.items() if key in label), DEFAULT_OBSTACLE_RADIUS)
 
 
+def obstacle_half_extents(sim, obstacle_name, center):
+    """World-frame AABB half-extents of the obstacle's geoms about `center`.
+
+    Exact for boxes/spheres/cylinders; meshes use their vertex sets (rbound
+    fallback only when vertices are unavailable). Replaces the scalar
+    OBSTACLE_RADII entry with the object's actual anisotropic extent — a tall
+    thin pot gets a tall thin keep-out.
+    """
+    gids = [g for g in range(sim.model.ngeom)
+            if obstacle_name in (sim.model.geom_id2name(g) or "")]
+    if not gids:
+        return None
+    lo = np.full(3, np.inf)
+    hi = np.full(3, -np.inf)
+    for gid in gids:
+        pos = sim.data.geom_xpos[gid]
+        rot = sim.data.geom_xmat[gid].reshape(3, 3)
+        size = sim.model.geom_size[gid]
+        gtype = int(sim.model.geom_type[gid])
+        if gtype == 6:  # box
+            half = np.abs(rot) @ size
+        elif gtype == 2:  # sphere
+            half = np.full(3, size[0])
+        elif gtype == 5:  # cylinder
+            half = np.abs(rot) @ np.array([size[0], size[0], size[1]])
+        elif gtype == 7:  # mesh
+            try:
+                mid = int(sim.model.geom_dataid[gid])
+                adr, num = int(sim.model.mesh_vertadr[mid]), int(sim.model.mesh_vertnum[mid])
+                verts = np.asarray(sim.model.mesh_vert[adr:adr + num]).reshape(-1, 3)
+                world = verts @ rot.T + pos
+                lo = np.minimum(lo, world.min(axis=0))
+                hi = np.maximum(hi, world.max(axis=0))
+                continue
+            except Exception:  # noqa: BLE001 — rbound fallback below
+                half = np.full(3, float(sim.model.geom_rbound[gid]))
+        else:
+            half = np.full(3, float(sim.model.geom_rbound[gid]))
+        lo = np.minimum(lo, pos - half)
+        hi = np.maximum(hi, pos + half)
+    if not np.all(np.isfinite(lo)):
+        return None
+    center = np.asarray(center)
+    # half-extents about the guidance center (not the AABB midpoint), so the
+    # superquadric centered there still covers the whole box
+    he = np.maximum(np.abs(hi - center), np.abs(center - lo))
+    return np.clip(he, 0.02, 0.35).astype(np.float32)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate pi0.5 + in-denoising DCBF guidance on SafeLIBERO")
     parser.add_argument("--task_suite_name", type=str, default="safelibero_spatial",
@@ -190,6 +239,11 @@ def parse_args():
     parser.add_argument("--save_videos", action="store_true")
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--task_indices", type=int, nargs="+", default=None)
+    parser.add_argument("--obstacle_shape", type=str, default="sphere",
+                        choices=["sphere", "superquadric"],
+                        help="'superquadric' sends the obstacle's GT AABB half-extents "
+                             "as anisotropic barrier semi-axes (server sq_eps sets the "
+                             "shape family; 1.0 = ellipsoid). 'sphere' = legacy scalar radius.")
     parser.add_argument("--corridor", action="store_true",
                         help="Send parsed target/destination positions for the corridor exemption (GT tier).")
     parser.add_argument("--max_steps", type=int, default=None,
@@ -383,6 +437,13 @@ def run_eval(args):
             # obstacle when symbolic identity mispicks — guidance follows the
             # method's belief; scoring stays GT-anchored above).
             guidance_obstacle_pos = obs[f"{obstacle_name}_pos"] if obstacle_name else None
+            obstacle_scales = None
+            if args.obstacle_shape == "superquadric" and obstacle_name is not None:
+                obstacle_scales = obstacle_half_extents(
+                    env.sim, obstacle_name, obs[f"{obstacle_name}_pos"])
+                if obstacle_scales is not None:
+                    logging.info(f"  [shape] {obstacle_name} half-extents "
+                                 f"{np.round(obstacle_scales, 3).tolist()}")
             percep_fallback = False
             if args.obstacle_pos_source == "percep" and obstacle_name is not None:
                 from percep_obstacle import estimate_obstacle_pos
@@ -446,6 +507,8 @@ def run_eval(args):
                                     else obs[f"{obstacle_name}_pos"], dtype=np.float32),
                                 "obstacle_radius": obstacle_radius(obstacle_name),
                             }
+                            if obstacle_scales is not None:
+                                element["guidance"]["obstacle_scales"] = obstacle_scales
                             if args.corridor:
                                 element["guidance"].update(
                                     parse_entities(task_description, entity_view(obs), sim=env.sim))

@@ -42,6 +42,7 @@ class GuidanceConfig:
     repair_schedule: str = "ramp"  # "ramp" (trust early, exact late) | "uniform" (r3 behavior)
     dbnr_beta0: float = 0.0  # DBNR restitution budget (0 = off; KILLED 2026-07-16, kept for ablation reproduction)
     hdc_scale: float = 0.0  # HDC lateral detour bias, meters per action step (0 = off)
+    sq_eps: float = 1.0  # superquadric exponent for anisotropic obstacles (1 = ellipsoid)
 
 
 def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
@@ -104,6 +105,8 @@ class GuidedPolicy(_policy.Policy):
         # Place the dummy obstacle far away when disabled so diagnostics stay finite.
         obs_pos = np.asarray(payload.get("obstacle_pos", np.array([10.0, 10.0, 10.0])), dtype=np.float32)
         r_obs = float(payload.get("obstacle_radius", cfg.default_obstacle_radius))
+        # Anisotropic shape: semi-axes from the client; zeros = sphere mode.
+        scales = np.asarray(payload.get("obstacle_scales", np.zeros(3)), dtype=np.float32)
         return GuidanceParams(
             enabled=jnp.float32(enabled),
             eef_pos=jnp.asarray(eef),
@@ -122,6 +125,9 @@ class GuidedPolicy(_policy.Policy):
             corridor_relax=jnp.float32(cfg.corridor_relax),
             companion_scale=jnp.float32(1.0 if cfg.use_companions else 0.0),
             dbnr_beta0=jnp.float32(cfg.dbnr_beta0),
+            obstacle_scales=jnp.asarray(scales),
+            sq_eps=jnp.float32(cfg.sq_eps),
+            r_obs_base=jnp.float32(r_obs),
             hdc_scale=jnp.float32(cfg.hdc_scale),
         )
 

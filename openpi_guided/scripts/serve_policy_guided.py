@@ -45,6 +45,7 @@ class Args:
     use_companions: bool = True
     dbnr_beta0: float = 0.0
     hdc_scale: float = 0.0
+    sq_eps: float = 1.0
 
 
 def main(args: Args) -> None:
@@ -73,6 +74,7 @@ def main(args: Args) -> None:
         use_companions=args.use_companions,
         dbnr_beta0=args.dbnr_beta0,
         hdc_scale=args.hdc_scale,
+        sq_eps=args.sq_eps,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)

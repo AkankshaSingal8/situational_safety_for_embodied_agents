@@ -1,0 +1,5 @@
+{"kind": "s1_weight", "name": "akita_black_bowl_1", "clean": "akita black bowl", "variant": "base", "detail": {"votes": [0.7, 0.7, 0.65, 0.8, 0.85]}, "weight": 0.74, "table_weight": 0.15}
+{"kind": "s1_weight", "name": "akita_black_bowl_2", "clean": "akita black bowl", "variant": "base", "detail": {"votes": [0.8, 0.85, 0.75, 0.7, 0.8]}, "weight": 0.7799999999999999, "table_weight": 0.15}
+{"kind": "s1_weight", "name": "cookies_1", "clean": "cookies", "variant": "base", "detail": {"votes": [0.3, 0.2, 0.1, 0.2, 0.25]}, "weight": 0.21000000000000002, "table_weight": 0.2}
+{"kind": "s1_weight", "name": "glazed_rim_porcelain_ramekin_1", "clean": "glazed rim porcelain ramekin", "variant": "base", "detail": {"votes": [0.8, 0.6, 0.85, 0.85, 0.75]}, "weight": 0.77, "table_weight": 0.15}
+{"kind": "s1_weight", "name": "milk_obstacle_1", "clean": "milk", "variant": "base", "detail": {"votes": [0.7, 0.75, 0.7, 0.8, 0.65]}, "weight": 0.72, "table_weight": 0.7}
