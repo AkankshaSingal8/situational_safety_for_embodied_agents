@@ -453,11 +453,19 @@ def run_eval(args):
             guidance_obstacle_pos = obs[f"{obstacle_name}_pos"] if obstacle_name else None
             obstacle_scales = None
             if args.obstacle_shape == "superquadric" and obstacle_name is not None:
-                obstacle_scales = obstacle_half_extents(
-                    env.sim, obstacle_name, obs[f"{obstacle_name}_pos"])
+                if args.obstacle_pos_source == "percep":
+                    # no-GT tier: extents from the masked-depth point cloud —
+                    # no simulator geometry consulted
+                    from percep_obstacle import estimate_obstacle_extent
+                    obstacle_scales = estimate_obstacle_extent(
+                        env.sim, obstacle_name, cameras=("agentview",),
+                        region_source=args.mask_source, detector=gdino_detector)
+                else:
+                    obstacle_scales = obstacle_half_extents(
+                        env.sim, obstacle_name, obs[f"{obstacle_name}_pos"])
                 if obstacle_scales is not None:
-                    logging.info(f"  [shape] {obstacle_name} half-extents "
-                                 f"{np.round(obstacle_scales, 3).tolist()}")
+                    logging.info(f"  [shape:{args.obstacle_pos_source}] {obstacle_name} "
+                                 f"half-extents {np.round(obstacle_scales, 3).tolist()}")
             percep_fallback = False
             if args.obstacle_pos_source == "percep" and obstacle_name is not None:
                 from percep_obstacle import estimate_obstacle_pos

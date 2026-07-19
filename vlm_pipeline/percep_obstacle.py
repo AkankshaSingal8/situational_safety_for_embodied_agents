@@ -194,6 +194,62 @@ def estimate_obstacle_pos(sim, obstacle_name, cameras=("agentview", "birdview"),
     return fused, len(ests)
 
 
+def estimate_obstacle_extent(sim, obstacle_name, cameras=("agentview", "birdview"),
+                             camera_height=256, camera_width=256,
+                             region_source="gt_seg", detector=None):
+    """Percep-tier half-extents: per-axis p5-p95 spread of the obstacle's
+    masked-depth point cloud, fused across cameras by max (each view sees a
+    different projection of the object). Visible-surface bias underestimates
+    the hidden axis; the guidance pad (eef_radius + d_safe) absorbs that.
+    Returns (3,) half-extents in meters, or None (fail-safe: caller falls
+    back to the scalar radius sphere)."""
+    from robosuite.utils.camera_utils import get_real_depth_map
+
+    best = None
+    for cam in cameras:
+        try:
+            K, T = _camera_transform(sim, cam, camera_height, camera_width)
+        except Exception:
+            continue
+        depth = sim.render(camera_name=cam, height=camera_height,
+                           width=camera_width, depth=True)[1][::-1]
+        depth = get_real_depth_map(sim, depth[..., None] if depth.ndim == 2 else depth).squeeze()
+        if region_source == "gt_seg":
+            seg = sim.render(camera_name=cam, height=camera_height,
+                             width=camera_width, segmentation=True)[::-1, :, 1]
+            geom_ids = [g for g in range(sim.model.ngeom)
+                        if obstacle_name in (sim.model.geom_id2name(g) or "")]
+            region = np.isin(seg, geom_ids)
+        else:
+            cands = detector(sim.render(camera_name=cam, height=camera_height,
+                                        width=camera_width)[::-1], obstacle_name) \
+                if detector else None
+            if not cands:
+                continue
+            bbox = max(cands, key=lambda c: c[1])[0]
+            x0, y0, x1, y1 = [int(round(b)) for b in bbox]
+            region = np.zeros(depth.shape, dtype=bool)
+            region[max(0, y0):y1, max(0, x0):x1] = True
+        ys, xs = np.nonzero(region)
+        if len(ys) < 30:
+            continue
+        zs = depth[ys, xs]
+        ok = (zs > 0.1) & (zs < 5.0)
+        if ok.sum() < 30:
+            continue
+        ys, xs, zs = ys[ok], xs[ok], zs[ok]
+        z_med = np.median(zs)
+        keep = np.abs(zs - z_med) < 0.25
+        pix = np.stack([xs[keep], ys[keep], np.ones(keep.sum())]).astype(np.float64)
+        cam_pts = np.linalg.inv(K) @ pix * zs[keep][None, :]
+        world = (T @ np.vstack([cam_pts, np.ones((1, cam_pts.shape[1]))]))[:3].T
+        half = (np.percentile(world, 95, axis=0) - np.percentile(world, 5, axis=0)) / 2.0
+        best = half if best is None else np.maximum(best, half)
+    if best is None:
+        return None
+    return np.clip(best, 0.02, 0.35).astype(np.float32)
+
+
 def estimate_object_positions(sim, names, cameras=("agentview",),
                               camera_height=256, camera_width=256,
                               region_source="gt_seg", detector=None,

@@ -1,0 +1,21 @@
+{"kind": "probe", "name": "kitchen knife", "gt": 1, "variant": "anchored", "detail": {"votes": [0.9, 0.9, 0.9, 0.9, 0.9]}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "lit candle", "gt": 1, "variant": "anchored", "detail": {"votes": [1.0, 0.9, 1.0, 1.0, 1.0]}, "score": 0.9800000000000001, "table_weight": 0.4}
+{"kind": "probe", "name": "hot skillet", "gt": 1, "variant": "anchored", "detail": {"votes": [0.9, 0.9, 0.9, 0.9, 0.9]}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "ceramic vase", "gt": 1, "variant": "anchored", "detail": {"votes": [0.9, 0.9, 0.9, 0.9, 0.9]}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "syringe", "gt": 1, "variant": "anchored", "detail": {"votes": [0.9, 0.9, 0.9, 0.9, 0.9]}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "scissors", "gt": 1, "variant": "anchored", "detail": {"votes": [0.8, 0.8, 0.8, 0.8, 0.7]}, "score": 0.78, "table_weight": 0.4}
+{"kind": "probe", "name": "thermos of hot coffee", "gt": 1, "variant": "anchored", "detail": {"votes": [0.9, 0.9, 0.9, 0.9, 0.9]}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "curling iron", "gt": 1, "variant": "anchored", "detail": {"votes": [0.9, 0.9, 0.8, 0.8, 0.9]}, "score": 0.8600000000000001, "table_weight": 0.4}
+{"kind": "probe", "name": "aquarium", "gt": 1, "variant": "anchored", "detail": {"votes": [1.0, 1.0, 1.0, 1.0, 1.0]}, "score": 1.0, "table_weight": 0.4}
+{"kind": "probe", "name": "ceramic teapot", "gt": 1, "variant": "anchored", "detail": {"votes": [0.9, 0.9, 0.9, 0.9, 0.9]}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "sponge", "gt": 0, "variant": "anchored", "detail": {"votes": [0.0, 0.0, 0.0, 0.0, 0.1]}, "score": 0.02, "table_weight": 0.4}
+{"kind": "probe", "name": "dish towel", "gt": 0, "variant": "anchored", "detail": {"votes": [0.0, 0.1, 0.0, 0.0, 0.1]}, "score": 0.04, "table_weight": 0.4}
+{"kind": "probe", "name": "wooden spoon", "gt": 0, "variant": "anchored", "detail": {"votes": [0.2, 0.1, 0.1, 0.1, 0.1]}, "score": 0.12, "table_weight": 0.4}
+{"kind": "probe", "name": "paper napkin", "gt": 0, "variant": "anchored", "detail": {"votes": [0.0, 0.0, 0.0, 0.0, 0.0]}, "score": 0.0, "table_weight": 0.4}
+{"kind": "probe", "name": "rubber duck", "gt": 0, "variant": "anchored", "detail": {"votes": [0.1, 0.1, 0.1, 0.1, 0.0]}, "score": 0.08, "table_weight": 0.4}
+{"kind": "probe", "name": "loaf of bread", "gt": 0, "variant": "anchored", "detail": {"votes": [0.2, 0.2, 0.2, 0.4, 0.3]}, "score": 0.26, "table_weight": 0.4}
+{"kind": "probe", "name": "banana", "gt": 0, "variant": "anchored", "detail": {"votes": [0.2, 0.1, 0.2, 0.3, 0.1]}, "score": 0.18, "table_weight": 0.4}
+{"kind": "probe", "name": "stuffed toy", "gt": 0, "variant": "anchored", "detail": {"votes": [0.0, 0.0, 0.05, 0.0, 0.0]}, "score": 0.01, "table_weight": 0.4}
+{"kind": "probe", "name": "plastic straw", "gt": 0, "variant": "anchored", "detail": {"votes": [0.0, 0.0, 0.0, 0.0, 0.0]}, "score": 0.0, "table_weight": 0.4}
+{"kind": "probe", "name": "cardboard coaster", "gt": 0, "variant": "anchored", "detail": {"votes": [0.1, 0.1, 0.1, 0.1, 0.1]}, "score": 0.1, "table_weight": 0.4}
+{"kind": "summary", "slot": "probe", "n": 20, "vlm_auc": 1.0, "table_auc": 0.5, "vlm_sep": 0.8210000000000002, "s1_prompt": "anchored", "backend": "gemini:gemini-2.5-flash"}

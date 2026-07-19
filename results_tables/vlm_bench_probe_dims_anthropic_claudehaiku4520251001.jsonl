@@ -1,0 +1,21 @@
+{"kind": "probe", "name": "kitchen knife", "gt": 1, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 0.0, "hot": 0.0, "sharp": 1.0, "topple": 0.0, "scene": 0.6666666666666666}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "lit candle", "gt": 1, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 1.0, "hot": 1.0, "sharp": 0.0, "topple": 0.3333333333333333, "scene": 1.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "hot skillet", "gt": 1, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 1.0, "hot": 1.0, "sharp": 0.0, "topple": 0.0, "scene": 1.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "ceramic vase", "gt": 1, "variant": "dims", "detail": {"fragile": 1.0, "liquid": 1.0, "hot": 1.0, "sharp": 0.0, "topple": 0.0, "scene": 1.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "syringe", "gt": 1, "variant": "dims", "detail": {"fragile": 0.3333333333333333, "liquid": 1.0, "hot": 0.0, "sharp": 1.0, "topple": 0.0, "scene": 0.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "scissors", "gt": 1, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 0.0, "hot": 0.0, "sharp": 1.0, "topple": 0.0, "scene": 0.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "thermos of hot coffee", "gt": 1, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 1.0, "hot": 1.0, "sharp": 0.0, "topple": 0.0, "scene": 1.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "curling iron", "gt": 1, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 1.0, "hot": 1.0, "sharp": 0.0, "topple": 0.0, "scene": 0.6666666666666666}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "aquarium", "gt": 1, "variant": "dims", "detail": {"fragile": 1.0, "liquid": 1.0, "hot": 0.0, "sharp": 0.0, "topple": 0.0, "scene": 1.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "ceramic teapot", "gt": 1, "variant": "dims", "detail": {"fragile": 1.0, "liquid": 1.0, "hot": 1.0, "sharp": 0.0, "topple": 0.0, "scene": 1.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "sponge", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 1.0, "hot": 0.0, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "dish towel", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 1.0, "hot": 1.0, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "wooden spoon", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 0.0, "hot": 1.0, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "paper napkin", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 1.0, "hot": 0.0, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "rubber duck", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 1.0, "hot": 0.0, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.9, "table_weight": 0.4}
+{"kind": "probe", "name": "loaf of bread", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 0.0, "hot": 0.6666666666666666, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.6, "table_weight": 0.4}
+{"kind": "probe", "name": "banana", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 0.0, "hot": 0.0, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.1, "table_weight": 0.4}
+{"kind": "probe", "name": "stuffed toy", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 0.0, "hot": 0.0, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.1, "table_weight": 0.4}
+{"kind": "probe", "name": "plastic straw", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 0.0, "hot": 0.0, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.1, "table_weight": 0.4}
+{"kind": "probe", "name": "cardboard coaster", "gt": 0, "variant": "dims", "detail": {"fragile": 0.0, "liquid": 0.0, "hot": 0.0, "sharp": 0.0, "topple": 0.0, "scene": 0.0}, "score": 0.1, "table_weight": 0.4}
+{"kind": "summary", "slot": "probe", "n": 20, "vlm_auc": 0.75, "table_auc": 0.5, "vlm_sep": 0.3500000000000001, "s1_prompt": "dims", "backend": "anthropic:claude-haiku-4-5-20251001"}

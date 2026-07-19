@@ -779,3 +779,29 @@ resolve the Spatial L1 thin(TSR)/fat(CAR) sphere tradeoff. Smoke job
   no-GT SafeLIBERO closes.
 - no-GT Long L1+L2 n=50 submitted (42405139, composed-thin, full Tier-Percep,
   head-noun fix live) — last two virgin no-GT cells.
+
+### Late-wave additions (same day, GPU-queue window)
+- **Prompt-variant sweep FINAL**: anchored wins (gemini-anchored s1 84.2% —
+  best name-only arm — probe sep 0.82; haiku-anchored 78.9%/0.74). dims
+  multiprompt NO-GO (s1 68-74%, probe AUC 0.55-0.75 — binary micro-judgments
+  destroy the graded hazard signal). Gemini-anchored priors file generated
+  as upgrade candidate (vlm_hazard_priors_gemini.json); pending prior-swap
+  smoke stays on haiku file for provenance.
+- **Scene-graph V1 VERDICT: 100% agreement (19/19)** flat-v3 vs graph-rule
+  identification (scene_graph.py; results_tables/scene_graph_v1_agreement.json)
+  → pre-registered NO-GO for SafeLIBERO confirmed: the graph is a refactor,
+  not information, on this benchmark. V2 (LIBERO-Safety) parked per priority.
+- **G5 table-plane fit: GO + discovery** — depth-histogram mode recovers the
+  support plane with 0.4cm scatter across 19 scenes at z=0.862; the hardcoded
+  z_table=0.81 is ~5cm below where objects actually rest (bowl centers 0.898,
+  half-height ~4cm). Adopt fit as percep-tier table height.
+- **Percep extents integrated** as no-GT obstacle_scales source
+  (estimate_obstacle_extent; client picks percep vs GT AABB by
+  obstacle_pos_source) — ready the moment the GT shape smoke (42405105) GOes.
+- **G3 LLM-parse NO-GO** recorded above; token heuristics + head-noun stay.
+- **Significance (Fisher, n=200/arm)**: no-GT CAR wins all significant
+  (Obj L1 p=3e-41, Spa L2 p=5e-18, Goal L2 p=2e-4 vs reimpl); NO TSR
+  difference vs reimpl reaches significance anywhere (Obj L1 +3.5 ns p=0.55,
+  Goal L2 −1.0 ns p=0.91, Goal L1 +6.5 ns p=0.17, Spa L2 +15.5 SIG p=2e-4).
+  Headline: "TSR statistically indistinguishable from self-run SOTA, CAR
+  2-5x higher, without privileged state."
