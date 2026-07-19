@@ -726,3 +726,56 @@ try text-threshold sweep or per-name query batching).
 
 Ops: LIBERO-Safety unzip moved into CPU SLURM job (42405002, qos=low) after
 repeated login-node kills; chains smoke sbatch on success.
+
+## ★ 2026-07-19 (late wave) — generalization campaign: VLM property head, prompt study, superquadric barrier
+
+### Multi-model VLM property-head study (19-scene offline benchmark + 20-name open-vocab probe)
+| Backend | s1 identity (base prompt) | open-vocab AUC | notes |
+|---|---|---|---|
+| hand table (incumbent) | 100% | 0.50 (uninformative 0.4 default) | benchmark-role leakage acknowledged |
+| claude-sonnet-5 | 78.9% | **1.00** | |
+| claude-haiku-4.5 | 15.8% base / 78.9% context+anchored | **1.00** | base-prompt parse pathology |
+| gpt-5.5 | 78.9% | **1.00** | |
+| gemini-2.5-flash | 78.9% | **1.00** | dims multiprompt: 73.7% |
+All backends fail the SAME 4 box/book scenes: the VLM ratings are semantically
+correct (box/book harmless to touch) but the benchmark designates them as
+placed obstacles — the discriminator is physical size, invisible to name-only
+prompts. s2 whole-scene WITH images: gpt-5.5 84.2%, sonnet 57.9%, gemini
+47.4% vs structured 100% → decomposition claim survives at API strength.
+
+### Offline rescue arms (19 scenes)
+- head-noun mention fix: real bug ("glazed rim porcelain ramekin" mention_frac
+  0.25 when task says "ramekin") → INTEGRATED into scored_obstacle_id.
+- percep extents (seg+depth, after fixing 180° capture rotation): coverage
+  16/19 but size term does NOT rescue identification (visible-surface noise)
+  → NO-GO for identity; REPURPOSED as no-GT obstacle_scales source.
+- protection floor (C1 fail-safe): max(vlm_rating, 0.5) → **17/19 best
+  general config**; remaining 2 scenes are answer-key artifacts.
+- G3 LLM instruction parse (haiku, JSON target/dest/mentioned): 13/19 —
+  WORSE than fixed token heuristics, errors fail-unsafe → NO-GO; heuristic
+  + head-noun stays.
+
+### Integration (commit e7ace4a)
+symbolic_identity.load_vlm_priors(path, floor) + client
+--hazard_prior_source vlm; priors JSON = 35-name vocabulary rated by haiku
+anchored prompt (results_tables/vlm_hazard_priors.json). Runtime tax measured
+by fgd_prior_swap_smoke (job 42405131): Spatial L1 n=10 Tier-Percep,
+table-arm vs vlm-arm, same r3 server.
+
+### Superquadric/anisotropic obstacle barrier (commit 4533f42)
+_eff_dist radial barrier B(p)=|p-o|-r(u), r(u)=(sum|u_i/s_i|^(2/eps))^(-eps/2);
+all-zero scales = exact legacy sphere. Client --obstacle_shape superquadric
+sends GT AABB half-extents (mesh-vertex exact). Hypothesis: tall-thin shapes
+resolve the Spatial L1 thin(TSR)/fat(CAR) sphere tradeoff. Smoke job
+42405105: ellipsoid (eps 1.0) + boxy (eps 0.4), Spatial L1 n=10, r3 config.
+
+### Ops
+- iter5 (r3@0.095): 42405001 died on w010 node flake; 42405059 hit a
+  mid-edit GuidanceParams race (job started during superquadric edit);
+  clean resubmit 42405128. LESSON: don't edit worktree modules while jobs
+  are PENDING on them.
+- LIBERO-Safety assets: unzip CPU job 42405002 COMPLETED (1h34m), UNZIP_DONE
+  set, env smoke auto-chained (42405130). Parked per user priority until
+  no-GT SafeLIBERO closes.
+- no-GT Long L1+L2 n=50 submitted (42405139, composed-thin, full Tier-Percep,
+  head-noun fix live) — last two virgin no-GT cells.
