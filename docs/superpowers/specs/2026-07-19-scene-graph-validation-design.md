@@ -1,6 +1,9 @@
 # Scene Graph for Semantic Safety: Go/No-Go Validation Design
 
-Date: 2026-07-19. Status: DRAFT — awaiting user review.
+Date: 2026-07-19. Status: V1 EXECUTED same day (user directed continuous work).
+V1 RESULT: 100% agreement (19/19) flat-v3 vs graph-rule identification —
+pre-registered NO-GO for SafeLIBERO confirmed. Construction: vlm_pipeline/
+scene_graph.py (worktree). V2 gated on LIBERO-Safety priority unparking.
 Question: is an explicit scene graph (typed nodes + relational edges) worth adding
 to the no-GT identification pipeline, and if so, how do we build it cheaply?
 
