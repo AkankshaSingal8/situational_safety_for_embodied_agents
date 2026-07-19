@@ -805,3 +805,19 @@ resolve the Spatial L1 thin(TSR)/fat(CAR) sphere tradeoff. Smoke job
   Goal L2 −1.0 ns p=0.91, Goal L1 +6.5 ns p=0.17, Spa L2 +15.5 SIG p=2e-4).
   Headline: "TSR statistically indistinguishable from self-run SOTA, CAR
   2-5x higher, without privileged state."
+
+### E5 fail-direction for VLM priors + GUARD-SET result (offline, 19 scenes)
+Argmax identification is fail-unsafe by construction (single-obstacle guidance
+leaves the true hazard unguarded on ANY mispick): intact vlm+floor 17/19,
+30%-dropped 15/19, inverted 3/19 — the floor helps accuracy but cannot fix
+ordering. **Guard-set (top-k by the same score): top-2 recall 19/19 under
+EVERY corruption including full inversion** — path geometry alone keeps the
+true obstacle in the top-2; semantics only orders within the set. This is the
+C1 default-deny thesis with an empirical proof: identification errors become
+survivable if guidance guards the set. Module: vlm_pipeline/guard_set.py
+(guard_set()[0] == scored_obstacle_id() by construction). Server-side
+multi-obstacle barrier (min over obstacles, same composition as companion
+points) is the pending integration — DEFERRED until the 4 queued jobs start
+(module-edit race lesson).
+
+### Scene-graph V1 + G5 + stats: see block above (commit 2d10d69).
