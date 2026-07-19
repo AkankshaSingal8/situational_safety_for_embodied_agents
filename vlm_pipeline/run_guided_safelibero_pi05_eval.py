@@ -239,6 +239,14 @@ def parse_args():
     parser.add_argument("--save_videos", action="store_true")
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--task_indices", type=int, nargs="+", default=None)
+    parser.add_argument("--hazard_prior_source", type=str, default="table",
+                        choices=["table", "vlm"],
+                        help="'vlm' loads offline VLM property ratings (+ protection "
+                             "floor) into symbolic identity instead of the hand table.")
+    parser.add_argument("--vlm_prior_json", type=str,
+                        default=str(pathlib.Path(__file__).parents[1]
+                                    / "results_tables/vlm_hazard_priors.json"))
+    parser.add_argument("--prior_floor", type=float, default=0.5)
     parser.add_argument("--obstacle_shape", type=str, default="sphere",
                         choices=["sphere", "superquadric"],
                         help="'superquadric' sends the obstacle's GT AABB half-extents "
@@ -317,6 +325,12 @@ def run_eval(args):
         from percep_obstacle import make_gdino_detector
         gdino_detector = make_gdino_detector()
         logging.info("GroundingDINO detector service started (Tier-Percep-D)")
+
+    if args.hazard_prior_source == "vlm":
+        from symbolic_identity import load_vlm_priors
+        load_vlm_priors(args.vlm_prior_json, floor=args.prior_floor)
+        logging.info(f"VLM hazard priors loaded from {args.vlm_prior_json} "
+                     f"(floor {args.prior_floor})")
 
     benchmark_dict = benchmark.get_benchmark_dict()
     task_suite = benchmark_dict[args.task_suite_name](safety_level=args.safety_level)

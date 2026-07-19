@@ -125,8 +125,31 @@ HAZARD_PRIOR = {
 _HAZARD_DEFAULT = 0.4
 
 
+# VLM-sourced property priors (generalization arm G1): per-clean-name hazard
+# ratings generated OFFLINE by a VLM (vlm_slot_bench rate_name, anchored
+# prompt) + a protection floor — semantics may RAISE concern above the floor
+# but never delete protection from an unmentioned near-path object (C1
+# fail-safe principle; floor=0.5 was the best offline config, 17/19 vs
+# table 19/19 with full open-vocab generality the table lacks).
+_VLM_PRIORS: dict | None = None
+_PRIOR_FLOOR = 0.5
+
+
+def load_vlm_priors(path: str, floor: float = 0.5) -> None:
+    global _VLM_PRIORS, _PRIOR_FLOOR
+    import json
+    _VLM_PRIORS = {k.lower(): float(v) for k, v in json.load(open(path)).items()}
+    _PRIOR_FLOOR = floor
+
+
 def _hazard_weight(name: str) -> float:
-    toks = _clean_object_name(name).lower().split()
+    clean = _clean_object_name(name).lower()
+    if _VLM_PRIORS is not None:
+        rated = _VLM_PRIORS.get(clean.replace(" obstacle", ""))
+        if rated is None:  # unseen name: floor = protected, never invisible
+            rated = _HAZARD_DEFAULT
+        return max(rated, _PRIOR_FLOOR)
+    toks = clean.split()
     ws = [HAZARD_PRIOR[t] for t in toks if t in HAZARD_PRIOR]
     return max(ws) if ws else _HAZARD_DEFAULT
 
@@ -150,10 +173,18 @@ def scored_obstacle_id(
     task = task_description.lower()
 
     def mention_frac(key: str) -> float:
-        toks = [w for w in _clean_object_name(key).lower().split() if len(w) >= 3]
+        toks = [w for w in _clean_object_name(key).lower().split()
+                if len(w) >= 3 and w != "obstacle"]
         if not toks:
             return 0.0
-        return sum(w in task for w in toks) / len(toks)
+        frac = sum(w in task for w in toks) / len(toks)
+        # Head-noun rule: multi-word visual descriptors ("glazed rim porcelain
+        # ramekin") dilute token-fraction matching — if the name's head noun
+        # (last content token, English NP convention) appears in the
+        # instruction, the object IS referenced and must be goal-excluded.
+        if toks[-1] in task:
+            frac = 1.0
+        return frac
 
     fracs = {k: mention_frac(k) for k in candidate_positions}
     partial = {k for k, f in fracs.items() if f < 1.0}
