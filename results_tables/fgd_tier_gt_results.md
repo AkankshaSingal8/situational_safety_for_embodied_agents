@@ -867,3 +867,21 @@ exemption's job → arm C submitted (boxy + corridor, job 42422430).
   symlinked; resubmitted as 42422432.
 - New-script header fixed to source conda by absolute path (module fn absent
   in this session's sbatch environment).
+
+## ★ 2026-07-19 late — prior-swap verdict + Spatial L1 no-GT VLM confirm launched
+- Job 42422429 (Spatial L1, Tier-Percep, r3 server, n=10/task per arm):
+  - table arm: 60.0/42.5 — matches the existing no-GT board cell (60.0/40.0 at n=80).
+  - vlm arm (haiku anchored priors + floor 0.5): **72.5/37.5** — TSR +12.5, CAR −5.0 (2 eps).
+- VERDICT: generalization tax is ZERO-TO-NEGATIVE. The fully general VLM-prior
+  identification path is at least as good as the hand table at runtime. GO —
+  VLM priors promoted into the no-GT standard config.
+- Bonus: 72.5/37.5 would beat BOTH refs BOTH axes at the open Spatial L1 no-GT
+  cell (baseline 67.0/14.0, reimpl 62.0/28.5). n=50 confirm = job 42430870
+  (fgd_nogt_spatial_vlm_n50.slurm, r3 + vlm priors, full Tier-Percep).
+- Mechanism note: biggest per-task gains t0 0.9→1.0 and t3 0.3→0.6 — graded
+  VLM hazard priors reweight the guard toward the true hazard on scenes where
+  the hand table's uniform-ish weights mis-rank candidates.
+- LIBERO-Safety smoke (parked lane, CPU fixes only): config-dir, wand,
+  scikit-image, level-aware bddl/init API (L0/L1/L2 subdirs; reasoning_safety
+  ships no .pruned_init). obstacle_avoidance/human_safety/affordance resolve
+  15 tasks × 50 init states offline. Smoke 42427444 queued.
