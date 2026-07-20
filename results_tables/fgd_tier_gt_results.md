@@ -952,3 +952,30 @@ the one GT caveat cell). Superquadric stays in the paper as the shape study
 tier: 70.0/46.5 beats both refs both axes — perception extents + VLM priors
 outperform our own GT config here. shape_scale fix stays (flag-gated, inert in
 sphere mode, needed by any future shape config).
+
+## 2026-07-20 — sim-name-free inventory study: full ladder + VERDICT (offline, 19 scenes)
+Harness vlm_pipeline/inventory_study.py (seg regions as SAM stand-in; hits by
+POSITION vs GT obstacle, never string match; ratings stay haiku/anchored).
+Reference (sim names): 17/19 argmax, 19/19 guard-set top-2.
+Ladder: SoM markers+haiku 7/9 -> +robot-name filter 9/10 -> crop-montage haiku
+6/11 -> crop sonnet-5 4/12 -> +movability filter 4/8. Whole-image inventory
+recall (amortized 1 call/task): 9/19.
+Diagnosis (each verified): (1) marker placement correct, haiku full-scene
+naming weak (moka pot -> "blue shirt"); (2) crops fix naming but surface
+FIXTURES (stove burner, stovetop pot, cloths) that are genuinely hazardous +
+near-path and OUTRANK the designated obstacle — the sim list's hidden
+privilege is CURATION (movables only), and sonnet's better naming made it
+worse (4/19); (3) movability self-classification fails on the stovetop pot;
+(4) task_3 elevated-cabinet scenes: true-obstacle region centroid >13cm off in
+this quick harness (visible-surface bias) -> ~14-15/19 offline ceiling
+regardless of naming.
+VERDICT: NO-GO at current quality — adopting would cut top-2 recall from
+19/19 to ~12/19, violating "no performance regression". The no-GT tier keeps
+the symbolic object inventory (names from env metadata; positions/geometry/
+semantics all pixel-derived) and the tier description states this explicitly.
+Future work (documented, not pre-ICRA): SAM-class proposals + production
+percep localization per region; benchmark-vs-open-world scoring mismatch (the
+pixel stack flags the boiling stovetop pot — arguably CORRECT safety behavior
+that SafeLIBERO's single-designated-obstacle scoring cannot credit); guard_k>2
+with fixture-aware curation.
+API spend: ~130 haiku + 19 sonnet calls, all cached under scratchpad/som/.
