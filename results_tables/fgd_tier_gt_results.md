@@ -940,3 +940,15 @@ arm held directionally at n=50 (70.0 vs table-arm history 60.0/40.0 n=80);
 Board: no-GT clean wins vs BOTH refs BOTH axes: Spatial L1+L2, Goal L1,
 Object L1+L2 (5/8); Goal L2 TSR tie (p ns) + CAR win; Long L1+L2 beat reimpl
 both axes, baseline keeps TSR via liveness stalls.
+
+## 2026-07-20 — corridor-shape fix verdict (job 42431256, n=40) + GT Spatial L1 CLOSED-WITH-CAVEAT
+boxy(0.4)+corridor WITH shape_scale fix: 62.5/45.0 — t0 0.80/0.30, t1 0.10/0.40,
+t2 1.00/0.60, t3 0.60/0.50. t2 holds 100 TSR, t3 +0.10, but t1 NOT rescued even
+with the corridor relaxing r_shape. Three arms agree: obstacle-on-grasp-target
+geometry (t1) defeats any AABB-sized barrier, corridor or not.
+DECISION: GT Spatial L1 ships sphere r3@0.09 (71.0/23.5, CAR −5.0 vs reimpl,
+the one GT caveat cell). Superquadric stays in the paper as the shape study
+(first 100-TSR cell, honest t1 negative). The cell's REAL closure is the no-GT
+tier: 70.0/46.5 beats both refs both axes — perception extents + VLM priors
+outperform our own GT config here. shape_scale fix stays (flag-gated, inert in
+sphere mode, needed by any future shape config).
