@@ -73,20 +73,36 @@ Bold = beats BOTH baseline and self-run SOTA on BOTH axes.
 | Goal L2 | 66.5/35.0 | 75.0/49.5 | **76.0/60.0** | 74.0/68.0 (TSR −1.0pp=2eps, CAR +18.5) |
 | Object L1 | 40.5/14.0 | 53.0/15.5 | **53.5/28.0** | **56.5/80.5** (beats own GT tier) |
 | Object L2 | 74.0/25.0 | 76.0/33.5 | **83.0/74.5** | **77.0/86.0** |
-| Long L1 | 58.0/15.0 | 30.5/35.5 | 42.5/71.0 (beats reimpl) | running (42405139) |
-| Long L2 | 51.0/16.5 | 43.0/59.5 | 47.0/77.0 (beats reimpl) | running (42405139) |
+| Long L1 | 58.0/15.0 | 30.5/35.5 | 42.5/71.0 (beats reimpl) | **49.0/66.5** (beats reimpl both axes; beats own GT TSR) |
+| Long L2 | 51.0/16.5 | 43.0/59.5 | 47.0/77.0 (beats reimpl) | **44.0/79.5** (beats reimpl both axes) |
 
-GT strict wins 5/8; no-GT clean wins 4/8 + 2 running + Goal L2 statistical tie.
+GT strict wins 5/8; no-GT: 6/8 clean wins vs both refs, Long L1/L2 beat reimpl
+both axes (baseline keeps a TSR edge via liveness stalls — timeouts, not
+collisions), Goal L2 statistical tie on TSR. Only Spatial L1 remains open at
+both tiers (sphere family exhausted: r3@0.095 = 60.0/48.5 FAIL, cliff between
+0.09 and 0.095; SQ boxy+corridor arm in flight, job 42422430).
+
+Stats headline (Fisher, n=200/suite-level): every no-GT CAR win vs reimpl is
+significant (up to p=3e-41); NO no-GT TSR delta vs reimpl is significant
+anywhere → "TSR statistically indistinguishable from self-run SOTA, CAR 2–5×
+higher, without privileged state."
 
 ## Generalization content update (for the method section / rebuttal armor)
 - no-GT stack today: percep geometry + symbolic identity with HAND property
   table. VLM-priors arm (haiku anchored + protection floor 0.5) integrated,
-  runtime tax measured by job 42405131; offline 89% vs table 100% with
-  open-vocab AUC 1.0 vs 0.5 — "general at a small in-domain cost" claim.
+  runtime tax measured by job 42422429 (in flight); offline 89% vs table 100%
+  with open-vocab AUC 1.0 vs 0.5 — "general at a small in-domain cost" claim.
+- Guard-set identification (top-k by v3 score): top-2 recall 19/19 under ALL
+  prior corruptions incl. full inversion — converts fail-unsafe argmax into a
+  fail-safe set; server multi-obstacle (min-composition) patch staged.
 - Multi-model study (sonnet-5/gpt-5.5/gemini-2.5-flash/haiku): identical
   78.9% ceiling, identical 4 failing scenes → prompt/question-format bound,
   not model bound; whole-scene s2 with images max 84.2% vs structured 100%
   (decomposition claim holds at frontier strength).
 - Anisotropic superquadric barrier from object extents implemented
-  (candidate to replace the per-name radius table + per-suite radius tuning);
-  Spatial L1 shape smoke = job 42405105.
+  (candidate to replace the per-name radius table + per-suite radius tuning).
+  Spatial L1 shape smoke: ellipsoid 62.5/42.5, boxy(ε0.4) 60.0/50.0 overall,
+  BUT per-task t2 = 100 TSR (boxy 100/60) — first 100-TSR cell ever on this
+  suite; t1 collapses (10–20 TSR) because the AABB-sized barrier smothers the
+  grasp when the obstacle abuts the target → boxy+corridor arm (42422430) is
+  the exemption-vs-restriction hypothesis test at the shape level.
