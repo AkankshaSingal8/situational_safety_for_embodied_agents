@@ -1089,3 +1089,18 @@ Also: protected-class rule landed (02:49) while vlmfin cells were starting —
 later cells imported the edited module; benign by construction (no protected
 names in SafeLIBERO -> scoring bit-identical, verified 19/19 offline).
 Assembler AEGIS schema fixed (reads results['overall']).
+
+## 2026-07-20 — AEGIS self-run verdict + post-hoc row replacement
+AEGIS released code shipped with the shield DISABLED (perception commented
+out, flag_safety_control=False hardcoded) — the row as released is plain
+pi0.5. Enabled with GT geometry: AABB ellipsoid arm TSR 0/8 (mesh-inflated
+bounds -> eef permanently "inside"); tuned-sphere arm TSR 5.0/CAR 45.0 (n=20,
+QP feasible throughout) — their velocity-space controller destroys task
+success even where the barrier should be inactive. DECISION: do not publish a
+number for their controller (unfair strawman; code is mid-development).
+REPLACEMENT — post-hoc shield row run CORRECTLY: new 'posthoc' repair
+schedule in our server (zero guidance during denoising, one exact projection
+sweep on the final decoded chunk), same GT barrier params as the SOTA-reimpl
+referee (r0.10, K1, no companions, no corridor). Delta vs reimpl isolates
+post-hoc vs in-denoising ARCHITECTURE with everything else held fixed — the
+comparison the AEGIS row was meant to provide. Jobs: 8 cells n=50.

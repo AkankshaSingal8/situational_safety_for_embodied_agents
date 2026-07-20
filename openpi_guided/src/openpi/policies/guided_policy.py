@@ -56,6 +56,14 @@ def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
         ramp = np.linspace(0.2, 1.0, num=5, dtype=np.float32)  # steps 2..6
         w[2 : 2 + len(ramp)] = ramp
         return w, margin
+    if kind == "posthoc":
+        # Post-hoc shield baseline (AEGIS architecture class): the flow is
+        # never guided — one exact projection sweep repairs the FINAL decoded
+        # chunk only. Same barrier/criterion/policy as every other row; the
+        # delta vs in-denoising schedules isolates the architecture.
+        w = np.zeros(n, dtype=np.float32)
+        w[-1] = 1.0
+        return w, margin
     raise ValueError(f"unknown repair_schedule {kind!r}")
 
 
