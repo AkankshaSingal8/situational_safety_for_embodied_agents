@@ -832,3 +832,38 @@ Gemini's higher argmax on the sonnet-weight benchmark did not carry to its
 own ratings (over-rates fragile distractors → GT pushed to rank 3 twice).
 Haiku-anchored + floor + top-2 guard set = general config with full recall;
 pending prior-swap smoke (42405131) already runs the haiku file.
+
+## ★ 2026-07-19 evening — first full results wave (jobs 42405128/248/251)
+
+### no-GT Long n=50 FINALS (job 42405251, composed-thin, full Tier-Percep, head-noun fix live)
+| Cell | no-GT | baseline | reimpl | Verdict |
+|---|---|---|---|---|
+| Long L1 | 49.0 / 66.5 | 58.0/15.0 | 30.5/35.5 | beats reimpl BOTH axes (+18.5/+31); baseline TSR −9 (liveness stalls, same as GT) |
+| Long L2 | 44.0 / 79.5 | 51.0/16.5 | 43.0/59.5 | beats reimpl BOTH axes (+1/+20); baseline TSR −7 |
+no-GT Long now matches the GT-tier story exactly: dominates the SOTA method
+class, loses baseline TSR to timeout stalls (not collisions). Notably BETTER
+than GT-tier composed (42.5/71.0, 47.0/77.0) on L1 TSR +6.5.
+
+### GT Spatial L1 iter5 (r3 @ 0.095, job 42405128): FAILS
+60.0/48.5 — the radius cliff is between 0.09 and 0.095 (0.095 behaves like
+0.10: TSR collapse with big CAR). Radius interpolation EXHAUSTED. r3@0.09
+(71.0/23.5) stays the terminal sphere candidate. (L2 side: 86.0/55.0.)
+
+### Superquadric smoke n=10 (job 42405248, GT AABB extents, r3 base)
+| Arm | overall | t0 | t1 | t2 | t3 |
+|---|---|---|---|---|---|
+| ellipsoid eps1.0 | 62.5/42.5 | 80/60 | 20/40 | **100/30** | 50/40 |
+| boxy eps0.4 | 60.0/50.0 | 80/60 | 10/40 | **100/60** | 50/40 |
+Shape WORKS where the obstacle is off-grasp (t2: 100 TSR with CAR 30-60 —
+sphere never did this) but the AABB smothers the grasp on t1 (bowl ON the
+ramekin, obstacle adjacent): 10-20 TSR. This is precisely the corridor
+exemption's job → arm C submitted (boxy + corridor, job 42422430).
+
+### Ops
+- prior-swap smoke died on w004 with the abort-after-ep1 signature (same as
+  w010) → w004 added to exclusions; resubmitted as 42422429.
+- LIBERO-Safety smoke failure root-caused: checkpoint ships norm_stats at
+  assets/lerobot/, openpi expects assets/physical-intelligence/libero/ →
+  symlinked; resubmitted as 42422432.
+- New-script header fixed to source conda by absolute path (module fn absent
+  in this session's sbatch environment).
