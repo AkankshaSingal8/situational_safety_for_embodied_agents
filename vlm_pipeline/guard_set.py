@@ -38,6 +38,14 @@ def guard_set(task_description: str, candidate_positions: dict,
         return f
 
     fr = {n: mf(n) for n in candidate_positions}
+    # Protected-class override — mirror of scored_obstacle_id (human_safety V2
+    # finding): body-part classes are never mention-excluded, path-floored,
+    # weight 1.0.
+    protected = {n for n in candidate_positions
+                 if any(w in si._clean_object_name(n).lower()
+                        for w in si._PROTECTED_CLASSES)}
+    for n in protected:
+        fr[n] = 0.0
     part = [n for n, f in fr.items() if f < 1.0]
     if not part:
         return []
@@ -57,8 +65,11 @@ def guard_set(task_description: str, candidate_positions: dict,
         return best
 
     def score(n):
-        return (si._hazard_weight(n)
-                * float(np.exp(-dp(n) ** 2 / (2 * 0.25 ** 2)))
-                * (1.0 - 0.8 * fr[n]))
+        path = float(np.exp(-dp(n) ** 2 / (2 * 0.25 ** 2)))
+        w = si._hazard_weight(n)
+        if n in protected:
+            path = max(path, si._PROTECTED_PATH_FLOOR)
+            w = 1.0
+        return w * path * (1.0 - 0.8 * fr[n])
 
     return sorted(part, key=score, reverse=True)[:k]

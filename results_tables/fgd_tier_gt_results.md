@@ -998,3 +998,23 @@ machinery (optional mode). Rejected with evidence: LLM instruction parse,
 dims multiprompt, size-for-identity, scene graph (SafeLIBERO), full SQ depth
 fit, yaw fit (no in-domain gain), pixel-only inventory (curation privilege),
 guard_k=2 default, superquadric-as-default (t1 negative).
+
+## ★ 2026-07-20 — scene-graph V2 (LIBERO-Safety) VERDICT + protected-class rule
+Capture: 59/60 scenes (4 suites x 15 tasks; ls_v2cap 42431593). Hazard GT =
+bddl :constraints entities. Results (top1/top2 vs GT set, n=15/suite):
+- obstacle_avoidance: flat 9/11, graph 9/11 — IDENTICAL. SafeLIBERO V1
+  replicates on the second benchmark: for object hazards the graph is a
+  refactor. affordance/reasoning_safety: no constraint entities — hazards are
+  instruction-level (SSR/refusal territory, E4 judge F1 0.968), not obstacle ID.
+- human_safety: BOTH collapse 0/15 — the intruding hand is off-path at t=0 and
+  path-gating kills it. The graph does NOT rescue the relational suite.
+- Root cause is semantic CLASS, not graph structure: a hand is hazardous by
+  being a hand. PROTECTED-CLASS RULE added to scored_obstacle_id + guard_set
+  (_PROTECTED_CLASSES body parts: never mention-excluded, path floored 0.5,
+  weight 1.0): human_safety 0/15 -> **15/15 top-1, 15/15 top-2**.
+- SafeLIBERO regression: protected set empty on all 19 scenes -> scoring
+  bit-identical (guard-set 19/19 confirmed post-patch).
+FINAL SCENE-GRAPH VERDICT: NO-GO on BOTH benchmarks. Where hazards are
+objects, the graph ties the flat scorer (19/19 and 9/11 parity); where they
+are relational/dynamic (human hand), the graph fails identically and the fix
+is a 10-line semantic-class rule in the flat scorer. Minimal design wins.

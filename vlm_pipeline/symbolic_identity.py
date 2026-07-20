@@ -154,6 +154,13 @@ def _hazard_weight(name: str) -> float:
     return max(ws) if ws else _HAZARD_DEFAULT
 
 
+# Semantic hazard CLASSES guarded unconditionally: never mention-excluded,
+# path term floored (dynamic intruders), hazard weight 1.0. Extend via
+# rated properties, not names — these are body-part classes, not objects.
+_PROTECTED_CLASSES = ("hand", "human", "person", "arm", "finger", "face")
+_PROTECTED_PATH_FLOOR = 0.5
+
+
 def scored_obstacle_id(
     task_description: str,
     candidate_positions: Dict[str, "np.ndarray"],
@@ -187,6 +194,17 @@ def scored_obstacle_id(
         return frac
 
     fracs = {k: mention_frac(k) for k in candidate_positions}
+    # Protected-class override (LIBERO-Safety human_safety V2 finding,
+    # 2026-07-20): a human body part is hazardous by CLASS, not by geometry —
+    # it must never be mention-excluded ("place it in my hand" names the hand
+    # as a destination, not a license to touch it) and never path-gated to
+    # zero (it intrudes DYNAMICALLY; episode-start distance is meaningless).
+    # Offline: flat scorer 0/15 -> 14/15 top-1, 15/15 top-2 with this rule.
+    protected = {k for k in candidate_positions
+                 if any(w in _clean_object_name(k).lower()
+                        for w in _PROTECTED_CLASSES)}
+    for k in protected:
+        fracs[k] = 0.0
     partial = {k for k, f in fracs.items() if f < 1.0}
     if not partial:
         return None
@@ -210,9 +228,12 @@ def scored_obstacle_id(
         return best
 
     def score(k: str) -> float:
-        return (_hazard_weight(k)
-                * float(np.exp(-d_path(k) ** 2 / (2 * sigma ** 2)))
-                * (1.0 - 0.8 * fracs[k]))
+        path = float(np.exp(-d_path(k) ** 2 / (2 * sigma ** 2)))
+        w = _hazard_weight(k)
+        if k in protected:
+            path = max(path, _PROTECTED_PATH_FLOOR)
+            w = 1.0
+        return w * path * (1.0 - 0.8 * fracs[k])
 
     ranking = sorted(partial, key=score, reverse=True)
     if _E5_CORRUPT in ("identity", "both") and len(ranking) > 1:
