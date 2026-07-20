@@ -285,6 +285,11 @@ def parse_args():
                              "obs['*_pos'] — the full Tier-Percep entity stack. "
                              "Objects that fail localization are dropped from the "
                              "candidate/entity set (fail-safe: no corridor granted).")
+    parser.add_argument("--guard_k", type=int, default=1, choices=[1, 2],
+                        help="Guard-set size for symbolic identification: 1 = argmax "
+                             "(exact current behavior), 2 = also send the runner-up as "
+                             "obstacle2 (server barrier = min over both; identification "
+                             "errors fail safe instead of unguarding the true hazard).")
     parser.add_argument("--disable_guidance", action="store_true",
                         help="Send enabled=0 (server sanity baseline through the same code path).")
     return parser.parse_args()
@@ -482,6 +487,48 @@ def run_eval(args):
                     percep_fallback = True
                     logging.warning(f"  [percep] ep {ep_idx} estimator failed — GT fallback")
 
+            # Guard-set obstacle2: the runner-up candidate by the same v3 score.
+            # Positions/extents come through the SAME tier machinery as the
+            # primary (percep or GT); scoring stays GT-anchored regardless.
+            obstacle2_payload = None
+            if args.guard_k >= 2 and args.obstacle_id_source == "symbolic" and obstacle_name is not None:
+                from guard_set import guard_set as _guard_set
+                _ev = entity_view(obs)
+                _cands = {}
+                for _k in _ev:
+                    if (not _k.endswith("_pos") or _k.startswith("robot0")
+                            or "_to_" in _k):
+                        continue
+                    _p = np.asarray(_ev[_k])
+                    if _p.shape == (3,) and -0.5 < _p[0] < 0.5 and -0.5 < _p[1] < 0.5 and _p[2] > 0:
+                        _cands[_k[:-4]] = _p
+                _names = _guard_set(str(task_description), _cands,
+                                    np.asarray(obs["robot0_eef_pos"]), k=2)
+                _second = next((n for n in _names if n != obstacle_name), None)
+                if _second is not None:
+                    if args.obstacle_pos_source == "percep":
+                        from percep_obstacle import estimate_obstacle_pos as _est_pos2
+                        _p2, _ = _est_pos2(env.sim, _second, cameras=("agentview",),
+                                           region_source=args.mask_source, detector=gdino_detector)
+                        if _p2 is not None:
+                            _p2 = _p2 + np.array([0.0, 0.0, args.percep_z_correction])
+                    else:
+                        _p2 = np.asarray(obs.get(f"{_second}_pos"))
+                    if _p2 is not None:
+                        obstacle2_payload = {"pos": np.asarray(_p2, dtype=np.float32),
+                                             "radius": obstacle_radius(_second)}
+                        if args.obstacle_shape == "superquadric":
+                            if args.obstacle_pos_source == "percep":
+                                from percep_obstacle import estimate_obstacle_extent as _est_ext2
+                                _sc2 = _est_ext2(env.sim, _second, cameras=("agentview",),
+                                                 region_source=args.mask_source, detector=gdino_detector)
+                            else:
+                                _sc2 = obstacle_half_extents(env.sim, _second, _p2)
+                            if _sc2 is not None:
+                                obstacle2_payload["scales"] = _sc2
+                        logging.info(f"  [guard] ep {ep_idx} second={_second} "
+                                     f"pos={np.round(np.asarray(_p2), 3).tolist()}")
+
             if args.corridor and obstacle_name is not None:
                 _ents = parse_entities(task_description, entity_view(obs), sim=env.sim)
                 logging.info(
@@ -531,6 +578,8 @@ def run_eval(args):
                             }
                             if obstacle_scales is not None:
                                 element["guidance"]["obstacle_scales"] = obstacle_scales
+                            if obstacle2_payload is not None:
+                                element["guidance"]["obstacle2"] = obstacle2_payload
                             if args.corridor:
                                 element["guidance"].update(
                                     parse_entities(task_description, entity_view(obs), sim=env.sim))

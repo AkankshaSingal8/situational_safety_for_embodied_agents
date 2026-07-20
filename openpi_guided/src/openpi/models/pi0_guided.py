@@ -96,24 +96,51 @@ class GuidanceParams(NamedTuple):
     # Value = desired lateral displacement in meters PER ACTION STEP for the
     # biased candidates (0 = off; K=1 requests are never biased).
     hdc_scale: at.Float[at.Array, ""]
+    # Guard-set second obstacle (fixed M=2 keeps jit shapes static). Default =
+    # FAR center + zero scales -> its barrier is huge -> min() returns the
+    # primary barrier bit-for-bit. extra_r_obs is obstacle 2's OWN scalar
+    # radius; its effective radius reuses the primary's eef_radius + d_safe
+    # via r_eff2 = extra_r_obs + (r_eff - r_obs_base).
+    extra_obstacle_pos: at.Float[at.Array, "3"]
+    extra_r_obs: at.Float[at.Array, ""]
+    extra_obstacle_scales: at.Float[at.Array, "3"]
 
 
-def _eff_dist(diffs: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
+def _eff_dist(diffs: jnp.ndarray, g: GuidanceParams, scales=None, r_base=None, shape_scale=1.0) -> jnp.ndarray:
     """Shape-corrected distance for center offsets `diffs` (..., 3).
 
     Sphere mode (any obstacle_scale <= 0): plain Euclidean norm — callers'
     `dist - r_eff` reproduces legacy behavior bit-for-bit. Shape mode: returns
-    dist - r_shape(u) + r_obs_base, so `dist_eff - r_eff` equals
-    dist - r_shape(u) - eef_radius - d_safe.
+    dist - shape_scale*(r_shape(u) - r_base), so with shape_scale=1 the
+    caller's `dist_eff - r_eff` equals dist - r_shape(u) - eef_radius - d_safe.
+    shape_scale < 1 (corridor/margin relaxation) shrinks the anisotropic
+    keep-out the same way it shrinks the scalar margin — without it the
+    corridor exemption cannot reach the shape term at all (the t1 failure).
+    scales/r_base default to the primary obstacle's; pass the extra
+    obstacle's to evaluate its shape.
     """
+    scales = g.obstacle_scales if scales is None else scales
+    r_base = g.r_obs_base if r_base is None else r_base
     dists = jnp.linalg.norm(diffs, axis=-1)
     u = diffs / (dists[..., None] + 1e-8)
-    s = jnp.maximum(g.obstacle_scales, 1e-3)
+    s = jnp.maximum(scales, 1e-3)
     p_exp = 2.0 / jnp.maximum(g.sq_eps, 0.1)
     q = jnp.sum(jnp.abs(u / s) ** p_exp, axis=-1)
     r_shape = (q + 1e-8) ** (-jnp.maximum(g.sq_eps, 0.1) / 2.0)
-    use_shape = jnp.min(g.obstacle_scales) > 0.0
-    return jnp.where(use_shape, dists - r_shape + g.r_obs_base, dists)
+    use_shape = jnp.min(scales) > 0.0
+    return jnp.where(use_shape, dists - shape_scale * (r_shape - r_base), dists)
+
+
+def _min_eff_dist(p: jnp.ndarray, g: GuidanceParams, shape_scale=1.0) -> jnp.ndarray:
+    """Guard-set pseudo-distance at points p (..., 3): min over the two
+    obstacles of their barrier values, re-offset by the PRIMARY r_eff so that
+    callers' existing `- g.r_eff` yields the min barrier. Obstacle 2 at FAR
+    (the client default) makes this exactly the primary-only value."""
+    b1 = _eff_dist(p - g.obstacle_pos, g, shape_scale=shape_scale) - g.r_eff
+    r_eff2 = g.extra_r_obs + (g.r_eff - g.r_obs_base)
+    b2 = _eff_dist(p - g.extra_obstacle_pos, g, g.extra_obstacle_scales,
+                   g.extra_r_obs, shape_scale=shape_scale) - r_eff2
+    return jnp.minimum(b1, b2) + g.r_eff
 
 
 def _corridor_scale(p: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
@@ -176,17 +203,27 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
     # object hang below. Each shares r_eff; the barrier is the min over points.
     COMPANIONS = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]]) * g.companion_scale
 
-    def _closest(p):
-        """Min shape-corrected distance (and escape direction) over companion points.
+    def _closest(p, shape_scale=1.0):
+        """Min pseudo-distance (and escape direction) over companion points
+        AND the two guard-set obstacles; escape direction = center ray of the
+        argmin (obstacle, companion) pair.
 
-        The escape direction stays radial (center ray): in shape mode moving
-        along u leaves r_shape(u) fixed while dist grows, so d_eff increases
-        monotonically — the same push/brake monotonicity argument as the sphere.
+        The escape direction stays radial: in shape mode moving along u leaves
+        r_shape(u) fixed while dist grows, so d_eff increases monotonically —
+        the same push/brake monotonicity argument as the sphere.
         """
-        diffs = p[None, :] + COMPANIONS - g.obstacle_pos  # (3, 3)
-        d_eff = _eff_dist(diffs, g)
-        k = jnp.argmin(d_eff)
-        return d_eff[k], diffs[k] / (jnp.linalg.norm(diffs[k]) + 1e-8)
+        pts = p[None, :] + COMPANIONS  # (3, 3)
+        diffs1 = pts - g.obstacle_pos
+        b1 = _eff_dist(diffs1, g, shape_scale=shape_scale) - g.r_eff
+        r_eff2 = g.extra_r_obs + (g.r_eff - g.r_obs_base)
+        diffs2 = pts - g.extra_obstacle_pos
+        b2 = _eff_dist(diffs2, g, g.extra_obstacle_scales, g.extra_r_obs,
+                       shape_scale=shape_scale) - r_eff2
+        b_all = jnp.concatenate([b1, b2])  # (6,)
+        diffs_all = jnp.concatenate([diffs1, diffs2], axis=0)
+        k = jnp.argmin(b_all)
+        d = diffs_all[k]
+        return b_all[k] + g.r_eff, d / (jnp.linalg.norm(d) + 1e-8)
 
     # DBNR task direction: toward dest_pos, falling back to target_pos, reused
     # from the corridor module's FAR-disable convention. Loop-invariant (goal
@@ -206,8 +243,13 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
             disp_acc, p_prev, b_prev = carry
             orig_step = disp_acc[j]
             p_j = p_prev + orig_step
-            r_j = ms_k * (g.r_eff + g.inflation_slope * (j + 1.0)) * _corridor_scale(p_j, g)
-            dist, direction = _closest(p_j)
+            c_j = _corridor_scale(p_j, g)
+            r_j = ms_k * (g.r_eff + g.inflation_slope * (j + 1.0)) * c_j
+            # The same relaxation multiplier must reach the anisotropic shape
+            # term, or the corridor exempts centimeters of scalar margin while
+            # the AABB-sized keep-out still covers the grasp (t1 failure).
+            ss_j = ms_k * c_j
+            dist, direction = _closest(p_j, ss_j)
             b_j = dist - r_j
             need = (1.0 - g.gamma) * b_prev
             deficit = jnp.maximum(need - b_j, 0.0)
@@ -217,7 +259,7 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
             pushed_cmd = jnp.clip(pushed / g.translation_scale, -1.0, 1.0)
             pushed = pushed_cmd * g.translation_scale
             p_push = p_prev + pushed
-            dist_push, _ = _closest(p_push)
+            dist_push, _ = _closest(p_push, ss_j)
             # FULL-BRAKE alternative: remove the toward-obstacle component of
             # the original step. Its radial component is non-negative, so the
             # barrier cannot decrease at this step — a clamp-independent floor.
@@ -225,7 +267,7 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
             braked = orig_step + approach * direction
             braked_cmd = jnp.clip(braked / g.translation_scale, -1.0, 1.0)
             braked = braked_cmd * g.translation_scale
-            dist_brake, _ = _closest(p_prev + braked)
+            dist_brake, _ = _closest(p_prev + braked, ss_j)
             # Take whichever realizable step yields the larger barrier: the
             # clamped push when it helps (incl. max-speed escape from inside
             # the margin), the brake floor when per-dim clamping would make the
@@ -268,7 +310,7 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
 
             disp_acc = disp_acc.at[j].set(new_step)
             p_j = p_prev + new_step
-            dist2, _ = _closest(p_j)
+            dist2, _ = _closest(p_j, ss_j)
             b_j = dist2 - r_j
             return disp_acc, p_j, b_j
 
@@ -287,11 +329,11 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
     # min over companion points).
     p_traj = g.eef_pos + jnp.cumsum(disp_new, axis=1)  # (B, H, 3)
     r_horizon = g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)
-    comp_dists = _eff_dist(
-        p_traj[:, :, None, :] + COMPANIONS[None, None, :, :] - g.obstacle_pos, g
+    comp_dists = _min_eff_dist(
+        p_traj[:, :, None, :] + COMPANIONS[None, None, :, :], g
     )  # (B, H, 3)
     clearance = jnp.min(comp_dists, axis=-1) - r_horizon
-    b0_val = jnp.min(_eff_dist(g.eef_pos[None, :] + COMPANIONS - g.obstacle_pos, g)) - g.r_eff
+    b0_val = jnp.min(_min_eff_dist(g.eef_pos[None, :] + COMPANIONS, g)) - g.r_eff
     b_chain = jnp.concatenate([jnp.broadcast_to(b0_val, (b, 1)), clearance], axis=1)
     residual = jnp.maximum((1.0 - g.gamma) * b_chain[:, :-1] - b_chain[:, 1:], 0.0)
     diag = {
@@ -373,12 +415,12 @@ def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> 
     companions = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]]) * g.companion_scale
     p_traj = g.eef_pos + jnp.cumsum(disp, axis=1)  # (K, H, 3)
     dists = jnp.min(
-        _eff_dist(p_traj[:, :, None, :] + companions[None, None] - g.obstacle_pos, g), axis=-1
+        _min_eff_dist(p_traj[:, :, None, :] + companions[None, None], g), axis=-1
     )  # (K, H)
     h = disp.shape[1]
     r_horizon = (g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)) * _corridor_scale(p_traj, g)
     b = dists - r_horizon  # (K, H)
-    b0 = jnp.min(_eff_dist(g.eef_pos[None, :] + companions - g.obstacle_pos, g)) - g.r_eff
+    b0 = jnp.min(_min_eff_dist(g.eef_pos[None, :] + companions, g)) - g.r_eff
     chain = jnp.concatenate([jnp.broadcast_to(b0, (b.shape[0], 1)), b[:, :prefix_len]], axis=1)
     viol = (1.0 - g.gamma) * chain[:, :-1] - chain[:, 1:]
     feasible = jnp.max(viol, axis=1) <= 1e-4  # (K,)

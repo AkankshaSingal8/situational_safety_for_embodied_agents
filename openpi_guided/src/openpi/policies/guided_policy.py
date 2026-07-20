@@ -107,6 +107,14 @@ class GuidedPolicy(_policy.Policy):
         r_obs = float(payload.get("obstacle_radius", cfg.default_obstacle_radius))
         # Anisotropic shape: semi-axes from the client; zeros = sphere mode.
         scales = np.asarray(payload.get("obstacle_scales", np.zeros(3)), dtype=np.float32)
+        # Guard-set second obstacle (optional payload dict {pos, radius, scales});
+        # absent -> FAR + zero scales = its barrier never wins the min.
+        extra = payload.get("obstacle2") or None
+        extra_pos = (np.asarray(extra["pos"], dtype=np.float32) if extra
+                     else np.array([100.0, 100.0, 100.0], dtype=np.float32))
+        extra_r = float(extra.get("radius", r_obs)) if extra else r_obs
+        extra_scales = (np.asarray(extra.get("scales", np.zeros(3)), dtype=np.float32) if extra
+                        else np.zeros(3, dtype=np.float32))
         return GuidanceParams(
             enabled=jnp.float32(enabled),
             eef_pos=jnp.asarray(eef),
@@ -129,6 +137,9 @@ class GuidedPolicy(_policy.Policy):
             sq_eps=jnp.float32(cfg.sq_eps),
             r_obs_base=jnp.float32(r_obs),
             hdc_scale=jnp.float32(cfg.hdc_scale),
+            extra_obstacle_pos=jnp.asarray(extra_pos),
+            extra_r_obs=jnp.float32(extra_r),
+            extra_obstacle_scales=jnp.asarray(extra_scales),
         )
 
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]
