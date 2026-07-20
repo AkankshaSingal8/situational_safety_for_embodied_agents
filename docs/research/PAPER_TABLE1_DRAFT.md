@@ -67,7 +67,7 @@ Bold = beats BOTH baseline and self-run SOTA on BOTH axes.
 
 | Condition | pi0.5 baseline | Self-run SOTA (reimpl) | Ours GT | Ours no-GT |
 |---|---|---|---|---|
-| Spatial L1 | 67.0/14.0 | 62.0/28.5 | 71.0/23.5 (open: CAR) | 60.0/40.0 (open; n=80) |
+| Spatial L1 | 67.0/14.0 | 62.0/28.5 | 71.0/23.5 (open: CAR) | **70.0/46.5** (VLM priors, n=200) |
 | Spatial L2 | 55.5/12.0 | 71.5/25.5 | **85.0/76.5** | **87.0/68.5** |
 | Goal L1 | 51.0/23.0 | 71.0/27.5 | **77.5/51.0** | **77.5/67.5** |
 | Goal L2 | 66.5/35.0 | 75.0/49.5 | **76.0/60.0** | 74.0/68.0 (TSR −1.0pp=2eps, CAR +18.5) |
@@ -76,11 +76,14 @@ Bold = beats BOTH baseline and self-run SOTA on BOTH axes.
 | Long L1 | 58.0/15.0 | 30.5/35.5 | 42.5/71.0 (beats reimpl) | **49.0/66.5** (beats reimpl both axes; beats own GT TSR) |
 | Long L2 | 51.0/16.5 | 43.0/59.5 | 47.0/77.0 (beats reimpl) | **44.0/79.5** (beats reimpl both axes) |
 
-GT strict wins 5/8; no-GT: 6/8 clean wins vs both refs, Long L1/L2 beat reimpl
-both axes (baseline keeps a TSR edge via liveness stalls — timeouts, not
-collisions), Goal L2 statistical tie on TSR. Only Spatial L1 remains open at
-both tiers (sphere family exhausted: r3@0.095 = 60.0/48.5 FAIL, cliff between
-0.09 and 0.095; SQ boxy+corridor arm in flight, job 42422430).
+GT strict wins 5/8; **no-GT board COMPLETE (2026-07-19)**: clean wins vs both
+refs both axes in 5/8 (Spatial L1+L2, Goal L1, Object L1+L2), Goal L2 TSR
+statistical tie + CAR win, Long L1/L2 beat self-run SOTA both axes (baseline
+keeps a TSR edge via liveness stalls — timeouts, not collisions). Spatial L1
+no-GT closed at 70.0/46.5 (n=200) WITH the fully general VLM-prior
+identification (Fisher: CAR p=1.2e-12 / 2.9e-4 vs baseline/reimpl; TSR ns) —
+no-GT CAR doubles our own GT sphere CAR there. GT Spatial L1 CAR gap rides on
+the corridor-shape-fix smoke (42431256).
 
 Stats headline (Fisher, n=200/suite-level): every no-GT CAR win vs reimpl is
 significant (up to p=3e-41); NO no-GT TSR delta vs reimpl is significant
