@@ -285,6 +285,12 @@ def parse_args():
                              "obs['*_pos'] — the full Tier-Percep entity stack. "
                              "Objects that fail localization are dropped from the "
                              "candidate/entity set (fail-safe: no corridor granted).")
+    parser.add_argument("--above_envelope", action="store_true",
+                        help="Relation-conditioned keep-out (Brunke et al. RA-L'25 "
+                             "'above' construction): keep the thin contact sphere as "
+                             "the primary barrier and add the obstacle's xy footprint "
+                             "extruded upward as obstacle2 (min-composition). Blocks "
+                             "low flyovers without smothering lateral grasps.")
     parser.add_argument("--guard_k", type=int, default=1, choices=[1, 2],
                         help="Guard-set size for symbolic identification: 1 = argmax "
                              "(exact current behavior), 2 = also send the runner-up as "
@@ -487,6 +493,34 @@ def run_eval(args):
                     percep_fallback = True
                     logging.warning(f"  [percep] ep {ep_idx} estimator failed — GT fallback")
 
+            # Relation-conditioned 'above' envelope (Brunke et al. RA-L'25):
+            # obstacle2 = the obstacle's own xy footprint extruded upward from
+            # its top. Composed by the server's min() with the primary thin
+            # sphere: flyovers hit the column, lateral grasp approaches never
+            # do. Extents via the tier's own machinery (GT AABB / percep).
+            above_payload = None
+            if args.above_envelope and obstacle_name is not None and guidance_obstacle_pos is not None:
+                if args.obstacle_pos_source == "percep":
+                    from percep_obstacle import estimate_obstacle_extent as _ae_ext
+                    _ext = _ae_ext(env.sim, obstacle_name, cameras=("agentview",),
+                                   region_source=args.mask_source, detector=gdino_detector)
+                else:
+                    _ext = obstacle_half_extents(env.sim, obstacle_name, guidance_obstacle_pos)
+                if _ext is not None:
+                    _ext = np.asarray(_ext, dtype=np.float32)
+                    COL_H = 0.20  # half-height of the column above the obstacle top
+                    _cpos = np.asarray(guidance_obstacle_pos, dtype=np.float32) + \
+                        np.array([0.0, 0.0, float(_ext[2]) + COL_H], dtype=np.float32)
+                    above_payload = {
+                        "pos": _cpos,
+                        "radius": 0.02,
+                        "scales": np.array([float(_ext[0]) + 0.01, float(_ext[1]) + 0.01, COL_H],
+                                           dtype=np.float32),
+                    }
+                    logging.info(f"  [above-env] ep {ep_idx} column center "
+                                 f"{np.round(_cpos, 3).tolist()} scales "
+                                 f"{np.round(above_payload['scales'], 3).tolist()}")
+
             # Guard-set obstacle2: the runner-up candidate by the same v3 score.
             # Positions/extents come through the SAME tier machinery as the
             # primary (percep or GT); scoring stays GT-anchored regardless.
@@ -578,7 +612,9 @@ def run_eval(args):
                             }
                             if obstacle_scales is not None:
                                 element["guidance"]["obstacle_scales"] = obstacle_scales
-                            if obstacle2_payload is not None:
+                            if above_payload is not None:
+                                element["guidance"]["obstacle2"] = above_payload
+                            elif obstacle2_payload is not None:
                                 element["guidance"]["obstacle2"] = obstacle2_payload
                             if args.corridor:
                                 element["guidance"].update(
