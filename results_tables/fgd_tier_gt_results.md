@@ -979,3 +979,22 @@ pixel stack flags the boiling stovetop pot — arguably CORRECT safety behavior
 that SafeLIBERO's single-designated-obstacle scoring cannot credit); guard_k>2
 with fixture-aware curation.
 API spend: ~130 haiku + 19 sonnet calls, all cached under scratchpad/som/.
+
+## 2026-07-20 — guard_k smoke verdict (job 42431257, Spatial L1 Tier-Percep+VLM priors, n=40/arm)
+guard_k=1: 72.5/40.0 — independently REPRODUCES the prior-swap vlm arm
+(72.5/37.5): the no-GT VLM config is stable across servers/jobs.
+guard_k=2: 60.0/47.5 — t3 trades 0.70->0.30 TSR for 0.20->0.50 CAR; the
+runner-up barrier constrains real motion when identification was already
+correct. Success criterion (CAR up, TSR flat) NOT met.
+DECISION: default stays guard_k=1. guard_k=2 ships as the documented
+fail-safe mode: offline it converts fail-unsafe argmax into 19/19 top-2
+recall under every prior corruption (E5), at a measured smoke-scale cost of
+-12.5 TSR / +7.5 CAR. Server min-composition machinery stays (flag-gated,
+bit-exact legacy at k=1) — it is also the substrate any multi-hazard domain
+(LIBERO-Safety) will need.
+GENERALIZATION CAMPAIGN COMPLETE. Adopted: VLM hazard priors (closed Spatial
+L1 no-GT at 70.0/46.5), head-noun fix, percep extents-as-scales, guard-set
+machinery (optional mode). Rejected with evidence: LLM instruction parse,
+dims multiprompt, size-for-identity, scene graph (SafeLIBERO), full SQ depth
+fit, yaw fit (no in-domain gain), pixel-only inventory (curation privilege),
+guard_k=2 default, superquadric-as-default (t1 negative).
