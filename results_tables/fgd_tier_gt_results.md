@@ -897,3 +897,19 @@ exemption's job → arm C submitted (boxy + corridor, job 42422430).
   scale r_shape by the same corridor/margin multiplier in _eff_dist call sites,
   then re-smoke. Projection: t1→~0.6 would give ≈72 TSR / ~47 CAR → closes
   Spatial L1 GT. Sphere r3@0.09 (71.0/23.5) remains the fallback.
+
+## 2026-07-19 night — offline study: full SQ fit from depth cloud (user idea)
+Harness vlm_pipeline/sq_fit_study.py, 19 obstacle scenes. Arm B = current
+percentile box (p5-p95/2 half-extents, yaw 0). Arm C = full superquadric fit
+(center+scales+eps+yaw, L-BFGS-B inside-outside residual) on a single-view
+cloud completed by camera-ray mirroring + table-plane footprint grounding.
+Medians: coverage B 0.56 -> C 0.89 (+33pp) BUT volume B 2484 -> C 11041 cm3
+(4.4x inflation); center err 0.105 -> 0.099 (wash); fitted eps pinned at the
+0.3 bound on 19/19 (degenerate); yaw err ~13 deg median.
+VERDICT: NO-GO as-is — inflation is exactly the grasp-smothering failure axis
+(t1), and the gate (tighter AND covering) is failed. Same lesson as G2:
+single-view partial clouds punish expressive fits; robust percentiles win.
+Extents stay percentile-box. Path that could flip it (future work, not now):
+multi-view fusion (we already capture 2-3 cameras and max-fuse extents) for a
+genuinely closed cloud before fitting, + fit only yaw with fixed percentile
+scales (cheap orientation without the volume blow-up).
