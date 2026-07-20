@@ -924,3 +924,19 @@ GuidanceParams for nothing measurable); keep as rebuttal armor — "orientation
 is recoverable at 2 deg median from the same cloud when a domain needs it."
 SQ thread now rides entirely on the two queued smokes: corridor-shape fix
 (42431256) and guard_k (42431257), plus no-GT VLM n=50 (42430870, running).
+
+## ★★ 2026-07-19 night — SPATIAL L1 NO-GT CLOSED (job 42430870, n=200)
+Config: r3 server (K1/uniform/0.09) + full Tier-Percep + VLM priors (haiku
+anchored, floor 0.5). **70.0 / 46.5** — beats baseline (67.0/14.0) AND
+self-run SOTA (62.0/28.5) on BOTH axes. Per-task: t0 0.96/0.42, t1 0.30/0.36,
+t2 0.96/0.58, t3 0.58/0.50.
+Fisher (n=200): CAR wins significant vs both (p=1.2e-12, p=2.9e-4); TSR
+deltas ns (p=0.59, p=0.11) — consistent with the standing headline.
+Notes: (a) closes the LAST open no-GT cell; every no-GT row now beats the
+method class (reimpl) on both axes; (b) does it with the GENERAL identification
+stack (VLM priors, not the hand table) — the smoke's +12.5 TSR over the table
+arm held directionally at n=50 (70.0 vs table-arm history 60.0/40.0 n=80);
+(c) no-GT CAR doubles our own GT-tier sphere CAR (46.5 vs 23.5) at -1.0 TSR.
+Board: no-GT clean wins vs BOTH refs BOTH axes: Spatial L1+L2, Goal L1,
+Object L1+L2 (5/8); Goal L2 TSR tie (p ns) + CAR win; Long L1+L2 beat reimpl
+both axes, baseline keeps TSR via liveness stalls.
