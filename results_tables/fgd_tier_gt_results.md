@@ -913,3 +913,14 @@ Extents stay percentile-box. Path that could flip it (future work, not now):
 multi-view fusion (we already capture 2-3 cameras and max-fuse extents) for a
 genuinely closed cloud before fitting, + fit only yaw with fixed percentile
 scales (cheap orientation without the volume blow-up).
+
+## 2026-07-19 night — yaw-only fit (SQ thread, arm D offline)
+Min-volume-orientation fit, percentile scales fixed (no completion, no
+inflation possible by construction). 19 scenes: yaw err median 2.0 deg,
+p90 9.7 deg — accurate. BUT volume ratio rotated/axis-aligned = 1.00 median:
+SafeLIBERO obstacles are axis-aligned, so orientation buys ZERO tightening
+in-domain. VERDICT: no server integration now (a rotation field would change
+GuidanceParams for nothing measurable); keep as rebuttal armor — "orientation
+is recoverable at 2 deg median from the same cloud when a domain needs it."
+SQ thread now rides entirely on the two queued smokes: corridor-shape fix
+(42431256) and guard_k (42431257), plus no-GT VLM n=50 (42430870, running).

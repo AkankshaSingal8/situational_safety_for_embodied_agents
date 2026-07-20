@@ -160,3 +160,56 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def fit_yaw_only(cloud):
+    """Arm D: percentile scales FIXED (robust), fit yaw alone by minimizing the
+    rotated-frame axis-aligned box volume of the cloud (min-volume orientation
+    — no inside/outside residual, no completion, no inflation possible)."""
+    cen = np.median(cloud, axis=0)
+    q = cloud[:, :2] - cen[:2]
+
+    def vol2d(yaw):
+        c, s = math.cos(yaw), math.sin(yaw)
+        r = q @ np.array([[c, -s], [s, c]])
+        e = np.percentile(r, 95, axis=0) - np.percentile(r, 5, axis=0)
+        return float(e[0] * e[1])
+
+    grid = np.linspace(-math.pi / 4, math.pi / 4, 91)
+    yaw = float(grid[int(np.argmin([vol2d(y) for y in grid]))])
+    c, s = math.cos(yaw), math.sin(yaw)
+    r = q @ np.array([[c, -s], [s, c]])
+    exy = (np.percentile(r, 95, axis=0) - np.percentile(r, 5, axis=0)) / 2.0
+    ez = (np.percentile(cloud[:, 2], 95) - np.percentile(cloud[:, 2], 5)) / 2.0
+    return yaw, np.array([exy[0], exy[1], ez])
+
+
+def main_yaw():
+    eps_list = vb.load_episodes(["safelibero_spatial"], 5)
+    rows = []
+    for e in eps_list:
+        ep = pathlib.Path(e["ep"])
+        ob = json.load(open(ep / "obstacle.json"))["active_obstacle"]
+        if not ob:
+            continue
+        gt_pos = np.array(ob["position"])
+        cloud = obstacle_cloud(e["ep"], ob["name"], gt_pos)
+        if cloud is None:
+            continue
+        yaw, sc = fit_yaw_only(cloud)
+        gt_yaw = yaw_from_quat(ob["quaternion"])
+        err = abs((yaw - gt_yaw + math.pi / 4) % (math.pi / 2) - math.pi / 4)
+        sB = np.maximum((np.percentile(cloud, 95, axis=0) - np.percentile(cloud, 5, axis=0)) / 2.0, 0.015)
+        rows.append({"name": ob["name"], "yaw_deg": round(math.degrees(yaw), 1),
+                     "gt_yaw_deg": round(math.degrees(gt_yaw), 1),
+                     "err_deg": round(math.degrees(err), 1),
+                     "vol_axisaligned_cm3": round(8e6 * np.prod(sB)),
+                     "vol_rotated_cm3": round(8e6 * np.prod(np.maximum(sc, 0.015)))})
+    for r in rows:
+        print(json.dumps(r))
+    if rows:
+        errs = [r["err_deg"] for r in rows]
+        shrink = [r["vol_rotated_cm3"] / max(r["vol_axisaligned_cm3"], 1) for r in rows]
+        print(json.dumps({"n": len(rows), "yaw_err_median_deg": float(np.median(errs)),
+                          "yaw_err_p90_deg": float(np.percentile(errs, 90)),
+                          "volume_ratio_median": round(float(np.median(shrink)), 3)}))
