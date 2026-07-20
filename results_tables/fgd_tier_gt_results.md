@@ -885,3 +885,15 @@ exemption's job → arm C submitted (boxy + corridor, job 42422430).
   scikit-image, level-aware bddl/init API (L0/L1/L2 subdirs; reasoning_safety
   ships no .pruned_init). obstacle_avoidance/human_safety/affordance resolve
   15 tasks × 50 init states offline. Smoke 42427444 queued.
+
+## ★ 2026-07-19 night — SQ boxy+corridor arm C verdict (job 42422430, n=40)
+- boxy(ε0.4)+corridor: 62.5/47.5. Per-task: t0 0.8/0.4, t1 0.2/0.4, t2 1.0/0.6, t3 0.5/0.5.
+- t2 HOLDS at 100 TSR (shape thesis intact). t1 did NOT recover (0.2 vs 0.1–0.2
+  without corridor) → corridor as-implemented cannot exempt the shape:
+  corridor_scale multiplies r_eff (scalar margin) only, while shape mode's
+  dominant keep-out term r_shape(u) from the AABB is NEVER relaxed inside the
+  grasp corridor. Mechanical gap, not a refuted hypothesis.
+- NEXT ITERATION (staged, module-blocked until 42430870 is safely RUNNING):
+  scale r_shape by the same corridor/margin multiplier in _eff_dist call sites,
+  then re-smoke. Projection: t1→~0.6 would give ≈72 TSR / ~47 CAR → closes
+  Spatial L1 GT. Sphere r3@0.09 (71.0/23.5) remains the fallback.
