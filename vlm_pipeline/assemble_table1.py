@@ -81,8 +81,9 @@ def main():
         af = WT / f"fgd_aegis_selfrun/{suite}/results_{lvl}.json"
         aegis = None
         if af.exists():
-            r = json.load(open(af))
-            aegis = (100 * r["TSR"], 100 * r["CAR"], r.get("total_episodes", 200))
+            ov = json.load(open(af)).get("overall", {})
+            if "TSR" in ov:
+                aegis = (100 * ov["TSR"], 100 * ov["CAR"], ov.get("total_episodes", 200))
         nogt_dir = NOGT_DONE.get(key, WT / f"fgd_vlmfin/{suite}_{lvl}")
         nogt = read_cell(nogt_dir)
         name = suite.replace("safelibero_", "").capitalize()

@@ -1064,3 +1064,28 @@ prior" ablation; the gap = generalization tax, with the Long finding framed as
 benchmark-definition divergence (a point about SafeLIBERO's single-obstacle
 labeling, not a filter failure). Long L2 + Object L1 keep the table config in
 the headline board; VLM-general is the generality claim.
+
+## 2026-07-20 — CRITICAL AUDIT of the VLM-general board (corrections)
+All 8 result files re-verified at n=200; priors-loaded log line confirmed in
+the vlmfin jobs. Three corrections to the record:
+1. CONFOUND (tier mismatch): the table-arm board cells for Spatial L2,
+   Goal L1, Object L2 (fgd_nogt_spatial_n50 / fgd_nogt_goalobj_n50) ran
+   WITHOUT --entity_pos_source percep (GT entities for corridor binding),
+   while the VLM-general wave is full Tier-Percep. For those three cells the
+   delta vs table-arm conflates {prior source} + {entity source} — do NOT
+   quote it as pure prior tax. Clean same-tier prior comparisons: Spatial L1
+   (smoke + n=50), Goal L2, Object L1, Long L1/L2. Paper fix: footnote the
+   tier of every quoted cell; the headline no-GT column is all full
+   Tier-Percep regardless.
+2. Long misID split by level (pooled 62% obscured the structure):
+   L1 = 50/200 wrong (25%, almost all chocolate_pudding), L2 = 197/200 wrong
+   (98% — identification essentially ALWAYS wrong: pudding/bowl/tomato-sauce/
+   OJ over the designated book/mug). L2's 29.0/18.5 is fully explained by an
+   unguarded true obstacle; L1 held because 75% correct.
+3. Goal L2 vs reimpl is a NOMINAL win only (77.5 vs 75.0 p=0.64; 52.0 vs
+   49.5 p=0.69) — bold under the pre-registered nominal rule, but the text
+   must call it statistically indistinguishable.
+Also: protected-class rule landed (02:49) while vlmfin cells were starting —
+later cells imported the edited module; benign by construction (no protected
+names in SafeLIBERO -> scoring bit-identical, verified 19/19 offline).
+Assembler AEGIS schema fixed (reads results['overall']).
