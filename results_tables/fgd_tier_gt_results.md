@@ -1115,3 +1115,21 @@ held-object contact ranking + prior quality — none fixable by logic. The
 compositional hazards (towel-ON-stove) are instruction-level refusal cases
 where the direct E4 judge already scores F1 0.968 — a compiler must beat that.
 Survival path: refusal/router layer (C4) for interpretability, next paper.
+
+## 2026-07-20 — FOL-COMPILE v2 STRONG version probed at its ceiling (oracle grounding)
+User spec: VLM critic selects from a groundable predicate library AND composes
+rules at runtime -> steering. Probe (fol_compile_v2_probe.py): every predicate
+oracle-grounded (GT positions, MOVING from bddl :dynamics, properties from
+rated priors, protected classes) + generous composed rule set; a real VLM
+critic can only ground WORSE, so this bounds the direction from above.
+Results (top1/top2): SafeLIBERO 16/18 vs flat+classes 16/19 (composition LOSES
+one); LS obstacle_avoidance 10/11 vs 9/11 (+1, entirely the MOVING predicate);
+LS human_safety 15/15 both. Ceiling gain of the entire FOL apparatus = ONE
+scene from ONE predicate, adoptable as a flat class rule (two-frame position
+delta), while composition introduces a selection-brittleness loss.
+VERDICT (2-line): SafeLIBERO NO-GO — nothing to compose, oracle composition
+strictly <= flat. LIBERO-Safety NO-GO for steering — the ceiling is +1 scene
+via MOVING (a class rule, not logic); compositional hazards live in the
+refusal suites where the E4 judge is at F1 0.968.
+TODO adopted from probe: MOVING class rule (dynamic-intruder guard) for the
+LIBERO-Safety port — runtime grounding by inter-frame displacement.
