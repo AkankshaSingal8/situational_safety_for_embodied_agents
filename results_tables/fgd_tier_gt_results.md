@@ -1018,3 +1018,21 @@ FINAL SCENE-GRAPH VERDICT: NO-GO on BOTH benchmarks. Where hazards are
 objects, the graph ties the flat scorer (19/19 and 9/11 parity); where they
 are relational/dynamic (human hand), the graph fails identically and the fix
 is a 10-line semantic-class rule in the flat scorer. Minimal design wins.
+
+## 2026-07-20 — relation-conditioned 'above' envelope verdict (job 42431627, n=40/arm)
+Brunke et al. RA-L'25 'above' construction via our M=2 min-composition
+(primary thin sphere + xy-footprint column above the obstacle; active in all
+80 episodes, both tiers).
+- GT tier (GT AABB extents): 50.0/50.0 vs sphere 71.0/23.5 — the SAME
+  TSR-for-CAR trade as every uniform shape arm, no unlock (GT extents include
+  handles -> wide columns bind the approach; t3 0.10).
+- Tier-Percep + VLM priors: 70.0/47.5 vs reference 70.0/46.5 — a wash
+  (percep percentile extents are tighter, the column barely binds).
+VERDICT: NOT adopted. The shape thread is now closed end-to-end: uniform SQ,
+SQ+corridor, corridor-shape fix, and the paper-faithful semantic 'above'
+envelope ALL trade TSR for CAR without dominating the thin sphere on this
+benchmark. Context for the paper: Brunke et al. operate a velocity-space QP
+at 45 Hz on a real arm with per-part fitted superquadrics and no aggregate
+TSR pressure — in-denoising chunk repair on a 10-step flow policy is a
+different regime; the semantic-exemption idea that DID transfer is the
+corridor (CAR at zero TSR cost) and the protected-class rule.
