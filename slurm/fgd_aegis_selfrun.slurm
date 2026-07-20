@@ -15,11 +15,13 @@
 set -euo pipefail
 : "${SUITES:?ERROR: SUITES env var not set}"
 : "${PORT:=8200}"
+: "${NUM:=50}"
+: "${LEVELS:=I II}"
 source /jet/home/asingal/miniconda3/etc/profile.d/conda.sh
 ROOT=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
 WT="$ROOT/.worktrees/flow-guidance-tier-gt"
 AEGIS="$ROOT/vlsa-aegis"
-OUT="$WT/fgd_aegis_selfrun"
+OUT="${OUTDIR:-$WT/fgd_aegis_selfrun}"
 mkdir -p "$OUT"
 
 conda activate aegis
@@ -42,10 +44,10 @@ export PYTHONPATH="$ROOT/SafeLIBERO/safelibero:$AEGIS/main:${PYTHONPATH:-}"
 cd "$AEGIS"  # GroundingDINO config/weights are repo-relative
 
 for SUITE in $SUITES; do
-  for LEVEL in I II; do
+  for LEVEL in $LEVELS; do
     python "$AEGIS/main/main_aegis.py" \
       --task_suite_name "$SUITE" --safety_level "$LEVEL" \
-      --num_trials_per_task 50 --host 127.0.0.1 --port "$PORT" \
+      --num_trials_per_task "$NUM" --host 127.0.0.1 --port "$PORT" \
       --results_output_dir "$OUT" \
       --video_out_path "$OUT/videos"
   done
