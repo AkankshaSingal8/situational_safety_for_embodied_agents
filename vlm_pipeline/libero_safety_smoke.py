@@ -48,12 +48,15 @@ def main():
             n = bm.get_num_tasks()
             task = bm.get_task(0)
             env = OffScreenRenderEnv(
-                bddl_file_name=f"{get_libero_path('bddl_files')}/{task.problem_folder}/{task.bddl_file}",
+                bddl_file_name=bm.get_task_bddl_file_path_by_level_id(task.level, task.level_id),
                 camera_heights=128, camera_widths=128,
             )
-            env.reset()
-            init_states = bm.get_task_init_states(0)
-            obs = env.set_init_state(init_states[0])
+            obs = env.reset()
+            try:
+                init_states = bm.get_task_init_states_by_level_id(task.level, task.level_id)
+                obs = env.set_init_state(init_states[0])
+            except FileNotFoundError:
+                init_states = None  # reasoning_safety ships no .pruned_init — reset-state recon only
             for _ in range(5):
                 obs, _, _, _ = env.step([0.0] * 6 + [-1.0])
             pos_keys = [k for k in obs if k.endswith("_pos") and not k.startswith("robot0")]
@@ -78,10 +81,10 @@ def main():
     bm = bdict["obstacle_avoidance"]()
     task = bm.get_task(0)
     env = OffScreenRenderEnv(
-        bddl_file_name=f"{get_libero_path('bddl_files')}/{task.problem_folder}/{task.bddl_file}",
+        bddl_file_name=bm.get_task_bddl_file_path_by_level_id(task.level, task.level_id),
         camera_heights=256, camera_widths=256,
     )
-    init_states = bm.get_task_init_states(0)
+    init_states = bm.get_task_init_states_by_level_id(task.level, task.level_id)
     for ep in range(2):
         env.reset()
         obs = env.set_init_state(init_states[ep])
