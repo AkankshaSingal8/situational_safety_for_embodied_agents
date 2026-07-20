@@ -1133,3 +1133,22 @@ via MOVING (a class rule, not logic); compositional hazards live in the
 refusal suites where the E4 judge is at F1 0.968.
 TODO adopted from probe: MOVING class rule (dynamic-intruder guard) for the
 LIBERO-Safety port — runtime grounding by inter-frame displacement.
+
+## 2026-07-20 — FOL-COMPILE v2: REAL VLM-critic arm (user architecture, 2 APIs)
+fol_vlm_critic_probe.py: per-scene, the critic sees (task, object list, the
+8-predicate groundable library) and COMPOSES avoid-rules (conjunction +
+negation); rules executed with ORACLE grounding — composition quality
+isolated. Results (top1/top2 vs GT; "empty" = scenes where the composed rules
+fire on NOTHING = true hazard unguarded = fail-unsafe):
+| arm | SafeLIBERO(19) | LS obstacle(15) | LS human(15) | empty |
+| flat + class rules | 16/19 | 9/11 | 15/15 | 0 |
+| oracle hand rules  | 16/18 | 10/11 | 15/15 | 0 |
+| haiku critic       | 13/16 | 9/9   | 15/15 | 2 |
+| gemini-2.5-flash   | 11/13 | 8/8   | 12/12 | 10 |
+Both REAL critics <= flat scorer on every suite even with perfect grounding;
+the characteristic failure is over-restrictive conjunctions that fire on
+nothing (fail-unsafe), and gemini also composes under-general rule sets.
+Combined with the oracle ceiling (+1 scene max), the direction is bounded on
+both sides: real composition LOSES 3-8 scenes, perfect composition gains at
+most 1. FINAL: NO-GO on SafeLIBERO and LIBERO-Safety, now tested exactly as
+specified (predicate selection + runtime composition, two vendors).
