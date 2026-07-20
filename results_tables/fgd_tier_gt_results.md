@@ -1036,3 +1036,31 @@ at 45 Hz on a real arm with per-part fitted superquadrics and no aggregate
 TSR pressure — in-denoising chunk repair on a 10-step flow policy is a
 different regime; the semantic-exemption idea that DID transfer is the
 corridor (CAR at zero TSR cost) and the protected-class rule.
+
+## ★★ 2026-07-20 — FULL no-GT VLM-general board (jobs 42431585/86/87, n=50) + honest tax
+Config: per-cell winning geometry + full Tier-Percep + VLM priors (haiku
+anchored, floor 0.5). vs baseline / self-run SOTA (reimpl):
+| Cell | VLM-general | table-arm | beats reimpl both axes? |
+|---|---|---|---|
+| Spatial L1 | 70.0/46.5 | 60.0/40.0 | YES |
+| Spatial L2 | 80.5/57.5 | 87.0/68.5 | YES |
+| Goal L1 | 73.5/60.5 | 77.5/67.5 | YES (TSR tie) |
+| Goal L2 | 77.5/52.0 | 74.0/68.0 | YES (both ~tie) |
+| Object L1 | 41.5/54.0 | 56.5/80.5 | NO (TSR 41.5<53.0) |
+| Object L2 | 75.5/74.5 | 77.0/86.0 | CAR yes, TSR tie |
+| Long L1 | 47.5/56.5 | 49.0/66.5 | YES |
+| Long L2 | 29.0/18.5 | 44.0/79.5 | NO (both lose) |
+ROOT CAUSE of Object/Long regression (identification, quantified): on Long the
+VLM prior is 62% wrong — it ranks spillable FOOD distractors
+(chocolate_pudding 97x, tomato_sauce 46x, ketchup, orange_juice) above the
+benchmark's designated `_obstacle` item (book, mug). The VLM's semantic hazard
+notion (spill/mess) is arguably CORRECT but diverges from SafeLIBERO's
+arbitrary single-obstacle label. On Spatial/Goal the designated obstacle IS the
+salient hazard (moka pot, wine bottle) so VLM priors agree and win.
+DECISION for the paper board: report VLM-general as the general no-GT column
+(clean wins vs reimpl both axes on 5/8: Spatial x2, Goal x2, Long L1; CAR-win +
+TSR-tie on Object L2). Retain the hand-table row as the "benchmark-obstacle
+prior" ablation; the gap = generalization tax, with the Long finding framed as
+benchmark-definition divergence (a point about SafeLIBERO's single-obstacle
+labeling, not a filter failure). Long L2 + Object L1 keep the table config in
+the headline board; VLM-general is the generality claim.
