@@ -1104,3 +1104,14 @@ sweep on the final decoded chunk), same GT barrier params as the SOTA-reimpl
 referee (r0.10, K1, no companions, no corridor). Delta vs reimpl isolates
 post-hoc vs in-denoising ARCHITECTURE with everything else held fixed — the
 comparison the AEGIS row was meant to provide. Jobs: 8 cells n=50.
+
+## 2026-07-20 — FOL-COMPILE v2 direction verdict (scene graph + VLM predicate critic -> composed FOL rule -> steering)
+SafeLIBERO: NO-GO — single-object hazards; rules bit-equivalent to flat scorer
+(V1 19/19); binary predicate votes destroy graded signal (dims NO-GO).
+LIBERO-Safety: NO-GO for steering — graph==flat (9/11); human_safety needed one
+class rule (15/15), no composition; miss forensics (this entry) show residual
+obstacle_avoidance failures are DYNAMIC obstacles (toy_car, billiard_balls) +
+held-object contact ranking + prior quality — none fixable by logic. The
+compositional hazards (towel-ON-stove) are instruction-level refusal cases
+where the direct E4 judge already scores F1 0.968 — a compiler must beat that.
+Survival path: refusal/router layer (C4) for interpretability, next paper.
