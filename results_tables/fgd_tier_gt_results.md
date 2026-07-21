@@ -1152,3 +1152,17 @@ Combined with the oracle ceiling (+1 scene max), the direction is bounded on
 both sides: real composition LOSES 3-8 scenes, perfect composition gains at
 most 1. FINAL: NO-GO on SafeLIBERO and LIBERO-Safety, now tested exactly as
 specified (predicate selection + runtime composition, two vendors).
+
+## 2026-07-21 — post-hoc shield row, first half (job 42437085, n=200/cell)
+Same GT barrier as reimpl (r0.10/K1/no companions/no corridor); only the
+architecture differs (one final-chunk projection vs in-denoising repair).
+| cell | post-hoc | reimpl (in-denoising) | ours GT composed |
+| Spatial L1 | 71.5/28.5 | 62.0/28.5 | 71.0/23.5 |
+| Spatial L2 | 66.5/21.0 | 71.5/25.5 | 85.0/76.5 |
+| Goal L1 | 72.0/19.0 | 71.0/27.5 | 77.5/51.0 |
+| Goal L2 | 69.5/48.5 | 75.0/49.5 | 76.0/60.0 |
+Read: post-hoc and degenerate in-denoising trade narrowly (TSR +-5, CAR ~tie
+or post-hoc lower); NEITHER approaches the composed method's CAR. The paper
+claim sharpens: the contribution is not "guidance during denoising" per se —
+it is the COMPOSED in-denoising machinery (schedule/K/corridor/companions);
+the degenerate case is barely better than a post-hoc projection.
