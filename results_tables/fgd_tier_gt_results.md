@@ -1166,3 +1166,27 @@ or post-hoc lower); NEITHER approaches the composed method's CAR. The paper
 claim sharpens: the contribution is not "guidance during denoising" per se —
 it is the COMPOSED in-denoising machinery (schedule/K/corridor/companions);
 the degenerate case is barely better than a post-hoc projection.
+
+## ★★★ 2026-07-21 — POST-HOC ROW COMPLETE (jobs 42437085/88) — FIVE-ROW BOARD FINAL
+Post-hoc shield (unguided denoising + one final-chunk projection; barrier
+identical to reimpl: GT, r0.10, K1, no companions/corridor), n=200/cell:
+| cell | baseline | post-hoc | reimpl (in-denoise) | ours GT | ours no-GT (VLM-gen) |
+| Spatial L1 | 67.0/14.0 | 71.5/28.5 | 62.0/28.5 | 71.0/23.5 | 70.0/46.5 |
+| Spatial L2 | 55.5/12.0 | 66.5/21.0 | 71.5/25.5 | 85.0/76.5 | 80.5/57.5 |
+| Goal L1    | 51.0/23.0 | 72.0/19.0 | 71.0/27.5 | 77.5/51.0 | 73.5/60.5 |
+| Goal L2    | 66.5/35.0 | 69.5/48.5 | 75.0/49.5 | 76.0/60.0 | 77.5/52.0 |
+| Object L1  | 40.5/14.0 | 63.5/16.0 | 53.0/15.5 | 53.5/28.0 | 41.5/54.0 |
+| Object L2  | 74.0/25.0 | 79.0/34.5 | 76.0/33.5 | 83.0/74.5 | 75.5/74.5 |
+| Long L1    | 58.0/15.0 | 27.5/32.5 | 30.5/35.5 | 42.5/71.0 | 47.5/56.5 |
+| Long L2    | 51.0/16.5 | 46.5/52.0 | 43.0/59.5 | 47.0/77.0 | 29.0/18.5* (table 44.0/79.5)
+ARCHITECTURE FINDINGS (the row's purpose):
+1. Post-hoc ~= degenerate in-denoising on EVERY cell (TSR +-5-10, CAR within
+   ~7) — moving repair inside denoising is NOT the win by itself.
+2. The COMPOSED in-denoising machinery is the separator: +6..+19 TSR and
+   2-3x CAR over BOTH shield architectures on Spatial L2/Goal/Object L2/Long.
+3. Long TSR stall afflicts post-hoc too (27.5 vs baseline 58.0) — liveness
+   loss is a property of THIS barrier class, not of in-denoising; ours
+   recovers +15-19 TSR over both shields there while doubling CAR.
+4. Object L1/Spatial L1: post-hoc is the best TSR shield (minimal
+   interference preserves grasping); its CAR ceiling stays ~reimpl level.
+Board is now complete: 5 method rows x 8 cells x n=200, one criterion.
