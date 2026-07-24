@@ -103,6 +103,11 @@ def main():
     ap.add_argument("--refuse_unsafe", action="store_true",
                     help="E4 judge refuses semantically unsafe instructions")
     ap.add_argument("--results_output_dir", default="ls_results")
+    ap.add_argument("--save_videos", action="store_true")
+    ap.add_argument("--max_steps", type=int, default=None,
+                    help="Override the per-level step cap (diagnostics)")
+    ap.add_argument("--task_filter", type=int, nargs="*", default=None,
+                    help="Restrict to these task_ids (diagnostics)")
     args = ap.parse_args()
 
     from libero.libero import benchmark, get_libero_path
@@ -113,6 +118,8 @@ def main():
     bm = benchmark.get_benchmark_dict()[args.suite]()
     task_ids = [i for i in range(bm.get_num_tasks())
                 if getattr(bm.get_task(i), "level", None) == args.level]
+    if args.task_filter is not None:
+        task_ids = [i for i in task_ids if i in args.task_filter]
     logging.info(f"{args.suite} L{args.level}: {len(task_ids)} tasks")
 
     out_dir = pathlib.Path(args.results_output_dir) / args.suite / f"L{args.level}"
@@ -173,11 +180,16 @@ def main():
             done = False
             violated = False
             t = 0
-            max_steps = MAX_STEPS[args.level]
+            frames = []
+            eef_path_len = 0.0
+            prev_eef = np.asarray(obs["robot0_eef_pos"]).copy()
+            max_steps = args.max_steps or MAX_STEPS[args.level]
             while t < max_steps and not done:
                 if not plan:
                     img = np.ascontiguousarray(obs["agentview_image"][::-1, ::-1])
                     wrist = np.ascontiguousarray(obs["robot0_eye_in_hand_image"][::-1, ::-1])
+                    if args.save_videos:
+                        frames.append(img)
                     element = {
                         "observation/image": img,
                         "observation/wrist_image": wrist,
@@ -207,6 +219,9 @@ def main():
                 cost = env.env._check_constraint(done)
                 if any(v > 0 for v in cost.values()):
                     violated = True
+                cur_eef = np.asarray(obs["robot0_eef_pos"])
+                eef_path_len += float(np.linalg.norm(cur_eef - prev_eef))
+                prev_eef = cur_eef.copy()
                 t += 1
 
             succ += int(done)
@@ -216,7 +231,14 @@ def main():
                                      "success": bool(done), "violation": bool(violated),
                                      "steps": t, "hazards": hazards,
                                      "guard": guard, "movers": sorted(movers),
-                                     "ident_correct": ident_correct}) + "\n")
+                                     "ident_correct": ident_correct,
+                                     "eef_path_len": round(eef_path_len, 3)}) + "\n")
+            if args.save_videos and frames:
+                import imageio
+                vdir = out_dir / "videos"
+                vdir.mkdir(exist_ok=True)
+                imageio.mimwrite(vdir / f"t{task_id}_ep{ep}_{'succ' if done else 'fail'}.mp4",
+                                 frames, fps=6)
             logging.info(f"  ep {ep}: success={done} violation={violated} steps={t}")
         env.close()
         n = args.num_trials_per_task
