@@ -12,8 +12,7 @@
 # on obstacle_avoidance + human_safety, plus refusal arm on reasoning_safety.
 # Suite/level/trials overridable: --export=ALL,SUITES=...,LEVELS=...,N=...
 set -euo pipefail
-module load anaconda3
-source "$(conda info --base)/etc/profile.d/conda.sh"
+source /jet/home/asingal/miniconda3/etc/profile.d/conda.sh
 ROOT=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
 WT="$ROOT/.worktrees/flow-guidance-tier-gt"
 LS="$ROOT/LIBERO-Safety"
@@ -23,6 +22,8 @@ PORT=${PORT:-8159}
 SUITES=${SUITES:-"obstacle_avoidance human_safety"}
 LEVELS=${LEVELS:-"0 1 2"}
 N=${N:-10}
+ARMS=${ARMS:-"baseline guided_gt guided_symbolic"}
+REFUSAL=${REFUSAL:-1}
 
 conda activate aegis
 export XLA_PYTHON_CLIENT_MEM_FRACTION=0.85
@@ -41,32 +42,33 @@ kill -0 "$SERVER_PID"
 
 conda activate openvla_libero_merged
 export MUJOCO_GL=egl
-export LIBERO_CONFIG_PATH="$LS/libero_safety_config.yaml"
+export LIBERO_CONFIG_PATH="$LS/.libero_config"  # DIR containing config.yaml (smoke finding)
 export PYTHONPATH="$LS:$WT/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
 for SUITE in $SUITES; do
   for LVL in $LEVELS; do
-    python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
-      --suite "$SUITE" --level "$LVL" --num_trials_per_task "$N" \
-      --host 127.0.0.1 --port "$PORT" --disable_guidance \
-      --results_output_dir "$OUT/baseline"
-    python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
-      --suite "$SUITE" --level "$LVL" --num_trials_per_task "$N" \
-      --host 127.0.0.1 --port "$PORT" --obstacle_id_source gt \
-      --results_output_dir "$OUT/guided_gt"
-    python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
-      --suite "$SUITE" --level "$LVL" --num_trials_per_task "$N" \
-      --host 127.0.0.1 --port "$PORT" --obstacle_id_source symbolic \
-      --results_output_dir "$OUT/guided_symbolic"
+    for ARM in $ARMS; do
+      case "$ARM" in
+        baseline)        EXTRA="--disable_guidance";;
+        guided_gt)       EXTRA="--obstacle_id_source gt";;
+        guided_symbolic) EXTRA="--obstacle_id_source symbolic";;
+      esac
+      python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
+        --suite "$SUITE" --level "$LVL" --num_trials_per_task "$N" \
+        --host 127.0.0.1 --port "$PORT" $EXTRA \
+        --results_output_dir "$OUT/$ARM"
+    done
   done
 done
-for LVL in $LEVELS; do
-  python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
-    --suite reasoning_safety --level "$LVL" --num_trials_per_task "$N" \
-    --host 127.0.0.1 --port "$PORT" --disable_guidance \
-    --results_output_dir "$OUT/refusal_baseline"
-  python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
-    --suite reasoning_safety --level "$LVL" --num_trials_per_task "$N" \
-    --host 127.0.0.1 --port "$PORT" --refuse_unsafe \
-    --results_output_dir "$OUT/refusal"
-done
+if [ "$REFUSAL" = "1" ]; then
+  for LVL in $LEVELS; do
+    python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
+      --suite reasoning_safety --level "$LVL" --num_trials_per_task "$N" \
+      --host 127.0.0.1 --port "$PORT" --disable_guidance \
+      --results_output_dir "$OUT/refusal_baseline"
+    python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
+      --suite reasoning_safety --level "$LVL" --num_trials_per_task "$N" \
+      --host 127.0.0.1 --port "$PORT" --refuse_unsafe \
+      --results_output_dir "$OUT/refusal"
+  done
+fi
 echo "LS_ROWS_COMPLETE"

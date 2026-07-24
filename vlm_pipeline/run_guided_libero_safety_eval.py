@@ -6,10 +6,14 @@ Differences from the SafeLIBERO client:
 - Safety metric: the benchmark's OWN `env._check_constraint()` predicate costs
   (per-step; episode violates if any predicate fires at any step). No custom
   displacement criterion needed.
-- Hazard identity: Tier-GT = object names parsed from the BDDL `:constraints`
-  block (the benchmark's own hazard annotation); no-GT = symbolic v3.
-- Moving obstacles (`:dynamics`): handled by the existing per-chunk guidance
-  refresh (obstacle_pos re-read every REPLAN_STEPS).
+- Hazard identity: Tier-GT = the CheckRobotContact argument(s) from the BDDL
+  `:constraints` block — the entity the robot must not touch. (CheckContact's
+  FIRST arg is the carried task object; guarding it would barrier the grasp
+  target, so plain entity extraction is wrong.) no-GT = symbolic v3 with the
+  MOVING class rule grounded by settle-window displacement.
+- Moving obstacles (`:dynamics`): obstacle_pos (and obstacle2 pos) re-read
+  from live obs every REPLAN_STEPS chunk; identification additionally treats
+  observed movers as a hazard CLASS (never mention-excluded, path-floored).
 - reasoning_safety: instructions are UNSAFE by design — the E4 judge can
   refuse (`--refuse_unsafe`); refused episodes are recorded (refused=True) and
   count as safe-compliant behavior in the SSR sense.
@@ -33,6 +37,16 @@ NUM_STEPS_WAIT = 20
 DUMMY_ACTION = [0.0] * 6 + [-1.0]
 MAX_STEPS = {0: 300, 1: 300, 2: 520}  # per level; long-horizon L2 gets more
 DEFAULT_OBSTACLE_RADIUS = 0.065
+# Conservative envelope radii by name fragment (hand bodies are large).
+OBSTACLE_RADII = {"hand": 0.10, "car": 0.05, "train": 0.05, "ball": 0.04}
+MOVER_THRESHOLD = 0.01  # settle-window displacement [m] that marks MOVING(x)
+WORKSPACE = ((-0.8, 0.8), (-0.8, 0.8))  # wide: hands intrude from the edge
+
+
+def obstacle_radius(name):
+    label = name.lower()
+    return next((r for k, r in OBSTACLE_RADII.items() if k in label),
+                DEFAULT_OBSTACLE_RADIUS)
 
 
 def _quat2axisangle(quat):
@@ -43,13 +57,38 @@ def _quat2axisangle(quat):
 
 
 def hazard_names_from_constraints(env):
-    """The benchmark's hazard annotation: object args of constraint predicates."""
+    """The benchmark's hazard annotation: CheckRobotContact argument(s) only.
+
+    Constraint shape (both suites): (And (CheckRobotContact HAZARD)
+    (CheckContact TASK_OBJ HAZARD)) — the avoid-entity is the unary
+    CheckRobotContact arg; CheckContact's first arg is the object the robot
+    must CARRY, so a naive all-args walk would guard the grasp target.
+    """
     names = []
-    for c in env.env.parsed_problem.get("constraints", []):
-        for tok in c[1:]:
-            if isinstance(tok, str) and not tok.startswith(":") and tok not in names:
-                names.append(tok)
+
+    def walk(node):
+        if not isinstance(node, (list, tuple)) or not node:
+            return
+        if isinstance(node[0], str) and node[0].lower() == "checkrobotcontact":
+            for tok in node[1:]:
+                if isinstance(tok, str) and tok not in names:
+                    names.append(tok)
+        for child in node:
+            walk(child)
+
+    walk(env.env.parsed_problem.get("constraints", []))
     return names
+
+
+def detect_movers(pos_a, pos_b):
+    """MOVING(x) runtime grounding: displacement across the settle window."""
+    return {n for n, p in pos_a.items()
+            if n in pos_b and float(np.linalg.norm(np.asarray(pos_b[n]) - np.asarray(p))) > MOVER_THRESHOLD}
+
+
+def object_positions(obs):
+    return {k[:-4]: np.asarray(obs[k]) for k in obs
+            if k.endswith("_pos") and not k.startswith("robot0") and "_to_" not in k}
 
 
 def main():
@@ -88,11 +127,16 @@ def main():
     for task_id in task_ids:
         task = bm.get_task(task_id)
         desc = str(task.language)
+        # Level-aware paths (smoke finding 2026-07-20: the flat
+        # problem_folder/bddl_file path misses the level directory).
         env = OffScreenRenderEnv(
-            bddl_file_name=f"{get_libero_path('bddl_files')}/{task.problem_folder}/{task.bddl_file}",
+            bddl_file_name=bm.get_task_bddl_file_path_by_level_id(task.level, task.level_id),
             camera_heights=256, camera_widths=256,
         )
-        init_states = bm.get_task_init_states(task_id)
+        try:
+            init_states = bm.get_task_init_states_by_level_id(task.level, task.level_id)
+        except FileNotFoundError:
+            init_states = None  # reasoning_safety ships no .pruned_init
         logging.info(f"=== task {task_id} (L{args.level}): {desc}")
 
         refused = args.refuse_unsafe and is_unsafe(desc)
@@ -103,18 +147,27 @@ def main():
                     ef.write(json.dumps({"task": task_id, "ep": ep, "refused": True,
                                          "success": False, "violation": False}) + "\n")
                 continue
-            env.reset()
-            obs = env.set_init_state(init_states[ep % len(init_states)])
-            for _ in range(NUM_STEPS_WAIT):
+            obs = env.reset()
+            if init_states is not None:
+                obs = env.set_init_state(init_states[ep % len(init_states)])
+            pos_settle_start = None
+            for wi in range(NUM_STEPS_WAIT):
                 obs, _, _, _ = env.step(DUMMY_ACTION)
+                if wi == 4:  # after physics settling, before the window ends
+                    pos_settle_start = object_positions(obs)
+            movers = detect_movers(pos_settle_start or {}, object_positions(obs))
+            if movers:
+                logging.info(f"  [moving] ep {ep}: {sorted(movers)}")
 
             hazards = hazard_names_from_constraints(env)
             if args.obstacle_id_source == "symbolic":
                 from symbolic_identity import identify_obstacle
-                picked = identify_obstacle(desc, obs)
+                picked = identify_obstacle(desc, obs, workspace=WORKSPACE,
+                                           moving=movers)
                 guard = [picked] if picked else []
             else:
                 guard = [h for h in hazards if f"{h}_pos" in obs]
+            ident_correct = (bool(guard) and guard[0] in hazards) if hazards else None
 
             plan = collections.deque()
             done = False
@@ -136,12 +189,19 @@ def main():
                         "prompt": desc,
                     }
                     if guard and not args.disable_guidance and f"{guard[0]}_pos" in obs:
+                        # Positions re-read from LIVE obs every replan — this is
+                        # what tracks :dynamics movers (hands, toy cars).
                         element["guidance"] = {
                             "enabled": 1.0,
                             "eef_pos": np.asarray(obs["robot0_eef_pos"], dtype=np.float32),
                             "obstacle_pos": np.asarray(obs[f"{guard[0]}_pos"], dtype=np.float32),
-                            "obstacle_radius": DEFAULT_OBSTACLE_RADIUS,
+                            "obstacle_radius": obstacle_radius(guard[0]),
                         }
+                        if len(guard) > 1 and f"{guard[1]}_pos" in obs:
+                            element["guidance"]["obstacle2"] = {
+                                "pos": np.asarray(obs[f"{guard[1]}_pos"], dtype=np.float32),
+                                "radius": obstacle_radius(guard[1]),
+                            }
                     plan.extend(client.infer(element)["actions"][:REPLAN_STEPS])
                 obs, reward, done, info = env.step(plan.popleft().tolist())
                 cost = env.env._check_constraint(done)
@@ -155,7 +215,8 @@ def main():
                 ef.write(json.dumps({"task": task_id, "ep": ep, "refused": False,
                                      "success": bool(done), "violation": bool(violated),
                                      "steps": t, "hazards": hazards,
-                                     "guard": guard}) + "\n")
+                                     "guard": guard, "movers": sorted(movers),
+                                     "ident_correct": ident_correct}) + "\n")
             logging.info(f"  ep {ep}: success={done} violation={violated} steps={t}")
         env.close()
         n = args.num_trials_per_task

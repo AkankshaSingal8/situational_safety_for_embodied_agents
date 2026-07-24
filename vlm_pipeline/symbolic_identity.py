@@ -166,6 +166,7 @@ def scored_obstacle_id(
     candidate_positions: Dict[str, "np.ndarray"],
     eef_pos: Optional["np.ndarray"] = None,
     sigma: float = 0.25,
+    moving: Optional[set] = None,
 ) -> Optional[str]:
     """v3 identity for distractor-rich scenes: soft scoring instead of hard
     mention exclusion.
@@ -203,6 +204,14 @@ def scored_obstacle_id(
     protected = {k for k in candidate_positions
                  if any(w in _clean_object_name(k).lower()
                         for w in _PROTECTED_CLASSES)}
+    # MOVING class rule (FOL probe survivor #2, ledger 2026-07-21): a dynamic
+    # intruder is hazardous by CLASS — grounded at runtime by inter-frame
+    # displacement (the caller observes which objects moved during the settle
+    # window), never by name. Same override as protected: never
+    # mention-excluded, path term floored (its episode-start distance is
+    # meaningless), weight 1.0.
+    if moving:
+        protected = protected | {k for k in candidate_positions if k in moving}
     for k in protected:
         fracs[k] = 0.0
     partial = {k for k, f in fracs.items() if f < 1.0}
@@ -241,9 +250,11 @@ def scored_obstacle_id(
     return ranking[0]
 
 
-def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5, 0.5))) -> Optional[str]:
+def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5, 0.5)),
+                      moving: Optional[set] = None) -> Optional[str]:
     """Client entry point: candidates from `*_pos` obs keys (workspace-filtered,
-    robot excluded), target via the pickup-phrase heuristic, then symbolic id."""
+    robot excluded), target via the pickup-phrase heuristic, then symbolic id.
+    `moving`: names observed displacing during the settle window (MOVING class)."""
     cands = {}
     for k in obs:
         if not k.endswith("_pos") or k.startswith("robot0"):
@@ -260,4 +271,4 @@ def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5,
     if not cands:
         return None
     return scored_obstacle_id(task_description, cands,
-                              np.asarray(obs["robot0_eef_pos"]))
+                              np.asarray(obs["robot0_eef_pos"]), moving=moving)
