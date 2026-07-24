@@ -1190,3 +1190,22 @@ ARCHITECTURE FINDINGS (the row's purpose):
 4. Object L1/Spatial L1: post-hoc is the best TSR shield (minimal
    interference preserves grasping); its CAR ceiling stays ~reimpl level.
 Board is now complete: 5 method rows x 8 cells x n=200, one criterion.
+
+## 2026-07-24 — LIBERO-SAFETY PORT: MOVING rule adopted; frozen-robot root cause found + fixed
+Port state (commits 2e81dc3..): level-aware bddl/init APIs; GT hazard =
+CheckRobotContact args ONLY (all-args walk would guard the CARRIED task
+object — constraint shape is (And (CheckRobotContact HAZ) (CheckContact
+TASK_OBJ HAZ))); MOVING class rule in symbolic scorer (settle-window
+displacement > 1 cm; offline obstacle_avoidance 9->10/15 top-1, human_safety
+15/15 unchanged); hand radius 0.10; guard[1] -> live obstacle2; violation
+metric = env._check_constraint (their own predicates).
+SMOKE 42574740 + original 42427444: ALL arms TSR 0, violations 0.
+FORENSICS 42575868 (videos + eef telemetry): robot FROZEN — eef path 0.05 m
+over 520 steps; image orientation, param trees, norm-stats loading all
+verified correct. ROOT CAUSE: their finetune's action norm stats unnormalize
+to METRIC deltas (q99 xyz ~0.02 m, rot ~0.03-0.06 rad) vs base pi05_libero's
+~0.9 [-1,1] commands; robosuite OSC_POSE scales commands by 0.05 m / 0.5 rad
+-> actions 20x too small. FIX: client action*[1/0.05,..,1/0.5,..,1]+clip;
+server translation_scale=1.0 + NEW cmd_clip=0.05 (GuidanceParams field,
+default 1.0 = bit-exact for all SafeLIBERO rows; AST 25==25).
+Diag rerun: 42577247.
