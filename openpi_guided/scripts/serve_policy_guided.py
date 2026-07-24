@@ -38,6 +38,12 @@ class Args:
     eef_radius: float = 0.09
     inflation_slope: float = 0.004
     translation_scale: float = 0.05
+    # Per-step command clamp in COMMAND units. 1.0 = the [-1,1] command
+    # convention (base pi05_libero). For checkpoints whose actions unnormalize
+    # to METRIC deltas (LIBERO-Safety finetune: q99 ~ 0.02 m), serve with
+    # translation_scale=1.0 cmd_clip=0.05 so the repair's actuation model stays
+    # "max 5 cm per control step".
+    cmd_clip: float = 1.0
     repair_schedule: str = "ramp"
     num_candidates: int = 1
     corridor_radius: float = 0.07
@@ -67,6 +73,7 @@ def main(args: Args) -> None:
         eef_radius=args.eef_radius,
         inflation_slope=args.inflation_slope,
         translation_scale=args.translation_scale,
+        cmd_clip=args.cmd_clip,
         repair_schedule=args.repair_schedule,
         num_candidates=args.num_candidates,
         corridor_radius=args.corridor_radius,

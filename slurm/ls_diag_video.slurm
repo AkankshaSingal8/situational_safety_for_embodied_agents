@@ -25,6 +25,7 @@ export XLA_PYTHON_CLIENT_MEM_FRACTION=0.85
 export PYTHONPATH="$WT/openpi_guided/src"
 python "$WT/openpi_guided/scripts/serve_policy_guided.py" \
   --port "$PORT" --repair_schedule ramp --num_candidates 1 \
+  --translation_scale 1.0 --cmd_clip 0.05 \
   --policy.config=pi05_libero \
   --policy.dir="$LS_WEIGHTS" &
 SERVER_PID=$!

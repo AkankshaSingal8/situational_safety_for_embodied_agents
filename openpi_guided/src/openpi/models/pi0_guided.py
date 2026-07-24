@@ -48,6 +48,12 @@ class GuidanceParams(NamedTuple):
     q01: at.Float[at.Array, "3"]  # action quantile stats, translational dims
     q99: at.Float[at.Array, "3"]
     translation_scale: at.Float[at.Array, ""]  # metres of EEF motion per unit command
+    # Per-step clamp in COMMAND units. 1.0 = the [-1,1] command convention
+    # (every SafeLIBERO row, bit-exact). Metric-delta checkpoints (LIBERO-
+    # Safety finetune: actions unnormalize to meters) serve with
+    # translation_scale=1.0 and cmd_clip=0.05 so the repair's feasibility
+    # model stays "at most 5 cm of EEF motion per control step".
+    cmd_clip: at.Float[at.Array, ""]
     # Denoising-time schedule (length = num denoising steps). repair_weight
     # scales the correction applied at Euler step k (0 = trust the flow, 1 =
     # full repair); margin_scale scales r_eff at step k. Rationale: always-hard
@@ -256,7 +262,7 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
             # Push p_j (and, through the cumulative rollout, all later points)
             # away from the obstacle along the closest companion's direction.
             pushed = orig_step + deficit * direction
-            pushed_cmd = jnp.clip(pushed / g.translation_scale, -1.0, 1.0)
+            pushed_cmd = jnp.clip(pushed / g.translation_scale, -g.cmd_clip, g.cmd_clip)
             pushed = pushed_cmd * g.translation_scale
             p_push = p_prev + pushed
             dist_push, _ = _closest(p_push, ss_j)
@@ -265,7 +271,7 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
             # barrier cannot decrease at this step — a clamp-independent floor.
             approach = jnp.maximum(jnp.dot(orig_step, -direction), 0.0)
             braked = orig_step + approach * direction
-            braked_cmd = jnp.clip(braked / g.translation_scale, -1.0, 1.0)
+            braked_cmd = jnp.clip(braked / g.translation_scale, -g.cmd_clip, g.cmd_clip)
             braked = braked_cmd * g.translation_scale
             dist_brake, _ = _closest(p_prev + braked, ss_j)
             # Take whichever realizable step yields the larger barrier: the
@@ -298,7 +304,7 @@ def _dcbf_repair(x_t: jnp.ndarray, g: GuidanceParams, step_idx) -> tuple[jnp.nda
             do_restitute = (deficit > 0.0) & dbnr_have_goal & (g.dbnr_beta0 > 0.0)
             restitution = g.dbnr_beta0 * damage * w_perp
             new_step_restituted = new_step + restitution
-            new_step_restituted_cmd = jnp.clip(new_step_restituted / g.translation_scale, -1.0, 1.0)
+            new_step_restituted_cmd = jnp.clip(new_step_restituted / g.translation_scale, -g.cmd_clip, g.cmd_clip)
             new_step_restituted = new_step_restituted_cmd * g.translation_scale
             # Gate the WHOLE modification (not just restitution -> 0) on
             # do_restitute so dbnr_beta0=0 (every pre-DBNR config/ablation

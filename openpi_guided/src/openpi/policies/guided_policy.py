@@ -33,6 +33,9 @@ class GuidanceConfig:
     eef_radius: float = 0.09  # EEF+fingers+carried-object sphere approximation [m]
     inflation_slope: float = 0.004  # extra margin per horizon step [m]
     translation_scale: float = 0.05  # metres per unit command per control step
+    cmd_clip: float = 1.0  # per-step command clamp (1.0 = [-1,1] command space;
+    # 0.05 with translation_scale=1.0 for metric-delta checkpoints like the
+    # LIBERO-Safety finetune, keeping the actuation model at 5 cm/step)
     default_obstacle_radius: float = 0.065
     num_denoise_steps: int = 10
     num_candidates: int = 1  # best-of-K noise seeds with executed-prefix selection
@@ -133,6 +136,7 @@ class GuidedPolicy(_policy.Policy):
             q01=jnp.asarray(self._q01),
             q99=jnp.asarray(self._q99),
             translation_scale=jnp.float32(cfg.translation_scale),
+            cmd_clip=jnp.float32(cfg.cmd_clip),
             repair_weight=jnp.asarray(self._repair_weight),
             margin_scale=jnp.asarray(self._margin_scale),
             target_pos=jnp.asarray(np.asarray(payload.get("target_pos", FAR), dtype=np.float32)),

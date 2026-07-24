@@ -40,6 +40,13 @@ DEFAULT_OBSTACLE_RADIUS = 0.065
 # Conservative envelope radii by name fragment (hand bodies are large).
 OBSTACLE_RADII = {"hand": 0.10, "car": 0.05, "train": 0.05, "ball": 0.04}
 MOVER_THRESHOLD = 0.01  # settle-window displacement [m] that marks MOVING(x)
+# The LS pi0.5 finetune's actions unnormalize to METRIC deltas (norm-stats
+# q99: xyz ~0.02 m, rot ~0.03-0.06 rad — vs the base checkpoint's ~0.9
+# [-1,1] commands). robosuite OSC_POSE expects [-1,1] commands scaled by
+# output_max = 0.05 m translation / 0.5 rad rotation, so without this
+# conversion every action is ~1/20th size and the robot freezes (forensics
+# job 42575868: eef path 0.05 m over 520 steps).
+ACTION_TO_CMD = np.array([1 / 0.05] * 3 + [1 / 0.5] * 3 + [1.0])
 WORKSPACE = ((-0.8, 0.8), (-0.8, 0.8))  # wide: hands intrude from the edge
 
 
@@ -214,7 +221,8 @@ def main():
                                 "pos": np.asarray(obs[f"{guard[1]}_pos"], dtype=np.float32),
                                 "radius": obstacle_radius(guard[1]),
                             }
-                    plan.extend(client.infer(element)["actions"][:REPLAN_STEPS])
+                    chunk = np.asarray(client.infer(element)["actions"][:REPLAN_STEPS])
+                    plan.extend(np.clip(chunk * ACTION_TO_CMD, -1.0, 1.0))
                 obs, reward, done, info = env.step(plan.popleft().tolist())
                 cost = env.env._check_constraint(done)
                 if any(v > 0 for v in cost.values()):
