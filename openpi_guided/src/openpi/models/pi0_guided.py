@@ -110,6 +110,14 @@ class GuidanceParams(NamedTuple):
     extra_obstacle_pos: at.Float[at.Array, "3"]
     extra_r_obs: at.Float[at.Array, ""]
     extra_obstacle_scales: at.Float[at.Array, "3"]
+    # Enforcement pilot knobs (both 0.0 = machinery inert, bit-exact legacy).
+    # fk_beta: FK/SMC tilt strength — candidates reweighted by
+    # softmax(beta * prefix_margin) and systematically resampled at two
+    # mid-denoising steps (candidate B). Uniform weights resample to identity.
+    fk_beta: at.Float[at.Array, ""]
+    # repulsor_eta: soft velocity-superposition repulsor strength [m per
+    # denoise step at full hinge] added to translational commands (candidate C).
+    repulsor_eta: at.Float[at.Array, ""]
 
 
 def _eff_dist(diffs: jnp.ndarray, g: GuidanceParams, scales=None, r_base=None, shape_scale=1.0) -> jnp.ndarray:
@@ -456,6 +464,48 @@ def _hdc_bias(g: GuidanceParams, k_batch: int) -> jnp.ndarray:
     )
 
 
+def _repulsor(x_t: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
+    """Enforcement candidate C: soft velocity-superposition repulsor.
+
+    Adds eta * hinge(clearance) along the radial escape direction from the
+    PRIMARY obstacle to the translational commands — annealed-free, no
+    feasibility logic, no brake: the classic guidance-style baseline. Hinge
+    ramps in below TAU_C clearance. eta = 0 -> identity (bit-exact legacy).
+    Step-coupling (nudging step j moves p_{j'>j}) is deliberately ignored —
+    that is what separates this soft arm from the certified repair."""
+    TAU_C = 0.05
+    span = g.q99 - g.q01 + 1e-6
+    cmd = (x_t[..., :3] + 1.0) / 2.0 * span + g.q01
+    disp = cmd * g.translation_scale
+    p = g.eef_pos + jnp.cumsum(disp, axis=1)  # (K, H, 3)
+    diffs = p - g.obstacle_pos
+    dist = jnp.linalg.norm(diffs, axis=-1, keepdims=True)
+    hinge = jnp.maximum(0.0, 1.0 - (dist - g.r_eff) / TAU_C)
+    ddisp = g.repulsor_eta * hinge * diffs / (dist + 1e-8)
+    dx = 2.0 * ddisp / (g.translation_scale * span)
+    return x_t.at[..., :3].add(g.enabled * dx)
+
+
+def _fk_resample(x_t: jnp.ndarray, g: GuidanceParams, k) -> jnp.ndarray:
+    """Enforcement candidate B: Feynman-Kac tilt over the K particles.
+
+    At mid-denoising steps k in {4, 7}: weight particles by
+    softmax(fk_beta * prefix_margin(x_t)) and systematically resample
+    (deterministic offsets — uniform weights map to the IDENTITY permutation,
+    so fk_beta = 0 is bit-exact legacy; this is the fidelity check).
+    The margin on a partially-denoised x_t is a heuristic score, same
+    convention as the repair path's margin_scale."""
+    kk = x_t.shape[0]
+    m = _prefix_acceptance(x_t, g, 5)["min_margin"]  # (K,)
+    w = jax.nn.softmax(g.fk_beta * m)
+    cum = jnp.cumsum(w)
+    pts = (jnp.arange(kk, dtype=jnp.float32) + 0.5) / kk
+    idx = jnp.clip(jnp.searchsorted(cum, pts), 0, kk - 1)
+    active = (g.enabled > 0) & (g.fk_beta > 0) & ((k == 4) | (k == 7))
+    take = jnp.where(active, idx, jnp.arange(kk))
+    return x_t[take]
+
+
 def guided_sample_actions(
     self,
     rng: at.KeyArrayLike,
@@ -529,7 +579,9 @@ def guided_sample_actions(
         x_t = euler_step(x_t, time)
         w_hdc = jnp.where((k >= 2) & (k <= 5), 0.25, 0.0) * guidance.enabled
         x_t = x_t.at[..., :3].add(w_hdc * hdc_norm_bias[:, None, :])
+        x_t = _repulsor(x_t, guidance)  # candidate C (eta=0 -> identity)
         x_t, diag = _dcbf_repair(x_t, guidance, k)
+        x_t = _fk_resample(x_t, guidance, k)  # candidate B (beta=0 -> identity)
         return x_t, time + dt, diag
 
     _, init_diag = _dcbf_repair(

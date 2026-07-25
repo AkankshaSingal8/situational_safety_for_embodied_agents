@@ -49,6 +49,9 @@ class Args:
     adjoint_steps: int = 0
     adjoint_lr: float = 0.05
     adjoint_tau: float = 0.02
+    # Enforcement candidates B / C (0.0 = inert legacy path).
+    fk_beta: float = 0.0
+    repulsor_eta: float = 0.0
     repair_schedule: str = "ramp"
     num_candidates: int = 1
     corridor_radius: float = 0.07
@@ -82,6 +85,8 @@ def main(args: Args) -> None:
         adjoint_steps=args.adjoint_steps,
         adjoint_lr=args.adjoint_lr,
         adjoint_tau=args.adjoint_tau,
+        fk_beta=args.fk_beta,
+        repulsor_eta=args.repulsor_eta,
         repair_schedule=args.repair_schedule,
         num_candidates=args.num_candidates,
         corridor_radius=args.corridor_radius,

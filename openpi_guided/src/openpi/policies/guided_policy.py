@@ -45,6 +45,9 @@ class GuidanceConfig:
     adjoint_steps: int = 0
     adjoint_lr: float = 0.05
     adjoint_tau: float = 0.02  # ascend only while margin < tau [m]
+    # Enforcement candidates B and C (0.0 = inert, bit-exact legacy path).
+    fk_beta: float = 0.0  # FK/SMC particle tilt strength
+    repulsor_eta: float = 0.0  # soft repulsor strength [m/denoise-step]
     corridor_radius: float = 0.07  # sanctioned-approach cylinder radius [m]
     corridor_relax: float = 0.6  # margin relaxation inside corridors (0 = off)
     use_companions: bool = True  # False = EEF-point-only (SOTA-reimpl fidelity arm)
@@ -65,6 +68,10 @@ def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
         ramp = np.linspace(0.2, 1.0, num=5, dtype=np.float32)  # steps 2..6
         w[2 : 2 + len(ramp)] = ramp
         return w, margin
+    if kind == "none":
+        # Repair fully off: enforcement-pilot arms (FK tilt / repulsor /
+        # select-only) run the unmodified flow; selection still applies.
+        return np.zeros(n, dtype=np.float32), margin
     if kind == "posthoc":
         # Post-hoc shield baseline (AEGIS architecture class): the flow is
         # never guided — one exact projection sweep repairs the FINAL decoded
@@ -171,6 +178,8 @@ class GuidedPolicy(_policy.Policy):
             extra_obstacle_pos=jnp.asarray(extra_pos),
             extra_r_obs=jnp.float32(extra_r),
             extra_obstacle_scales=jnp.asarray(extra_scales),
+            fk_beta=jnp.float32(cfg.fk_beta),
+            repulsor_eta=jnp.float32(cfg.repulsor_eta),
         )
 
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]
