@@ -39,6 +39,12 @@ class GuidanceConfig:
     default_obstacle_radius: float = 0.065
     num_denoise_steps: int = 10
     num_candidates: int = 1  # best-of-K noise seeds with executed-prefix selection
+    # Enforcement candidate A (adjoint noise-space optimization). adjoint_steps
+    # > 0 REPLACES the in-denoising repair path with K-seed selection + gated
+    # gradient ascent of the certified prefix margin w.r.t. the initial noise.
+    adjoint_steps: int = 0
+    adjoint_lr: float = 0.05
+    adjoint_tau: float = 0.02  # ascend only while margin < tau [m]
     corridor_radius: float = 0.07  # sanctioned-approach cylinder radius [m]
     corridor_relax: float = 0.6  # margin relaxation inside corridors (0 = off)
     use_companions: bool = True  # False = EEF-point-only (SOTA-reimpl fidelity arm)
@@ -100,12 +106,25 @@ class GuidedPolicy(_policy.Policy):
         self._repair_weight, self._margin_scale = w, m
         logging.info("Repair schedule %s: w=%s", config.repair_schedule, np.round(w, 2))
 
-        bound = types.MethodType(guided_sample_actions, self._model)
-        # Shape-determining kwargs must be static under jit (noise shape,
-        # loop bounds, selection slice) — one compile per distinct K.
-        self._sample_actions = nnx_utils.module_jit(
-            bound, static_argnames=("num_candidates", "prefix_len", "num_steps")
-        )
+        if config.adjoint_steps > 0:
+            from openpi.models.pi0_guided import adjoint_sample_actions
+            bound = types.MethodType(adjoint_sample_actions, self._model)
+            self._sample_actions = nnx_utils.module_jit(
+                bound, static_argnames=("num_candidates", "prefix_len",
+                                        "num_steps", "ascent_steps"))
+            self._extra_sample_kwargs = {
+                "ascent_steps": config.adjoint_steps,
+                "ascent_lr": config.adjoint_lr,
+                "ascent_tau": config.adjoint_tau,
+            }
+        else:
+            bound = types.MethodType(guided_sample_actions, self._model)
+            # Shape-determining kwargs must be static under jit (noise shape,
+            # loop bounds, selection slice) — one compile per distinct K.
+            self._sample_actions = nnx_utils.module_jit(
+                bound, static_argnames=("num_candidates", "prefix_len", "num_steps")
+            )
+            self._extra_sample_kwargs = {}
 
     def _make_params(self, payload: dict | None) -> GuidanceParams:
         cfg = self._config
@@ -182,7 +201,8 @@ class GuidedPolicy(_policy.Policy):
         start = time.monotonic()
         actions, diag = self._sample_actions(
             sample_rng, observation, guidance=guidance,
-            num_candidates=self._config.num_candidates, **sample_kwargs,
+            num_candidates=self._config.num_candidates,
+            **self._extra_sample_kwargs, **sample_kwargs,
         )
         outputs = {"state": inputs["state"], "actions": actions}
         model_time = time.monotonic() - start

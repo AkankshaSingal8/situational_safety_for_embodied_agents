@@ -560,3 +560,90 @@ def guided_sample_actions(
         jnp.max(acc["min_margin"]) - jnp.min(acc["min_margin"]), (1,)
     )
     return selected, diag
+
+
+def adjoint_sample_actions(
+    self,
+    rng: at.KeyArrayLike,
+    observation: _model.Observation,
+    *,
+    guidance: GuidanceParams,
+    num_steps: int = 10,
+    num_candidates: int = 8,
+    prefix_len: int = 5,
+    ascent_steps: int = 5,
+    ascent_lr: float = 0.05,
+    ascent_tau: float = 0.02,
+    noise: at.Float[at.Array, "b ah ad"] | None = None,
+) -> tuple[_model.Actions, dict]:
+    """Enforcement candidate A (stage 2): noise-space adjoint optimization.
+
+    NO in-denoising repair — the policy flow is never overridden. Enforcement
+    is a search over initial noises: K seeds are decoded unguided and scored
+    by the SAME executed-prefix margin the certificate checks
+    (`_prefix_acceptance`); the winner's noise is then refined by
+    `ascent_steps` gradient-ascent steps of that margin w.r.t. the noise
+    (reverse-mode through the 10-step Euler map; prefix KV constant).
+    Ascent is GATED on margin < ascent_tau so already-safe chunks pass through
+    bit-untouched — enforcement only engages when the certificate is at risk.
+    Emitted actions are exactly F(z*): on the policy manifold by construction.
+    """
+    observation = _model.preprocess_observation(None, observation, train=False)
+    dt = -1.0 / num_steps
+    if noise is None:
+        noise = jax.random.normal(
+            rng, (num_candidates, self.action_horizon, self.action_dim))
+
+    prefix_tokens, prefix_mask, prefix_ar_mask = self.embed_prefix(observation)
+    prefix_attn_mask = make_attn_mask(prefix_mask, prefix_ar_mask)
+    positions = jnp.cumsum(prefix_mask, axis=1) - 1
+    _, kv_cache = self.PaliGemma.llm(
+        [prefix_tokens, None], mask=prefix_attn_mask, positions=positions)
+    kv_cache = jax.lax.stop_gradient(kv_cache)
+
+    def denoise_one(z):
+        """(H, ad) noise -> (1, H, ad) chunk; unrolled for clean reverse AD."""
+        x_t, time_t = z[None], 1.0
+        for _ in range(num_steps):
+            suffix_tokens, suffix_mask, suffix_ar_mask, adarms_cond = self.embed_suffix(
+                observation, x_t, jnp.broadcast_to(time_t, 1))
+            suffix_attn_mask = make_attn_mask(suffix_mask, suffix_ar_mask)
+            prefix_attn = einops.repeat(
+                prefix_mask, "b p -> b s p", s=suffix_tokens.shape[1])
+            full_attn_mask = jnp.concatenate([prefix_attn, suffix_attn_mask], axis=-1)
+            pos = (jnp.sum(prefix_mask, axis=-1)[:, None]
+                   + jnp.cumsum(suffix_mask, axis=-1) - 1)
+            (_, suffix_out), _ = self.PaliGemma.llm(
+                [None, suffix_tokens], mask=full_attn_mask, positions=pos,
+                kv_cache=kv_cache, adarms_cond=[None, adarms_cond])
+            v_t = self.action_out_proj(suffix_out[:, -self.action_horizon:])
+            x_t = x_t + dt * v_t
+            time_t = time_t + dt
+        return x_t
+
+    def margin_of(z):
+        return _prefix_acceptance(denoise_one(z), guidance, prefix_len)["min_margin"][0]
+
+    margins = jax.lax.map(margin_of, noise)  # sequential: memory-light K sweep
+    best = jnp.argmax(margins)
+    z0 = noise[best]
+
+    grad_fn = jax.value_and_grad(margin_of)
+
+    def ascend(_, z):
+        m, g_z = grad_fn(z)
+        gate = (m < ascent_tau).astype(jnp.float32) * guidance.enabled
+        return z + ascent_lr * gate * g_z / (jnp.linalg.norm(g_z) + 1e-8)
+
+    z_star = jax.lax.fori_loop(0, ascent_steps, ascend, z0)
+    x_0 = denoise_one(z_star)
+    acc = _prefix_acceptance(x_0, guidance, prefix_len)
+    diag = {
+        "selected_margin": acc["min_margin"],
+        "feasible_count": jnp.broadcast_to(
+            acc["feasible"].astype(jnp.float32)[0], (1,)),
+        "seed_margin_best": jnp.broadcast_to(margins[best], (1,)),
+        "ascent_gain": acc["min_margin"] - margins[best],
+        "noise_shift": jnp.broadcast_to(jnp.linalg.norm(z_star - z0), (1,)),
+    }
+    return x_0, diag

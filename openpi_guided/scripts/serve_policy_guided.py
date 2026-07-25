@@ -44,6 +44,11 @@ class Args:
     # translation_scale=1.0 cmd_clip=0.05 so the repair's actuation model stays
     # "max 5 cm per control step".
     cmd_clip: float = 1.0
+    # Enforcement candidate A: >0 replaces in-denoising repair with K-seed
+    # selection + gated noise-space gradient ascent of the certified margin.
+    adjoint_steps: int = 0
+    adjoint_lr: float = 0.05
+    adjoint_tau: float = 0.02
     repair_schedule: str = "ramp"
     num_candidates: int = 1
     corridor_radius: float = 0.07
@@ -74,6 +79,9 @@ def main(args: Args) -> None:
         inflation_slope=args.inflation_slope,
         translation_scale=args.translation_scale,
         cmd_clip=args.cmd_clip,
+        adjoint_steps=args.adjoint_steps,
+        adjoint_lr=args.adjoint_lr,
+        adjoint_tau=args.adjoint_tau,
         repair_schedule=args.repair_schedule,
         num_candidates=args.num_candidates,
         corridor_radius=args.corridor_radius,
