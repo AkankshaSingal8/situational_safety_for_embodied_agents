@@ -1341,3 +1341,26 @@ NOT FINAL per protocol: await select-only / FK / repulsor (job 42606966) to
 attribute the Spatial win between seed selection and gradient ascent, then
 rank all candidates. TODO: latency read-out from server logs; certificate
 pass-rate telemetry comparison.
+
+## ★★ 2026-07-25 — ENFORCEMENT PILOT ROUND COMPLETE (jobs 42606959 + 42606966): no single winner, structure is clear
+Dev cells, n=20/task, all arms paired (same seeds, GT identity, same certificate):
+| arm | Spatial t0+t1 TSR/CAR | Object t1 TSR | paired vs control (Spatial) |
+| control = composed repair | 32.5/17.5 | 30.0 | — |
+| select-only (0th-order) | 55.0/20.0 | 0.0 | succ p=0.078 |
+| FK tilt (beta=40) | **65.0/22.5** | 10.0 | succ 17v4 **p=0.007** |
+| adjoint (5 steps) | **67.5/20.0** | 10.0 | succ 19v5 **p=0.0066** |
+| repulsor (eta=0.01) | 37.5/**42.5** | **50.0** | nocol 12v2 **p=0.013** |
+ATTRIBUTION: (1) the repair itself is the Spatial TSR killer — merely removing
+it (select-only) lifts 32.5->55.0; (2) FK and adjoint are indistinguishable
+from each other (p=1.0) and both significantly beat control; the gradient adds
++12.5 over select-only but ns at this n (p=0.227); (3) the soft repulsor is
+the ONLY arm that moves the SAFETY axis (CAR 17.5->42.5, p=0.013 vs control;
+p=0.004 vs adjoint) and the only arm that un-sticks Object t1 (50% where hard
+enforcement gets 0-10%) — soft continuous fields navigate obstacle-on-grasp
+geometry that hard projection locks up.
+IMPLICATION: TSR mechanism and CAR mechanism are SEPARABLE — the natural
+composed method is repulsor field (CAR) + FK/adjoint noise search (TSR) +
+prefix certificate (soundness), all repair-free. NEXT ROUND (pre-register):
+composed arm (eta=0.01 + fk_beta=40 [+ adjoint 5]) vs best singles, full
+Spatial L1 n=50 + Object t1, paired; also latency read-out. NO finalization
+yet per directive.
