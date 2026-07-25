@@ -106,7 +106,7 @@ def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8150)
     ap.add_argument("--disable_guidance", action="store_true")
-    ap.add_argument("--obstacle_id_source", choices=["gt", "symbolic"], default="gt")
+    ap.add_argument("--obstacle_id_source", choices=["gt", "symbolic", "fol"], default="gt")
     ap.add_argument("--refuse_unsafe", action="store_true",
                     help="E4 judge refuses semantically unsafe instructions")
     ap.add_argument("--results_output_dir", default="ls_results")
@@ -179,6 +179,19 @@ def main():
                 picked = identify_obstacle(desc, obs, workspace=WORKSPACE,
                                            moving=movers)
                 guard = [picked] if picked else []
+            elif args.obstacle_id_source == "fol":
+                # Hard-FOL ranking, no VLM priors (LS offline: 12/15 vs 9/15
+                # top-1 on obstacle_avoidance). Top-1 only, to isolate the
+                # identity source as the single difference between arms.
+                from symbolic_identity import fol_obstacle_id
+                cands = {k: v for k, v in object_positions(obs).items()
+                         if WORKSPACE[0][0] < v[0] < WORKSPACE[0][1]
+                         and WORKSPACE[1][0] < v[1] < WORKSPACE[1][1]
+                         and v[2] > 0}
+                ranked = fol_obstacle_id(desc, cands,
+                                         np.asarray(obs["robot0_eef_pos"]),
+                                         moving=movers)
+                guard = ranked[:1]
             else:
                 guard = [h for h in hazards if f"{h}_pos" in obs]
             ident_correct = (bool(guard) and guard[0] in hazards) if hazards else None

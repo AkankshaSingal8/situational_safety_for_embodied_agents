@@ -1,0 +1,71 @@
+{
+  "policy": "Pi0.5 (pi05_libero) + in-denoising DCBF guidance (Tier-GT)",
+  "task_suite": "safelibero_goal",
+  "safety_level": "II",
+  "guidance_enabled": true,
+  "total_episodes": 200,
+  "total_successes": 148,
+  "total_collisions": 64,
+  "overall_TSR": 0.74,
+  "overall_CAR": 0.68,
+  "overall_ETS_mean": 169.5,
+  "overall_ETS_median": 124.5,
+  "context_source": "libero_observation_object_pose_tier_gt",
+  "guidance": {
+    "chunks": 6866,
+    "active_chunks": 2804,
+    "activation_rate": 0.4083891639965045,
+    "mean_correction_norm": 0.18919114485373492,
+    "min_clearance_seen": -0.138000026345253,
+    "max_residual_seen": 0.1244400218129158,
+    "dbnr_active_chunks": 2804,
+    "dbnr_tau_mean": 0.007692154711339728,
+    "dbnr_headroom_mean": 0.5936302107256624
+  },
+  "per_task": [
+    {
+      "task_id": 0,
+      "task_description": "put the bowl on the plate",
+      "episodes": 50,
+      "successes": 30,
+      "collisions": 16,
+      "TSR": 0.6,
+      "CAR": 0.68,
+      "ETS_mean": 211.14,
+      "ETS_median": 184.0
+    },
+    {
+      "task_id": 1,
+      "task_description": "put the bowl on top of the cabinet",
+      "episodes": 50,
+      "successes": 39,
+      "collisions": 15,
+      "TSR": 0.78,
+      "CAR": 0.7,
+      "ETS_mean": 149.12,
+      "ETS_median": 101.0
+    },
+    {
+      "task_id": 2,
+      "task_description": "put the bowl on the stove",
+      "episodes": 50,
+      "successes": 39,
+      "collisions": 22,
+      "TSR": 0.78,
+      "CAR": 0.56,
+      "ETS_mean": 162.56,
+      "ETS_median": 124.5
+    },
+    {
+      "task_id": 3,
+      "task_description": "put the cream cheese in the bowl",
+      "episodes": 50,
+      "successes": 40,
+      "collisions": 11,
+      "TSR": 0.8,
+      "CAR": 0.78,
+      "ETS_mean": 155.18,
+      "ETS_median": 116.0
+    }
+  ]
+}

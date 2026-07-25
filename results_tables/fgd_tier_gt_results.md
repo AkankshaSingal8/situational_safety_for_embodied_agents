@@ -1209,3 +1209,33 @@ to METRIC deltas (q99 xyz ~0.02 m, rot ~0.03-0.06 rad) vs base pi05_libero's
 server translation_scale=1.0 + NEW cmd_clip=0.05 (GuidanceParams field,
 default 1.0 = bit-exact for all SafeLIBERO rows; AST 25==25).
 Diag rerun: 42577247.
+
+## ★ 2026-07-25 — LS ident arms v3: FOL WINS obstacle ID; scene-graph re-confirmed NO-GO
+User-directed validation of scene graphs + FOL on LIBERO-Safety, GT =
+CheckRobotContact args (the client's own hazard extraction, stricter than the
+V2 all-entities GT). ls_v3_ident_arms.py, 59 captured scenes:
+| arm | obstacle_avoidance top1/top2 (n=15) | human_safety top1/top2 (n=12) |
+|---|---|---|
+| flat v3 (VLM priors) | 9/11 | 12/12 |
+| scene-graph | 9/11 | 0/2 |
+| hard-FOL (no priors) | **12/13** | 12/12 |
+FOL rule: HAZARD(x) := PROTECTED(x) | MOVING(x) | (~MENTIONED(x) &
+NEAREST_TO_PATH(x)), rank protected-first then path distance. WHY it wins:
+the VLM prior pulls semantically-hazardous names (ketchup, milk, tomato_sauce)
+above the benchmark's designated obstacle (bottle_of_carrot_juice, toy_car) —
+the SafeLIBERO Long misID mechanism replicated on LS. Pure geometry + mention
+logic matches the benchmark label. Scene-graph verdict unchanged (3rd
+confirmation): parity where hazards are objects, collapse on human_safety
+(never got the protected rule). Head-noun fix: strip double-underscore
+variants (can_of_soda__6_1 -> soda) before mention check.
+ADOPTED: fol_obstacle_id in symbolic_identity.py + --obstacle_id_source fol
+(top-1 only, isolates identity between arms; zero API cost — no priors).
+PAPER TARGETS pinned (2606.23686 Tab.3 pi0.5, SR = success w/ zero violations,
+10 trials x 3 seeds): TSA=obstacle_avoidance 58.0/62.7/56.7, HRI=human_safety
+84.7/88.7/83.3, FSHOA=obstacle_avoidance_human 55.3/58.7/51.3, AAG=affordance
+78.7/59.3/35.3, SSR best-model RR 80/72/36. Assembler now prints paper-style
+SafeSR (success AND no violation) + paper column per cell.
+CAMPAIGN: 42587320 (oa+SSR) / 42587321 (hs) still PENDING; NEW 42605626
+(FSHOA, 4 arms x 3 levels, n=10) + 42605627 (guided_fol on oa+hs). NOTE for
+comparison: paper SR bar vs our n=10 single-seed; HRI needs corridor exemption
+(hand = hazard AND destination) — flagged follow-up.

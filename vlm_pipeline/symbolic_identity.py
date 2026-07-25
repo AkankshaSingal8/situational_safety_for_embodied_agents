@@ -250,6 +250,36 @@ def scored_obstacle_id(
     return ranking[0]
 
 
+def fol_obstacle_id(task_description: str, candidates, eef_pos,
+                    moving: Optional[set] = None):
+    """Hard-FOL ranking (v17 lineage), no VLM priors:
+        HAZARD(x) := PROTECTED(x) | MOVING(x) | (~MENTIONED(x) & NEAR_PATH(x))
+    Returns candidates ranked protected/moving first (by path distance), then
+    unmentioned by path distance. LS offline validation: 12/15 top-1 on
+    obstacle_avoidance vs 9/15 for the prior-weighted scorer; ties 12/12 on
+    human_safety (ls_v3_ident_arms.py)."""
+    import re as _re
+    tgt = parse_target_heuristic(task_description, list(candidates))
+    tpos = candidates.get(tgt, eef_pos)
+
+    def d_path(k):
+        p, a, b = np.asarray(candidates[k]), np.asarray(eef_pos), np.asarray(tpos)
+        ab = b - a
+        t = np.clip(np.dot(p - a, ab) / max(np.dot(ab, ab), 1e-9), 0, 1)
+        return float(np.linalg.norm(p - (a + t * ab)))
+
+    def head_mentioned(name):
+        base = _re.sub(r"(__\d+)?(_\d+)?$", "", name)
+        return base.split("_")[-1].lower() in task_description.lower()
+
+    protected = [k for k in candidates
+                 if any(w in k.lower() for w in _PROTECTED_CLASSES)
+                 or (moving and k in moving)]
+    obstacles = [k for k in candidates
+                 if k not in protected and k != tgt and not head_mentioned(k)]
+    return sorted(protected, key=d_path) + sorted(obstacles, key=d_path)
+
+
 def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5, 0.5)),
                       moving: Optional[set] = None) -> Optional[str]:
     """Client entry point: candidates from `*_pos` obs keys (workspace-filtered,

@@ -52,6 +52,7 @@ for SUITE in $SUITES; do
         baseline)        EXTRA="--disable_guidance";;
         guided_gt)       EXTRA="--obstacle_id_source gt";;
         guided_symbolic) EXTRA="--obstacle_id_source symbolic";;
+        guided_fol)      EXTRA="--obstacle_id_source fol";;
       esac
       python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
         --suite "$SUITE" --level "$LVL" --num_trials_per_task "$N" \
