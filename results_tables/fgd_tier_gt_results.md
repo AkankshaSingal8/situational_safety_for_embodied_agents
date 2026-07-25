@@ -1273,3 +1273,19 @@ All four GO criteria met. Compile 141 s one-time. HONEST SCOPE: random-image
 example, easy margin regime — mechanism certified, performance NOT.
 Stage 2 unlocked per pre-registered spec: dev cells n=20 paired vs composed
 repair, same seeds/identity/certificate.
+
+## 2026-07-25 — LS Tier-Percep offline validation (job 42608077): GO for no-GT rollouts
+45 scenes, GroundingDINO+depth, agentview 256:
+| suite | loc_rate | med_err | fol top1 (percep) | fol top1 (GT pos) |
+| obstacle_avoidance | 68.3% | 0.037 m | 9/15 | 12/15 |
+| human_safety | 72.1% | 0.036 m | 11/12 | 12/12 |
+| obstacle_avoidance_human | 68.3% | 0.038 m | 12/15 (sym 11/15) | n/a |
+Med err ~half of SafeLIBERO's (0.067): LS scenes are less cluttered. The
+no-GT tax concentrates in obstacle_avoidance (12->9: position noise flips
+path-nearest ranking; unlocalized GT hazards can't be candidates —
+fail-unguided direction). human_safety robust (protected class needs only a
+rough hand position). First FSHOA ident data: FOL leads symbolic 12 vs 11.
+GO: guided_nogt_fol / guided_nogt_sym rollout arms submitted (split by arm
+for walltime). Bug fixed en route: region_source is 'detector' not 'gdino'
+(first submission failed all 45 scenes; also latent in the LS client percep
+path — fixed before any rollout burned).
