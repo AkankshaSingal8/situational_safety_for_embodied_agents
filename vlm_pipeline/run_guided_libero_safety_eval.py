@@ -142,7 +142,7 @@ def main():
         def percep_snapshot(env, names):
             return estimate_object_positions(
                 env.sim, names, cameras=("agentview",),
-                region_source="gdino", detector=gdino_detector,
+                region_source="detector", detector=gdino_detector,
                 z_correction=args.percep_z_correction)
     bm = benchmark.get_benchmark_dict()[args.suite]()
     task_ids = [i for i in range(bm.get_num_tasks())

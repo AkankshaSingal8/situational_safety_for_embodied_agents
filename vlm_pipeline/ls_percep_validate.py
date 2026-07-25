@@ -55,7 +55,7 @@ def main():
                       and "_to_" not in k}
                 est = estimate_object_positions(env.sim, list(gt),
                                                 cameras=("agentview",),
-                                                region_source="gdino",
+                                                region_source="detector",
                                                 detector=det)
                 errs = {n: float(np.linalg.norm(est[n] - gt[n]))
                         for n in est}
