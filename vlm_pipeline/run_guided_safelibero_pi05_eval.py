@@ -258,10 +258,11 @@ def parse_args():
                         help="Override the per-suite episode step cap (cap-sensitivity "
                              "ablation; default = TASK_MAX_STEPS table).")
     parser.add_argument("--obstacle_id_source", type=str, default="gt",
-                        choices=["gt", "symbolic"],
-                        help="'symbolic' = v17 FOL grounder (¬mentioned ∧ ¬support ∧ "
-                             "nearest-to-path; no '_obstacle' name cue) — the E3 "
-                             "identity-swap arm. Identity accuracy logged per episode.")
+                        choices=["gt", "symbolic", "fol"],
+                        help="'symbolic' = prior-weighted scorer; 'fol' = hard "
+                             "boolean rules, no VLM priors (LS offline winner "
+                             "12/15 vs 9/15) — E3 identity-swap arms. Identity "
+                             "accuracy logged per episode.")
     parser.add_argument("--obstacle_pos_source", type=str, default="gt",
                         choices=["gt", "percep"],
                         help="'percep' = RGB-D back-projection at episode start "
@@ -440,9 +441,18 @@ def run_eval(args):
                 return merged
 
             ident_correct = None
-            if args.obstacle_id_source == "symbolic":
-                from symbolic_identity import identify_obstacle
-                picked = identify_obstacle(str(task_description), entity_view(obs))
+            if args.obstacle_id_source in ("symbolic", "fol"):
+                from symbolic_identity import fol_obstacle_id, identify_obstacle
+                if args.obstacle_id_source == "symbolic":
+                    picked = identify_obstacle(str(task_description), entity_view(obs))
+                else:
+                    _ev = entity_view(obs)
+                    _cands = {k[:-4]: np.asarray(v) for k, v in _ev.items()
+                              if k.endswith("_pos") and not k.startswith("robot0")
+                              and "_to_" not in k}
+                    _ranked = fol_obstacle_id(str(task_description), _cands,
+                                              np.asarray(obs["robot0_eef_pos"]))
+                    picked = _ranked[0] if _ranked else None
                 ident_correct = picked == gt_obstacle_name
                 logging.info(f"  [ident] ep {ep_idx} picked={picked} "
                              f"gt={gt_obstacle_name} correct={ident_correct}")
