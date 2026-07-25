@@ -22,7 +22,23 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from vlm_slot_bench import make_backend  # noqa: E402
+
+
+def make_json_backend(spec):
+    """Direct Anthropic call — vlm_slot_bench backends cap max_tokens at ~32
+    (single-name ratings), which truncates JSON answers mid-string."""
+    assert spec.startswith("anthropic:"), spec
+    import anthropic
+    client = anthropic.Anthropic()
+    model = spec.split(":", 1)[1]
+
+    def complete(prompt, temperature=0.3):
+        resp = client.messages.create(
+            model=model, max_tokens=500, temperature=temperature,
+            messages=[{"role": "user", "content": prompt}])
+        return resp.content[0].text
+
+    return complete
 
 ROOT = pathlib.Path(__file__).parents[1]
 SCENES = ROOT / "results_tables/libero_safety_scenes.jsonl"
@@ -49,7 +65,7 @@ def main():
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
-    backend = make_backend(args.backend)
+    backend = make_json_backend(args.backend)
     out = {}
     for line in open(SCENES):
         r = json.loads(line)

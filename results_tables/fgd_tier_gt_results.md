@@ -1239,3 +1239,26 @@ CAMPAIGN: 42587320 (oa+SSR) / 42587321 (hs) still PENDING; NEW 42605626
 (FSHOA, 4 arms x 3 levels, n=10) + 42605627 (guided_fol on oa+hs). NOTE for
 comparison: paper SR bar vs our n=10 single-seed; HRI needs corridor exemption
 (hand = hazard AND destination) — flagged follow-up.
+
+## ★ 2026-07-25 — FOL-VLM predicate grounding: generality at ZERO accuracy cost
+User-directed (\"FOL with VLM — more general?\"). Architecture: FIXED FOL rule
+keeps all scene-level decision authority; VLM (haiku, 3 votes, cached per
+task — runtime API-free) answers only LOCAL per-object predicates:
+REFERENCED(x) (reference resolution incl. paraphrase) and PROTECTED(x) (body
+part / attached to person / living). No name lists, no head-noun matching.
+| arm | obstacle top1/top2 | human top1/top2 |
+| fol (hand heuristics) | 12/13 | 12/12 |
+| folvlm (VLM predicates) | **12/13** | **12/12** |
+EXACT match on every scene. The cache also shows the predicates capture what
+heuristics cannot: 'deliver it to me' -> left_hand protected (paraphrase);
+plate_with_hand both referenced AND protected (destination-hazard duality).
+Contrast with the two DISPROVEN ways to add a VLM: rule composition
+(fail-unsafe, -3..8 scenes) and scene-wide priors (ketchup over toy_car).
+Thesis sharpened: the VLM belongs at the PREDICATE level; logic decides.
+Bug fixed en route: vlm_slot_bench backends cap max_tokens~32 -> truncated
+JSON -> silently empty predicate sets (first pass had ALL human_safety empty);
+gen_vlm_predicates now uses a direct client, max_tokens=500. Keys are
+suite/L{level}/task (level collapse fixed).
+NEXT: folvlm as rollout arm (--obstacle_id_source folvlm) after first rows;
+SafeLIBERO predicate cache for the E3 folvlm arm; property predicates
+(HOT/SHARP/FRAGILE) for the affordance suite.

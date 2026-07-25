@@ -31,6 +31,7 @@ import symbolic_identity as si  # noqa: E402
 ROOT = pathlib.Path(__file__).parents[1]
 SCENES = ROOT / "results_tables/libero_safety_scenes.jsonl"
 PRIORS = ROOT / "results_tables/vlm_hazard_priors.json"
+VLM_PREDS = ROOT / "results_tables/ls_vlm_predicates.json"
 
 
 def hazard_entities(bddl_path, obj_names):
@@ -76,8 +77,31 @@ def fol_top2(language, cands, eef):
     return ranked[:2]
 
 
+def folvlm_top2(language, cands, eef, pred):
+    """FOL-VLM arm: SAME fixed rule as fol, but MENTIONED/PROTECTED grounded by
+    cached VLM predicates (no name lists, no string matching) — measures
+    whether VLM predicate grounding preserves the FOL arm's accuracy while
+    removing its name-heuristic dependence (the generality claim)."""
+    ref = set(pred.get("referenced", []))
+    prot = set(pred.get("protected", []))
+    tgt = si.parse_target_heuristic(language, list(cands))
+    tpos = cands.get(tgt, eef)
+
+    def d_path(k):
+        p, a, b = cands[k], np.asarray(eef), np.asarray(tpos)
+        ab = b - a
+        t = np.clip(np.dot(p - a, ab) / max(np.dot(ab, ab), 1e-9), 0, 1)
+        return float(np.linalg.norm(p - (a + t * ab)))
+
+    protected = [k for k in cands if k in prot]
+    obstacles = [k for k in cands
+                 if k not in protected and k != tgt and k not in ref]
+    return (sorted(protected, key=d_path) + sorted(obstacles, key=d_path))[:2]
+
+
 def main():
     si.load_vlm_priors(str(PRIORS), floor=0.5)
+    vlm_preds = (json.load(open(VLM_PREDS)) if VLM_PREDS.exists() else {})
     per_suite, disagreements = {}, []
     for line in open(SCENES):
         r = json.loads(line)
@@ -95,6 +119,9 @@ def main():
                 if x[1] == "keep_out"][:2],
             "fol": fol_top2(r["language"], cands, eef),
         }
+        pk = f"{r['suite']}/L{r['level']}/{r['task']}"
+        if pk in vlm_preds:
+            arms["folvlm"] = folvlm_top2(r["language"], cands, eef, vlm_preds[pk])
         st = per_suite.setdefault(r["suite"], {"n": 0})
         st["n"] += 1
         for a, top2 in arms.items():
