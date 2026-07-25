@@ -1289,3 +1289,21 @@ GO: guided_nogt_fol / guided_nogt_sym rollout arms submitted (split by arm
 for walltime). Bug fixed en route: region_source is 'detector' not 'gdino'
 (first submission failed all 45 scenes; also latent in the LS client percep
 path — fixed before any rollout burned).
+
+## ★ 2026-07-25 — E3 IDENTIFICATION-SWAP (job 42606046): identity is NOT the bottleneck
+Enforcement FIXED (ramp K=8 r0.09 corridor); ONLY identity source varies.
+Spatial, n=40/arm/level, SAME seeds (paired):
+| identity | L1 TSR/CAR | L2 TSR/CAR |
+| GT | 55.0/27.5 | 77.5/40.0 |
+| symbolic (VLM-prior) | 60.0/27.5 | 77.5/37.5 |
+| FOL (no priors) | 62.5/32.5 | 90.0/40.0 |
+Paired McNemar GT vs FOL: L1 TSR 4/7 p=0.55; L1 CAR 0/2 p=0.50; L2 TSR 2/7
+p=0.18; L2 CAR 4/4 p=1.0 — NO significant difference at n=40; every trend
+favors FOL (12/40 discordant episodes go FOL's way vs 6 GT's way pooled).
+VERDICT (validation-not-noise discipline): FOL identity is statistically
+indistinguishable from GROUND-TRUTH identity with enforcement held fixed —
+the no-GT identity tier carries no measurable cost on Spatial. Consistent
+with offline (12/15 top-1). NOTE: absolute numbers below board config (this
+dev config r0.09+corridor, not per-cell winners) — internal comparison only.
+Extensions pending: n=50 + Goal/Object cells for power; folvlm arm; identity
+x geometry grid. Benign EOFErrors at job end = server teardown, not failures.
