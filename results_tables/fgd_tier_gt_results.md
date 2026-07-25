@@ -1390,3 +1390,44 @@ only as a NARROW slot — a rung in Design_v3's E3 intervention ladder
 (probe->steer causal link), not a headline mechanism. Measurement-first
 framing (knowledge_action_gap/Design_v3_ICRA2027.md) strengthened by this
 audit. August literature refresh remains mandatory.
+
+## ★★ 2026-07-25 — FOUR-AUDIT NOVELTY SYNTHESIS: "NOISE-SPACE SAFETY" is the vetted lane
+Four adversarial audits (viability cert / negative guidance / renoise repair /
+frontier sweep), ~70 papers screened. Verdicts:
+- N1 viability-terminal cert: CLAIMED — PACS 2511.06385 (ICRA'26): chunk +
+  failsafe-stop trajectory verified vs reachable human occupancy, on
+  diffusion + SmolVLA(flow), real HRI. Residuals (evasive backup, learned/
+  conformal hazard sets, in-generation viable-terminal steering) incremental.
+  PACS = mandatory baseline/citation for our certificate line; note its OOD
+  critique of CBF push-away == our repair-tax finding from the output side.
+- N2 negative-prompt guidance: NARROW-OPEN — the single surviving
+  differentiator is a LANGUAGE-ONLY negative branch (no failure data
+  [AFIL 2605.08434], no trained neg-embedding [2407.13842], no probes
+  [COAST]; CFG-on-flow-VLA exists [ACG 2510.22201]). VALIDITY RISK HIGH:
+  ICBench 2603.06001 — pi0.5 97.6% success on CONTRADICTORY instructions
+  (worst language grounding of tested VLAs). Pre-registered kill-switch:
+  ||v(task)-v(hazard-approach)|| vs paraphrase-noise floor + Cartesian
+  direction check; only proceed if separable.
+- N3 renoise repair: NARROW-OPEN — operator published (2310.09629 SDEdit
+  replanning, ITPS, Diffusion-ES, PPR 2601.21033); surviving composition:
+  certificate-as-binary-oracle + DEPTH-ESCALATING schedule + ANYTIME
+  contract on VLA chunks. Kill-baseline: rejection sampling at equal
+  compute; ablation: escalating vs fixed t*.
+- Frontier sweep intervention-point map: velocity field (2607.01378,
+  2602.15567, OmniGuide 2603.10052 on pi0.5/GR00T), intermediate states
+  (2602.21429 Constricting Barrier Functions — certified, geometric),
+  output (saturated: PACS, LatentCBF 2511.18606, PaCo-VLA), commit
+  (BOKBO, ReconVLA). **NOISE SPACE FOR SAFETY: UNOCCUPIED** (Flow Reversal
+  2606.13675 / Start Right 2606.19774 / DSRL are performance-only).
+  Also open: semantic constraints w/ any guarantee; cross-point stack w/
+  calibrated executed-action guarantee.
+SYNTHESIS — vetted headline candidate: **Noise-Space Safety** — enforcement
+for frozen flow VLAs entirely in noise coordinates: SELECT (0th, p=0.078
+trend) / ASCEND (1st, p=0.0066) / TILT (FK, p=0.007) / RENOISE (anytime
+repair, N3 composition), one checked prefix certificate, zero output
+surgery. Three of four operators ALREADY validated paired-significant on
+our infra; motivation = our repair-tax result + PACS's convergent OOD
+critique. Optional semantic arm = N2, strictly gated on its kill-switch.
+Required for defensibility: rejection-sampling equal-compute baseline,
+escalation ablation, latency table, baselines 2607.01378 + PACS + VLS +
+OmniGuide + 2602.21429.
