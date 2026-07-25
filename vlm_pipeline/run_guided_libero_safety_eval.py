@@ -107,6 +107,16 @@ def main():
     ap.add_argument("--port", type=int, default=8150)
     ap.add_argument("--disable_guidance", action="store_true")
     ap.add_argument("--obstacle_id_source", choices=["gt", "symbolic", "fol"], default="gt")
+    ap.add_argument("--entity_pos_source", choices=["gt", "percep"], default="gt",
+                    help="'percep' = episode-start RGB-D back-projection "
+                         "(GroundingDINO regions) for ALL positions consumed by "
+                         "ident + guidance. Static snapshot: dynamic hazards "
+                         "keep their settle-end estimate (documented no-GT tax)")
+    ap.add_argument("--percep_z_correction", type=float, default=-0.03)
+    ap.add_argument("--percep_mover_threshold", type=float, default=0.06,
+                    help="settle-window displacement [m] marking MOVING(x) from "
+                         "two percep snapshots (looser than the GT 0.01 — "
+                         "correlated detector noise, med abs err 0.067)")
     ap.add_argument("--refuse_unsafe", action="store_true",
                     help="E4 judge refuses semantically unsafe instructions")
     ap.add_argument("--results_output_dir", default="ls_results")
@@ -122,6 +132,18 @@ def main():
     from openpi_client import websocket_client_policy
 
     client = websocket_client_policy.WebsocketClientPolicy(args.host, args.port)
+
+    gdino_detector = None
+    if args.entity_pos_source == "percep":
+        from percep_obstacle import make_gdino_detector, estimate_object_positions
+        gdino_detector = make_gdino_detector()
+        logging.info("GroundingDINO detector service started (LS Tier-Percep)")
+
+        def percep_snapshot(env, names):
+            return estimate_object_positions(
+                env.sim, names, cameras=("agentview",),
+                region_source="gdino", detector=gdino_detector,
+                z_correction=args.percep_z_correction)
     bm = benchmark.get_benchmark_dict()[args.suite]()
     task_ids = [i for i in range(bm.get_num_tasks())
                 if getattr(bm.get_task(i), "level", None) == args.level]
@@ -165,32 +187,46 @@ def main():
             if init_states is not None:
                 obs = env.set_init_state(init_states[ep % len(init_states)])
             pos_settle_start = None
+            percep_a = None
             for wi in range(NUM_STEPS_WAIT):
                 obs, _, _, _ = env.step(DUMMY_ACTION)
                 if wi == 4:  # after physics settling, before the window ends
                     pos_settle_start = object_positions(obs)
-            movers = detect_movers(pos_settle_start or {}, object_positions(obs))
+                    if args.entity_pos_source == "percep":
+                        percep_a = percep_snapshot(env, list(pos_settle_start))
+            percep_pos = None
+            if args.entity_pos_source == "percep":
+                percep_pos = percep_snapshot(env, list(object_positions(obs)))
+                movers = {n for n, p in (percep_a or {}).items()
+                          if n in percep_pos and np.linalg.norm(
+                              np.asarray(percep_pos[n]) - np.asarray(p))
+                          > args.percep_mover_threshold}
+                logging.info(f"  [entity-percep] ep {ep} localized "
+                             f"{len(percep_pos)}/{len(object_positions(obs))}")
+            else:
+                movers = detect_movers(pos_settle_start or {}, object_positions(obs))
             if movers:
                 logging.info(f"  [moving] ep {ep}: {sorted(movers)}")
 
             hazards = hazard_names_from_constraints(env)
+            # Identity candidates: percep snapshot when no-GT, live obs else.
+            _pos_src = percep_pos if percep_pos is not None else object_positions(obs)
+            cands = {k: np.asarray(v) for k, v in _pos_src.items()
+                     if WORKSPACE[0][0] < v[0] < WORKSPACE[0][1]
+                     and WORKSPACE[1][0] < v[1] < WORKSPACE[1][1]
+                     and v[2] > 0}
+            eef = np.asarray(obs["robot0_eef_pos"])  # proprio: allowed in no-GT
             if args.obstacle_id_source == "symbolic":
-                from symbolic_identity import identify_obstacle
-                picked = identify_obstacle(desc, obs, workspace=WORKSPACE,
-                                           moving=movers)
+                from symbolic_identity import scored_obstacle_id
+                picked = scored_obstacle_id(desc, cands, eef, moving=movers) \
+                    if cands else None
                 guard = [picked] if picked else []
             elif args.obstacle_id_source == "fol":
                 # Hard-FOL ranking, no VLM priors (LS offline: 12/15 vs 9/15
                 # top-1 on obstacle_avoidance). Top-1 only, to isolate the
                 # identity source as the single difference between arms.
                 from symbolic_identity import fol_obstacle_id
-                cands = {k: v for k, v in object_positions(obs).items()
-                         if WORKSPACE[0][0] < v[0] < WORKSPACE[0][1]
-                         and WORKSPACE[1][0] < v[1] < WORKSPACE[1][1]
-                         and v[2] > 0}
-                ranked = fol_obstacle_id(desc, cands,
-                                         np.asarray(obs["robot0_eef_pos"]),
-                                         moving=movers)
+                ranked = fol_obstacle_id(desc, cands, eef, moving=movers)
                 guard = ranked[:1]
             else:
                 guard = [h for h in hazards if f"{h}_pos" in obs]
@@ -220,18 +256,26 @@ def main():
                         )),
                         "prompt": desc,
                     }
-                    if guard and not args.disable_guidance and f"{guard[0]}_pos" in obs:
-                        # Positions re-read from LIVE obs every replan — this is
-                        # what tracks :dynamics movers (hands, toy cars).
+                    def _guard_pos(name):
+                        # GT tier: LIVE obs every replan (tracks :dynamics
+                        # movers). Percep tier: static settle-end snapshot —
+                        # the documented no-GT tax on dynamic hazards.
+                        if percep_pos is not None:
+                            return percep_pos.get(name)
+                        return obs.get(f"{name}_pos")
+
+                    g0 = _guard_pos(guard[0]) if guard else None
+                    if g0 is not None and not args.disable_guidance:
                         element["guidance"] = {
                             "enabled": 1.0,
                             "eef_pos": np.asarray(obs["robot0_eef_pos"], dtype=np.float32),
-                            "obstacle_pos": np.asarray(obs[f"{guard[0]}_pos"], dtype=np.float32),
+                            "obstacle_pos": np.asarray(g0, dtype=np.float32),
                             "obstacle_radius": obstacle_radius(guard[0]),
                         }
-                        if len(guard) > 1 and f"{guard[1]}_pos" in obs:
+                        g1 = _guard_pos(guard[1]) if len(guard) > 1 else None
+                        if g1 is not None:
                             element["guidance"]["obstacle2"] = {
-                                "pos": np.asarray(obs[f"{guard[1]}_pos"], dtype=np.float32),
+                                "pos": np.asarray(g1, dtype=np.float32),
                                 "radius": obstacle_radius(guard[1]),
                             }
                     chunk = np.asarray(client.infer(element)["actions"][:REPLAN_STEPS])
@@ -271,6 +315,7 @@ def main():
         "suite": args.suite, "level": args.level,
         "guidance": not args.disable_guidance,
         "obstacle_id_source": args.obstacle_id_source,
+        "entity_pos_source": args.entity_pos_source,
         "refuse_unsafe": args.refuse_unsafe,
         "overall_TSR": float(np.mean([r["TSR"] for r in per_task])) if per_task else 0.0,
         "overall_violation_rate": float(np.mean([r["violation_rate"] for r in per_task])) if per_task else 0.0,
