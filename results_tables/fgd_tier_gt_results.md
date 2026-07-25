@@ -1262,3 +1262,14 @@ suite/L{level}/task (level collapse fixed).
 NEXT: folvlm as rollout arm (--obstacle_id_source folvlm) after first rows;
 SafeLIBERO predicate cache for the E3 folvlm arm; property predicates
 (HOT/SHARP/FRAGILE) for the affordance suite.
+
+## ★ 2026-07-25 — ADJOINT PROBE (enforcement candidate A stage 1): GO
+Job 42606069, adjoint_probe.py. Reverse-mode grad of prefix clearance margin
+through the 10-step denoise map w.r.t. initial noise, frozen pi0.5, prefix KV
+stop-gradiented (never touches the 3B backbone):
+grad_step 57 ms | peak mem 6.9 GB | |g|=0.12 finite | margin +0.044 over 8
+monotone ascent steps (0.618->0.662) | noise std 0.954 (stays ~N(0,1)).
+All four GO criteria met. Compile 141 s one-time. HONEST SCOPE: random-image
+example, easy margin regime — mechanism certified, performance NOT.
+Stage 2 unlocked per pre-registered spec: dev cells n=20 paired vs composed
+repair, same seeds/identity/certificate.

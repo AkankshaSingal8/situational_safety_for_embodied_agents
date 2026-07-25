@@ -1,0 +1,23 @@
+{
+ "compile_s": 141.1,
+ "grad_step_s": 0.057,
+ "grad_norm": 0.12227831780910492,
+ "grad_finite": true,
+ "margin_init": 0.6179012656211853,
+ "ascent": [
+  0.6179,
+  0.6238,
+  0.6296,
+  0.6373,
+  0.6428,
+  0.6465,
+  0.6519,
+  0.6571
+ ],
+ "margin_final": 0.6622748970985413,
+ "margin_gain": 0.04437363147735596,
+ "noise_shift_norm": 0.3996703028678894,
+ "noise_final_std": 0.9538394212722778,
+ "peak_bytes_in_use": 6941538304,
+ "verdict": "GO"
+}
