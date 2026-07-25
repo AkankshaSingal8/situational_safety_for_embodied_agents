@@ -1364,3 +1364,29 @@ prefix certificate (soundness), all repair-free. NEXT ROUND (pre-register):
 composed arm (eta=0.01 + fk_beta=40 [+ adjoint 5]) vs best singles, full
 Spatial L1 n=50 + Object t1, paired; also latency read-out. NO finalization
 yet per directive.
+
+## 2026-07-25 — NOVELTY AUDIT: latent-steering pitch downgraded; VLS overlaps enforcement pilots
+User-directed sweep before committing to "semantic activation steering":
+- VLA activation steering EXISTS as a line (COAST 2605.17144; mech-interp
+  steering 2509.00328 — causal speed/direction directions; PID closed-loop
+  2606.00269; AR action-token intervention 2606.15021; multirobot affine
+  editing 2606.11489). Task/concept control, no safety, no certificates —
+  but the raw mechanism is claimed.
+- VLM (non-embodied) safety steering exists (ASTRA, SPO-VLM, 2603.27240).
+- **VLS (vision-language-steering.github.io): VLM reward gradients + FK
+  resampling injected into frozen pi0.5 denoising, training-free** — our
+  candidates A/B minus certificate and safety framing, aimed at OOD
+  generality (CALVIN/LIBERO-PRO). MUST-CITE vs our enforcement pilots.
+  Surviving differentiators: checked prefix certificate, the paired
+  repair-tax finding (no one compares vs in-denoising CBF repair matched
+  seeds), TSR/CAR separability, safety-specific attribution.
+- 2606.09749 "Your Model Already Knows": READS VLA attention heads for
+  target/obstacle ID -> CBF, SafeLIBERO + moving obstacles, beats stale
+  oracle by 43% dynamic. Identification-chapter competitor (vs FOL/folvlm);
+  MOVING-class comparison obligatory. Read-only; never writes activations.
+- pi0.7: prompt-level multimodal conditioning; no internal steering/safety.
+VERDICT: "safety-directed activation steering with certificate" survives
+only as a NARROW slot — a rung in Design_v3's E3 intervention ladder
+(probe->steer causal link), not a headline mechanism. Measurement-first
+framing (knowledge_action_gap/Design_v3_ICRA2027.md) strengthened by this
+audit. August literature refresh remains mandatory.
