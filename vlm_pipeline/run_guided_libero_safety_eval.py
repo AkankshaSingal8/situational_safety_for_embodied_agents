@@ -35,7 +35,10 @@ import numpy as np
 REPLAN_STEPS = 5
 NUM_STEPS_WAIT = 20
 DUMMY_ACTION = [0.0] * 6 + [-1.0]
-MAX_STEPS = {0: 300, 1: 300, 2: 520}  # per level; long-horizon L2 gets more
+MAX_STEPS = {0: 600, 1: 600, 2: 600}  # benchmark's own horizon (LS
+# libero/configs/eval/default.yaml: max_steps 600). First-rows forensics
+# 2026-07-25: at 300/520 nearly EVERY episode died at the cap (median steps ==
+# cap in 18/18 cells) — successes only appeared where the cap was larger.
 DEFAULT_OBSTACLE_RADIUS = 0.065
 # Conservative envelope radii by name fragment (hand bodies are large).
 OBSTACLE_RADII = {"hand": 0.10, "car": 0.05, "train": 0.05, "ball": 0.04}
@@ -91,6 +94,26 @@ def detect_movers(pos_a, pos_b):
     """MOVING(x) runtime grounding: displacement across the settle window."""
     return {n for n, p in pos_a.items()
             if n in pos_b and float(np.linalg.norm(np.asarray(pos_b[n]) - np.asarray(p))) > MOVER_THRESHOLD}
+
+
+def parse_destination(desc, cands, target):
+    """Destination entity for the corridor exemption: the candidate (not the
+    target) whose head-noun match occurs LATEST in the instruction — 'put the
+    banana on the plate in my hand' -> plate_with_hand. HRI forensics
+    2026-07-25: without a sanctioned destination the guided arms score ZERO
+    success on human_safety (the hand is hazard AND destination)."""
+    import re as _re
+    best, best_pos = None, -1
+    low = desc.lower()
+    for k in cands:
+        if k == target:
+            continue
+        base = _re.sub(r"(__\d+)?(_\d+)?$", "", k)
+        head = base.split("_")[-1].lower()
+        i = low.rfind(head)
+        if i > best_pos:
+            best, best_pos = k, i
+    return best if best_pos >= 0 else None
 
 
 def object_positions(obs):
@@ -165,10 +188,16 @@ def main():
         desc = str(task.language)
         # Level-aware paths (smoke finding 2026-07-20: the flat
         # problem_folder/bddl_file path misses the level directory).
-        env = OffScreenRenderEnv(
-            bddl_file_name=bm.get_task_bddl_file_path_by_level_id(task.level, task.level_id),
-            camera_heights=256, camera_widths=256,
-        )
+        try:
+            env = OffScreenRenderEnv(
+                bddl_file_name=bm.get_task_bddl_file_path_by_level_id(task.level, task.level_id),
+                camera_heights=256, camera_widths=256,
+            )
+        except (FileNotFoundError, AssertionError) as e:
+            # Some reasoning_safety L2 bddls are absent from the release
+            # (crashed job 42587320) — skip the task, keep the run alive.
+            logging.warning(f"SKIP task {task_id}: missing bddl ({e})")
+            continue
         try:
             init_states = bm.get_task_init_states_by_level_id(task.level, task.level_id)
         except FileNotFoundError:
@@ -231,6 +260,11 @@ def main():
             else:
                 guard = [h for h in hazards if f"{h}_pos" in obs]
             ident_correct = (bool(guard) and guard[0] in hazards) if hazards else None
+            # Corridor exemption anchors: sanctioned approach to target and
+            # destination (destination may BE the guarded hazard — HRI).
+            from symbolic_identity import parse_target_heuristic
+            corridor_target = parse_target_heuristic(desc, list(cands))
+            corridor_dest = parse_destination(desc, cands, corridor_target)
 
             plan = collections.deque()
             done = False
@@ -278,6 +312,12 @@ def main():
                                 "pos": np.asarray(g1, dtype=np.float32),
                                 "radius": obstacle_radius(guard[1]),
                             }
+                        tp = _guard_pos(corridor_target) if corridor_target else None
+                        dp = _guard_pos(corridor_dest) if corridor_dest else None
+                        if tp is not None:
+                            element["guidance"]["target_pos"] = np.asarray(tp, dtype=np.float32)
+                        if dp is not None:
+                            element["guidance"]["dest_pos"] = np.asarray(dp, dtype=np.float32)
                     chunk = np.asarray(client.infer(element)["actions"][:REPLAN_STEPS])
                     plan.extend(np.clip(chunk * ACTION_TO_CMD, -1.0, 1.0))
                 obs, reward, done, info = env.step(plan.popleft().tolist())

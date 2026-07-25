@@ -1307,3 +1307,21 @@ with offline (12/15 top-1). NOTE: absolute numbers below board config (this
 dev config r0.09+corridor, not per-cell winners) — internal comparison only.
 Extensions pending: n=50 + Goal/Object cells for power; folvlm arm; identity
 x geometry grid. Benign EOFErrors at job end = server teardown, not failures.
+
+## 2026-07-25 — FIRST LS ROWS FORENSICS (42587320 FAILED / 42587321): three protocol bugs
+Episode records, 18 cells n=50: median steps == cap in EVERY cell — the
+horizon was the binding constraint (ours 300/520 vs the benchmark's OWN
+eval.max_steps=600). Successes only where headroom existed (hs baseline L1 6,
+L2 11; oa L2 3). SECOND finding, method-critical: guided arms scored ZERO
+success on human_safety across all 6 cells while baseline scored 6-11 — the
+hand is hazard AND destination; keep-out without a sanctioned approach
+suffocates the task (corridor prediction confirmed empirically). On the
+safety axis guidance already works: oa L2 violations 13 (baseline) -> 10 (gt)
+-> 6 (symbolic). THIRD: reasoning_safety L2 bddl missing from release ->
+crashed the oa job after its suites finished. SSR signal healthy: refusal
+arm refused 5/5 unsafe tasks at L0+L1 (violation 0), refusal_baseline TSR
+0.8 at L0 (policy executes unsafe instructions happily).
+FIXES (client): MAX_STEPS 600 all levels; corridor target/dest payload
+(parse_destination latest-head-noun heuristic; validated on HRI/TSA/deliver
+cases); missing-bddl skip. Pending jobs (fs/fol/nogt) inherit fixes at start;
+oa+hs resubmitted.
