@@ -1325,3 +1325,19 @@ FIXES (client): MAX_STEPS 600 all levels; corridor target/dest payload
 (parse_destination latest-head-noun heuristic; validated on HRI/TSA/deliver
 cases); missing-bddl skip. Pending jobs (fs/fol/nogt) inherit fixes at start;
 oa+hs resubmitted.
+
+## ★★ 2026-07-25 — ADJOINT STAGE 2 (job 42606959): SIGNIFICANT TSR win on dev cells
+Paired n=20/task, same seeds, GT identity, identical certificate; only
+enforcement differs (composed repair vs adjoint noise-ascent, ascent gated
+at tau=0.02, 5 steps, K=8 seed-select warm start):
+| dev cells | control repair | adjoint | paired McNemar |
+| Spatial L1 t0+t1 | 32.5/17.5 | **67.5/20.0** | TSR 19 vs 5 discordant, p=0.0066; collisions 3 vs 4, p=1.0 |
+| Object L1 t1 | 30.0/0.0 | 10.0/0.0 | TSR 5 vs 1, p=0.22 (ns); the known CAR=0 stuck cell |
+READ: on obstacle-near-path geometry the projection's off-manifold repair tax
+is the TSR killer; noise-space search finds on-manifold trajectories that are
+safe AND executable. Safety axis unchanged (collision ties). Object t1 needs
+forensics (ascent may push away from a grasp the obstacle overlaps).
+NOT FINAL per protocol: await select-only / FK / repulsor (job 42606966) to
+attribute the Spatial win between seed selection and gradient ascent, then
+rank all candidates. TODO: latency read-out from server logs; certificate
+pass-rate telemetry comparison.
