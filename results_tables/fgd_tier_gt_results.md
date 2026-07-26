@@ -1666,3 +1666,19 @@ SUITE-DEPENDENT, consistent with checkpoint-provenance, and the odd L0<L1
 ordering flags a possible level-convention mismatch (footnote). ALL LS board
 cells now exist (5 suites x 2 checkpoints x GT/no-GT + refusal). Last open
 slot: enforcement acceptance-box verdict (42641021 + 42638805).
+
+## ★ 2026-07-26 — ACCEPTANCE BOX: edges OUT at n=200, midpoints IN at n=80; deciding run submitted
+Spatial L1, box = TSR>=67.0 AND CAR>=28.5 (beat baseline 67/14 + reimpl
+62/28.5 on both axes):
+| arm | n | TSR/CAR | box |
+| fk_eta003    | 200 | 68.5/24.5 | OUT (CAR -4.0) |
+| eta005_only  | 200 | 65.0/34.0 | OUT (TSR -2.0) |
+| fk_eta004    |  80 | 67.5/33.8 | IN  |
+| fk_eta0045   |  80 | 67.5/35.0 | IN  |
+Both interpolated midpoints sit inside the box at n=80, straddled by the
+two n=200-confirmed edges — the frontier is smooth, so the midpoints are
+expected to hold. Deciding run: 42662560 (fk_eta004 + fk_eta0045, n=50/task
+= 200 eps + Object t1 50). Note Object t1 CAR=0 for all weak-eta arms
+(unstick needs eta=.01); t1 is quoted separately, not part of the box.
+Ops note: first resubmit ran at script-default N=20 (export dropped) —
+edges' n=200 numbers came from the parallel line's rerun.
