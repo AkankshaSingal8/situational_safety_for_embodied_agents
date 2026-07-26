@@ -1647,3 +1647,10 @@ overlay+repair CAR 41.3 vs repair-alone 27.5 (E3 control, n=40) is a weak
 interaction hint — NOT pursued under paper lock-in; noted for future work.
 VERDICT: NO-GO as a mechanism; adopted as one line in the ablation section
 strengthening the intervention-point thesis.
+
+## 2026-07-26 — duality v3 (42638600): 40/44/12 viol=0 — routing recovers most of HRI
+Recipient-precedence fix nearly doubles v2 (18/20/6 -> 40/44/12; v1 24/20/14;
+baseline 54/56/26). Residual gap = t4-class cells (hand near path, NOT dest:
+hard keep-out blocks workspace — resolved by the finalized soft config) and
+L2 paraphrase cells hard for baseline too. Duality progression
+2->24->40 (L0) is the routing-ablation figure for the paper.
