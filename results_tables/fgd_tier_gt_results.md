@@ -1485,3 +1485,16 @@ no-GT FOL rows complete (images+instruction only): oa 14/24/0, hs 22/16/18,
 FSHOA 4/2/4, violations ~0 everywhere; beats self-run baseline BOTH axes on
 oa L0/L1. GT+no-GT board on the finetune now complete except affordance
 (42631100 queued) and hs duality rerun (42631732).
+
+## 2026-07-25 — RENOISE (candidate D) KILLED by its pre-registered baseline (42629590)
+Dev cells n=20 paired: escalate 62.5/22.5 vs rejection-sampling 65.0/22.5
+(Spatial), 5.0/0.0 both (Object t1); paired McNemar p=1.0 on every axis.
+The escalating-depth SDEdit operator adds NOTHING over plain
+resample-until-pass at equal compute — exactly the kill condition the
+novelty audit pre-registered. NO-GO; rejection-until-pass is just best-of-K
+with more K, already covered by SELECT. NOTE the convergence: all
+noise-space variants land at 62.5-67.5 TSR on these cells (select 55, FK 65,
+adjoint 67.5, renoise 62.5-65) — the family's value is established, the
+differentiator among its members is COMPUTE, where FK (reweighting, ~free)
+wins. Enforcement selection now awaits only round 2 (FK+repulsor
+composition, 42626351 running).
