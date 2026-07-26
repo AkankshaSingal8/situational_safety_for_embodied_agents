@@ -1,4 +1,21 @@
-# Certificates for In-Denoising DCBF Repair on a Frozen Flow Policy
+# Certificates for Safety Enforcement on a Frozen Flow Policy
+
+## Attribution note (2026-07-25, after checking 2607.01378 in full)
+
+The DCBF chain condition and its geometric-decay induction (`B_t >=
+(1-gamma)^t B_0`) are TEXTBOOK (Agrawal & Sreenath 2017), and 2607.01378
+uses them the same way we do — as background, not a contribution. That paper
+proves NOTHING about its own pipeline: no feasibility under actuation
+limits (its min-norm delta* is unconstrained), no certificate on the
+EXECUTED chunk (corrections at intermediate denoising steps; final actions
+never re-verified), no infeasibility handling. Our contributions are
+therefore exactly: Thm 1 (saturation/brake feasibility), the CHECKED
+certificate semantics (soundness independent of whether guidance worked —
+a property of the output, not the procedure), Prop 3 (K-candidate selection
+soundness), and §5 (mechanism-independence over noise-space operators,
+which correction-based arguments cannot cover). Present Thm 2's induction
+as a lemma WITH CITATION; the novelty is in what is being certified and
+when it is checked, not the induction itself.
 
 Draft theory appendix (2026-07-25). Every statement is checked against the
 implementation in `openpi_guided/src/openpi/models/pi0_guided.py`; honest-claims
