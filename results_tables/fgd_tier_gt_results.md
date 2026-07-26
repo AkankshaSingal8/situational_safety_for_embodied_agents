@@ -1580,3 +1580,14 @@ blocks workspace — the case for SOFT enforcement, resolved by the finalized
 noise-space config in the LS board rerun). Recipient-precedence fix
 committed; dual3 rerun submitted. NOTE baseline t1/t2 (plate-in-hand) are
 0.0 themselves — the suite's hard tasks are hard for everyone.
+
+## 2026-07-26 — ENFORCEMENT ACCEPTANCE CRITERION (user directive) + midpoint arms
+User: the enforcement config must beat BOTH baseline AND SOTA-reimpl on BOTH
+TSR and CAR. Box on Spatial L1: TSR >= 67.0 AND CAR >= 28.5. The two queued
+finalization arms each miss one edge at n=80 (fk_eta003 70/25 CAR-short;
+eta005_only 65/38.8 TSR-short). Companion job 42638805 adds interpolated
+fk_eta004 (~67.5/29.4 projected, the corner) + fk_eta0045 backup, n=50/task
+seed-paired. Selection rule: an arm must sit in the box at n=200 to become
+THE enforcement config; if none does, composed repair (which already
+dominates both refs on the no-GT board: 70.0/46.5) STAYS production and the
+noise-space family is reported as the tunable-frontier section.
