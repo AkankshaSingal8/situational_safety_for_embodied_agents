@@ -148,6 +148,10 @@ def main():
     ap.add_argument("--save_videos", action="store_true")
     ap.add_argument("--max_steps", type=int, default=None,
                     help="Override the per-level step cap (diagnostics)")
+    ap.add_argument("--raw_actions", action="store_true",
+                    help="Checkpoint outputs [-1,1] commands (off-the-shelf "
+                         "pi05_libero) — skip the metric ACTION_TO_CMD "
+                         "conversion that the LS finetune needs")
     ap.add_argument("--replan_steps", type=int, default=5,
                     help="Actions executed per chunk before replanning (10 = "
                          "openpi's default full-chunk LIBERO consumption)")
@@ -336,6 +340,9 @@ def main():
                         if dp is not None:
                             element["guidance"]["dest_pos"] = np.asarray(dp, dtype=np.float32)
                     chunk = np.asarray(client.infer(element)["actions"][:args.replan_steps])
+                    if args.raw_actions:
+                        plan.extend(np.clip(chunk, -1.0, 1.0))
+                        continue
                     plan.extend(np.clip(chunk * ACTION_TO_CMD, -1.0, 1.0))
                 obs, reward, done, info = env.step(plan.popleft().tolist())
                 cost = env.env._check_constraint(done)
