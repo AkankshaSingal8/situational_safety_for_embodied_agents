@@ -1560,3 +1560,13 @@ four testbeds agree — the language channel modulates TASK behavior, never
 safety. DECISION: safety-prompt NOT adopted; kept as ablation row + the
 behavioral linguistic-blindness-for-safety finding (policy hears language,
 does not avoid). N2 negative guidance stays dead.
+
+## ★ 2026-07-26 — ETA SWEEP (42635810): lock-in region found; n=200 finalization launched
+Full Spatial L1 n=80/arm: fk+eta.003 70.0/25.0 (beats baseline both axes;
+reimpl CAR -3.5 short) | fk+eta.005 65.0/33.8 (beats reimpl both axes;
+baseline TSR -2) | eta.005-only 65.0/38.8 + Object t1 55.0 (beats reimpl
+both axes; simplest mechanism; unstick strongest). All deltas inside n=80
+noise -> finalization at board scale: 42638199, fk_eta003 + eta005_only,
+n=50/task (200 eps/arm) vs stored n=200 baseline/reimpl rows. Whichever
+survives both-axes at n=200 becomes THE enforcement config for the paper
+board + the minimal-GT goal arm + the LS suites.
