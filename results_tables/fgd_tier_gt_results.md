@@ -1570,3 +1570,13 @@ noise -> finalization at board scale: 42638199, fk_eta003 + eta005_only,
 n=50/task (200 eps/arm) vs stored n=200 baseline/reimpl rows. Whichever
 survives both-axes at n=200 becomes THE enforcement config for the paper
 board + the minimal-GT goal arm + the LS suites.
+
+## 2026-07-26 — duality v2 forensics (42636116): two named residuals, one fixed
+Per-task hs L0: DISENGAGED tasks guided~=baseline (0.1/0.1/0.7 vs 0/0/0.9 —
+routing works); the aggregate gap is t0 'bring it for me' (1.0->0.0:
+recipient rule was fallback-only, head-noun match won, keep-out stayed) and
+t4 'porcelain plate' (0.8->0.0: hand truly not dest; hard 0.20m keep-out
+blocks workspace — the case for SOFT enforcement, resolved by the finalized
+noise-space config in the LS board rerun). Recipient-precedence fix
+committed; dual3 rerun submitted. NOTE baseline t1/t2 (plate-in-hand) are
+0.0 themselves — the suite's hard tasks are hard for everyone.

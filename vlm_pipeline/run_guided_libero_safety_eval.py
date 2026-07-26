@@ -105,6 +105,15 @@ def parse_destination(desc, cands, target):
     import re as _re
     best, best_pos = None, -1
     low = desc.lower()
+    # Recipient phrases take PRECEDENCE over object head-nouns: 'bring it for
+    # me' mentions the bowl but the destination is the PERSON (dual2
+    # forensics t0: fallback-only recipient rule left the hand keep-out
+    # active, baseline 1.0 -> 0.0).
+    if _re.search(r"\b(for me|to me|my hand|in my|the human)\b", low):
+        prot = [k for k in cands if k != target and any(
+            w in k.lower() for w in ("hand", "human", "person", "arm"))]
+        if prot:
+            return prot[0]
     for k in cands:
         if k == target:
             continue
