@@ -1621,3 +1621,13 @@ on SafeSR across the physical suites, and sweeps the SSR track — the
 training-free-vs-training row the ICRA argument wanted. hs on base ckpt
 needs the duality arm (known regime). Guided arms here still run ramp
 repair; the finalized soft config (42638199) can only improve them.
+
+## 2026-07-26 — session sync note + paper draft v2
+Parallel-session reconciliation: acceptance box adopted (TSR>=67.0 AND
+CAR>=28.5, Spatial L1 n=200); edge-arm finalization job 42638199 FAILED
+(transient EGL core dump on w002 after ep0) -> resubmitted as 42640949;
+midpoint job 42638805 (fk_eta004/fk_eta0045) running. paper/main.tex
+rewritten from the 147-line skeleton into a full 7-page IEEE draft (compiles
+clean, all numbers ledger-sourced, 6 todo slots incl. the finalization box
+verdict). Known text gaps flagged by the drafting pass: affordance guided
+row "~neutral" (2 of 3 levels), composed-repair control n=40 noted inline.
