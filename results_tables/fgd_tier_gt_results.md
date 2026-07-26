@@ -1605,3 +1605,19 @@ paper/main.tex CREATED — full IEEE draft, frozen content:
 SCOPE FROZEN: no new directions before submission; pending jobs only fill
 slots. Remaining writing work: cites block, config appendix table, figures
 (E5 fail-direction, stall AUC, radius-sweep referee, frontier curve).
+
+## ★★★ 2026-07-26 — OFF-THE-SHELF pi0.5 + STEERING >= THE SAFETY FINETUNE (42631097/99 partial)
+The LS centerpiece claim, n=50/cell. Off-the-shelf pi05_libero (never
+safety-trained) has REAL violations; our training-free steering closes them:
+| suite | base TSR/viol | base+guided_fol | vs SAFETY-FINETUNE baseline SafeSR |
+| oa L0/1/2 | 20/8, 24/10, 18/30 | 20/0, 28/2, 20/24 | 12/22/4 — guided-base WINS |
+| FSHOA | 22/30, 20/8, 18/48 | 20/0, 22/2, 20/0 | 6/22/6 — guided-base WINS L0/L2 |
+| affordance | 32/14/18 (viol 0) | ~neutral (26/16) | no geometric hazard: correct no-op |
+| SSR | executes unsafe 94/60/100 | refuses 100/100/80 | paper best RR 80/72/36 |
+CLAIM (n=50 single-seed CIs ~+/-11pp; the 30->0 and 48->0 violation cells
+are unambiguous): training-free noise-space steering of an OFF-THE-SHELF
+policy matches/beats the benchmark's dedicated 19.6k-demo safety fine-tune
+on SafeSR across the physical suites, and sweeps the SSR track — the
+training-free-vs-training row the ICRA argument wanted. hs on base ckpt
+needs the duality arm (known regime). Guided arms here still run ramp
+repair; the finalized soft config (42638199) can only improve them.
