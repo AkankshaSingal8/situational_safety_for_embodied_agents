@@ -113,6 +113,16 @@ def parse_destination(desc, cands, target):
         i = low.rfind(head)
         if i > best_pos:
             best, best_pos = k, i
+    if best_pos < 0:
+        # Recipient phrases ('bring it for me', 'deliver it to me', 'in my
+        # hand') name no object head-noun — the destination is the PERSON:
+        # route to the protected-class candidate (hs duality forensics:
+        # these episodes kept the hand keep-out active and collapsed).
+        if _re.search(r"\b(for me|to me|my hand|in my|the human)\b", low):
+            prot = [k for k in cands if k != target and any(
+                w in k.lower() for w in ("hand", "human", "person", "arm"))]
+            if prot:
+                return prot[0]
     return best if best_pos >= 0 else None
 
 

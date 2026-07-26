@@ -1534,3 +1534,18 @@ certified, training-free, TUNABLE safety-performance frontier in noise +
 velocity space", with the lock-in point (beat baseline + reimpl both axes)
 expected between eta 0 and 0.01. Eta-sweep submitted (42635810: fk+eta.003,
 fk+eta.005, eta.005-only, n=20 full Spatial L1).
+
+## 2026-07-25 — FSHOA COMPLETE (42621761) + duality v1 partial recovery (42631732)
+FSHOA (obstacle_avoidance_human, hands as obstacles), n=50/cell:
+| level | baseline TSR/Safe | guided (gt/sym/fol) TSR, all Safe=100 |
+| L0 | 8/60 (40% hand hits!) | 2 / 4 / 2 |
+| L1 | 22/100 | 16 / 16 / 14 |
+| L2 | 18/76 | 6 / 10 / 4 |
+THE suite where guidance buys real safety: violations 40%->0 and 24%->0.
+On SafeSR the guided arms ~match baseline while closing the safety axis.
+human_safety duality v1: 24/20/14 TSR viol=0 (vs pre-duality guided 2-18,
+baseline 54/56/26). 90/150 episodes disengaged; misses = recipient-phrase
+tasks ('bring it for me' — no object head-noun, dest parse None, hand
+keep-out stayed active). Recipient rule added to parse_destination
+(for me/to me/my hand -> protected candidate is the destination);
+rerun ls_hs_dual2 submitted.
