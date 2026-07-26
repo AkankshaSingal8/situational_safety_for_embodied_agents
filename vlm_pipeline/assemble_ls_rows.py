@@ -10,7 +10,8 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).parents[1] / "ls_rows"
 ARMS = ["baseline", "guided_gt", "guided_symbolic", "guided_fol",
-        "refusal_baseline", "refusal"]
+        "guided_nogt_fol", "guided_nogt_sym", "prompt_baseline",
+        "prompt_guided", "refusal_baseline", "refusal"]
 
 # Paper (arXiv 2606.23686) Table 3, pi0.5 row, SR = success with ZERO
 # violations (violation terminates the episode as failure). Suite mapping:

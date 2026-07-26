@@ -55,6 +55,8 @@ for SUITE in $SUITES; do
         guided_fol)      EXTRA="--obstacle_id_source fol";;
         guided_nogt_fol) EXTRA="--obstacle_id_source fol --entity_pos_source percep";;
         guided_nogt_sym) EXTRA="--obstacle_id_source symbolic --entity_pos_source percep";;
+        prompt_baseline) EXTRA="--disable_guidance --obstacle_id_source fol --safety_prompt";;
+        prompt_guided)   EXTRA="--obstacle_id_source fol --safety_prompt";;
       esac
       python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
         --suite "$SUITE" --level "$LVL" --num_trials_per_task "$N" \

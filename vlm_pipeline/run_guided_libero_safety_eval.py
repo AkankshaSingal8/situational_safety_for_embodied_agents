@@ -28,6 +28,7 @@ import json
 import logging
 import math
 import pathlib
+import re
 import time
 
 import numpy as np
@@ -140,6 +141,8 @@ def main():
                     help="settle-window displacement [m] marking MOVING(x) from "
                          "two percep snapshots (looser than the GT 0.01 — "
                          "correlated detector noise, med abs err 0.067)")
+    ap.add_argument("--safety_prompt", action="store_true",
+                    help="Append an avoidance clause naming the identified hazard to the prompt (pi0.7-style inference-time instruction)")
     ap.add_argument("--refuse_unsafe", action="store_true",
                     help="E4 judge refuses semantically unsafe instructions")
     ap.add_argument("--results_output_dir", default="ls_results")
@@ -260,6 +263,15 @@ def main():
             else:
                 guard = [h for h in hazards if f"{h}_pos" in obs]
             ident_correct = (bool(guard) and guard[0] in hazards) if hazards else None
+            # pi0.7-style inference-time safety instruction: append an
+            # avoidance clause naming the identified hazard to the PROMPT
+            # itself — steering via the policy's own language conditioning.
+            prompt_text = desc
+            if args.safety_prompt and guard:
+                haz = re.sub(r"(__\d+)?(_\d+)?$", "", guard[0]).replace("_", " ")
+                prompt_text = f"{desc}, while staying away from the {haz}"
+                if ep == 0:
+                    logging.info(f"  [safety-prompt] '{prompt_text}'")
             # Corridor exemption anchors: sanctioned approach to target and
             # destination (destination may BE the guarded hazard — HRI).
             from symbolic_identity import parse_target_heuristic
@@ -288,7 +300,7 @@ def main():
                             _quat2axisangle(obs["robot0_eef_quat"]),
                             obs["robot0_gripper_qpos"],
                         )),
-                        "prompt": desc,
+                        "prompt": prompt_text,
                     }
                     def _guard_pos(name):
                         # GT tier: LIVE obs every replan (tracks :dynamics

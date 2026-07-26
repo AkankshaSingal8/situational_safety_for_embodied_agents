@@ -254,6 +254,9 @@ def parse_args():
                              "shape family; 1.0 = ellipsoid). 'sphere' = legacy scalar radius.")
     parser.add_argument("--corridor", action="store_true",
                         help="Send parsed target/destination positions for the corridor exemption (GT tier).")
+    parser.add_argument("--safety_prompt", action="store_true",
+                        help="Append an avoidance clause naming the identified hazard "
+                             "to the prompt (pi0.7-style inference-time instruction)")
     parser.add_argument("--max_steps", type=int, default=None,
                         help="Override the per-suite episode step cap (cap-sensitivity "
                              "ablation; default = TASK_MAX_STEPS table).")
@@ -609,7 +612,9 @@ def run_eval(args):
                                 _quat2axisangle(obs["robot0_eef_quat"]),
                                 obs["robot0_gripper_qpos"],
                             )),
-                            "prompt": str(task_description),
+                            "prompt": (f"{task_description}, while staying away from the "
+                                       + str(obstacle_name).replace("_obstacle", "").replace("_", " ")
+                                       if args.safety_prompt and obstacle_name else str(task_description)),
                         }
                         if obstacle_name is not None:
                             element["guidance"] = {
