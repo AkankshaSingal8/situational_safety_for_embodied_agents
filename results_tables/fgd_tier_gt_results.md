@@ -1549,3 +1549,14 @@ tasks ('bring it for me' — no object head-noun, dest parse None, hand
 keep-out stayed active). Recipient rule added to parse_destination
 (for me/to me/my hand -> protected candidate is the destination);
 rerun ls_hs_dual2 submitted.
+
+## 2026-07-25 — LS PROMPT ARMS (42628265): safety-prompt verdict FINAL — not a safety mechanism
+L0, n=50/cell vs same-protocol references:
+oa: prompt_baseline 20/8viol (baseline 12/4) — TSR +8, violations UP;
+    prompt_guided 10/2 (guided_fol 16/0) — hurts the guided arm.
+hs: prompt_baseline 46/0 (baseline 54/0) — TSR -8; prompt_guided 2/0.
+Combined with SafeLIBERO pilots (TSR +8..+10 trend, CAR immovable):
+four testbeds agree — the language channel modulates TASK behavior, never
+safety. DECISION: safety-prompt NOT adopted; kept as ablation row + the
+behavioral linguistic-blindness-for-safety finding (policy hears language,
+does not avoid). N2 negative guidance stays dead.
