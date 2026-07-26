@@ -1516,3 +1516,21 @@ READS (n=40 — trends, NOT significant; z~1.1 on the TSR delta):
    baseline) requires the FK+repulsor COMPOSITION on the percep tier —
    pending round 2 (42626351) verdict; if composition wins, submit
    nogt_composed as the goal-test arm at n>=20.
+
+## ★★ 2026-07-25 — ROUND 2 (42626351): the enforcement family is a TUNABLE PARETO FRONT
+Full Spatial L1 n=80/arm + Object t1 n=20, paired:
+| arm | Spatial TSR/CAR | Object t1 |
+| FK tilt | 71.2/17.5 | 5.0 |
+| repulsor (eta .01) | 60.0/50.0 | 50.0 |
+| FK+repulsor | 48.8/57.5 | 40.0 |
+| composed-repair control (paired n=40) | 55.0/27.5 | — |
+| baseline (n=200) | 67.0/14.0 | — |
+Paired: composed safer than FK (nocol 33v1, p=4e-4) but repulsor-alone BEATS
+the composition on TSR (17v6, p=0.035) — naive FK+field composition
+over-conservatizes. FK alone beats baseline both axes (71.2/17.5). Repulsor
+Object-t1 unstick REPLICATES at 50%. READ: (beta, eta) trace a smooth
+TSR-CAR frontier 71/17 -> 60/50 -> 49/57 — the paper claim becomes "a
+certified, training-free, TUNABLE safety-performance frontier in noise +
+velocity space", with the lock-in point (beat baseline + reimpl both axes)
+expected between eta 0 and 0.01. Eta-sweep submitted (42635810: fk+eta.003,
+fk+eta.005, eta.005-only, n=20 full Spatial L1).

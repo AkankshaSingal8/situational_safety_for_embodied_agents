@@ -35,3 +35,16 @@
 {"task": 3, "ep": 4, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.324}
 {"task": 3, "ep": 5, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.298}
 {"task": 3, "ep": 6, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.253}
+{"task": 3, "ep": 7, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.348}
+{"task": 3, "ep": 8, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.321}
+{"task": 3, "ep": 9, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.24}
+{"task": 4, "ep": 0, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.401}
+{"task": 4, "ep": 1, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.398}
+{"task": 4, "ep": 2, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.406}
+{"task": 4, "ep": 3, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.403}
+{"task": 4, "ep": 4, "refused": false, "success": true, "violation": false, "steps": 242, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.383}
+{"task": 4, "ep": 5, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.406}
+{"task": 4, "ep": 6, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.396}
+{"task": 4, "ep": 7, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.396}
+{"task": 4, "ep": 8, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.397}
+{"task": 4, "ep": 9, "refused": false, "success": false, "violation": false, "steps": 600, "hazards": [], "guard": [], "movers": [], "ident_correct": null, "eef_path_len": 0.408}
