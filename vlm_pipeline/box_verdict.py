@@ -21,7 +21,11 @@ def latest(arm, suite):
     if not fs:
         return None
     with open(fs[-1]) as f:
-        return json.load(f), os.path.basename(fs[-1])
+        d = json.load(f)
+    for k in ("overall_TSR", "overall_CAR"):
+        if d[k] <= 1.0:  # stored as fraction
+            d[k] *= 100.0
+    return d, os.path.basename(fs[-1])
 
 
 winners = []
@@ -40,7 +44,8 @@ for arm in ARMS:
     line = f"{arm:12s}  spatial {tsr:5.1f}/{car:5.1f} n={n:<4d} {tag:24s} [{fn}]"
     if ob is not None:
         od = ob[0]
-        line += f"  | object-t1 {od['overall_TSR']:.1f}/{od['overall_CAR']:.1f} n={od['total_episodes']}"
+        line += (f"  | object-t1 {od['overall_TSR']:.1f}/"
+                 f"{od['overall_CAR']:.1f} n={od['total_episodes']}")
     print(line)
     if in_box and full:
         winners.append((car, tsr, arm))
