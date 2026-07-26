@@ -257,6 +257,10 @@ def parse_args():
     parser.add_argument("--safety_prompt", action="store_true",
                         help="Append an avoidance clause naming the identified hazard "
                              "to the prompt (pi0.7-style inference-time instruction)")
+    parser.add_argument("--visual_overlay", action="store_true",
+                        help="pi0.7-style visual conditioning: draw the keep-out "
+                             "disk (red) + target ring (green) into the agentview "
+                             "image the policy consumes (image channel, not text)")
     parser.add_argument("--max_steps", type=int, default=None,
                         help="Override the per-suite episode step cap (cap-sensitivity "
                              "ablation; default = TASK_MAX_STEPS table).")
@@ -593,6 +597,20 @@ def run_eval(args):
                 try:
                     img = np.ascontiguousarray(obs["agentview_image"][::-1, ::-1])
                     wrist_img = np.ascontiguousarray(obs["robot0_eye_in_hand_image"][::-1, ::-1])
+
+                    # pi0.7-style visual conditioning: steer through the image
+                    # channel (keep-out disk + target ring drawn into the
+                    # policy's agentview input), not the text prompt.
+                    if args.visual_overlay and obstacle_name is not None:
+                        from visual_conditioning import overlay_from_sim
+                        _vis_ents = parse_entities(task_description, entity_view(obs), sim=env.sim)
+                        _ovr_target = (np.asarray(_vis_ents["target_pos"])
+                                       if "target_pos" in _vis_ents else None)
+                        img = overlay_from_sim(
+                            img, env.sim, "agentview",
+                            np.asarray(guidance_obstacle_pos, dtype=np.float64),
+                            obstacle_radius(obstacle_name) + 0.06,
+                            target_pos=_ovr_target, rotated=True)
 
                     if args.save_videos:
                         replay_images.append(img)
