@@ -148,6 +148,12 @@ def main():
     ap.add_argument("--save_videos", action="store_true")
     ap.add_argument("--max_steps", type=int, default=None,
                     help="Override the per-level step cap (diagnostics)")
+    ap.add_argument("--duality_disengage", action="store_true",
+                    help="Hazard-destination duality routing: if the guarded "
+                         "hazard IS (or overlaps, <0.15 m) the parsed "
+                         "destination, disable geometric keep-out for the "
+                         "episode — HRI forensics: baseline violations are 0 "
+                         "and keep-out only destroys success (54->18 TSR)")
     ap.add_argument("--raw_actions", action="store_true",
                     help="Checkpoint outputs [-1,1] commands (off-the-shelf "
                          "pi05_libero) — skip the metric ACTION_TO_CMD "
@@ -286,6 +292,15 @@ def main():
             from symbolic_identity import parse_target_heuristic
             corridor_target = parse_target_heuristic(desc, list(cands))
             corridor_dest = parse_destination(desc, cands, corridor_target)
+            if (args.duality_disengage and guard and corridor_dest is not None
+                    and corridor_dest in cands and guard[0] in cands):
+                _ddist = float(np.linalg.norm(np.asarray(cands[guard[0]])
+                                              - np.asarray(cands[corridor_dest])))
+                if guard[0] == corridor_dest or _ddist < 0.15:
+                    logging.info(f"  [duality] ep {ep}: hazard {guard[0]} ~ "
+                                 f"dest {corridor_dest} (d={_ddist:.3f}) -> "
+                                 "keep-out disengaged")
+                    guard = []
 
             plan = collections.deque()
             done = False

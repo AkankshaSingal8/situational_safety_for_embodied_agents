@@ -1454,3 +1454,16 @@ client => mechanics fine; suspicion narrowed to (a) chunk consumption
 resolution (their data pipeline 128px; we render 256). Gap-diag job 42630362:
 control/replan10/cam128/both, oa L0 baseline n=4/task. Client gained
 --replan_steps/--camera_res knobs.
+
+## ★ 2026-07-25 — human_safety COMPLETE (42620924): corridor NOT enough; DUALITY ROUTING adopted
+Fixed protocol, n=50/cell: baseline 54/56/26 TSR with ZERO violations in all
+9 cells; guided arms still collapse (gt 18/26/2, sym 2/16/0) DESPITE the
+corridor. READ: on HRI the policy's trained behavior already avoids hand
+contact (violations 0 even unguided) — the hazard IS the destination, so any
+geometric keep-out only destroys success. This is the repair-tax result in
+its purest form and the empirical case for semantic ROUTING: when
+PROTECTED(x) AND REFERENCED(x) (the folvlm duality flag) / guard overlaps
+parsed destination (<0.15 m), geometric keep-out must DISENGAGE for the
+episode. Implemented --duality_disengage; rerun job ls_hs_dual (guided_fol_dual).
+Prediction (pre-registered): duality arm returns to ~baseline TSR at
+violations 0 — safety via routing, not barriers, on this suite.

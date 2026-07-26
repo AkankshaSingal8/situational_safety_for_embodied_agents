@@ -53,6 +53,7 @@ for SUITE in $SUITES; do
         guided_gt)       EXTRA="--obstacle_id_source gt";;
         guided_symbolic) EXTRA="--obstacle_id_source symbolic";;
         guided_fol)      EXTRA="--obstacle_id_source fol";;
+        guided_fol_dual) EXTRA="--obstacle_id_source fol --duality_disengage";;
         guided_nogt_fol) EXTRA="--obstacle_id_source fol --entity_pos_source percep";;
         guided_nogt_sym) EXTRA="--obstacle_id_source symbolic --entity_pos_source percep";;
         prompt_baseline) EXTRA="--disable_guidance --obstacle_id_source fol --safety_prompt";;
