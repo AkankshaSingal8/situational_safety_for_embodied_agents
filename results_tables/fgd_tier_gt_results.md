@@ -1467,3 +1467,21 @@ parsed destination (<0.15 m), geometric keep-out must DISENGAGE for the
 episode. Implemented --duality_disengage; rerun job ls_hs_dual (guided_fol_dual).
 Prediction (pre-registered): duality arm returns to ~baseline TSR at
 violations 0 — safety via routing, not barriers, on this suite.
+
+## 2026-07-25 — GAP DIAGNOSIS CLOSED (42630362) + no-GT FOL rows (42621760)
+Gap-diag, oa L0 baseline n=20/arm: control 20 / replan10 15 / cam128 5 /
+both 15. Chunk consumption and render resolution RULED OUT (cam128 hurts).
+With client mechanics (94% reasoning_safety), norm stats (byte-identical),
+and horizon (their 600) already ruled out, the remaining hypothesis is
+CHECKPOINT PROVENANCE: the paper trains two pi0.5 variants (50 vs 500 demos,
+Tab.5) and the HF release has NO model card and no eval harness — the
+released weights may not be the Table-3 checkpoint. Not further diagnosable
+from our side.
+PAPER STRATEGY (SafeLIBERO reimpl-referee precedent): all method claims are
+vs OUR self-run baseline on the released checkpoint (paired, same protocol);
+paper's published numbers quoted with a provenance footnote. The SSR sweep
+(100/100/80 vs 80/72/36) stands regardless — refusal is checkpoint-light.
+no-GT FOL rows complete (images+instruction only): oa 14/24/0, hs 22/16/18,
+FSHOA 4/2/4, violations ~0 everywhere; beats self-run baseline BOTH axes on
+oa L0/L1. GT+no-GT board on the finetune now complete except affordance
+(42631100 queued) and hs duality rerun (42631732).
