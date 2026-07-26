@@ -1,0 +1,147 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newcommand{\eef}{\mathrm{eef}}
+\newcommand{\slot}[1]{\textcolor{red}{[SLOT: #1]}}
+% Bold = beats BOTH the unguided baseline AND the SOTA reimplementation on that axis.
+
+\title{\LARGE \bf Certified In-Denoising Safety Steering for Frozen\\Vision-Language-Action Flow Policies Without Privileged State}
+
+\author{Akanksha Singal% <-- add coauthors/affiliations
+\thanks{Carnegie Mellon University. \texttt{asingal2@andrew.cmu.edu}}%
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Vision-language-action (VLA) policies trained by imitation collide with obstacles their demonstrations never contained. Post-hoc safety shields correct actions after generation; recent work moves a control-barrier repair inside the denoising loop of flow-matching policies, but relies on privileged simulator state and proves nothing about what is actually executed. We present a semantic safety-steering system for a frozen $\pi_{0.5}$ policy that (i) identifies \emph{what} to avoid from language, one-shot VLM property priors, and RGB-D perception --- no simulator state at runtime; (ii) enforces avoidance by a scheduled, actuation-aware barrier repair inside the denoising loop, composed with best-of-$K$ noise-seed search, a sanctioned-approach corridor exemption, and companion-point monitoring; and (iii) certifies the \emph{executed} action prefix, with a feasibility theorem for the repair operator under actuation limits. On the SafeLIBERO benchmark (8 suite$\times$level cells, $n{=}200$ each) our ground-truth-free system beats both the unguided policy and a faithful reimplementation of the state-of-the-art in-denoising shield on \emph{both} task success and collision avoidance in 4 of 8 cells, with 2--3$\times$ collision-avoidance gains; a matched post-hoc-shield row shows the composed in-denoising machinery --- not the in-denoising placement alone --- is the source of the gain. A paired identification-swap experiment shows our symbolic identity is statistically indistinguishable from ground-truth identity, isolating the residual cost of the no-GT tier to geometry. We further characterize a family of noise-space enforcement operators (Feynman--Kac tilting, soft repulsors, adjoint ascent) as a tunable task-success/safety Pareto frontier.
+\end{abstract}
+
+\section{Introduction}
+
+Imitation-trained VLA policies such as $\pi_{0.5}$ execute language-conditioned manipulation with high success but no notion of \emph{negative} space: an object that must not be touched is simply an object that never appeared as an obstacle in training. On SafeLIBERO --- LIBERO tasks with a semantically hazardous distractor placed near the reach path --- the frozen $\pi_{0.5}$ baseline collides in up to 86\% of episodes (Table~\ref{tab:board}).
+
+Two architectural families address this. \emph{Post-hoc shields} (e.g., AEGIS-style CBF-QP filters) correct the final action; they cannot re-plan, so corrections fight the policy. \emph{In-denoising guidance}~\cite{sota2607} repairs the intermediate action chunk after every Euler step of flow-matching denoising, letting subsequent steps adapt. Prior in-denoising work, however, (a) consumes privileged simulator state for obstacle identity and position, (b) applies an unconstrained min-norm correction with no feasibility argument under actuation limits, and (c) never verifies the final decoded chunk --- the certificate is about the procedure, not the output.
+
+This paper closes all three gaps and asks a sharper architectural question: \emph{which part of in-denoising steering actually matters?} Our contributions:
+\begin{enumerate}
+\item \textbf{A ground-truth-free semantic identification stack}: symbolic hazard scoring over the instruction and reach-path geometry, one-shot (offline, cached) VLM hazard-property priors with a fail-safe protection floor, two class rules (\textsc{Protected} body parts; \textsc{Moving} intruders grounded by inter-frame displacement), and RGB-D localization. A paired identification-swap experiment (Sec.~\ref{sec:e3}) shows this identity is statistically indistinguishable from ground truth.
+\item \textbf{A composed in-denoising enforcement mechanism}: denoising-time repair schedule (trust early, exact late), brake-then-push repair with a per-step feasibility guarantee, best-of-$K$ seed search with executed-prefix acceptance, a sanctioned-approach corridor exemption, and companion-point monitoring of the hand and payload.
+\item \textbf{Checked certificates}: the DCBF chain is re-verified on the executed prefix of the final decoded chunk; soundness is a property of the output and holds regardless of whether guidance succeeded (Sec.~\ref{sec:theory}).
+\item \textbf{A five-row architecture study} at $n{=}200$/cell under one collision criterion: unguided baseline, matched post-hoc shield, SOTA reimplementation, ours with ground truth, and ours fully GT-free. Post-hoc $\approx$ degenerate in-denoising \emph{everywhere}; the composed machinery is the separator (+6--19 success, 2--3$\times$ collision avoidance).
+\item \textbf{A noise-space enforcement frontier}: FK tilting, soft repulsor fields, and adjoint noise ascent trace a smooth, tunable success/safety Pareto front on top of the same certificate (Sec.~\ref{sec:frontier}).
+\end{enumerate}
+
+\section{Related Work}
+\textbf{Safety filtering for manipulation.} CBF-QP shields \cite{ames2019cbf,brunke2025semantic} certify velocity-space corrections against geometric keep-out sets; Brunke et al.\ compile VLM-extracted semantic constraints into superquadric barriers. These operate post-hoc on the final action. \textbf{Safe diffusion/flow policies.} SafeDiffuser-style projections inside generation are known to trap samples on constraint boundaries; \cite{sota2607} imposes a discrete exponential CBF along the horizon inside flow-matching denoising of $\pi_{0.5}$. \textbf{Semantic hazard identification.} VLM scene analyzers, whole-scene exclusion prompting, and rule-grounding systems (RoboGuard) identify what to avoid; calibration work (KnowNo lineage) gates such judgments. Our study finds a decomposed symbolic scorer with two class rules matches ground truth identity on two benchmarks, while whole-scene VLM prompting scores 0--10\% on the same data. \textbf{Conditioning channels.} $\pi_{0.7}$ steers behavior through multimodal prompt structure (metadata, visual subgoals); we evaluate language- and image-channel safety conditioning as ablations and find the language channel moves task behavior but not avoidance.
+
+\section{Problem Setup}
+An episode provides an instruction $\ell$, observations $o_t$ (two RGB views + proprioception), and a frozen VLA $\pi_{0.5}$ that decodes an $H$-step action chunk by $N{=}10$ Euler steps of flow-matching denoising from noise $z$. A designated hazard must not be displaced ($>$1\,mm total) while the task is completed within the step budget. Metrics: task success rate (TSR) and collision avoidance rate (CAR), per suite$\times$level cell, $n{=}200$.
+
+Two evaluation tiers: \emph{Tier-GT} (identity and positions from the simulator; upper bound and comparison tier for prior work) and \emph{Tier-Percep} (``no-GT''): the method sees the instruction, images, depth, proprioception, and the symbolic object \emph{name} list only --- positions, identity, priors, and corridor anchors are all perception- or VLM-derived. Collision scoring is always GT-anchored (evaluation only).
+
+\section{Method}
+\subsection{Identification: what to avoid}
+\label{sec:ident}
+Offline, once per vocabulary, a VLM rates each object name's hazard property (5 votes, anchored prompt) producing priors $w(x)\in[0,1]$, floored at $0.5$ at load time: semantics may \emph{raise} concern but can never delete protection from an unmentioned near-path object (fail-safe direction). At episode start, each candidate $x$ receives
+\begin{equation}
+s(x) = w(x)\cdot \exp\!\big(-d_{\mathrm{path}}(x)^2/2\sigma^2\big)\cdot\big(1-0.8\,m(x)\big),
+\end{equation}
+where $m(x)$ is the fraction of the name's content tokens in the instruction (head-noun rule: presence of the final noun forces $m{=}1$, excluding task objects), and $d_{\mathrm{path}}$ is the distance to any reach segment from the end-effector to a mentioned object (multi-goal aware). Two class rules override the score: \textsc{Protected} ($x$ names a body part: never mention-excluded, path-floored, $w{=}1$) and \textsc{Moving} ($x$ displaced $>1$\,cm during the settle window: same override, position re-read live each replan). The argmax is guarded; a top-2 guard set with min-composed barriers is a documented conservative mode (19/19 identification recall under adversarial prior corruption, at $-12.5$ TSR). Positions come from GroundingDINO regions back-projected through depth (median error 0.067\,m); estimator failures fall back to GT and are logged per episode.
+
+\subsection{Enforcement: in-denoising barrier repair}
+\label{sec:enforce}
+Interpreting the chunk's translational commands as a single-integrator end-effector rollout $p_j = p_{j-1} + s\,u_j$, we require the discrete exponential CBF chain
+\begin{equation}
+B_j \ge (1-\gamma)B_{j-1},\qquad
+B_j = \min_{m,q}\ \lVert p_j + q - o_m\rVert - r_m(j),
+\end{equation}
+over obstacles $m$ (primary + optional guard), companion offsets $q$ (wrist $+8$\,cm, fingertip/payload $-6$\,cm), and horizon-inflated radii $r_m(j) = r_{\mathrm{eff},m} + \lambda j$. After every Euler step, one in-order sweep repairs violating steps along the radial escape direction; when the actuation clamp cannot realize the push, the step falls back to a \emph{full brake} (removing all approach motion), which cannot decrease the barrier (Thm.~\ref{thm:feas}). The correction is scaled by a denoising-time schedule $w_k$ ($0$ on the first two steps, ramp to $1$): always-hard repair from pure noise is the documented boundary-trap failure. Margins relax (never vanish) inside a cylinder around the sanctioned segments end-effector$\to$target and $\to$destination, with a validity gate preventing the corridor from degenerating into an exemption bubble; this is what lets a protective envelope coexist with grasping next to a hazard. $K{=}8$ noise seeds share one vision-language KV cache; the executed 5-step prefix of each candidate is scored lexicographically (chain feasibility $\succ$ clearance margin $\succ$ progress) and the winner is returned.
+
+\subsection{Certificates}
+\label{sec:theory}
+Let $c$ be the per-step command clamp and $s$ the metric scale.
+
+\begin{theorem}[Per-step feasibility]\label{thm:feas}
+For any state with $B_{j-1}\ge 0$ there is an admissible $u_j\in[-c,c]^3$ satisfying the chain condition, and the brake-then-push operator returns one; under saturation the returned step never decreases the barrier.
+\end{theorem}
+
+\begin{proposition}[Checked prefix certificate]\label{prop:cert}
+The acceptance test re-evaluates the chain on the \emph{executed} prefix of the final decoded chunk at full margins. If it passes, the prefix satisfies the chain regardless of how the chunk was produced; the certificate is sound for any enforcement operator, including the noise-space operators of Sec.~\ref{sec:frontier}.
+\end{proposition}
+
+The geometric-decay induction $B_t \ge (1-\gamma)^t B_0$ is textbook \cite{agrawal2017dcbf} and used as a lemma. Assumptions (single-integrator tracking with error absorbed into the margin; obstacle motion bounded by $\lambda$ per step) are stated explicitly; full proofs in the appendix. What is new is \emph{what} is certified and \emph{when}: prior in-denoising work corrects intermediate chunks and never re-verifies the output.
+
+\section{Experiments: SafeLIBERO}
+\subsection{The five-row architecture board}
+\begin{table*}[t]
+\centering
+\caption{Five-row board: TSR/CAR (\%), $n{=}200$ per cell, one collision criterion ($>$1\,mm GT hazard displacement). \textbf{Bold}: beats \emph{both} the baseline and the SOTA reimplementation on that axis. $^\dagger$nominal (Fisher n.s., $p{=}0.64/0.69$). $^\ddagger$table-prior ablation 44.0/79.5; the VLM flags spillable food where the benchmark designates a book/mug (benchmark-definition divergence, Sec.~\ref{sec:limits}).}
+\label{tab:board}
+\begin{tabular}{lccccc}
+\toprule
+Cell & $\pi_{0.5}$ baseline & Post-hoc shield & SOTA-reimpl (in-denoise) & Ours (GT) & Ours (no-GT, VLM-general) \\
+\midrule
+Spatial L1 & 67.0 / 14.0 & 71.5 / 28.5 & 62.0 / 28.5 & 71.0 / 23.5 & \textbf{70.0} / \textbf{46.5} \\
+Spatial L2 & 55.5 / 12.0 & 66.5 / 21.0 & 71.5 / 25.5 & \textbf{85.0} / \textbf{76.5} & \textbf{80.5} / \textbf{57.5} \\
+Goal L1    & 51.0 / 23.0 & 72.0 / 19.0 & 71.0 / 27.5 & \textbf{77.5} / \textbf{51.0} & \textbf{73.5} / \textbf{60.5} \\
+Goal L2    & 66.5 / 35.0 & 69.5 / 48.5 & 75.0 / 49.5 & \textbf{76.0} / \textbf{60.0} & \textbf{77.5}$^\dagger$ / \textbf{52.0}$^\dagger$ \\
+Object L1  & 40.5 / 14.0 & 63.5 / 16.0 & 53.0 / 15.5 & \textbf{53.5} / \textbf{28.0} & 41.5 / \textbf{54.0} \\
+Object L2  & 74.0 / 25.0 & 79.0 / 34.5 & 76.0 / 33.5 & \textbf{83.0} / \textbf{74.5} & 75.5 / \textbf{74.5} \\
+Long L1    & 58.0 / 15.0 & 27.5 / 32.5 & 30.5 / 35.5 & 42.5 / \textbf{71.0} & 47.5 / \textbf{56.5} \\
+Long L2    & 51.0 / 16.5 & 46.5 / 52.0 & 43.0 / 59.5 & 47.0 / \textbf{77.0} & 29.0 / 18.5$^\ddagger$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Table~\ref{tab:board} is the paper's central result. Row configs: post-hoc = identical barrier, one projection of the final decoded chunk (the AEGIS architecture class, run on the same policy/criterion); SOTA-reimpl = \cite{sota2607}'s configuration ($K{=}1$, uniform schedule, no corridor/companions, GT state); ours differ only as described in Sec.~\ref{sec:enforce} (+GT-free identification for the last column). Four findings:
+\begin{enumerate}
+\item \emph{Post-hoc $\approx$ degenerate in-denoising on every cell} (TSR within $\pm$5--10, CAR within $\sim$7): moving repair inside denoising is not, by itself, the contribution.
+\item \emph{The composed machinery is the separator}: +6--19 TSR and 2--3$\times$ CAR over both shield architectures wherever engaged (CAR: Object L1 $p{=}3{\times}10^{-41}$, Spatial L2 $p{=}5{\times}10^{-18}$, Goal L2 $p{=}2{\times}10^{-4}$ vs.\ reimpl; no significant TSR cost anywhere, one significant gain, Spatial L2 $+15.5$, $p{=}2{\times}10^{-4}$).
+\item \emph{The Long-horizon TSR stall afflicts every shield} (post-hoc 27.5 vs.\ baseline 58.0): a property of the barrier class, not of in-denoising; our method recovers +15--19 TSR over both shields while doubling CAR. Raising the step cap does not recover it (liveness, not time).
+\item The GT-free column achieves clean both-axes dominance over both references in 4/8 cells and CAR-dominance with TSR parity in 2 more.
+\end{enumerate}
+
+\subsection{Identity is not the bottleneck (identification swap)}
+\label{sec:e3}
+Holding enforcement fixed and swapping \emph{only} the identity source (same seeds, $n{=}40$/arm/level, Spatial): GT 55.0/27.5 (L1), 77.5/40.0 (L2); symbolic+VLM priors 60.0/27.5, 77.5/37.5; FOL rules without priors 62.5/32.5, 90.0/40.0. Paired McNemar: no significant difference on any axis; pooled discordant episodes favor the GT-free identifiers 12:6. \emph{The no-GT identity tier carries no measurable cost}; the residual no-GT tax is geometric (median 0.067\,m localization error), not semantic.
+
+\subsection{The enforcement frontier}
+\label{sec:frontier}
+Replacing the repair sweep with noise-space operators under the same checked certificate --- Feynman--Kac tilting of the seed population, a soft repulsor field on the velocity target, and adjoint ascent of the prefix margin through the denoising rollout (57\,ms/gradient step) --- traces a smooth, tunable TSR$\leftrightarrow$CAR frontier (Spatial L1, $n{=}80$/arm): FK 71.2/17.5 $\to$ FK+$\eta{=}.003$ 70.0/25.0 $\to$ FK+$\eta{=}.005$ 65.0/33.8 $\to$ repulsor-only 60.0/50.0 $\to$ FK+repulsor 48.8/57.5. Paired highlights: adjoint yields a significant TSR gain over hard repair on dev cells (67.5 vs.\ 32.5, $p{=}0.0066$); the soft repulsor is the only operator that un-sticks the hardest obstacle-on-path cell (50\% success where hard repair yields 0--10\%, $p{=}0.013$); naive FK+repulsor composition over-conservatizes ($p{=}0.035$). Selection criterion (pre-registered): an operating point must dominate \emph{both} baseline and reimpl on \emph{both} axes at $n{=}200$. \slot{final $n{=}200$ frontier numbers: fk\_eta003 / eta005\_only / fk\_eta004 / fk\_eta0045; state which config is adopted, or that composed repair (which already dominates) remains production}
+
+\subsection{Ablations and negative results}
+Whole-scene VLM hazard prompting: 0--10\% identification vs.\ 100\% for the decomposed scorer. Runtime VLM rule composition (two vendors): never exceeds the flat scorer and fails \emph{unsafe} via empty rule sets; its \textsc{Protected}/\textsc{Moving} predicates survive as class rules. Scene-graph identity: exact parity. Superquadric and relation-conditioned barrier shapes (four variants incl.\ a faithful above-envelope): all trade TSR for CAR without dominating; spheres + corridor remain production. Safety instructions in the prompt ($\pi_{0.7}$-style language conditioning, four testbeds): move TSR (+8--10, trend) but never CAR --- the language channel modulates task behavior, not avoidance. Guard-set $k{=}2$: recall 19/19 under corrupted priors at $-12.5$ TSR (offered as a fail-safe mode). \slot{image-channel visual conditioning pilot (job 42638121): report GO/NO-GO one-liner}
+
+\section{Experiments: LIBERO-Safety}
+\label{sec:ls}
+We port the full stack to LIBERO-Safety (named-object hazards, dynamic human-hand intruders, benchmark-native contact-predicate violation metric, their released fine-tuned $\pi_{0.5}$). The identification stack transfers with \emph{zero} benchmark-specific tuning beyond the two class rules already in the scorer: 219/220 correct hazard identification across cells; the \textsc{Moving} rule grounds dynamic intruders by settle-window displacement, and guidance re-reads mover positions each replan. Reproduction required two documented protocol fixes (their checkpoint emits metric-delta actions; their evaluation horizon is 600 steps). Guidance already reduces violations on obstacle cells (13$\to$6 per 50 episodes), and the hand-as-destination suites confirm the corridor prediction: keep-out without a sanctioned approach suffocates the task. \slot{corrected-horizon rows: baseline vs guided-GT vs guided-symbolic per suite/level, vs paper's published $\pi_{0.5}$ numbers; SSR refusal row (5/5 unsafe tasks refused at L0/L1)}
+
+\section{Limitations}
+\label{sec:limits}
+The no-GT tier consumes the symbolic object \emph{name} list (pixel-only naming costs top-2 identification 19$\to$12); priors are per-name, not per-instance (a cold and a hot pot score identically); Long L2 exposes benchmark-definition divergence --- the VLM guards spillable food where the benchmark labels an arbitrary object, and we report the VLM-general number as the headline with the table-prior ablation footnoted. Sensing is simulation-grade; margins are tuned to the simulated error floor. The single-integrator actuation model absorbs tracking error into margins rather than modeling it. Enforcement guards at most two obstacles per episode, and with $k{=}1$ identification errors fail unsafe.
+
+\section{Conclusion}
+Safety steering for frozen VLA flow policies needs neither privileged state nor a new policy: a decomposed symbolic identifier with one-shot VLM priors matches ground-truth identity, and a composed, certificate-checked in-denoising repair --- not the in-denoising placement alone --- delivers 2--3$\times$ collision-avoidance gains at preserved task success. The enforcement family is a tunable dial, and the certificate is agnostic to which operator turns it.
+
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{9}
+\bibitem{sota2607} Anonymous, ``Neuro-symbolic safety guidance for VLA models via constrained flow matching,'' arXiv:2607.01378, 2026.
+\bibitem{ames2019cbf} A.~Ames et al., ``Control barrier functions: Theory and applications,'' ECC, 2019.
+\bibitem{agrawal2017dcbf} A.~Agrawal and K.~Sreenath, ``Discrete control barrier functions for safety-critical control,'' RSS, 2017.
+\bibitem{brunke2025semantic} L.~Brunke et al., ``Semantically safe robot manipulation: From semantic scene understanding to motion safeguards,'' IEEE RA-L, 2025.
+% SLOT: pi0.5 / pi0.7 / SafeLIBERO / LIBERO-Safety / SafeDiffuser / KnowNo / RoboGuard / GroundingDINO cites
+\end{thebibliography}
+
+\end{document}

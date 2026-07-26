@@ -1591,3 +1591,17 @@ seed-paired. Selection rule: an arm must sit in the box at n=200 to become
 THE enforcement config; if none does, composed repair (which already
 dominates both refs on the no-GT board: 70.0/46.5) STAYS production and the
 noise-space family is reported as the tunable-frontier section.
+
+## ★★★ 2026-07-26 — PAPER LOCK-IN (user: "LOCK IN I NEED TO SUBMIT A PAPER TO ICRA")
+paper/main.tex CREATED — full IEEE draft, frozen content:
+- Central: five-row board (final), 4 findings, stats inline.
+- E3 identity-swap (final): identity indistinguishable from GT.
+- Theory: Thm feasibility + checked-prefix certificate (from docs/theory).
+- Frontier section written; 3 red SLOTs remain: (1) enforcement n=200
+  finalization (42638199 edges + 42638805 midpoints) vs acceptance box;
+  (2) LS corrected-horizon rows; (3) visovr pilot one-liner.
+- Ablations paragraph: whole-scene VLM, FOL critics, scene graphs,
+  superquadrics, prompt conditioning, guard k=2 — all closed NO-GOs.
+SCOPE FROZEN: no new directions before submission; pending jobs only fill
+slots. Remaining writing work: cites block, config appendix table, figures
+(E5 fail-direction, stall AUC, radius-sweep referee, frontier curve).
