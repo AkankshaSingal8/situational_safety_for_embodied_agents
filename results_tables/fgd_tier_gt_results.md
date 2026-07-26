@@ -1654,3 +1654,15 @@ baseline 54/56/26). Residual gap = t4-class cells (hand near path, NOT dest:
 hard keep-out blocks workspace — resolved by the finalized soft config) and
 L2 paraphrase cells hard for baseline too. Duality progression
 2->24->40 (L0) is the routing-ablation figure for the paper.
+
+## 2026-07-26 — AFFORDANCE finetune rows (42631100): board coverage COMPLETE
+TSR/viol n=50: baseline 40/0, 68/0, 34/0 | gt 46/0, 70/0, 32/0 |
+sym 56/0, 38/0, 30/0 | fol 56/0, 40/0, 34/0.
+Guidance harmless-to-helpful at L0 (+16, K-seed selection effect — no
+geometric hazards) and L2; sym/fol dip at L1 (-28: guarding an on-path
+non-hazard; gt arm unaffected). vs paper AAG 78.7/59.3/35.3: our baseline
+BEATS paper at L1 (68>59.3) and ties L2 (34~35.3) — the protocol gap is
+SUITE-DEPENDENT, consistent with checkpoint-provenance, and the odd L0<L1
+ordering flags a possible level-convention mismatch (footnote). ALL LS board
+cells now exist (5 suites x 2 checkpoints x GT/no-GT + refusal). Last open
+slot: enforcement acceptance-box verdict (42641021 + 42638805).
