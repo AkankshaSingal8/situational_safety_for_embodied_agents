@@ -1631,3 +1631,19 @@ rewritten from the 147-line skeleton into a full 7-page IEEE draft (compiles
 clean, all numbers ledger-sourced, 6 todo slots incl. the finalization box
 verdict). Known text gaps flagged by the drafting pass: affordance guided
 row "~neutral" (2 of 3 levels), composed-repair control n=40 noted inline.
+
+## 2026-07-26 — VISUAL CONDITIONING PILOT (42638121): NO-GO — the image channel is as safety-blind as the language channel
+pi0.7-style keep-out overlay (red disk + green target ring drawn into the
+agentview input; projection validated offline), Spatial L1 n=20/task GT:
+| arm | TSR/CAR |
+| overlay_only (guidance OFF) | 58.8/12.5 |
+| overlay+composed repair     | 57.5/41.3 |
+| baseline (stored n=200)     | 67.0/14.0 |
+READ: overlay ALONE moves CAR 12.5 vs baseline 14.0 — nothing — while
+costing ~8 TSR (occlusion). Fifth testbed confirming the conditioning-
+blindness finding: neither language nor image inputs create avoidance in a
+policy never trained to avoid; enforcement must live in generation.
+overlay+repair CAR 41.3 vs repair-alone 27.5 (E3 control, n=40) is a weak
+interaction hint — NOT pursued under paper lock-in; noted for future work.
+VERDICT: NO-GO as a mechanism; adopted as one line in the ablation section
+strengthening the intervention-point thesis.
