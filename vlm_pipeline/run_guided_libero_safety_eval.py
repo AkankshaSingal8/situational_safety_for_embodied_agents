@@ -33,7 +33,6 @@ import time
 
 import numpy as np
 
-REPLAN_STEPS = 5
 NUM_STEPS_WAIT = 20
 DUMMY_ACTION = [0.0] * 6 + [-1.0]
 MAX_STEPS = {0: 600, 1: 600, 2: 600}  # benchmark's own horizon (LS
@@ -149,6 +148,12 @@ def main():
     ap.add_argument("--save_videos", action="store_true")
     ap.add_argument("--max_steps", type=int, default=None,
                     help="Override the per-level step cap (diagnostics)")
+    ap.add_argument("--replan_steps", type=int, default=5,
+                    help="Actions executed per chunk before replanning (10 = "
+                         "openpi's default full-chunk LIBERO consumption)")
+    ap.add_argument("--camera_res", type=int, default=256,
+                    help="Env render resolution (gap diagnosis: their data "
+                         "pipeline is 128px)")
     ap.add_argument("--task_filter", type=int, nargs="*", default=None,
                     help="Restrict to these task_ids (diagnostics)")
     args = ap.parse_args()
@@ -194,7 +199,7 @@ def main():
         try:
             env = OffScreenRenderEnv(
                 bddl_file_name=bm.get_task_bddl_file_path_by_level_id(task.level, task.level_id),
-                camera_heights=256, camera_widths=256,
+                camera_heights=args.camera_res, camera_widths=args.camera_res,
             )
         except (FileNotFoundError, AssertionError) as e:
             # Some reasoning_safety L2 bddls are absent from the release
@@ -330,7 +335,7 @@ def main():
                             element["guidance"]["target_pos"] = np.asarray(tp, dtype=np.float32)
                         if dp is not None:
                             element["guidance"]["dest_pos"] = np.asarray(dp, dtype=np.float32)
-                    chunk = np.asarray(client.infer(element)["actions"][:REPLAN_STEPS])
+                    chunk = np.asarray(client.infer(element)["actions"][:args.replan_steps])
                     plan.extend(np.clip(chunk * ACTION_TO_CMD, -1.0, 1.0))
                 obs, reward, done, info = env.step(plan.popleft().tolist())
                 cost = env.env._check_constraint(done)

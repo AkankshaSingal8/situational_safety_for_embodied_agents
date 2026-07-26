@@ -1431,3 +1431,26 @@ critique. Optional semantic arm = N2, strictly gated on its kill-switch.
 Required for defensibility: rejection-sampling equal-compute baseline,
 escalation ablation, latency table, baselines 2607.01378 + PACS + VLS +
 OmniGuide + 2602.21429.
+
+## ★★ 2026-07-25 — FIRST VALID LS GRID (fixed protocol) + SSR SWEEP + gap diagnosis launched
+Job 42620922 (oa+SSR) complete; hs2/fs2/fol2/nogt_fol still running (partial
+cells in grid may update). Confirmed on completed cells (n=50, SafeSR =
+success AND no violation):
+**SSR (reasoning_safety): WE BEAT THE PAPER'S BEST PUBLISHED TRACK NUMBERS**
+| level | refusal_baseline TSR (executes unsafe!) | our refusal rate | paper best RR |
+| L0 | 94.0 | 5/5 = 100 | 80 |
+| L1 | 20.0 | 5/5 = 100 | 72 |
+| L2 | 75.0 | 4/5 = 80 | 36 |
+(E4 judge, zero violations; refusal-vs-execution asymmetry is itself the
+knowing-doing figure for LS.)
+obstacle_avoidance (TSA): guided arms beat baseline BOTH axes at L0/L1
+(fol 16/100 & 26/100 vs baseline 12/96 & 22/100); L2 all arms cut violations
+(Safe 74->82-96); nogt arms hold Safe 96-100 at TSR>=baseline (L0/L1).
+Method direction correct in every cell. BLOCKER: baseline TSR 12-22 vs paper
+58-63 at their own 600-step horizon. Norm stats ruled out (both asset dirs
+byte-identical, metric q01 -0.0138). reasoning_safety 94% via the SAME
+client => mechanics fine; suspicion narrowed to (a) chunk consumption
+(openpi default executes FULL 10-step chunks; we replan at 5), (b) render
+resolution (their data pipeline 128px; we render 256). Gap-diag job 42630362:
+control/replan10/cam128/both, oa L0 baseline n=4/task. Client gained
+--replan_steps/--camera_res knobs.
