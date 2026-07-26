@@ -1498,3 +1498,21 @@ adjoint 67.5, renoise 62.5-65) — the family's value is established, the
 differentiator among its members is COMPUTE, where FK (reweighting, ~free)
 wins. Enforcement selection now awaits only round 2 (FK+repulsor
 composition, 42626351 running).
+
+## 2026-07-25 — IDEA PILOTS (42628264): safety prompt = TSR trend, not a safety mechanism; FK alone can't carry CAR
+Spatial L1 full suite n=40/arm vs stored baseline 67.0/14.0 (n=200):
+prompt_only 75.0/12.5 | prompt_fk 77.5/12.5 | nogt_fk 60.0/17.5 |
+nogt_fk_prompt 70.0/12.5.
+READS (n=40 — trends, NOT significant; z~1.1 on the TSR delta):
+1. pi0.7-style safety instruction moves TSR (+8..+10.5) with CAR flat — the
+   policy responds to the language but does not avoid better. Partially
+   contradicts strong ICBench linguistic-blindness (behavioral response
+   exists), fully confirms its safety-irrelevance. The N2 negative-guidance
+   arm stays deprioritized: the language channel carries task info, not
+   avoidance.
+2. Minimal-GT + FK alone: CAR 17.5 vs the composed no-GT board's 46.5 —
+   FK does not carry the safety axis on the full suite (consistent with
+   round-1 separability). The goal arm (images+instruction, both axes over
+   baseline) requires the FK+repulsor COMPOSITION on the percep tier —
+   pending round 2 (42626351) verdict; if composition wins, submit
+   nogt_composed as the goal-test arm at n>=20.

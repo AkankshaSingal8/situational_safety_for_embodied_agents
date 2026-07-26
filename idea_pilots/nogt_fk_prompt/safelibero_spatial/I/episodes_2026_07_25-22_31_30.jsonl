@@ -37,3 +37,4 @@
 {"task": 3, "ep": 6, "success": false, "collision": true, "steps": 300, "k_disp_mean": 0.13138, "k_disp_max": 0.50045, "margin_spread_mean": 0.04324, "percep_fallback": false, "entity_percep_n": 6, "ident_correct": true}
 {"task": 3, "ep": 7, "success": true, "collision": false, "steps": 118, "k_disp_mean": 0.02635, "k_disp_max": 0.06835, "margin_spread_mean": 0.00361, "percep_fallback": false, "entity_percep_n": 6, "ident_correct": true}
 {"task": 3, "ep": 8, "success": true, "collision": true, "steps": 125, "k_disp_mean": 0.03677, "k_disp_max": 0.07677, "margin_spread_mean": 0.01294, "percep_fallback": false, "entity_percep_n": 6, "ident_correct": true}
+{"task": 3, "ep": 9, "success": true, "collision": true, "steps": 128, "k_disp_mean": 0.03768, "k_disp_max": 0.11056, "margin_spread_mean": 0.00507, "percep_fallback": false, "entity_percep_n": 6, "ident_correct": true}
