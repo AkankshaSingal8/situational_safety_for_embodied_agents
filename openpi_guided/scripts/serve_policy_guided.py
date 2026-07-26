@@ -52,6 +52,10 @@ class Args:
     # Enforcement candidates B / C (0.0 = inert legacy path).
     fk_beta: float = 0.0
     repulsor_eta: float = 0.0
+    # Candidate D: certificate-triggered renoise repair; mode 'reject' = the
+    # equal-compute rejection-sampling kill-baseline.
+    renoise_attempts: int = 0
+    renoise_mode: str = "escalate"
     repair_schedule: str = "ramp"
     num_candidates: int = 1
     corridor_radius: float = 0.07
@@ -87,6 +91,8 @@ def main(args: Args) -> None:
         adjoint_tau=args.adjoint_tau,
         fk_beta=args.fk_beta,
         repulsor_eta=args.repulsor_eta,
+        renoise_attempts=args.renoise_attempts,
+        renoise_mode=args.renoise_mode,
         repair_schedule=args.repair_schedule,
         num_candidates=args.num_candidates,
         corridor_radius=args.corridor_radius,

@@ -48,6 +48,12 @@ class GuidanceConfig:
     # Enforcement candidates B and C (0.0 = inert, bit-exact legacy path).
     fk_beta: float = 0.0  # FK/SMC particle tilt strength
     repulsor_eta: float = 0.0  # soft repulsor strength [m/denoise-step]
+    # Enforcement candidate D: certificate-triggered RENOISE repair (0 = off).
+    # mode 'escalate' = SDEdit depth schedule (0.3/0.6/1.0) from the rejected
+    # chunk; 'reject' = fresh full resampling each attempt — the equal-compute
+    # rejection-sampling kill-baseline the novelty audit demands.
+    renoise_attempts: int = 0
+    renoise_mode: str = "escalate"
     corridor_radius: float = 0.07  # sanctioned-approach cylinder radius [m]
     corridor_relax: float = 0.6  # margin relaxation inside corridors (0 = off)
     use_companions: bool = True  # False = EEF-point-only (SOTA-reimpl fidelity arm)
@@ -113,6 +119,12 @@ class GuidedPolicy(_policy.Policy):
         self._repair_weight, self._margin_scale = w, m
         logging.info("Repair schedule %s: w=%s", config.repair_schedule, np.round(w, 2))
 
+        if config.renoise_attempts > 0:
+            from openpi.models.pi0_guided import flow_decode_actions
+            self._flow_decode = nnx_utils.module_jit(
+                types.MethodType(flow_decode_actions, self._model),
+                static_argnames=("num_candidates", "prefix_len",
+                                 "num_steps", "start_time"))
         if config.adjoint_steps > 0:
             from openpi.models.pi0_guided import adjoint_sample_actions
             bound = types.MethodType(adjoint_sample_actions, self._model)
@@ -182,6 +194,40 @@ class GuidedPolicy(_policy.Policy):
             repulsor_eta=jnp.float32(cfg.repulsor_eta),
         )
 
+    def _renoise_infer(self, rng, observation, guidance):
+        """Candidate D host loop: K-seed decode -> if the certificate rejects,
+        renoise the best chunk to escalating depth (or fresh-resample in
+        'reject' mode) and re-decode, keeping best-so-far (anytime)."""
+        cfg = self._config
+        x0, d = self._flow_decode(rng, observation, guidance=guidance,
+                                  num_candidates=cfg.num_candidates,
+                                  start_time=1.0)
+        m = np.asarray(d["min_margin"])
+        best = int(np.argmax(m))
+        chunk, margin = x0[best], float(m[best])
+        depths = (0.3, 0.6, 1.0)
+        attempts = 0
+        for a in range(cfg.renoise_attempts):
+            if margin >= 0.0:
+                break
+            attempts += 1
+            rng, sub = jax.random.split(rng)
+            if cfg.renoise_mode == "reject":
+                x1, d1 = self._flow_decode(sub, observation, guidance=guidance,
+                                           num_candidates=1, start_time=1.0)
+            else:
+                t_star = depths[min(a, len(depths) - 1)]
+                x1, d1 = self._flow_decode(sub, observation, guidance=guidance,
+                                           num_candidates=1, start_time=t_star,
+                                           start_chunk=chunk)
+            m1 = float(np.asarray(d1["min_margin"])[0])
+            if m1 > margin:
+                chunk, margin = x1[0], m1
+        diag = {"selected_margin": np.asarray([margin], dtype=np.float32),
+                "renoise_attempts": np.asarray([float(attempts)], dtype=np.float32),
+                "feasible_count": np.asarray([float(margin >= 0.0)], dtype=np.float32)}
+        return chunk[None], diag
+
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]
         obs = dict(obs)
         payload = obs.get("guidance", None)
@@ -208,11 +254,14 @@ class GuidedPolicy(_policy.Policy):
 
         observation = _model.Observation.from_dict(inputs)
         start = time.monotonic()
-        actions, diag = self._sample_actions(
-            sample_rng, observation, guidance=guidance,
-            num_candidates=self._config.num_candidates,
-            **self._extra_sample_kwargs, **sample_kwargs,
-        )
+        if self._config.renoise_attempts > 0:
+            actions, diag = self._renoise_infer(sample_rng, observation, guidance)
+        else:
+            actions, diag = self._sample_actions(
+                sample_rng, observation, guidance=guidance,
+                num_candidates=self._config.num_candidates,
+                **self._extra_sample_kwargs, **sample_kwargs,
+            )
         outputs = {"state": inputs["state"], "actions": actions}
         model_time = time.monotonic() - start
 

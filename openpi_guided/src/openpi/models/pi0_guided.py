@@ -699,3 +699,73 @@ def adjoint_sample_actions(
         "noise_shift": jnp.broadcast_to(jnp.linalg.norm(z_star - z0), (1,)),
     }
     return x_0, diag
+
+
+def flow_decode_actions(
+    self,
+    rng: at.KeyArrayLike,
+    observation: _model.Observation,
+    *,
+    guidance: GuidanceParams,
+    num_steps: int = 10,
+    num_candidates: int = 8,
+    prefix_len: int = 5,
+    start_time: float = 1.0,
+    start_chunk: at.Float[at.Array, "ah ad"] | None = None,
+    noise: at.Float[at.Array, "b ah ad"] | None = None,
+) -> tuple[_model.Actions, dict]:
+    """Repair-free K-candidate decode with an optional SDEdit entry point.
+
+    start_time=1.0: plain decode from fresh noise (the rejection-sampling /
+    select-only path). start_time=t*<1 with start_chunk: initialize at
+    x_{t*} = t*·ε + (1−t*)·start_chunk (the flow's own linear interpolant)
+    and integrate only the remaining round(N·t*) Euler steps — the RENOISE
+    operator: a local, on-manifold edit of a rejected chunk whose edit
+    radius grows with t*. Returns all K chunks + their certified prefix
+    margins; accept/reject and depth escalation live at the host level
+    (guided_policy), keeping this function a pure jit graph per (K, t*).
+    """
+    observation = _model.preprocess_observation(None, observation, train=False)
+    n_run = max(1, int(round(num_steps * start_time)))
+    dt = -1.0 / num_steps
+    if noise is None:
+        noise = jax.random.normal(
+            rng, (num_candidates, self.action_horizon, self.action_dim))
+    if start_chunk is None:
+        x_t = noise
+    else:
+        x_t = start_time * noise + (1.0 - start_time) * start_chunk[None]
+
+    prefix_tokens, prefix_mask, prefix_ar_mask = self.embed_prefix(observation)
+    prefix_attn_mask = make_attn_mask(prefix_mask, prefix_ar_mask)
+    positions = jnp.cumsum(prefix_mask, axis=1) - 1
+    _, kv_cache = self.PaliGemma.llm(
+        [prefix_tokens, None], mask=prefix_attn_mask, positions=positions)
+    k_batch = x_t.shape[0]
+    if k_batch != 1:
+        kv_cache = jax.tree.map(lambda x: jnp.repeat(x, k_batch, axis=1), kv_cache)
+        prefix_mask_k = jnp.repeat(prefix_mask, k_batch, axis=0)
+        observation_k = jax.tree.map(lambda x: jnp.repeat(x, k_batch, axis=0), observation)
+    else:
+        prefix_mask_k, observation_k = prefix_mask, observation
+
+    time_t = start_time
+    for _ in range(n_run):
+        suffix_tokens, suffix_mask, suffix_ar_mask, adarms_cond = self.embed_suffix(
+            observation_k, x_t, jnp.broadcast_to(time_t, k_batch))
+        suffix_attn_mask = make_attn_mask(suffix_mask, suffix_ar_mask)
+        prefix_attn = einops.repeat(prefix_mask_k, "b p -> b s p",
+                                    s=suffix_tokens.shape[1])
+        full_attn_mask = jnp.concatenate([prefix_attn, suffix_attn_mask], axis=-1)
+        pos = (jnp.sum(prefix_mask_k, axis=-1)[:, None]
+               + jnp.cumsum(suffix_mask, axis=-1) - 1)
+        (_, suffix_out), _ = self.PaliGemma.llm(
+            [None, suffix_tokens], mask=full_attn_mask, positions=pos,
+            kv_cache=kv_cache, adarms_cond=[None, adarms_cond])
+        v_t = self.action_out_proj(suffix_out[:, -self.action_horizon:])
+        x_t = x_t + dt * v_t
+        time_t = time_t + dt
+
+    acc = _prefix_acceptance(x_t, guidance, prefix_len)
+    return x_t, {"min_margin": acc["min_margin"],
+                 "feasible": acc["feasible"].astype(jnp.float32)}
