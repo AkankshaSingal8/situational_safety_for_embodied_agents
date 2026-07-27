@@ -203,6 +203,9 @@ def main():
                     help="Replan every 2 control steps while certified clearance "
                          "< --adaptive_clearance (reactivity vs the moving hand).")
     ap.add_argument("--adaptive_clearance", type=float, default=0.12)
+    ap.add_argument("--log_trajectories", action="store_true",
+                    help="Save executed actions of SAFE SUCCESSFUL episodes (npz) "
+                         "for self-distillation finetuning.")
     ap.add_argument("--task_filter", type=int, nargs="*", default=None,
                     help="Restrict to these task_ids (diagnostics)")
     args = ap.parse_args()
@@ -350,6 +353,7 @@ def main():
             prev_eef = np.asarray(obs["robot0_eef_pos"]).copy()
             # Revision controllers (spec 2026-07-27): per-episode state.
             dual_lam = 0.0
+            ep_actions = []                           # self-distillation log
             eef_hist = collections.deque(maxlen=40)   # A2 stall window
             stall_hdc_replans = 0
             in_retreat = 0
@@ -448,9 +452,11 @@ def main():
                     if in_retreat == 0:
                         plan.clear()
                         eef_hist.clear()
-                    obs, reward, done, info = env.step(_a.tolist())
                 else:
-                    obs, reward, done, info = env.step(plan.popleft().tolist())
+                    _a = np.asarray(plan.popleft())
+                if args.log_trajectories:
+                    ep_actions.append(np.asarray(_a, dtype=np.float32))
+                obs, reward, done, info = env.step(_a.tolist())
                 if args.stall_recovery and in_retreat == 0:
                     eef_hist.append(np.asarray(obs["robot0_eef_pos"], dtype=np.float64))
                     if (len(eef_hist) == eef_hist.maxlen
@@ -489,6 +495,13 @@ def main():
                 if args.ssm_margins:
                     _rec["ssm_dynamic"] = bool(ssm_moved)
                 ef.write(json.dumps(_rec) + "\n")
+            if args.log_trajectories and done and not violated and ep_actions:
+                tdir = out_dir / "trajectories"
+                tdir.mkdir(exist_ok=True)
+                np.savez_compressed(
+                    tdir / f"{args.suite}_L{args.level}_t{task_id}_ep{ep}.npz",
+                    actions=np.stack(ep_actions), task_id=task_id, ep=ep,
+                    task_description=str(desc))
             if args.save_videos and frames:
                 import imageio
                 vdir = out_dir / "videos"

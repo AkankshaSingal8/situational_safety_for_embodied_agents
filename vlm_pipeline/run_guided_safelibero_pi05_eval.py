@@ -340,6 +340,10 @@ def parse_args():
                              "certified clearance is below --adaptive_clearance — "
                              "double reactivity exactly where collisions/stalls happen.")
     parser.add_argument("--adaptive_clearance", type=float, default=0.12)
+    parser.add_argument("--log_trajectories", action="store_true",
+                        help="Save executed action sequences of SAFE SUCCESSFUL episodes "
+                             "(npz per episode) for self-distillation finetuning. Images "
+                             "are re-derivable by deterministic replay from the init state.")
     return parser.parse_args()
 
 
@@ -507,6 +511,7 @@ def run_eval(args):
             ep_mspread = []
             # Revision controllers (spec 2026-07-27): per-episode state.
             dual_lam = 0.0            # B: adaptive repulsor strength
+            ep_actions = []           # self-distillation trajectory log
             eef_hist = collections.deque(maxlen=STALL_WINDOW)  # A2: stall detector
             stall_hdc_replans = 0     # A2: replans left with HDC detour override
             retreats_done = 0
@@ -742,6 +747,8 @@ def run_eval(args):
                             eef_hist.clear()
                     else:
                         action = action_plan.popleft()
+                    if args.log_trajectories:
+                        ep_actions.append(np.asarray(action, dtype=np.float32))
                     obs, reward, done, info = env.step(action.tolist())
 
                     # A2 stall detector on the executed trajectory.
@@ -821,6 +828,14 @@ def run_eval(args):
                 if args.dual_eta:
                     ep_record["dual_lam_final"] = round(dual_lam, 5)
                 ef.write(json.dumps(ep_record) + "\n")
+            if args.log_trajectories and done and not collide_flag and ep_actions:
+                tdir = pathlib.Path(args.results_output_dir) / "trajectories"
+                tdir.mkdir(parents=True, exist_ok=True)
+                np.savez_compressed(
+                    tdir / f"{args.task_suite_name}_{args.safety_level}_t{task_id}_ep{ep_idx}.npz",
+                    actions=np.stack(ep_actions),
+                    task_id=task_id, ep=ep_idx, seed=args.seed,
+                    task_description=str(task_description))
 
             logging.info(
                 f"  ep {ep_idx+1}/{args.num_trials_per_task}: "
