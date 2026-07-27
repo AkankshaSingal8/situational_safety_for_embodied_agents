@@ -35,7 +35,7 @@ def summarize(eps, keys=None):
     if n == 0:
         return None
     tsr = 100.0 * sum(r["success"] for r in rows) / n
-    car = 100.0 * sum(r["success"] and not r["collision"] for r in rows) / n
+    car = 100.0 * sum(not r["collision"] for r in rows) / n  # collision-avoidance rate (project convention)
     stalls = sum(r.get("stalls", 0) for r in rows)
     retreats = sum(r.get("retreats", 0) for r in rows)
     return {"n": n, "TSR": tsr, "CAR": car, "stalls": stalls, "retreats": retreats}
