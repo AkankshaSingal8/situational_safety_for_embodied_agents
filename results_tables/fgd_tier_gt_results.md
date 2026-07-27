@@ -1736,3 +1736,24 @@ Implication either way: if rs10 recovers TSR, every LS row (ours AND
 baseline) improves under one protocol fix and the grid reruns; if not, the
 residual gap is attributed to the released-vs-paper checkpoint delta and the
 paper quotes our released-checkpoint reproduction as the honest reference.
+
+## 2026-07-27 — REVISION STAGE-1 VERDICTS (jobs 42691385/42691620/42695111, paired vs same-day control)
+
+Dev cells Spatial L1 t0+t1 n=20, Object t1 n=10, identical seeds/server (ramp
+K8 r0.09 + corridor). Control CTRL_prod: 35.0/15.0 spatial, 40.0/0.0 t1.
+
+| arm | spatial TSR/CAR | delta | verdict |
+|---|---|---|---|
+| B_dual (adaptive eta, repair-off+renoise) | 60.0/20.0 | +25.0/+5.0 | SURVIVE - star |
+| A12C (progress+lookahead+stall) | 45.0/20.0 | +10/+5 | survive |
+| AR (adaptive replan cadence) | 40.0/25.0 | +5/+10 | survive |
+| A1C (progress+lookahead) | 40.0/20.0 | +5/+5 | survive |
+| K16_A1C (compute-matched control) | 40.0/15.0 | +5/0 | control row |
+| A2_stall alone | 35.0/15.0 | 0/0 | kill (retreats uncertified, no gain) |
+
+KEY RESULT: closed-loop dual-adaptive eta at K=8 gains +25 TSR / +5 CAR while
+DOUBLING static compute (K16) gains +5/0 -> mechanism > compute at n=20.
+Object t1: CAR=0 for ALL arms INCLUDING control (cell unguardable at this
+config; B_dual TSR 10 vs 40 - eta fights the sanctioned grasp approach).
+Stage 2: B_dual and B_dual+AR at Spatial L1 full n=20/task + corridor-gated
+lambda on t1; A2 retreat primitive killed (uncertified lifts cost CAR).
