@@ -1783,3 +1783,21 @@ cannot help when the hand IS the stationary goal). Next lever: corridor-gated
 dual-eta (Stage-2 arm B_dual_gate) — soft repulsion that yields inside the
 sanctioned approach is the mechanism shape the handover duality needs; if it
 wins Stage 2 it propagates to LS human_safety.
+
+## 2026-07-27 — STAGE 2 (42695506, Spatial L1 full n=80 + Object t1 n=20, paired)
+
+| arm | spatial | object t1 |
+|---|---|---|
+| B_dual_gate | 77.5/20.0 | 5.0/0.0 |
+| B_dual_AR | 70.0/20.0 | 5.0/0.0 |
+| B_dual | 65.0/18.8 | 5.0/0.0 |
+| CTRL_prod (composed) | 53.8/35.0 | 20.0/0.0 |
+
+Corridor-gated adaptive eta: +23.7 TSR over production on identical seeds
+(77.5 > baseline 67.0, > SOTA-reimpl 62.0) but CAR 20 vs 35 with repair OFF —
+repair was the CAR machine on the easy cells. Both-axes rule: no replacement
+yet. Mechanisms are complementary by construction (repulsor runs BEFORE the
+repair sweep each denoise step) -> STAGE 2b submitted (42700745): composed
+repair + gated adaptive eta (CD_gate, CD_gate_AR), same seeds. Object t1
+unresolved by the 0.12 gate (5.0 TSR all dual arms) — t1 treatment deferred
+to the composed arms (repair restores the corridor behavior there).
