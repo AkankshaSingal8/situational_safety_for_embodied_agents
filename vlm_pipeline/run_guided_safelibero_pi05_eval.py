@@ -43,6 +43,17 @@ LIBERO_ENV_RESOLUTION = 1024
 RESIZE_SIZE = 224
 NUM_STEPS_WAIT = 20
 REPLAN_STEPS = 5
+# A2 stall recovery (spec 2026-07-27): net EEF motion below STALL_EPS_M over
+# STALL_WINDOW control steps triggers the escalation ladder (HDC detour
+# replans, then a scripted lift-retreat). HDC_OVERRIDE is the lateral detour
+# bias [m/action-step] sent as a payload override during escalation.
+STALL_WINDOW = 40
+STALL_EPS_M = 0.015
+STALL_HDC_REPLANS = 3
+HDC_OVERRIDE = 0.01
+RETREAT_STEPS = 8
+RETREAT_Z_CMD = 0.4
+MAX_RETREATS = 2
 DUMMY_ACTION = [0.0] * 6 + [-1.0]
 
 MAX_RECONNECT_ATTEMPTS = 3
@@ -306,6 +317,24 @@ def parse_args():
                              "errors fail safe instead of unguarding the true hazard).")
     parser.add_argument("--disable_guidance", action="store_true",
                         help="Send enabled=0 (server sanity baseline through the same code path).")
+    # Runtime steering revision (spec 2026-07-27) — client-side controllers.
+    parser.add_argument("--dual_eta", action="store_true",
+                        help="B: dual-adaptive repulsor strength. Per-episode integral "
+                             "controller on the server's selected_margin diag: lam <- "
+                             "clip(lam + kappa*(m_ref - m), 0, eta_max), sent as the "
+                             "per-request repulsor_eta payload override. Pair with a "
+                             "server running --repair_schedule none (+ renoise backstop).")
+    parser.add_argument("--dual_kappa", type=float, default=0.5,
+                        help="Integral gain [eta per meter of margin deficit].")
+    parser.add_argument("--dual_mref", type=float, default=0.02,
+                        help="Margin setpoint [m]; lam decays whenever margin exceeds it.")
+    parser.add_argument("--dual_eta_max", type=float, default=0.01,
+                        help="Repulsor strength ceiling (the eta that unsticks Object t1).")
+    parser.add_argument("--stall_recovery", action="store_true",
+                        help="A2: on EEF stall (<1.5cm net motion over 40 control steps) "
+                             "escalate — 3 replans with the HDC lateral-detour payload "
+                             "override, then (if still stalled) a scripted lift-retreat "
+                             "and re-approach. Max 2 retreats/episode.")
     return parser.parse_args()
 
 
@@ -471,6 +500,14 @@ def run_eval(args):
             collide_flag = False
             ep_kdisp = []
             ep_mspread = []
+            # Revision controllers (spec 2026-07-27): per-episode state.
+            dual_lam = 0.0            # B: adaptive repulsor strength
+            eef_hist = collections.deque(maxlen=STALL_WINDOW)  # A2: stall detector
+            stall_hdc_replans = 0     # A2: replans left with HDC detour override
+            retreats_done = 0
+            in_retreat = 0            # control steps left in scripted retreat
+            ep_stalls = 0
+            ep_retreats = 0
 
             # E3 geometry arm: obstacle position from RGB-D perception instead
             # of sim state. Estimated ONCE per episode (obstacles are static);
@@ -652,6 +689,11 @@ def run_eval(args):
                             if args.corridor:
                                 element["guidance"].update(
                                     parse_entities(task_description, entity_view(obs), sim=env.sim))
+                            if args.dual_eta:
+                                element["guidance"]["repulsor_eta"] = float(dual_lam)
+                            if stall_hdc_replans > 0:
+                                element["guidance"]["hdc_scale"] = HDC_OVERRIDE
+                                stall_hdc_replans -= 1
                         result = client.infer(element)
                         action_chunk = result["actions"][:REPLAN_STEPS]
                         diag = result.get("guidance")
@@ -670,10 +712,50 @@ def run_eval(args):
                                 ep_mspread.append(float(np.asarray(diag["margin_spread"]).reshape(-1)[0]))
                                 dbnr_tau_sum += float(diag.get("dbnr_tau_mean", 0.0))
                                 dbnr_headroom_sum += float(diag.get("dbnr_headroom_mean", 0.0))
+                            # B: integral update of the adaptive repulsor strength
+                            # from the certified margin of the chunk just selected.
+                            if args.dual_eta and "selected_margin" in diag:
+                                _m = float(np.asarray(diag["selected_margin"]).reshape(-1)[0])
+                                dual_lam = float(np.clip(
+                                    dual_lam + args.dual_kappa * (args.dual_mref - _m),
+                                    0.0, args.dual_eta_max))
                         action_plan.extend(action_chunk)
 
-                    action = action_plan.popleft()
+                    # A2 retreat primitive: scripted lift replaces the plan for a
+                    # few steps (straight up = away from tabletop keep-outs), then
+                    # a forced replan re-approaches from the new pose.
+                    if in_retreat > 0:
+                        action = np.zeros_like(action_plan[0]) if action_plan else np.zeros(7)
+                        action[2] = RETREAT_Z_CMD
+                        in_retreat -= 1
+                        if in_retreat == 0:
+                            action_plan.clear()
+                            eef_hist.clear()
+                    else:
+                        action = action_plan.popleft()
                     obs, reward, done, info = env.step(action.tolist())
+
+                    # A2 stall detector on the executed trajectory.
+                    if args.stall_recovery and in_retreat == 0:
+                        eef_hist.append(np.asarray(obs["robot0_eef_pos"], dtype=np.float64))
+                        if (len(eef_hist) == STALL_WINDOW
+                                and np.linalg.norm(eef_hist[-1] - eef_hist[0]) < STALL_EPS_M):
+                            ep_stalls += 1
+                            eef_hist.clear()
+                            action_plan.clear()  # force an immediate replan
+                            if stall_hdc_replans == 0 and retreats_done < MAX_RETREATS:
+                                if ep_stalls > 1:
+                                    # HDC escalation already tried once — retreat.
+                                    in_retreat = RETREAT_STEPS
+                                    retreats_done += 1
+                                    ep_retreats += 1
+                                    logging.info(f"  [stall] t={t}: retreat "
+                                                 f"{retreats_done}/{MAX_RETREATS}")
+                                else:
+                                    stall_hdc_replans = STALL_HDC_REPLANS
+                                    logging.info(f"  [stall] t={t}: HDC detour x{STALL_HDC_REPLANS}")
+                            elif stall_hdc_replans == 0:
+                                logging.info(f"  [stall] t={t}: recovery budget exhausted")
 
                     if initial_obstacle_pos is not None and not collide_flag:
                         current_pos = obs[f"{gt_obstacle_name}_pos"]
@@ -724,6 +806,11 @@ def run_eval(args):
                     ep_record["entity_percep_n"] = len(percep_entity_pos)
                 if ident_correct is not None:
                     ep_record["ident_correct"] = bool(ident_correct)
+                if args.stall_recovery:
+                    ep_record["stalls"] = ep_stalls
+                    ep_record["retreats"] = ep_retreats
+                if args.dual_eta:
+                    ep_record["dual_lam_final"] = round(dual_lam, 5)
                 ef.write(json.dumps(ep_record) + "\n")
 
             logging.info(

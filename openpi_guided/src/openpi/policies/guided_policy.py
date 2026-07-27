@@ -61,6 +61,9 @@ class GuidanceConfig:
     dbnr_beta0: float = 0.0  # DBNR restitution budget (0 = off; KILLED 2026-07-16, kept for ablation reproduction)
     hdc_scale: float = 0.0  # HDC lateral detour bias, meters per action step (0 = off)
     sq_eps: float = 1.0  # superquadric exponent for anisotropic obstacles (1 = ellipsoid)
+    # Revision knobs (spec 2026-07-27, both 0 = bit-exact legacy selection):
+    progress_weight: float = 0.0  # A1 directed-progress term in best-of-K selection
+    lookahead_weight: float = 0.0  # C tail-margin (dead-end) term in best-of-K selection
 
 
 def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
@@ -186,12 +189,18 @@ class GuidedPolicy(_policy.Policy):
             obstacle_scales=jnp.asarray(scales),
             sq_eps=jnp.float32(cfg.sq_eps),
             r_obs_base=jnp.float32(r_obs),
-            hdc_scale=jnp.float32(cfg.hdc_scale),
+            # hdc_scale / repulsor_eta accept per-request payload overrides so
+            # client-side controllers (stall-recovery escalation, dual-adaptive
+            # eta — spec 2026-07-27) can modulate them per replan while the
+            # server stays stateless. Absent -> server config, legacy behavior.
+            hdc_scale=jnp.float32(float(payload.get("hdc_scale", cfg.hdc_scale))),
             extra_obstacle_pos=jnp.asarray(extra_pos),
             extra_r_obs=jnp.float32(extra_r),
             extra_obstacle_scales=jnp.asarray(extra_scales),
             fk_beta=jnp.float32(cfg.fk_beta),
-            repulsor_eta=jnp.float32(cfg.repulsor_eta),
+            repulsor_eta=jnp.float32(float(payload.get("repulsor_eta", cfg.repulsor_eta))),
+            progress_weight=jnp.float32(cfg.progress_weight),
+            lookahead_weight=jnp.float32(cfg.lookahead_weight),
         )
 
     def _renoise_infer(self, rng, observation, guidance):

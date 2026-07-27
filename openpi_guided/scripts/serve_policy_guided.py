@@ -64,6 +64,10 @@ class Args:
     dbnr_beta0: float = 0.0
     hdc_scale: float = 0.0
     sq_eps: float = 1.0
+    # Revision knobs (spec 2026-07-27): A1 directed-progress and C tail-margin
+    # terms in best-of-K selection. 0 = legacy score.
+    progress_weight: float = 0.0
+    lookahead_weight: float = 0.0
 
 
 def main(args: Args) -> None:
@@ -101,6 +105,8 @@ def main(args: Args) -> None:
         dbnr_beta0=args.dbnr_beta0,
         hdc_scale=args.hdc_scale,
         sq_eps=args.sq_eps,
+        progress_weight=args.progress_weight,
+        lookahead_weight=args.lookahead_weight,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)

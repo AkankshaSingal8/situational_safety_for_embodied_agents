@@ -118,6 +118,15 @@ class GuidanceParams(NamedTuple):
     # repulsor_eta: soft velocity-superposition repulsor strength [m per
     # denoise step at full hinge] added to translational commands (candidate C).
     repulsor_eta: at.Float[at.Array, ""]
+    # Revision knobs (spec 2026-07-27; both 0.0 = bit-exact legacy selection).
+    # progress_weight: weight on DIRECTED prefix displacement toward target_pos
+    # in best-of-K selection (A1) — replaces "any motion" with "motion that
+    # advances the task" among certified-safe candidates.
+    progress_weight: at.Float[at.Array, ""]
+    # lookahead_weight: weight on the post-prefix (tail) minimum barrier margin
+    # (C) — candidates whose tail re-enters the keep-out lose ties, avoiding
+    # geometric dead-ends that stall the next replan.
+    lookahead_weight: at.Float[at.Array, ""]
 
 
 def _eff_dist(diffs: jnp.ndarray, g: GuidanceParams, scales=None, r_base=None, shape_scale=1.0) -> jnp.ndarray:
@@ -439,8 +448,22 @@ def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> 
     viol = (1.0 - g.gamma) * chain[:, :-1] - chain[:, 1:]
     feasible = jnp.max(viol, axis=1) <= 1e-4  # (K,)
     min_margin = jnp.min(b[:, :prefix_len], axis=1)
-    disp_norm = jnp.linalg.norm(jnp.sum(disp[:, :prefix_len], axis=1), axis=-1)
-    return {"feasible": feasible, "min_margin": min_margin, "disp_norm": disp_norm}
+    net = jnp.sum(disp[:, :prefix_len], axis=1)
+    disp_norm = jnp.linalg.norm(net, axis=-1)
+    # A1 directed progress: prefix displacement projected onto the unit vector
+    # toward target_pos. Falls back to disp_norm under the far-away disable
+    # convention (target ~17 m out) so progress_weight can stay on everywhere.
+    to_tgt = g.target_pos - g.eef_pos
+    tnorm = jnp.linalg.norm(to_tgt)
+    directed = jnp.einsum("ki,i->k", net, to_tgt / (tnorm + 1e-8))
+    progress = jnp.where(tnorm < 5.0, directed, disp_norm)
+    # C tail margin: worst clearance over the post-prefix horizon (dead-end
+    # signal). Horizon == prefix would leave an empty slice; reuse the last
+    # prefix step in that degenerate case.
+    tail = b[:, prefix_len:] if b.shape[1] > prefix_len else b[:, prefix_len - 1:]
+    tail_margin = jnp.min(tail, axis=1)
+    return {"feasible": feasible, "min_margin": min_margin, "disp_norm": disp_norm,
+            "progress": progress, "tail_margin": tail_margin}
 
 
 def _hdc_bias(g: GuidanceParams, k_batch: int) -> jnp.ndarray:
@@ -595,7 +618,13 @@ def guided_sample_actions(
     # Lexicographic selection over candidates via scalarization: executed-prefix
     # feasibility dominates, then prefix clearance margin, then task progress.
     acc = _prefix_acceptance(x_0, guidance, prefix_len)
-    score = 1e3 * acc["feasible"].astype(jnp.float32) + 10.0 * acc["min_margin"] + 0.1 * acc["disp_norm"]
+    score = (
+        1e3 * acc["feasible"].astype(jnp.float32)
+        + 10.0 * acc["min_margin"]
+        + 0.1 * acc["disp_norm"]
+        + guidance.progress_weight * acc["progress"]
+        + guidance.lookahead_weight * acc["tail_margin"]
+    )
     best = jnp.argmax(score)
     selected = jax.lax.dynamic_slice_in_dim(x_0, best, 1, axis=0)
     diag = {k: jax.lax.dynamic_slice_in_dim(v, best, 1, axis=0) for k, v in last_diag.items()}
