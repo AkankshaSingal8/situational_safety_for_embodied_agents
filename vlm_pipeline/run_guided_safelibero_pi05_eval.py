@@ -330,6 +330,10 @@ def parse_args():
                         help="Margin setpoint [m]; lam decays whenever margin exceeds it.")
     parser.add_argument("--dual_eta_max", type=float, default=0.01,
                         help="Repulsor strength ceiling (the eta that unsticks Object t1).")
+    parser.add_argument("--dual_gate_dist", type=float, default=0.0,
+                        help="Corridor gate for B: send eta=0 while the EEF is within "
+                             "this distance [m] of the task target (sanctioned approach "
+                             "phase — the repulsor must not fight the grasp). 0 = off.")
     parser.add_argument("--stall_recovery", action="store_true",
                         help="A2: on EEF stall (<1.5cm net motion over 40 control steps) "
                              "escalate — 3 replans with the HDC lateral-detour payload "
@@ -700,7 +704,13 @@ def run_eval(args):
                                 element["guidance"].update(
                                     parse_entities(task_description, entity_view(obs), sim=env.sim))
                             if args.dual_eta:
-                                element["guidance"]["repulsor_eta"] = float(dual_lam)
+                                _eta_send = float(dual_lam)
+                                _tp = element["guidance"].get("target_pos")
+                                if (args.dual_gate_dist > 0 and _tp is not None
+                                        and np.linalg.norm(np.asarray(_tp) - np.asarray(obs["robot0_eef_pos"]))
+                                        < args.dual_gate_dist):
+                                    _eta_send = 0.0  # sanctioned approach: don't fight the grasp
+                                element["guidance"]["repulsor_eta"] = _eta_send
                             if stall_hdc_replans > 0:
                                 element["guidance"]["hdc_scale"] = HDC_OVERRIDE
                                 stall_hdc_replans -= 1
