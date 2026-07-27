@@ -1682,3 +1682,29 @@ expected to hold. Deciding run: 42662560 (fk_eta004 + fk_eta0045, n=50/task
 (unstick needs eta=.01); t1 is quoted separately, not part of the box.
 Ops note: first resubmit ran at script-default N=20 (export dropped) —
 edges' n=200 numbers came from the parallel line's rerun.
+
+## 2026-07-26 — ENFORCEMENT FINALIZATION: box CLOSED, composed repair confirmed production (job 42662560)
+
+Acceptance box (user pre-registered): Spatial L1 TSR>=67.0 AND CAR>=28.5
+(beats baseline 67.0/14.0 and SOTA-reimpl 62.0/28.5 on both axes). All four
+noise-space frontier arms now at n=200:
+
+| arm            | Spatial L1 (n=200) | box | Object t1 (n=50) |
+|----------------|--------------------|-----|------------------|
+| fk_eta003      | 68.5 / 24.5        | out (CAR -4.0) | 28.0 / 0.0 |
+| fk_eta004      | 66.0 / 30.0        | out (TSR -1.0) | 22.0 / 0.0 |
+| fk_eta0045     | 65.5 / 29.5        | out (TSR -1.5) | 32.0 / 0.0 |
+| eta005_only    | 65.0 / 34.0        | out (TSR -2.0) | 32.0 / 0.0 |
+
+Midpoints' n=80 pilots (67.5/33.8, 67.5/35.0) were optimistic draws; at n=200
+they regress onto a smooth monotone frontier: TSR falls ~3.5pp as CAR rises
+~9.5pp across eta .003->.005. NO pure noise-space arm dominates both
+references on both axes.
+
+VERDICT (mechanical, vlm_pipeline/box_verdict.py): composed in-denoising
+repair STAYS production — it is the only enforcement config that holds the
+box (70.0/46.5 no-GT Spatial L1). The noise-space family is reported as the
+training-free tunable TSR<->CAR dial (four n=200 points), with Object t1
+quoted separately: weak-eta arms give CAR=0 there (unstick requires
+eta=.01) — the repulsor-strength trade-off row. ls_soft_rerun.slurm NOT
+submitted (was conditioned on a box winner); LS grid stands as final.
