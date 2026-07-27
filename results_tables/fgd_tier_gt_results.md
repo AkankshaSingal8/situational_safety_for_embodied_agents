@@ -1772,3 +1772,14 @@ reference row (protocol fully documented + verified against the released
 training data); note the printed-vs-released delta as an open benchmark
 reproducibility issue. The LS grid stands; remaining LS upside rides on the
 steering revision (SSM margins job 42691427 + Stage-2 winner propagation).
+
+## 2026-07-27 — LS human_safety SSM smoke (42691427, n=10, guided_gt id)
+
+ssm: 10/36/0 TSR (L0/L1/L2), viol 0 — vs guided_gt 18/26/2, baseline 54/56/26.
+ssm_stall: 10/24/6 (stall ladder hurts, consistent with SafeLIBERO kill).
+Verdict: PARTIAL — L1 +10 (moving-hand over-conservatism fixed), L0/L2 flat/
+worse (static hand-as-destination duality untouched; velocity-scaled margin
+cannot help when the hand IS the stationary goal). Next lever: corridor-gated
+dual-eta (Stage-2 arm B_dual_gate) — soft repulsion that yields inside the
+sanctioned approach is the mechanism shape the handover duality needs; if it
+wins Stage 2 it propagates to LS human_safety.
