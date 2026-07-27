@@ -199,6 +199,10 @@ def main():
                          "legacy fixed radius. Targets the human_safety stall tax.")
     ap.add_argument("--ssm_k", type=float, default=0.5,
                     help="Margin gain [m per m/s of hazard closing speed].")
+    ap.add_argument("--adaptive_replan", action="store_true",
+                    help="Replan every 2 control steps while certified clearance "
+                         "< --adaptive_clearance (reactivity vs the moving hand).")
+    ap.add_argument("--adaptive_clearance", type=float, default=0.12)
     ap.add_argument("--task_filter", type=int, nargs="*", default=None,
                     help="Restrict to these task_ids (diagnostics)")
     args = ap.parse_args()
@@ -429,10 +433,14 @@ def main():
                         dual_lam = float(np.clip(
                             dual_lam + args.dual_kappa * (args.dual_mref - _m),
                             0.0, args.dual_eta_max))
+                    _n_exec = len(chunk)
+                    if (args.adaptive_replan and _diag is not None
+                            and float(_diag.get("min_clearance", np.inf)) < args.adaptive_clearance):
+                        _n_exec = 2
                     if args.raw_actions:
-                        plan.extend(np.clip(chunk, -1.0, 1.0))
+                        plan.extend(np.clip(chunk[:_n_exec], -1.0, 1.0))
                         continue
-                    plan.extend(np.clip(chunk * ACTION_TO_CMD, -1.0, 1.0))
+                    plan.extend(np.clip(chunk[:_n_exec] * ACTION_TO_CMD, -1.0, 1.0))
                 if in_retreat > 0:
                     _a = np.zeros(7)
                     _a[2] = 0.4  # command-space lift; ~2 cm/step after cmd_clip

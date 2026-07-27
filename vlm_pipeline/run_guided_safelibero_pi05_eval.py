@@ -335,6 +335,11 @@ def parse_args():
                              "escalate — 3 replans with the HDC lateral-detour payload "
                              "override, then (if still stalled) a scripted lift-retreat "
                              "and re-approach. Max 2 retreats/episode.")
+    parser.add_argument("--adaptive_replan", action="store_true",
+                        help="Replan every 2 control steps (instead of 5) while the "
+                             "certified clearance is below --adaptive_clearance — "
+                             "double reactivity exactly where collisions/stalls happen.")
+    parser.add_argument("--adaptive_clearance", type=float, default=0.12)
     return parser.parse_args()
 
 
@@ -719,7 +724,11 @@ def run_eval(args):
                                 dual_lam = float(np.clip(
                                     dual_lam + args.dual_kappa * (args.dual_mref - _m),
                                     0.0, args.dual_eta_max))
-                        action_plan.extend(action_chunk)
+                        _n_exec = len(action_chunk)
+                        if (args.adaptive_replan and diag is not None
+                                and float(diag.get("min_clearance", np.inf)) < args.adaptive_clearance):
+                            _n_exec = 2  # tight zone: replan twice as often
+                        action_plan.extend(action_chunk[:_n_exec])
 
                     # A2 retreat primitive: scripted lift replaces the plan for a
                     # few steps (straight up = away from tabletop keep-outs), then
