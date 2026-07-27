@@ -183,6 +183,22 @@ def main():
     ap.add_argument("--camera_res", type=int, default=256,
                     help="Env render resolution (gap diagnosis: their data "
                          "pipeline is 128px)")
+    # Runtime steering revision (spec 2026-07-27) — client-side controllers.
+    ap.add_argument("--dual_eta", action="store_true",
+                    help="B: dual-adaptive repulsor strength from the server's "
+                         "selected_margin diag (pair with --repair_schedule none server)")
+    ap.add_argument("--dual_kappa", type=float, default=0.5)
+    ap.add_argument("--dual_mref", type=float, default=0.02)
+    ap.add_argument("--dual_eta_max", type=float, default=0.01)
+    ap.add_argument("--stall_recovery", action="store_true",
+                    help="A2: stall -> HDC detour replans -> scripted lift-retreat")
+    ap.add_argument("--ssm_margins", action="store_true",
+                    help="A3: speed-and-separation margin for DYNAMIC hazards (ISO/TS "
+                         "15066 shape): r = base - 0.03 + ssm_k * closing_speed, "
+                         "clamped [base-0.03, base+0.05]. Static hazards keep the "
+                         "legacy fixed radius. Targets the human_safety stall tax.")
+    ap.add_argument("--ssm_k", type=float, default=0.5,
+                    help="Margin gain [m per m/s of hazard closing speed].")
     ap.add_argument("--task_filter", type=int, nargs="*", default=None,
                     help="Restrict to these task_ids (diagnostics)")
     args = ap.parse_args()
@@ -328,6 +344,15 @@ def main():
             frames = []
             eef_path_len = 0.0
             prev_eef = np.asarray(obs["robot0_eef_pos"]).copy()
+            # Revision controllers (spec 2026-07-27): per-episode state.
+            dual_lam = 0.0
+            eef_hist = collections.deque(maxlen=40)   # A2 stall window
+            stall_hdc_replans = 0
+            in_retreat = 0
+            ep_stalls = ep_retreats = 0
+            ssm_prev_g0 = None                        # A3 hazard tracking
+            ssm_init_g0 = None
+            ssm_moved = False
             max_steps = args.max_steps or MAX_STEPS[args.level]
             while t < max_steps and not done:
                 if not plan:
@@ -355,12 +380,35 @@ def main():
 
                     g0 = _guard_pos(guard[0]) if guard else None
                     if g0 is not None and not args.disable_guidance:
+                        r_obs = obstacle_radius(guard[0])
+                        if args.ssm_margins:
+                            # A3: dynamic hazards get a speed-scaled margin;
+                            # hazards that have never moved keep the legacy
+                            # fixed radius (bit-identical on static suites).
+                            _eef = np.asarray(obs["robot0_eef_pos"])
+                            if ssm_init_g0 is None:
+                                ssm_init_g0 = np.asarray(g0).copy()
+                            if np.linalg.norm(np.asarray(g0) - ssm_init_g0) > 0.005:
+                                ssm_moved = True
+                            if ssm_moved and ssm_prev_g0 is not None:
+                                _dt = args.replan_steps / 20.0  # LIBERO runs 20 Hz
+                                closing = (np.linalg.norm(ssm_prev_g0 - _eef)
+                                           - np.linalg.norm(np.asarray(g0) - _eef)) / _dt
+                                r_obs = float(np.clip(
+                                    r_obs - 0.03 + args.ssm_k * max(0.0, closing),
+                                    r_obs - 0.03, r_obs + 0.05))
+                            ssm_prev_g0 = np.asarray(g0).copy()
                         element["guidance"] = {
                             "enabled": 1.0,
                             "eef_pos": np.asarray(obs["robot0_eef_pos"], dtype=np.float32),
                             "obstacle_pos": np.asarray(g0, dtype=np.float32),
-                            "obstacle_radius": obstacle_radius(guard[0]),
+                            "obstacle_radius": r_obs,
                         }
+                        if args.dual_eta:
+                            element["guidance"]["repulsor_eta"] = float(dual_lam)
+                        if stall_hdc_replans > 0:
+                            element["guidance"]["hdc_scale"] = 0.01
+                            stall_hdc_replans -= 1
                         g1 = _guard_pos(guard[1]) if len(guard) > 1 else None
                         if g1 is not None:
                             element["guidance"]["obstacle2"] = {
@@ -373,12 +421,42 @@ def main():
                             element["guidance"]["target_pos"] = np.asarray(tp, dtype=np.float32)
                         if dp is not None:
                             element["guidance"]["dest_pos"] = np.asarray(dp, dtype=np.float32)
-                    chunk = np.asarray(client.infer(element)["actions"][:args.replan_steps])
+                    _res = client.infer(element)
+                    chunk = np.asarray(_res["actions"][:args.replan_steps])
+                    _diag = _res.get("guidance")
+                    if args.dual_eta and _diag is not None and "selected_margin" in _diag:
+                        _m = float(np.asarray(_diag["selected_margin"]).reshape(-1)[0])
+                        dual_lam = float(np.clip(
+                            dual_lam + args.dual_kappa * (args.dual_mref - _m),
+                            0.0, args.dual_eta_max))
                     if args.raw_actions:
                         plan.extend(np.clip(chunk, -1.0, 1.0))
                         continue
                     plan.extend(np.clip(chunk * ACTION_TO_CMD, -1.0, 1.0))
-                obs, reward, done, info = env.step(plan.popleft().tolist())
+                if in_retreat > 0:
+                    _a = np.zeros(7)
+                    _a[2] = 0.4  # command-space lift; ~2 cm/step after cmd_clip
+                    in_retreat -= 1
+                    if in_retreat == 0:
+                        plan.clear()
+                        eef_hist.clear()
+                    obs, reward, done, info = env.step(_a.tolist())
+                else:
+                    obs, reward, done, info = env.step(plan.popleft().tolist())
+                if args.stall_recovery and in_retreat == 0:
+                    eef_hist.append(np.asarray(obs["robot0_eef_pos"], dtype=np.float64))
+                    if (len(eef_hist) == eef_hist.maxlen
+                            and np.linalg.norm(eef_hist[-1] - eef_hist[0]) < 0.015):
+                        ep_stalls += 1
+                        eef_hist.clear()
+                        plan.clear()
+                        if ep_stalls == 1:
+                            stall_hdc_replans = 3
+                            logging.info(f"  [stall] t={t}: HDC detour x3")
+                        elif ep_retreats < 2:
+                            in_retreat = 8
+                            ep_retreats += 1
+                            logging.info(f"  [stall] t={t}: retreat {ep_retreats}/2")
                 cost = env.env._check_constraint(done)
                 if any(v > 0 for v in cost.values()):
                     violated = True
@@ -390,12 +468,19 @@ def main():
             succ += int(done)
             viol += int(violated)
             with open(episodes_log, "a") as ef:
-                ef.write(json.dumps({"task": task_id, "ep": ep, "refused": False,
-                                     "success": bool(done), "violation": bool(violated),
-                                     "steps": t, "hazards": hazards,
-                                     "guard": guard, "movers": sorted(movers),
-                                     "ident_correct": ident_correct,
-                                     "eef_path_len": round(eef_path_len, 3)}) + "\n")
+                _rec = {"task": task_id, "ep": ep, "refused": False,
+                        "success": bool(done), "violation": bool(violated),
+                        "steps": t, "hazards": hazards,
+                        "guard": guard, "movers": sorted(movers),
+                        "ident_correct": ident_correct,
+                        "eef_path_len": round(eef_path_len, 3)}
+                if args.stall_recovery:
+                    _rec["stalls"], _rec["retreats"] = ep_stalls, ep_retreats
+                if args.dual_eta:
+                    _rec["dual_lam_final"] = round(dual_lam, 5)
+                if args.ssm_margins:
+                    _rec["ssm_dynamic"] = bool(ssm_moved)
+                ef.write(json.dumps(_rec) + "\n")
             if args.save_videos and frames:
                 import imageio
                 vdir = out_dir / "videos"
