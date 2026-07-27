@@ -1708,3 +1708,31 @@ training-free tunable TSR<->CAR dial (four n=200 points), with Object t1
 quoted separately: weak-eta arms give CAR=0 there (unstick requires
 eta=.01) — the repulsor-strength trade-off row. ls_soft_rerun.slurm NOT
 submitted (was conditioned on a box winner); LS grid stands as final.
+
+## 2026-07-27 — LS finetune-gap forensics (user: "figure out the finetune issue")
+
+Question: released LIBERO-Safety pi05 finetune scores 8-22 TSR on obstacle
+suites in our harness vs 55-63 printed. Findings so far:
+1. Released training set = 19,664 eps over exactly 15 base tasks; the five
+   suites REUSE these tasks with hazards injected (bddl names match task
+   strings verbatim). So every benchmark task IS in-distribution — the
+   obstacle-suite gap is NOT missing task competence. (Repo ships NO eval
+   harness; printed numbers cannot be re-run, only approximated.)
+2. Baseline telemetry is bimodal PER TASK (t5 banana->plate 10/10, t1 frypan
+   6/10, everything else 0/10 with 600-step timeouts, ~1 m path — moves
+   purposefully, never finishes). Global harness bugs are excluded by the
+   10/10 task.
+3. Conventions verified DIRECTLY against training parquet ep9985 (same task
+   as our 0/10 diag videos): actions ARE metric deltas (+-3 cm / +-0.05 rad
+   per step -> our ACTION_TO_CMD correct), 20 Hz, 8-dim state layout matches,
+   camera viewpoint matches (frame-to-frame comparison), prompts match bddl
+   language, init states + 20-step settle wait in place. Texture
+   randomization differs (their demos randomize; benchmark defaults).
+4. Their demos complete "hard" L0 tasks in ~200 steps; our rollouts wander
+   600. Remaining suspect: chunk execution cadence (we cut the 10-step flow
+   chunk at 5). PROBE submitted: job 42692373, baseline oa L0+L1 n=10,
+   replan_steps 10 vs 5, videos on rs10.
+Implication either way: if rs10 recovers TSR, every LS row (ours AND
+baseline) improves under one protocol fix and the grid reruns; if not, the
+residual gap is attributed to the released-vs-paper checkpoint delta and the
+paper quotes our released-checkpoint reproduction as the honest reference.
