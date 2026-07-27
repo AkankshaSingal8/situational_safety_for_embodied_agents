@@ -1757,3 +1757,18 @@ Object t1: CAR=0 for ALL arms INCLUDING control (cell unguardable at this
 config; B_dual TSR 10 vs 40 - eta fights the sanctioned grasp approach).
 Stage 2: B_dual and B_dual+AR at Spatial L1 full n=20/task + corridor-gated
 lambda on t1; A2 retreat primitive killed (uncertified lifts cost CAR).
+
+## 2026-07-27 — LS finetune-gap forensics CLOSED (chunk probe 42692373)
+
+replan_steps 10 (full chunk) vs 5, baseline oa L0+L1 n=10: rs10 12.0/24.0 TSR
+vs rs5 18.0/32.0 (violations 0 both) — cadence hypothesis REFUTED; rs5 control
+reproduces the stored grid. Exhausted testable suspects: task coverage (all
+15 benchmark tasks ARE in the 19.6k training set), action/state conventions
+(verified against training parquet), camera (frame-matched), prompts, init
+states, settle wait, horizon 600, execution cadence. The benchmark ships no
+eval harness, so the printed numbers cannot be arbitrated further.
+VERDICT for the paper: quote OUR released-checkpoint reproduction as the
+reference row (protocol fully documented + verified against the released
+training data); note the printed-vs-released delta as an open benchmark
+reproducibility issue. The LS grid stands; remaining LS upside rides on the
+steering revision (SSM margins job 42691427 + Stage-2 winner propagation).
