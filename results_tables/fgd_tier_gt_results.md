@@ -1874,3 +1874,16 @@ percep: 70.0/46.5). NEXT (final tilt test per user rule): derived operator
 ON TOP of that no-GT board config — if it holds/raises the box there it
 enters the paper; else the constrained-sampling formulation ships as theory
 + mechanism findings and configs stay frozen.
+
+## 2026-07-28 — VISUAL CONDITIONING RERUN (42773336, mirror-fixed): NO-GO RE-CONFIRMED, now valid
+
+Projection fix validated offline (disk lands on moka pot; old mirrored run
+archived to fgd_visovr_pilot_mirrorbug/). Spatial L1 n=80, ramp-K8 server:
+| arm | TSR/CAR | vs baseline 67.0/14.0 |
+| overlay_only (guidance off) | 65.0/15.0 | CAR +1.0 (noise), TSR -2.0 |
+| overlay_repair | 65.0/37.5 | interaction consistent with repair alone |
+With CORRECTLY-rendered keep-out disks + target rings, the image channel
+still creates zero avoidance (CAR 15.0 vs 14.0); the old -8 TSR occlusion
+artifact is gone (-2.0, within noise). The conditioning-blindness claim is
+re-validated on clean evidence: the paper may cite the visual-channel NO-GO.
+Fifth intervention-point testbed closed, this time properly.
