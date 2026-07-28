@@ -1824,3 +1824,38 @@ mechanism>compute finding (dev cells) + TSR/CAR mechanism decomposition
 survive as analysis; no revision config beats production at n=200 so far.
 LIVE candidate: the DERIVED tilt operator (job 42741107, queued) — user rule:
 beats baseline 67.0/14.0 AND SOTA 62.0/28.5 on both axes -> paper method.
+
+## 2026-07-28 — SQ + no-GT weak-cell forensics (offline, user /debug session)
+
+### Superquadric "did not work" — root causes found (3), fixes staged
+1. CERTIFICATE GAP (code): corridor relaxation reached the shape term only in
+   the REPAIR sweep, never in the ACCEPTANCE certificate — grasp chunks the
+   repair would allow were certificate-vetoed (selection + renoise). Fixed
+   (commit; sphere-mode bit-exact). Re-smoke t1/t2: job 42743117.
+2. FIT INFLATION (geometry): moka mesh AABB half-extents (0.065,0.118,0.121)
+   — the HANDLE nearly doubles lateral extent; plus the client SYMMETRIZES
+   about the body origin (max(|hi-c|,|c-lo|)) adding ~3 cm phantom keep-out
+   on the handle-free (grasp) side: sent y-half-extent 0.146 -> keep-out
+   0.246 m vs sphere 0.165, target at 0.168. Fix: --sq_fit mid (tight
+   AABB-midpoint fit + recentred shape). Smoke: job 42743295.
+3. BONUS BUG: visual_conditioning._project had a COLUMN MIRROR (camera x-axis
+   sign). Verified by 5-object projection onto spatial t1/t0 scenes. Guidance
+   unaffected (pure 3D). The visual-overlay pilot NO-GO is INVALIDATED
+   (disks were drawn mirrored = pure occlusion); needs rerun before the paper
+   cites it.
+
+### no-GT weak suites (Long L1 49.0/66.5, Long L2 44.0/79.5, Goal L2 67.5/69.0)
+Episode forensics (n=200/cell): identification 200/200 CORRECT, percep
+fallback 0, and 100% OF ALL FAILURES ARE TIMEOUTS — perception is exonerated;
+this is pure liveness. Concentrated: L1 t1/t3 (41/50, 37/50 timeouts),
+L2 t2/t3 (45/50, 44/50), Goal L2 t0 (33/50). Env probe (osmesa, no GPU):
+corridor parser binds CORRECTLY (nearest-undelivered target + dest) on the
+failing tasks; the real geometry: the obstacle sits INSIDE the sphere
+keep-out radius of a STAGE-2 entity (alphabet soup 0.118 m, chocolate
+pudding 0.151 m < r_eff 0.165) — stage 2 must thread the relaxed corridor
+window (0.066 m) for a full grasp sequence. Video diag n=3 on the two worst
+cells: job 42743730. Candidate fixes ranked: (a) tight/shape-aware keep-out
+via --sq_fit mid (the small mug obstacle's true extents are ~half the sphere
+radius — the SAME fix as SQ #2 helps here); (b) corridor-gated adaptive
+steering (tilt) instead of full-strength repair inside the window; (c) HDC
+detours on stall.
