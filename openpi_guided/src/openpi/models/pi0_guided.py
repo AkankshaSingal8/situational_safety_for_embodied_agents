@@ -448,11 +448,18 @@ def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> 
     disp = cmd * g.translation_scale  # (K, H, 3)
     companions = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08], [0.0, 0.0, -0.06]]) * g.companion_scale
     p_traj = g.eef_pos + jnp.cumsum(disp, axis=1)  # (K, H, 3)
+    # Corridor relaxation must reach the SHAPE term here too, not just the
+    # scalar margin — otherwise the certificate vetoes grasp chunks the
+    # repair path would allow (the t1 superquadric failure, root-caused
+    # 2026-07-28: handle-inflated AABB puts the grasp target inside the
+    # unrelaxed anisotropic keep-out). Sphere mode: bit-exact no-op.
+    cs = _corridor_scale(p_traj, g)  # (K, H)
     dists = jnp.min(
-        _min_eff_dist(p_traj[:, :, None, :] + companions[None, None], g), axis=-1
+        _min_eff_dist(p_traj[:, :, None, :] + companions[None, None], g,
+                      shape_scale=cs[:, :, None]), axis=-1
     )  # (K, H)
     h = disp.shape[1]
-    r_horizon = (g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)) * _corridor_scale(p_traj, g)
+    r_horizon = (g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)) * cs
     b = dists - r_horizon  # (K, H)
     b0 = jnp.min(_min_eff_dist(g.eef_pos[None, :] + companions, g)) - g.r_eff
     chain = jnp.concatenate([jnp.broadcast_to(b0, (b.shape[0], 1)), b[:, :prefix_len]], axis=1)
@@ -539,11 +546,13 @@ def _tilt_guidance(x_t: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
         companions = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08],
                                 [0.0, 0.0, -0.06]]) * g.companion_scale
         p_traj = g.eef_pos + jnp.cumsum(disp, axis=1)  # (K, H, 3)
+        cs = _corridor_scale(p_traj, g)  # corridor reaches the shape term (t1 fix)
         dists = jnp.min(
-            _min_eff_dist(p_traj[:, :, None, :] + companions[None, None], g), axis=-1
+            _min_eff_dist(p_traj[:, :, None, :] + companions[None, None], g,
+                          shape_scale=cs[:, :, None]), axis=-1
         )
         h = disp.shape[1]
-        r_h = (g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)) * _corridor_scale(p_traj, g)
+        r_h = (g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)) * cs
         b = dists - r_h  # (K, H)
         return jnp.sum(jax.nn.relu(TAU_T - b))
 
