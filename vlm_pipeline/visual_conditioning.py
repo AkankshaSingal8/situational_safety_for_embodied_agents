@@ -31,7 +31,14 @@ def _project(K, extrinsic_c2w, points_w):
     homo = np.concatenate([pts, np.ones((len(pts), 1))], axis=1)
     cam = (w2c @ homo.T).T[:, :3]
     z = np.maximum(cam[:, 2], 1e-6)
-    u = K[0, 0] * cam[:, 0] / z + K[0, 2]  # col
+    # Column-mirror fix (2026-07-28 forensics, spatial t1 multi-object
+    # validation): robosuite's saved extrinsic yields +z depth and correct
+    # rows, but the camera x-axis is LEFT-pointing relative to the CV
+    # convention — without the negation every projected point lands at
+    # (W-1-col). Verified: 5 named objects land on their pixels only with
+    # the flip. NOTE: this bug shipped in the visual-overlay pilot (disks
+    # drawn mirrored) — that NO-GO is invalidated pending rerun.
+    u = K[0, 0] * (-cam[:, 0]) / z + K[0, 2]  # col
     v = K[1, 1] * cam[:, 1] / z + K[1, 2]  # row
     return np.stack([v, u], axis=1), z
 

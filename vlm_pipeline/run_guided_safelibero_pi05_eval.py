@@ -188,7 +188,7 @@ def obstacle_radius(name: str) -> float:
     return next((r for key, r in OBSTACLE_RADII.items() if key in label), DEFAULT_OBSTACLE_RADIUS)
 
 
-def obstacle_half_extents(sim, obstacle_name, center):
+def obstacle_half_extents(sim, obstacle_name, center, return_mid=False):
     """World-frame AABB half-extents of the obstacle's geoms about `center`.
 
     Exact for boxes/spheres/cylinders; meshes use their vertex sets (rbound
@@ -231,6 +231,14 @@ def obstacle_half_extents(sim, obstacle_name, center):
     if not np.all(np.isfinite(lo)):
         return None
     center = np.asarray(center)
+    if return_mid:
+        # Tight fit (spec 2026-07-28 sq forensics): half-extents about the
+        # AABB MIDPOINT. The symmetrize-about-body-origin form below adds
+        # phantom keep-out opposite any protruding part (moka handle: ~3 cm
+        # on the handle-free side — the grasp side on Spatial t1).
+        he = (hi - lo) / 2.0
+        return (np.clip(he, 0.02, 0.35).astype(np.float32),
+                ((hi + lo) / 2.0).astype(np.float32))
     # half-extents about the guidance center (not the AABB midpoint), so the
     # superquadric centered there still covers the whole box
     he = np.maximum(np.abs(hi - center), np.abs(center - lo))
@@ -348,6 +356,10 @@ def parse_args():
                              "certified clearance is below --adaptive_clearance — "
                              "double reactivity exactly where collisions/stalls happen.")
     parser.add_argument("--adaptive_clearance", type=float, default=0.12)
+    parser.add_argument("--sq_fit", type=str, default="sym", choices=["sym", "mid"],
+                        help="Superquadric fit: 'sym' = legacy symmetrized-about-body-"
+                             "origin half-extents; 'mid' = tight AABB-midpoint fit "
+                             "(removes phantom keep-out opposite protruding parts).")
     parser.add_argument("--log_trajectories", action="store_true",
                         help="Save executed action sequences of SAFE SUCCESSFUL episodes "
                              "(npz per episode) for self-distillation finetuning. Images "
@@ -543,11 +555,18 @@ def run_eval(args):
                     obstacle_scales = estimate_obstacle_extent(
                         env.sim, obstacle_name, cameras=("agentview",),
                         region_source=args.mask_source, detector=gdino_detector)
+                elif args.sq_fit == "mid":
+                    _fit = obstacle_half_extents(
+                        env.sim, obstacle_name, obs[f"{obstacle_name}_pos"],
+                        return_mid=True)
+                    if _fit is not None:
+                        obstacle_scales, _mid = _fit
+                        guidance_obstacle_pos = _mid  # shape centered on true AABB
                 else:
                     obstacle_scales = obstacle_half_extents(
                         env.sim, obstacle_name, obs[f"{obstacle_name}_pos"])
                 if obstacle_scales is not None:
-                    logging.info(f"  [shape:{args.obstacle_pos_source}] {obstacle_name} "
+                    logging.info(f"  [shape:{args.obstacle_pos_source}:{args.sq_fit}] {obstacle_name} "
                                  f"half-extents {np.round(obstacle_scales, 3).tolist()}")
             percep_fallback = False
             if args.obstacle_pos_source == "percep" and obstacle_name is not None:
