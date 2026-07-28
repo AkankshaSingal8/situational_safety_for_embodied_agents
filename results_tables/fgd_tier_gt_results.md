@@ -1811,3 +1811,16 @@ four comparisons, underpowered at n=80 (pre-registered p<0.1 NOT yet met).
 STAGE 3 submitted: CD_gate vs CTRL at N=50/task (n=200 spatial + n=50 t1),
 final call at scale. Mechanism story regardless of verdict: repair = CAR
 machine, gated adaptive eta = TSR machine, composition additive.
+
+## 2026-07-28 — STAGE 3 DECISIVE n=200 (42739517): CD_gate FAILS to beat production
+
+CD_gate 51.5/40.0 vs CTRL_prod 56.5/39.0 (Spatial L1 n=200, paired): the
+n=80 advantage (+7.5/+5.0) was a noise draw — at scale TSR -5.0, CAR +1.0.
+Object t1: 30.0 vs 18.0 (+12 TSR, CAR 0=0). Same n=80->n=200 regression
+pattern as the eta-frontier midpoints. VERDICT (pre-registered): the
+hand-designed gated-eta composition does NOT replace production; composed
+repair REMAINS the production config. Standing revision results: Stage-1
+mechanism>compute finding (dev cells) + TSR/CAR mechanism decomposition
+survive as analysis; no revision config beats production at n=200 so far.
+LIVE candidate: the DERIVED tilt operator (job 42741107, queued) — user rule:
+beats baseline 67.0/14.0 AND SOTA 62.0/28.5 on both axes -> paper method.
