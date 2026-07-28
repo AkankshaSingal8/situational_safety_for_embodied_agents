@@ -758,8 +758,11 @@ def run_eval(args):
                                 dbnr_headroom_sum += float(diag.get("dbnr_headroom_mean", 0.0))
                             # B: integral update of the adaptive repulsor strength
                             # from the certified margin of the chunk just selected.
-                            if args.dual_eta and "selected_margin" in diag:
-                                _m = float(np.asarray(diag["selected_margin"]).reshape(-1)[0])
+                            if args.dual_eta and ("selected_margin" in diag or "min_clearance" in diag):
+                                # K=1 servers emit no selected_margin — fall back
+                                # to the repair diag's min_clearance (same units).
+                                _m_src = diag.get("selected_margin", diag.get("min_clearance"))
+                                _m = float(np.asarray(_m_src).reshape(-1)[0])
                                 dual_lam = float(np.clip(
                                     dual_lam + args.dual_kappa * (args.dual_mref - _m),
                                     0.0, args.dual_eta_max))
