@@ -1859,3 +1859,18 @@ via --sq_fit mid (the small mug obstacle's true extents are ~half the sphere
 radius — the SAME fix as SQ #2 helps here); (b) corridor-gated adaptive
 steering (tilt) instead of full-strength repair inside the window; (c) HDC
 detours on stall.
+
+## 2026-07-28 — DERIVED TILT OPERATOR at n=200 (42741107): fails the absolute box; best in-family arm
+
+CD_tilt 59.5/40.5, CD_tilt_gate 53.5/37.5 (Spatial L1 n=200). User box
+(TSR>=67.0 AND CAR>=28.5): FAIL on TSR (-7.5). Context: vs the SAME-SEED
+production control (56.5/39.0) the derived operator is the ONLY n=200 arm
+positive on BOTH axes (+3.0/+1.5) — but McNemar ns (TSR 28W/22L p=0.48,
+CAR 14W/11L p=0.69). Program-level honest read after Stages 1-3 + tilt:
+within the GT ramp-K8-corridor config family, no steering variant separates
+from composed production at n=200; all deltas are noise-scale. The absolute
+box is held only by the no-GT production config (thin r3 + VLM priors +
+percep: 70.0/46.5). NEXT (final tilt test per user rule): derived operator
+ON TOP of that no-GT board config — if it holds/raises the box there it
+enters the paper; else the constrained-sampling formulation ships as theory
++ mechanism findings and configs stay frozen.
