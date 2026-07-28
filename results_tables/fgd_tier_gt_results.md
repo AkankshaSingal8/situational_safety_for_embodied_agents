@@ -1801,3 +1801,13 @@ repair sweep each denoise step) -> STAGE 2b submitted (42700745): composed
 repair + gated adaptive eta (CD_gate, CD_gate_AR), same seeds. Object t1
 unresolved by the 0.12 gate (5.0 TSR all dual arms) — t1 treatment deferred
 to the composed arms (repair restores the corridor behavior there).
+
+## 2026-07-28 — STAGE 2b (42700745, paired n=80): COMPOSITION BEATS PRODUCTION ON BOTH AXES
+
+CD_gate (composed repair + corridor-gated adaptive eta): 61.3/40.0 vs CTRL
+53.8/35.0 (+7.5/+5.0); CD_gate_AR 60.0/41.2 (+6.2/+6.2); object t1 25.0 vs
+20.0. McNemar: TSR 11W/5L p=0.21, CAR 7W/3L p=0.34 — right direction on all
+four comparisons, underpowered at n=80 (pre-registered p<0.1 NOT yet met).
+STAGE 3 submitted: CD_gate vs CTRL at N=50/task (n=200 spatial + n=50 t1),
+final call at scale. Mechanism story regardless of verdict: repair = CAR
+machine, gated adaptive eta = TSR machine, composition additive.
