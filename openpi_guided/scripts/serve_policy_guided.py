@@ -68,6 +68,7 @@ class Args:
     # terms in best-of-K selection. 0 = legacy score.
     progress_weight: float = 0.0
     lookahead_weight: float = 0.0
+    tilt_lambda: float = 0.0
 
 
 def main(args: Args) -> None:
@@ -107,6 +108,7 @@ def main(args: Args) -> None:
         sq_eps=args.sq_eps,
         progress_weight=args.progress_weight,
         lookahead_weight=args.lookahead_weight,
+        tilt_lambda=args.tilt_lambda,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)

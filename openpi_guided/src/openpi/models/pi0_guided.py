@@ -127,6 +127,17 @@ class GuidanceParams(NamedTuple):
     # (C) — candidates whose tail re-enters the keep-out lose ties, avoiding
     # geometric dead-ends that stall the next replan.
     lookahead_weight: at.Float[at.Array, ""]
+    # tilt_lambda: DERIVED steering operator (constrained-sampling formulation,
+    # 2026-07-28). The safety-tilted target distribution is
+    # pi(chunk) * exp(-lambda * danger(chunk)); the correct guidance drift is
+    # -lambda * grad_x danger, where danger = sum of hinge barrier violations
+    # along the analytic rollout (same margins as the acceptance certificate,
+    # corridor exemption INCLUDED — so "don't fight the sanctioned approach"
+    # emerges from the derivation instead of a bolted-on gate). The gradient
+    # direction is normalized per candidate and scaled by tilt_lambda in the
+    # SAME meters-per-denoise-step units as repulsor_eta, so the client's dual
+    # (lambda) controller transfers unchanged. 0 = inert, bit-exact legacy.
+    tilt_lambda: at.Float[at.Array, ""]
 
 
 def _eff_dist(diffs: jnp.ndarray, g: GuidanceParams, scales=None, r_base=None, shape_scale=1.0) -> jnp.ndarray:
@@ -509,6 +520,42 @@ def _repulsor(x_t: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
     return x_t.at[..., :3].add(g.enabled * dx)
 
 
+def _tilt_guidance(x_t: jnp.ndarray, g: GuidanceParams) -> jnp.ndarray:
+    """Derived steering: guidance drift of the safety-tilted distribution.
+
+    danger(x) = sum_k relu(TAU_T - b_k(x)) over the FULL rollout horizon,
+    with b_k built EXACTLY like the acceptance certificate (companion points,
+    horizon-inflated margins, corridor relaxation). The applied drift is the
+    per-candidate NORMALIZED negative gradient scaled by tilt_lambda
+    [m/denoise-step] — steepest descent on total violation with a controlled
+    step, zero wherever the hinge is inactive (safe chunks are untouched).
+    Replaces the hand-designed radial repulsor (kept as its ablation)."""
+    TAU_T = 0.02  # hinge margin [m]: start steering slightly before violation
+
+    def danger(x3):
+        span = g.q99 - g.q01 + 1e-6
+        cmd = (x3 + 1.0) / 2.0 * span + g.q01
+        disp = cmd * g.translation_scale
+        companions = jnp.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.08],
+                                [0.0, 0.0, -0.06]]) * g.companion_scale
+        p_traj = g.eef_pos + jnp.cumsum(disp, axis=1)  # (K, H, 3)
+        dists = jnp.min(
+            _min_eff_dist(p_traj[:, :, None, :] + companions[None, None], g), axis=-1
+        )
+        h = disp.shape[1]
+        r_h = (g.r_eff + g.inflation_slope * jnp.arange(1.0, h + 1.0)) * _corridor_scale(p_traj, g)
+        b = dists - r_h  # (K, H)
+        return jnp.sum(jax.nn.relu(TAU_T - b))
+
+    grad = jax.grad(danger)(x_t[..., :3])  # (K, H, 3)
+    gnorm = jnp.sqrt(jnp.sum(grad ** 2, axis=(1, 2), keepdims=True))
+    direction = grad / (gnorm + 1e-8)
+    span = g.q99 - g.q01 + 1e-6
+    dx = -2.0 * g.tilt_lambda * direction / (g.translation_scale * span)
+    active = (gnorm > 1e-8).astype(jnp.float32)
+    return x_t.at[..., :3].add(g.enabled * active * dx)
+
+
 def _fk_resample(x_t: jnp.ndarray, g: GuidanceParams, k) -> jnp.ndarray:
     """Enforcement candidate B: Feynman-Kac tilt over the K particles.
 
@@ -603,6 +650,7 @@ def guided_sample_actions(
         w_hdc = jnp.where((k >= 2) & (k <= 5), 0.25, 0.0) * guidance.enabled
         x_t = x_t.at[..., :3].add(w_hdc * hdc_norm_bias[:, None, :])
         x_t = _repulsor(x_t, guidance)  # candidate C (eta=0 -> identity)
+        x_t = _tilt_guidance(x_t, guidance)  # derived operator (lambda=0 -> identity)
         x_t, diag = _dcbf_repair(x_t, guidance, k)
         x_t = _fk_resample(x_t, guidance, k)  # candidate B (beta=0 -> identity)
         return x_t, time + dt, diag

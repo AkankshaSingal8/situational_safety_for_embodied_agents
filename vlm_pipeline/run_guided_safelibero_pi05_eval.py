@@ -334,6 +334,10 @@ def parse_args():
                         help="Corridor gate for B: send eta=0 while the EEF is within "
                              "this distance [m] of the task target (sanctioned approach "
                              "phase — the repulsor must not fight the grasp). 0 = off.")
+    parser.add_argument("--dual_tilt", action="store_true",
+                        help="Send the dual controller's lambda as tilt_lambda (the "
+                             "DERIVED barrier-gradient guidance operator) instead of "
+                             "repulsor_eta (the hand-designed radial field).")
     parser.add_argument("--stall_recovery", action="store_true",
                         help="A2: on EEF stall (<1.5cm net motion over 40 control steps) "
                              "escalate — 3 replans with the HDC lateral-detour payload "
@@ -710,7 +714,8 @@ def run_eval(args):
                                         and np.linalg.norm(np.asarray(_tp) - np.asarray(obs["robot0_eef_pos"]))
                                         < args.dual_gate_dist):
                                     _eta_send = 0.0  # sanctioned approach: don't fight the grasp
-                                element["guidance"]["repulsor_eta"] = _eta_send
+                                key = "tilt_lambda" if args.dual_tilt else "repulsor_eta"
+                                element["guidance"][key] = _eta_send
                             if stall_hdc_replans > 0:
                                 element["guidance"]["hdc_scale"] = HDC_OVERRIDE
                                 stall_hdc_replans -= 1

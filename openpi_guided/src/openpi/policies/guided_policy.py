@@ -64,6 +64,7 @@ class GuidanceConfig:
     # Revision knobs (spec 2026-07-27, both 0 = bit-exact legacy selection):
     progress_weight: float = 0.0  # A1 directed-progress term in best-of-K selection
     lookahead_weight: float = 0.0  # C tail-margin (dead-end) term in best-of-K selection
+    tilt_lambda: float = 0.0  # derived barrier-gradient guidance strength [m/denoise-step]
 
 
 def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
@@ -201,6 +202,7 @@ class GuidedPolicy(_policy.Policy):
             repulsor_eta=jnp.float32(float(payload.get("repulsor_eta", cfg.repulsor_eta))),
             progress_weight=jnp.float32(cfg.progress_weight),
             lookahead_weight=jnp.float32(cfg.lookahead_weight),
+            tilt_lambda=jnp.float32(float(payload.get("tilt_lambda", cfg.tilt_lambda))),
         )
 
     def _renoise_infer(self, rng, observation, guidance):
