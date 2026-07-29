@@ -1909,3 +1909,43 @@ problem; 3 arms agree); (3) t2 headroom (~4pp) < t1 loss (~8-20pp) -> net
 TSR negative; (4) percep-fit inflation (4.4x) bars the no-GT tier; (5) CAR
 gain is real and large -> SQ joins the tunable-dial section next to the
 repulsor arms. Sphere stays production. Table-1 row unchanged.
+
+## 2026-07-29 — WHY SQ COSTS TSR: the sphere was never a circumscribing cover (geometry audit)
+
+The "tight fit frees space" intuition assumes the sphere OVER-approximates the
+object. It does not. `OBSTACLE_RADII` is a hand-tuned 0.060-0.080 m ball, while
+the objects' true half-extents reach 0.135-0.254 m. Fitting the shape faithfully
+therefore GREW the keep-out almost everywhere instead of shrinking it.
+
+Effective keep-out volume (object fit + eef_radius 0.09 + d_safe 0.01, the
+surface the robot actually feels), sym fit at eps=0.4 vs the production sphere:
+
+| obstacle | sphere r | SQ semi-axes | sphere vol | SQ vol | SQ/sphere | vertical reach |
+|---|---|---|---|---|---|---|
+| moka_pot | 0.080 | [0.065, 0.146, 0.139] | 24.4 L | 48.2 L | **1.97x** | 1.33x |
+| red_coffee_mug | 0.060 | [0.047, 0.063, 0.135] | 17.2 L | 25.5 L | 1.49x | 1.47x |
+| white_storage_box | 0.070 | [0.070, 0.142, 0.060] | 20.6 L | 31.5 L | 1.53x | 0.94x |
+| milk | 0.065 | [0.054, 0.055, 0.143] | 18.8 L | 26.2 L | 1.39x | 1.47x |
+| wine_bottle | 0.060 | [0.036, 0.035, 0.254] | 17.2 L | 19.3 L | 1.13x | **2.21x** |
+| yellow_book | 0.065 | [0.020, 0.069, 0.138] | 18.8 L | 16.4 L | 0.87x | 1.44x |
+
+5/6 obstacles get a LARGER keep-out; the moka pot (Spatial t0-t2) nearly doubles.
+So the n=200 result (-7.5 TSR / +25.0 CAR) is a COVERAGE effect, not a shape-
+efficiency effect: more of the object is actually protected (CAR up) at the cost
+of approach space (TSR down). Shape efficiency was never tested at board scale.
+
+Second, independent inflation: the `sym` fit symmetrizes half-extents about the
+BODY ORIGIN, which sits at the base for these meshes. Wine bottle sym z = 0.254
+vs mid z = 0.127 — EXACTLY 2x — i.e. the keep-out extends a full bottle-height
+ABOVE the bottle, directly into the top-down approach lane. Moka y: 0.146 sym vs
+0.122 mid. The `mid` fit (already implemented, `--sq_fit mid`) removes this, and
+was never run at n=200 — only the inflated `sym` fit reached the board.
+
+Interactive geometry: `sq_viz/keepout_spatial_I.html` (dump_sq_geometry.py ->
+render_sq_geometry.py, no policy server needed).
+
+IMPLICATION: the frontier-point verdict stands for the config that was RUN, but
+the claim "shape decreases TSR" is not established — what was tested is "a ~1.5-2x
+larger, vertically-inflated keep-out decreases TSR", which is the expected result
+for the sphere-radius sweep too. A shape arm that is genuinely volume-matched to
+the production sphere (mid fit + rescaled semi-axes) is the untested cell.
