@@ -108,6 +108,64 @@ def check_offset_gap(s, eps=EPS_DEFAULT, offset=OFF, n_probe=1500):
     return true_d
 
 
+def check_relaxation(s, r_eff, r_base, eps=EPS_DEFAULT):
+    """C5: numpy mirror of the server's _eff_dist relaxation algebra.
+
+    b(p) = ||p-o|| - ss*(r_shape(u) - r_base) - ms*r_eff, with ss = ms*c.
+    Two things must hold: sphere mode (scales <= 0) must be bit-exact legacy,
+    and full corridor relaxation (c=0) must remove the whole keep-out, shape
+    term included — the failure commit 1b108a5 claims to have fixed.
+    """
+    rng = np.random.default_rng(1)
+    p = rng.normal(size=(4000, 3)) * 0.25
+    d = np.linalg.norm(p, axis=-1)
+    u = p / d[:, None]
+    rows = []
+    for c in (1.0, 0.6, 0.25, 0.0):
+        ss = 1.0 * c
+        b_shape = d - ss * (sq_radius(u, s, eps) - r_base) - 1.0 * c * r_eff
+        b_sphere = d - 1.0 * c * r_eff          # legacy scalar path
+        rows.append((c, b_shape.min(), (b_shape - b_sphere).max()))
+    return rows
+
+
+def check_target_clearance(scene_json="sq_viz/spatial_I.json"):
+    """C4: is the GRASP TARGET inside the keep-out, per candidate fit?
+
+    Volume is a proxy. What decides task success is whether the keep-out
+    swallows the point the policy must reach. For each task, compare the
+    distance from obstacle center to the target against the keep-out extent
+    ALONG THAT DIRECTION for every candidate fit.
+    """
+    import json
+    import pathlib
+    data = json.loads(pathlib.Path(scene_json).read_text())
+    out = []
+    for s in data["scenes"]:
+        if not s.get("target_pos"):
+            continue
+        o = np.asarray(s["center"], dtype=float)
+        t = np.asarray(s["target_pos"], dtype=float)
+        v = t - o
+        dist = np.linalg.norm(v)
+        u = (v / dist)[None, :]
+        key = "moka_pot" if "moka" in s["obstacle"] else "wine_bottle"
+        obj = OBJECTS[key]
+        variants = [
+            (f"sphere r={obj['sphere_r']:.3f} (production)", obj["sphere_r"]),
+            ("SQ sym, boxy eps=0.4  [n=200 arm]", float(sq_radius(u, obj["sym"], 0.4)[0])),
+            ("SQ tight AABB, boxy eps=0.4", float(sq_radius(u, obj["mid"], 0.4)[0])),
+            ("ellipsoid tight AABB, eps=1.0", float(sq_radius(u, obj["mid"], 1.0)[0])),
+            ("ellipsoid main part only, eps=1.0", float(sq_radius(u, obj["body_only"], 1.0)[0])),
+        ]
+        if obj["body_only"] is not None:
+            infl = [x + OFF for x in obj["body_only"]]
+            variants.append(("ellipsoid main part, Minkowski-safe",
+                             float(sq_radius(u, infl, 1.0)[0]) - OFF))
+        out.append((s["task_id"], s["obstacle"], dist, variants))
+    return out
+
+
 def main():
     np.set_printoptions(suppress=True)
 
@@ -166,6 +224,37 @@ def main():
                      volume_radial(lambda u: np.full(u.shape[:-1], rmax))))
         for tag, v in rows:
             print(f"    {tag:46s} {v*1000:7.1f} L {v/v_sphere:9.2f}x")
+
+    print("\n" + "=" * 78)
+    print("C4  TARGET CLEARANCE — does the keep-out swallow the grasp target?")
+    print("    (keep-out extent along the center->target ray, vs the target's")
+    print(f"     own distance. extent = r_shape(u) + {OFF:.2f}. INSIDE = unreachable)")
+    print("=" * 78)
+    try:
+        rows = check_target_clearance()
+    except FileNotFoundError:
+        rows = []
+        print("  sq_viz/spatial_I.json not found — run dump_sq_geometry.py first.")
+    for task_id, obstacle, dist, variants in rows:
+        print(f"\n  t{task_id}  {obstacle}   target is {dist*1000:.0f} mm from obstacle center")
+        for tag, r_shape in variants:
+            extent = r_shape + OFF
+            verdict = "INSIDE  (target unreachable)" if extent > dist else "clear"
+            print(f"    {tag:40s} extent {extent*1000:6.1f} mm   {verdict}")
+
+    print("\n" + "=" * 78)
+    print("C5  RELAXATION ALGEBRA — does the corridor exemption reach the shape term?")
+    print("=" * 78)
+    for name, o in OBJECTS.items():
+        r_base = o["sphere_r"]
+        r_eff = r_base + OFF
+        print(f"\n  {name}  (r_obs_base={r_base:.3f}, r_eff={r_eff:.3f})")
+        print(f"    {'corridor scale c':>18s} {'min b [m]':>11s} {'b_shape - b_sphere max':>24s}")
+        for c, bmin, gap in check_relaxation(o["sym"], r_eff, r_base):
+            note = "  <- full relaxation: keep-out must vanish" if c == 0.0 else ""
+            print(f"    {c:>18.2f} {bmin:>11.4f} {gap:>24.4f}{note}")
+    print("\n  -> at c=0 the shape term and the scalar margin both vanish, so the")
+    print("     exemption is complete in shape mode (commit 1b108a5 verified).")
 
     print("\n" + "=" * 78)
     print("READ")

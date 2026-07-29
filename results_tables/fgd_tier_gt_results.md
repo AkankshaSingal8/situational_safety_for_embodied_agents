@@ -1973,3 +1973,107 @@ control and has NOT been run. That is the experiment worth queuing, not mid fit.
 
 Interactive geometry: `sq_viz/keepout_spatial_I.html` (dump_sq_geometry.py ->
 render_sq_geometry.py, no policy server needed).
+
+## 2026-07-29 — SUPERQUADRIC IMPLEMENTATION AUDIT (5 checks, vs Brunke et al. RA-L 2025 §IV-B)
+
+Tools: `vlm_pipeline/diag_obstacle_extent.py` (per-geom extent),
+`vlm_pipeline/verify_sq_barrier.py` (C1-C5, offline numpy mirror of
+`pi0_guided._eff_dist`). Extents confirmed against live MuJoCo geoms: the fits
+are NOT reading bad geometry — moka union AABB 130x243x247 mm is the real mesh
+(body 127x181x221 + handle protruding in +y); wine bottle 71x70x254 mm is real.
+
+**C1 level set — PASS (weakly).** `dist - r_shape(u) = 0` on the surface to
+2.8e-17 m, and the paper's implicit form `g(x) = 1` agrees to 3.5e-13. Note this
+is near-tautological (r_shape IS the radial distance); what it genuinely
+validates is our exponent algebra against paper eq. (1). It does NOT validate
+the distance semantics — C2 tests those and they fail.
+
+**C2 offset semantics — REAL BUG.** The barrier inflates by a RADIAL offset
+along u, not by the Minkowski dilation. On the enforced boundary the TRUE
+clearance to the object should be eef_radius + d_safe = 100 mm everywhere:
+| obstacle | eps | min | p05 | median | shortfall |
+| moka | 0.4 (as run) | 68.8 mm | 71.7 | 88.5 | up to 31 mm |
+| moka | 1.0 | 85.0 mm | 85.6 | 91.2 | up to 15 mm |
+| wine | 0.4 (as run) | 30.6 mm | 39.2 | 85.9 | **up to 69 mm** |
+| wine | 1.0 | 35.8 mm | 41.9 | 87.8 | up to 64 mm |
+Sphere mode is EXACT (radial offset = Minkowski dilation for a sphere), so this
+defect exists only in shape mode. Consequence: SQ's +25.0 CAR was earned WHILE
+under-enforcing its own nominal margin by up to 69 mm in oblique directions;
+the SQ and sphere CAR numbers are not apples-to-apples. Fix = inflate the
+SEMI-AXES (s_i + eef_radius + d_safe) instead of offsetting the radius. This
+fix is a PREREQUISITE for any shape-vs-radius frontier comparison.
+
+**C3 volume decomposition — the n=200 arm did not test shape.** Effective
+keep-out volume vs the production sphere (moka pot):
+| variant | volume | vs sphere |
+| production sphere r=0.080 (UNDER-covers) | 24.4 L | 1.00x |
+| SQ sym, boxy eps=0.4 — THE ARM THAT RAN | 48.5 L | 1.99x |
+| SQ tight AABB, boxy eps=0.4 | 41.5 L | 1.70x |
+| ellipsoid eps=1.0, tight AABB | 32.3 L | 1.32x |
+| ellipsoid eps=1.0, main part only | 26.5 L | 1.08x |
+| ellipsoid main part, Minkowski-safe axes | 27.4 L | 1.12x |
+| smallest CONTAINING sphere (r=0.123) | 46.7 L | 1.91x |
+Three independent inflations, none of them the shape idea: sym mirroring
+(1.70->1.99), boxy eps=0.4 (1.32->1.70), whole-object AABB incl. handle
+(1.08->1.32). A tight ellipsoid on the main part CONTAINS the pot body at 1.08x
+the sphere's volume, where the isotropic containing sphere costs 1.91x — that
+is the shape argument, and it was never run.
+
+**C4 target clearance — DECISIVE, and it kills the rescue hypothesis for t1.**
+Keep-out extent along the obstacle-center -> grasp-target ray vs the target's
+own distance (INSIDE = the target sits in the keep-out):
+| task | target dist | sphere | SQ sym | ellipsoid main-part | verdict |
+| t0 | 247 mm | 180 | 210 | 179 | all clear |
+| t1 | **168 mm** | **180 INSIDE** | **184 INSIDE** | **172 INSIDE** | ALL INSIDE |
+| t2 | 221 mm | 180 | 189 | 173 | all clear |
+| t3 | 279 mm | 160 | 154 | 147 | all clear |
+On t1 — the cell that lost TSR — EVERY candidate fit swallows the grasp target,
+INCLUDING the production sphere. The best physically-correct fit (171.8 mm)
+still exceeds the 168 mm target distance. So no improvement in fitting frees
+t1's grasp: its binding constraint is the CORRIDOR EXEMPTION, not the fit.
+This confirms the 2026-07-29 forensics line ("t1 fails for a non-shape reason")
+from geometry rather than from arm agreement.
+
+**C5 relaxation algebra — PASS.** `ss_j = ms_k * c_j` reaches the shape term and
+`r_j` scales identically, so at c=0 both the anisotropic and scalar keep-out
+vanish together (verified numerically at c = 1.0/0.6/0.25/0.0). Commit 1b108a5
+is correct. Shape mode is at most 15-25 mm LESS conservative than sphere mode at
+equal c, consistent with C2.
+
+**Also verified (user request: check every step).** The repair's escape
+direction (`_closest`) is the RADIAL unit vector, not the barrier gradient. The
+docstring's monotonicity argument is valid (moving along u holds r_shape(u)
+fixed, so the pseudo-distance rises by exactly the displacement), so feasibility
+is sound — but in shape mode radial is NOT steepest ascent of the true
+clearance, so the correction is minimum-norm only in sphere mode. The tilt
+operator (line 559) does use `jax.grad`, so that path is autodiff-correct.
+
+### GAPS vs the paper (Brunke et al. §IV-B), ranked
+1. **Union of superquadrics per part.** Paper fits separate SQs to point-cloud
+   parts (keyboard vs screen). We fit ONE box to the whole object, so the moka
+   handle inflates the fit into a full-width slab (1.08 -> 1.32x). Our guard-set
+   already carries M=2 obstacles (`extra_obstacle_scales`) — a 2-part union is
+   implementable with existing machinery, no new server shapes.
+2. **Oriented frame.** Paper's tau transforms the EEF into the SQ's own frame;
+   ours is world-axis-aligned. Harmless on Spatial (moka rpy=0, bottle
+   z-symmetric) but wrong in general.
+3. **Two exponents.** Paper has eps1, eps2; we expose a single `sq_eps`
+   (the eps1 = eps2 special case).
+4. **Point-cloud fit.** Ours is a MuJoCo AABB (GT tier) or, at the percep tier,
+   `estimate_obstacle_extent` = per-axis p5-p95 spread of visible-surface
+   points, max-fused across views — NOT a superquadric fit at all. It clips 10%
+   of the extent while max-fusing across views, which is the likely source of
+   the 4.4x percep inflation. Paper cites [40] (probabilistic EMS recovery).
+
+### VERDICT / what is and is not established
+ESTABLISHED: the n=200 SQ result tested a triply-inflated fit, not shape; the
+radial-offset margin is under-enforced in shape mode; t1's grasp target is
+inside the keep-out under EVERY fit including the sphere.
+NOT ESTABLISHED: that a correct tight fit recovers TSR. The volume->TSR slope is
+unresolved and non-monotone in our own data (1.00x -> 30, 1.70x -> 20 at
+n=10/task +/-15pp, 1.99x -> 22), and C4 shows the cell that lost TSR cannot be
+rescued by fitting at all. Do NOT write "1.08x therefore TSR recovers".
+NEXT (cheap, ordered): (a) fix C2 (semi-axis inflation) — correctness, not a
+gamble; (b) ellipsoid eps=1.0 + mid fit + main-part-only as ONE arm at a dev
+cell, since C3 says that is the whole available headroom; (c) only if (b) moves,
+consider the paper's union-of-parts / point-cloud fitting project.
