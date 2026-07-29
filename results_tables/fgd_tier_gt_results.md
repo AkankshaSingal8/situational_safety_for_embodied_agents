@@ -1887,3 +1887,25 @@ still creates zero avoidance (CAR 15.0 vs 14.0); the old -8 TSR occlusion
 artifact is gone (-2.0, within noise). The conditioning-blindness claim is
 re-validated on clean evidence: the paper may cite the visual-channel NO-GO.
 Fifth intervention-point testbed closed, this time properly.
+
+## 2026-07-29 — SUPERQUADRIC FULL EVAL (job 42795316, Spatial L1 n=200, user-requested debug)
+
+Best SQ config (boxy eps0.4 + corridor + shape_scale fix, GT extents, r3 base
+server) at board scale vs stored sphere r3@0.09 row (71.0/23.5 n=200):
+
+| arm | overall | t0 | t1 | t2 | t3 |
+|---|---|---|---|---|---|
+| sphere r3@0.09 (stored) | 71.0/23.5 | — | 30/36 | 96/58* | — |
+| SQ boxy+corridor n=200 | 63.5/48.5 | 72/32 | 22/38 | 94/72 | 66/52 |
+
+Pre-registered hypothesis (62±7 TSR / 45±7 CAR, t1 low, t2 ~100) CONFIRMED.
+VERDICT: shape DECREASES TSR (−7.5) and INCREASES CAR (+25.0) — a frontier
+point, not a dominator; outside the acceptance box (TSR 63.5 < 67.0).
+Root-cause account (5 evidence pieces, converged): (1) shape's benefit is
+narrow — only binds where the sphere's wasted lateral space intersects the
+policy's path (t2); (2) t1 fails for a non-shape reason — any tight cover of
+an obstacle adjacent to the grasp target occupies the approach (exemption
+problem; 3 arms agree); (3) t2 headroom (~4pp) < t1 loss (~8-20pp) -> net
+TSR negative; (4) percep-fit inflation (4.4x) bars the no-GT tier; (5) CAR
+gain is real and large -> SQ joins the tunable-dial section next to the
+repulsor arms. Sphere stays production. Table-1 row unchanged.
