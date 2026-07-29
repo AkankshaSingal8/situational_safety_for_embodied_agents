@@ -97,6 +97,8 @@ def main():
                 print(f"{'':44s} mesh verts={len(verts)} "
                       f"local |v|max={np.abs(verts).max(axis=0).round(4).tolist()} "
                       f"rbound={float(sim.model.geom_rbound[gid]):.4f}")
+                print(f"{'':44s} world AABB center {np.round((hi + lo) / 2, 4).tolist()} "
+                      f"offset from guidance center {np.round((hi + lo) / 2 - center, 4).tolist()}")
 
         print(f"\nUNION world AABB   lo={np.round(lo_all, 4).tolist()}  hi={np.round(hi_all, 4).tolist()}")
         print(f"UNION full size    {np.round(hi_all - lo_all, 4).tolist()}")
