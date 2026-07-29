@@ -1934,18 +1934,42 @@ So the n=200 result (-7.5 TSR / +25.0 CAR) is a COVERAGE effect, not a shape-
 efficiency effect: more of the object is actually protected (CAR up) at the cost
 of approach space (TSR down). Shape efficiency was never tested at board scale.
 
-Second, independent inflation: the `sym` fit symmetrizes half-extents about the
+Attribution (must not be conflated): Spatial t0/t1/t2 = moka_pot, t3 =
+wine_bottle. The stored sphere baseline exists for t1 (30/36) and t2 (96/58)
+only, so the measured TSR loss is a MOKA-POT volume effect (1.98x). The sym-fit
+symmetrization defect below is real but is a SEPARATE finding, largest on t3,
+where no sphere comparison exists.
+
+Sym-fit symmetrization defect: `sq_fit sym` symmetrizes half-extents about the
 BODY ORIGIN, which sits at the base for these meshes. Wine bottle sym z = 0.254
-vs mid z = 0.127 — EXACTLY 2x — i.e. the keep-out extends a full bottle-height
-ABOVE the bottle, directly into the top-down approach lane. Moka y: 0.146 sym vs
-0.122 mid. The `mid` fit (already implemented, `--sq_fit mid`) removes this, and
-was never run at n=200 — only the inflated `sym` fit reached the board.
+vs mid z = 0.127 — EXACTLY 2x — the keep-out extends a full bottle-height ABOVE
+the bottle, into the top-down approach lane. On the moka pot the effect is mild
+(z 0.139 vs 0.123 = 1.13x; y 0.146 vs 0.122 = 1.20x), so it is NOT what cost
+t1/t2 TSR.
+
+MID FIT DOES NOT RESCUE SHAPE (job 42743295, `sq_fit_mid/`, n=10/task):
+| arm | t1 TSR/CAR | t2 TSR/CAR |
+| sphere r3 (stored, n=200) | 30 / 36 | 96 / 58 |
+| SQ sym (n=200) | 22 / 38 | 94 / 72 |
+| SQ mid (n=10/task smoke) | 20 / 30 | 100 / 40 |
+Predicted from geometry and confirmed: the mid fit is still 1.70x the sphere
+keep-out volume on the moka pot, so t1 TSR stays at 20 (vs sphere 30). The tight
+fit is NOT the untested rescue — the volume gap, not the symmetrization, is the
+binding constraint on the cells that lost TSR. Do not spend n=200 on mid fit.
+
+REFRAMING (supersedes the "volume-matched arm" line): volume-matching a
+superquadric to the sphere would discard the coverage that produced the CAR gain,
+so it is not the right control. The honest statement is that r_obs = 0.080 does
+NOT contain the moka pot (max half-extent 0.146) — the production sphere is a
+LEAKY under-approximation, and the SQ arm is the first arm that actually covers
+the obstacle. That is why CAR went 23.5 -> 48.5. The discriminating question is
+whether shape beats RADIUS on the (TSR, CAR) frontier. Suggestive but NOT
+conclusive from stored data: the reimpl radius sweep (different config family —
+EEF-only, uniform, K=1, no corridor) gives Spatial L1 r0.10 = 62.0/28.5 and
+r0.14 = 49.0/63.0; linear interpolation to CAR 48.5 lands near TSR ~55, below
+SQ's 63.5, which would make shape a genuine frontier improvement. An in-family
+sphere-radius arm (ramp/K=8/corridor, r_obs swept to CAR ~48) is the clean
+control and has NOT been run. That is the experiment worth queuing, not mid fit.
 
 Interactive geometry: `sq_viz/keepout_spatial_I.html` (dump_sq_geometry.py ->
 render_sq_geometry.py, no policy server needed).
-
-IMPLICATION: the frontier-point verdict stands for the config that was RUN, but
-the claim "shape decreases TSR" is not established — what was tested is "a ~1.5-2x
-larger, vertically-inflated keep-out decreases TSR", which is the expected result
-for the sphere-radius sweep too. A shape arm that is genuinely volume-matched to
-the production sphere (mid fit + rescaled semi-axes) is the untested cell.
