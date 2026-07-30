@@ -2216,3 +2216,42 @@ axis spread, max-fused) are not a fit; expect the 4.4x inflation to drop to
 ~the GT slack once the same grid+bisection runs on the fused cloud. Server
 integration for the 2-part union: the guard-set M=2 slot (extra_obstacle_*)
 carries part 2 with zero new server shapes.
+
+## 2026-07-30 — PAPER-CLAIMS AUDIT vs arXiv 2607.01378 (SOTA) + 2512.11891 (AEGIS/benchmark)
+
+Column checks for the ICRA draft, from the papers' HTML (three cross-checked
+extractions each; PDF eyeball still recommended before camera-ready):
+
+SOTA-PUBLISHED column: CORRECT. Our per-level values aggregate exactly to
+their Table 1 (Spatial 76.75/76.50, Goal 87.25/88.25, Object 85.75/84.00,
+Long 76.75/82.50).
+
+SOTA-REIMPL column: VERDICT YES (publishable), NO RERUN — with three draft
+wording fixes applied (commit this):
+- Their printed spec: ELLIPSOIDAL EEF semi-axes (0.06, 0.12, 0.11) + sphere
+  obstacle with UNDISCLOSED r_obs; gamma 0.9, d_safe 0.01, N=H=10,
+  translational-only, GT positions — our reimpl matches everything printed
+  except the EEF shape (sphere approx; sweep 0.06/0.10/0.14 brackets their
+  semi-axes) and fills their non-disclosures (r_obs swept, rs5 cadence,
+  n=200) explicitly. "faithful reimplementation" reworded to enumerate this.
+- Their criterion: "determined automatically by the terminal position of
+  objects in the simulation", threshold undisclosed — same displacement
+  FAMILY as ours but possibly terminal-only/looser. Footnote now quotes this
+  and hedges ("looser or terminal-only criterion") instead of asserting.
+- "at ANY obstacle radius" scoped to the swept bracket.
+Optional armor (not required): a true ellipsoid-EEF fidelity arm is now a
+config away via the support-plane barrier (stashed) — obstacle_scales can
+carry the EEF ellipsoid Minkowski-folded into the obstacle.
+
+BASELINE column addendum (corrects the 2026-07-30 baseline check): the
+"full-action baseline Long TSR 54.3" row from the first 2512.11891
+extraction did NOT recur on re-fetch; both papers consistently print Long
+baseline TSR 35.75. Treat 54.3 as a probable extraction artifact until the
+PDF is eyeballed. Consequence: our baseline Long TSR (58.0/51.0, avg 54.5)
+exceeds published 35.75 by ~19pp. Verdict unchanged (internal validity
+carries the column; their trials/seeds/caps undisclosed), but the Long
+footnote must attribute the delta to protocol/step-budget — supported by our
+cap-800 ablation (baseline Long rises to 63.7/50.0 with budget), i.e. Long
+TSR is strongly budget-sensitive and their effective budget appears tighter.
+All other suites: TSR within 2pp, CAR within 3.5pp except Goal (+5.25 suite,
+driven by Goal L1 CAR 23.0 ours vs 7.5 published).
