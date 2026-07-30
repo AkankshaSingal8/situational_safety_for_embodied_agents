@@ -2255,3 +2255,54 @@ cap-800 ablation (baseline Long rises to 63.7/50.0 with budget), i.e. Long
 TSR is strongly budget-sensitive and their effective budget appears tighter.
 All other suites: TSR within 2pp, CAR within 3.5pp except Goal (+5.25 suite,
 driven by Goal L1 CAR 23.0 ours vs 7.5 published).
+
+## 2026-07-30 — S4 CLOSED: outcome-scored/world-model steering is THOROUGHLY CLAIMED — NO-GO as posed; residual gap documented
+
+Survey verdict (task #36, second half). The question as pre-registered — "is
+world-model/outcome-scored steering for robot policies already claimed?" —
+answer: YES, at every intervention strength:
+- gates/rankers/correctors taxonomy is explicit in Pre-VLA (2605.22446):
+  LEARNED SAFETY-CONFIDENCE + advantage scores for candidate action chunks
+  with preemptive resampling — the closest single paper to our critic idea;
+- best-of-N + learned verifier for VLAs: RoboMonkey (2506.17811, CoRL) incl.
+  inference-time scaling laws; verifier-free variant 2510.05681;
+- adaptive test-time compute w/ action critic: VLA-ATTC (2605.01194);
+- chunk selection with latent world models: DREAM-Chunk (2606.18589);
+  policy-in-the-loop world-model eval: PiL-World (2606.05773);
+- outcome-embedding guidance: DynaGuide (2506.13922, NeurIPS'25), Feedback
+  World Model (2605.15705); progress guidance: ProgressVLA (2603.27670).
+VERDICT: NO-GO on "outcome-scored steering" as a novel contribution.
+
+RESIDUAL GAP (what none of the above claim), for the #37 design doc:
+1. LIVENESS/memory: every method above is per-decision memoryless; none
+   addresses livelock of a safety-filtered policy (RMCS's claim);
+2. certificate DISTILLATION: critics above are trained from rollout success/
+   preference labels; none distills a SYMBOLIC safety certificate (teacher =
+   geometric CBF pipeline) nor is language-hazard-conditioned;
+3. certified-safety semantics: verifiers above score quality/confidence, not
+   a checked safety chain with a referee tier.
+Consequence for #37: the critic must be pitched as certificate distillation
++ liveness memory (differentiators 1-3), NEVER as "verifier for VLAs" —
+RoboMonkey/Pre-VLA own that phrase. Design doc must cite all of the above.
+
+## 2026-07-30 — F0 OBJECT-L1 ATTRIBUTION SWAP (job 42800170, n=20/task seed-paired, harvested)
+
+Swap ONE component of the no-GT stack to GT per arm; control = full percep:
+| arm | overall | t0 oj | t1 pudding | t2 milk | t3 bbq |
+| full_percep (ctrl) | 42.5/62.5 | 35/95 | 20/0 | 20/55 | 95/100 |
+| + GT obstacle pos | 51.2/22.5 | 65/50 | 5/0 | 50/0 | 85/40 |
+| + GT corridor entities | 55.0/71.2 | 45/100 | 55/55 | 25/30 | 95/100 |
+| + GT identity/prior | 53.8/81.2 | 45/95 | 40/80 | 35/50 | 95/100 |
+
+ATTRIBUTION (Object L1 weak cell):
+1. The TSR binding constraint is CORRIDOR-ENTITY localization (+12.5 TSR
+   when target/dest positions go GT) and IDENTITY/PRIOR (+11.3), NOT
+   obstacle position.
+2. GT obstacle position CRATERS CAR (62.5 -> 22.5): percep position error
+   is accidentally PROTECTIVE (inflated effective envelope) — same mechanism
+   as the no-GT board's CAR advantage. Do NOT "fix" percep obstacle pos.
+3. t1 (pudding) is identity/prior-bound: 20/0 -> 40/80 with GT id+table
+   prior — the VLM prior mis-guards this cell.
+4. t2 (milk) is structurally weak in EVERY arm (TSR<=50, CAR<=55 across all
+   four) — not a perception cell; candidate for the same liveness/corridor
+   diagnosis as Long (needs episode forensics before any lever is proposed).
