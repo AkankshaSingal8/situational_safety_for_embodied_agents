@@ -2306,3 +2306,52 @@ ATTRIBUTION (Object L1 weak cell):
 4. t2 (milk) is structurally weak in EVERY arm (TSR<=50, CAR<=55 across all
    four) — not a perception cell; candidate for the same liveness/corridor
    diagnosis as Long (needs episode forensics before any lever is proposed).
+
+## 2026-07-30 — LONG DEBUG: videos harvested (job 42743730) — the timeout is a PLACEMENT-PHASE deadlock, not transit route-looping
+
+Cap question first (user): Long cap is 550; the cap-800 ablation already
+went past 600 — guided 36.2/62.5 & 31.2/72.5 at 800 vs 42.5/71.0 & 24.5/77.0
+at 550 (within noise) while BASELINE rises to 63.7/50.0. More time helps the
+unguided policy and does nothing for the guided one. Budget is not the lever.
+
+Frame-strip analysis of the diag videos (first visual evidence):
+- L2 t2 ep0 (timeout, safe): stage 1 delivered cleanly mid-episode; the
+  final ~third is spent DITHERING at the left plate where the moka pot sits
+  directly adjacent to the destination; the carried mug ends tipped at the
+  plate edge, never placed.
+- L1 t1 ep0 (collision-flagged): robot reaches the basket holding the can
+  and HOVERS OVER THE DROP ZONE for the middle third-plus of the episode —
+  approach, hold, re-approach — never releasing; ends re-approaching item 2.
+
+REFINED MECHANISM (supersedes the "route loop" transit framing): the
+obstacle sits adjacent to (or effectively over) the DESTINATION, so the
+keep-out covers the placement descent cone. The repair blocks the final
+descend/release; the policy re-approaches from nearly identical states
+forever — a boundary deadlock in the classic CLF-CBF sense, located at the
+placement phase. "Timeout" = infinite approach-retreat dither at the drop
+zone. This unifies THREE weak-cell families as one mechanism:
+  - SafeLIBERO Long L1 t1/t3, L2 t2/t3 (dest-adjacent obstacle),
+  - LS human_safety L0/L2 ("static hand-as-destination duality", ledger
+    2026-07-27),
+  - plausibly Object L1 t2 milk (structural in all F0 arms — check whether
+    the obstacle neighbors the basket before proposing anything).
+
+IMPLICATIONS FOR LEVERS:
+- Step budget: dead (confirmed at 800).
+- RMCS route memory: does NOT address Long — there is no alternative route
+  homotopy to select; the loop is a placement dither. RMCS targeting must
+  shift to cells with genuine mode diversity; its commitment/hysteresis
+  piece may reduce dither but cannot open a blocked drop cone.
+- The correct lever is SEMANTIC, in the existing corridor machinery: a
+  PLACEMENT EXEMPTION — when the gripper is loaded and the destination lies
+  inside/adjacent to a keep-out, exempt a narrow vertical descent tube above
+  dest (second corridor segment dest_above->dest, tighter radius, stronger
+  relax), optionally velocity-capped through the tube. This is the corridor
+  exemption argument extended from grasp to PLACE — the asymmetry that we
+  exempt the approach to the TARGET but never the approach to the DEST with
+  a payload. Cheap dev-cell test: Long L1 t1/t3 + L2 t2/t3, n=10/task,
+  paired vs production; LS human_safety L0 rides the same fix.
+Also suspicious and cheap to check offline first: `_corridor_scale`'s
+t_raw > 0.15 validity gate as the EEF closes on dest (segment length -> 0:
+does the gate invalidate the dest corridor exactly during final descent?)
+and the payload companion (-0.06 z) vs the relaxed window arithmetic.
