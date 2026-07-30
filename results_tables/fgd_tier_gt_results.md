@@ -2493,3 +2493,19 @@ CLOSES the SQ debugging thread: sphere r3@0.09 stays production; SQ rows are
 quoted as volume-dial points with the C2 caveat (the n=200 SQ CAR was earned
 while under-enforcing obliquely by up to 69 mm — paper must footnote this).
 Data: sq_ellip_c2/ellip_main_corridor_n20/.
+
+## 2026-07-30 — F3 PAIRED ARM (job 42847447, Object L1 no-GT, n=20/task): GATE PASSED — promoted to n=50 board rerun (job 42853154)
+
+| arm | TSR | CAR | t0 | t1 | t2 | t3 |
+|---|---|---|---|---|---|---|
+| F0 full_percep (control) | 42.5 | 62.5 | 35/95 | 20/0 | 20/55 | 95/100 |
+| F3 +birdview entities | **56.2** | 60.0 | **75/95** | 10/0 | **40/45** | 100/100 |
+
+TSR +13.8pp, CAR within noise (-2.5). Mechanism confirmed per-task: the
+corridor-entity cells move (t0 +40, t2 +20), the identity-bound pudding cell
+(t1) does not — matching F0's attribution exactly. F3 recovers ~the full GT-
+entity gap (+12.5) with zero GT: one extra 256px render/episode.
+Promotion rule (TSR >= +5pp, CAR within noise): PASSED. Board rerun job
+42853154: Object L1+L2, n=50/task, board no-GT config + entity_cameras
+agentview,birdview. If it holds, the no-GT Object row updates and the
+--entity_cameras 2-view setting becomes the no-GT board default.
