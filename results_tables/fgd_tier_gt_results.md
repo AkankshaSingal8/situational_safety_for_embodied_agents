@@ -2542,3 +2542,21 @@ THREE VERDICTS:
    ablation, NOT as a method row.
 Data: ls_full_ft/{guided_gt,guided_nogt_fol}/, baseline in
 .worktrees/libero-safety-benchmark/LIBERO-Safety/results/*_pi05_libero_safety_10trial.json.
+
+## ★ 2026-07-30 — F3 BOARD RERUN n=200 (job 42853154): Object no-GT cells UPDATED, 2-view entities adopted
+
+| cell | old no-GT board | new (2-view entities) | delta |
+|---|---|---|---|
+| Object L1 | 41.5/54.0 | **47.0/58.5** | +5.5 TSR, +4.5 CAR |
+| Object L2 | 75.5/74.5 | **80.0/66.0** | +4.5 TSR, −8.5 CAR |
+
+Object L2 no-GT now beats BOTH baseline (74.0/25.0) AND reimpl (76.0/33.5)
+on both axes → no-GT board goes 4/8 → 5/8 win cells. Object L1 remains
+short of reimpl TSR (47.0 < 53.0); residual gap is the F0 identity lever
+(t1 6/0 — pudding prior mis-guard) + t2 structural (30/44). The n=20 pilot
+(+13.8) regressed to +5.5 at n=200, as usual. --entity_cameras
+agentview,birdview is now the no-GT board config for Object (documented in
+Table 1 caption). Artifact updated (merged onto parallel session's newer
+version; also corrected the Table-4 reproducibility footnote to reflect
+the authors'-protocol replication: affordance exact, hs close).
+Data: f3_board_n50/{L1,L2}/safelibero_object/.
