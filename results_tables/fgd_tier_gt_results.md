@@ -2355,3 +2355,36 @@ Also suspicious and cheap to check offline first: `_corridor_scale`'s
 t_raw > 0.15 validity gate as the EEF closes on dest (segment length -> 0:
 does the gate invalidate the dest corridor exactly during final descent?)
 and the payload companion (-0.06 z) vs the relaxed window arithmetic.
+
+## 2026-07-30 — WS1/WS2/WS3 verdicts (jobs 42800169/70/71, user 3-front directive)
+
+WS1 LS PAPER-CONDITIONS (42800169): protocol audit PASSED before submission
+(official .pruned_init cycled, horizon 600, settle, metric-delta actions
+verified vs training parquet; textures are bddl-fixed — the shipped eval HAS
+no randomization, so fixed-texture IS the paper condition). Fresh n=10 repro
+on the finetuned ckpt REPRODUCES the stored n=50 grid: guided arms within
++-4 TSR on all 12 cells, baseline within n=10 noise (max delta oa L0 24 vs
+12). VERDICT: stored LS grid = official baseline TSR + ours GT/no-GT SR rows.
+
+WS2 F0 OBJECT-L1 ATTRIBUTION (42800170, n=80/arm, paired, board no-GT cfg):
+| arm | TSR/CAR | read |
+| full_percep (ctrl) | 42.5/62.5 | matches board 41.5/54.0 |
+| gt_obspos          | 51.2/22.5 | TSR +8.7, CAR COLLAPSES |
+| gt_entity          | 55.0/71.2 | TSR +12.5 AND CAR +8.7 |
+| gt_id              | 53.8/81.2 | TSR +11.3 AND CAR +18.7 |
+ATTRIBUTION: the no-GT TSR gap is NOT obstacle localization — it's entity/
+corridor anchoring + identity ranking; fixing either recovers full GT-tier
+TSR *without* losing CAR. gt_obspos shows percep noise on the obstacle acts
+as accidental margin inflation (the no-GT CAR advantage partly rides on it);
+exact obstacle pos tightens the barrier and drops CAR to GT-sphere level.
+Fix list reprioritized: F5 (referenced-exemption/identity hardening) and
+corridor-anchor fusion FIRST; F1 uncertainty margins now aimed at entities,
+not the obstacle.
+
+WS3 S1 PROBE (42800171): first run collected 0 scenes (obstacle key filter
+bug — SafeLIBERO names are <obj>_obstacle_<idx>); "NO-GO" on n=0 is INVALID.
+Script fixed (sim-joint obstacle selection + INVALID guard on <15 scenes),
+resubmitted as 42843977. S4 survey CLOSED: training-free chunk-rate
+semantic-outcome scoring of a frozen VLA is unclaimed (WorldGym=offline eval,
+latent-CBF lines=trained, LPB/DynaGuide=robustness); cosmos-policy checkout
+in repo is the natural prediction engine for the offline AUROC pilot.
