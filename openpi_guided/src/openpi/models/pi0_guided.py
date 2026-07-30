@@ -144,9 +144,11 @@ def _eff_dist(diffs: jnp.ndarray, g: GuidanceParams, scales=None, r_base=None, s
     """Shape-corrected distance for center offsets `diffs` (..., 3).
 
     Sphere mode (any obstacle_scale <= 0): plain Euclidean norm — callers'
-    `dist - r_eff` reproduces legacy behavior bit-for-bit. Shape mode: returns
-    dist - shape_scale*(r_shape(u) - r_base), so with shape_scale=1 the
-    caller's `dist_eff - r_eff` equals dist - r_shape(u) - eef_radius - d_safe.
+    `dist - r_eff` reproduces legacy behavior bit-for-bit. Shape mode
+    (ellipsoid semi-axes in `scales`): support-plane true-distance bound, so
+    with shape_scale=1 the caller's `dist_eff - r_eff` equals
+    dist(p, ellipsoid) - eef_radius - d_safe (conservative; C2-correct —
+    the pre-2026-07-30 radial form under-enforced obliquely).
     shape_scale < 1 (corridor/margin relaxation) shrinks the anisotropic
     keep-out the same way it shrinks the scalar margin — without it the
     corridor exemption cannot reach the shape term at all (the t1 failure).
@@ -156,13 +158,24 @@ def _eff_dist(diffs: jnp.ndarray, g: GuidanceParams, scales=None, r_base=None, s
     scales = g.obstacle_scales if scales is None else scales
     r_base = g.r_obs_base if r_base is None else r_base
     dists = jnp.linalg.norm(diffs, axis=-1)
-    u = diffs / (dists[..., None] + 1e-8)
     s = jnp.maximum(scales, 1e-3)
-    p_exp = 2.0 / jnp.maximum(g.sq_eps, 0.1)
-    q = jnp.sum(jnp.abs(u / s) ** p_exp, axis=-1)
-    r_shape = (q + 1e-8) ** (-jnp.maximum(g.sq_eps, 0.1) / 2.0)
+    # Ellipsoid SUPPORT-PLANE distance (2026-07-30 C2 fix). The old radial
+    # form subtracted r_shape(u) — the gap along the center ray — which
+    # OVERSTATES the true clearance obliquely, under-enforcing the margin by
+    # up to 69 mm (audit C2). The support-plane bound d = (p-c)·n - h_E(n)
+    # with n ∝ diag(1/s²)(p-c) is a LOWER bound on dist(p, E) for any convex
+    # E, so enforcing it is conservative — errors now widen margins instead
+    # of silently shrinking them. Exact on-axis and for spheres.
+    n_raw = diffs / (s * s)
+    n_hat = n_raw / (jnp.linalg.norm(n_raw, axis=-1, keepdims=True) + 1e-8)
+    support = jnp.sqrt(jnp.sum((s * n_hat) ** 2, axis=-1) + 1e-12)
+    d_true = jnp.sum(diffs * n_hat, axis=-1) - support  # <= dist(p, E); < 0 inside
+    # Same relaxation algebra as before: r_eq plays the old r_shape role, so
+    # shape_scale (corridor/margin relaxation) and the caller's `- r_eff`
+    # compose identically; at shape_scale=1, pseudo - r_eff = d_true - pad.
+    r_eq = dists - d_true
     use_shape = jnp.min(scales) > 0.0
-    return jnp.where(use_shape, dists - shape_scale * (r_shape - r_base), dists)
+    return jnp.where(use_shape, dists - shape_scale * (r_eq - r_base), dists)
 
 
 def _min_eff_dist(p: jnp.ndarray, g: GuidanceParams, shape_scale=1.0) -> jnp.ndarray:

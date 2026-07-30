@@ -2388,3 +2388,31 @@ resubmitted as 42843977. S4 survey CLOSED: training-free chunk-rate
 semantic-outcome scoring of a frozen VLA is unclaimed (WorldGym=offline eval,
 latent-CBF lines=trained, LPB/DynaGuide=robustness); cosmos-policy checkout
 in repo is the natural prediction engine for the offline AUROC pilot.
+
+## 2026-07-30 — SQ EMPTY-SPACE FIX: C2 support-plane barrier VERIFIED conservative; ellipsoid main-part arm submitted (job 42845021)
+
+User hypothesis ("superquadrics have a lot of empty space, not fitting the
+object") CONFIRMED = audit C3's decomposition: the n=200 arm's 1.99x sphere
+volume is sym mirroring (1.70->1.99) + boxy eps=0.4 (1.32->1.70) + whole-object
+AABB incl. handle (1.08->1.32); tight ellipsoid on the main part = 1.08x.
+
+Fix chain now in tree:
+1. C2 fix (support-plane bound in _eff_dist, from the wip stash, applied +
+   kept in stash): d_true = (p-c)·n_hat - ||s·n_hat||, n_hat ∝ diag(1/s²)(p-c)
+   — a LOWER bound on dist(p, ellipsoid), so enforcement errors now WIDEN
+   margins. Offline verify (verify_sq_barrier.py, --form both): enforced-
+   boundary true clearance min 100.0 mm on ALL fits (nominal 100), vs old
+   radial form min 85.0 (moka) / 35.8 mm (wine sym). C5 relaxation re-passes
+   (keep-out vanishes at c=0). Closed-form boundary (d_true linear along rays).
+2. --sq_fit main: largest-part-only fit (2-means geom split as fit_sq_gt,
+   largest by summed world-AABB volume, tight AABB midpoint centering) —
+   removes the handle slab + sym phantom. Mock-sim smoke: moka-like 8-geom
+   object -> handle's 3 geoms excluded, x half-extent 0.055 vs 0.086 whole.
+3. Dev arm (job 42845021): Spatial L1 n=20/task, server sq_eps 1.0, client
+   superquadric+main+corridor — the C3 "shape argument" arm (ellipsoid
+   main-part), first time run with correct enforcement semantics.
+
+Pre-registered reading rules: compare vs sphere 71.0/23.5 and SQ-sym-eps0.4
+63.5/48.5 (both n=200). C4 caveat stands: t1 unrescuable by ANY fit (target
+inside true dilation) — do not attribute t1 movement to the fit. Promote to
+n=200 only if TSR recovers toward sphere while keeping a clear CAR lead.

@@ -188,46 +188,52 @@ def obstacle_radius(name: str) -> float:
     return next((r for key, r in OBSTACLE_RADII.items() if key in label), DEFAULT_OBSTACLE_RADIUS)
 
 
-def obstacle_half_extents(sim, obstacle_name, center, return_mid=False):
+def _geom_world_aabb(sim, gid):
+    """World-frame AABB (lo, hi) of ONE geom. Exact for boxes/spheres/
+    cylinders; meshes use their vertex sets (rbound fallback only when
+    vertices are unavailable)."""
+    pos = sim.data.geom_xpos[gid]
+    rot = sim.data.geom_xmat[gid].reshape(3, 3)
+    size = sim.model.geom_size[gid]
+    gtype = int(sim.model.geom_type[gid])
+    if gtype == 6:  # box
+        half = np.abs(rot) @ size
+    elif gtype == 2:  # sphere
+        half = np.full(3, size[0])
+    elif gtype == 5:  # cylinder
+        half = np.abs(rot) @ np.array([size[0], size[0], size[1]])
+    elif gtype == 7:  # mesh
+        try:
+            mid = int(sim.model.geom_dataid[gid])
+            adr, num = int(sim.model.mesh_vertadr[mid]), int(sim.model.mesh_vertnum[mid])
+            verts = np.asarray(sim.model.mesh_vert[adr:adr + num]).reshape(-1, 3)
+            world = verts @ rot.T + pos
+            return world.min(axis=0), world.max(axis=0)
+        except Exception:  # noqa: BLE001 — rbound fallback below
+            half = np.full(3, float(sim.model.geom_rbound[gid]))
+    else:
+        half = np.full(3, float(sim.model.geom_rbound[gid]))
+    return pos - half, pos + half
+
+
+def obstacle_half_extents(sim, obstacle_name, center, return_mid=False, gids=None):
     """World-frame AABB half-extents of the obstacle's geoms about `center`.
 
-    Exact for boxes/spheres/cylinders; meshes use their vertex sets (rbound
-    fallback only when vertices are unavailable). Replaces the scalar
-    OBSTACLE_RADII entry with the object's actual anisotropic extent — a tall
-    thin pot gets a tall thin keep-out.
+    Replaces the scalar OBSTACLE_RADII entry with the object's actual
+    anisotropic extent — a tall thin pot gets a tall thin keep-out.
+    `gids` restricts the AABB to a geom subset (the --sq_fit main path).
     """
-    gids = [g for g in range(sim.model.ngeom)
-            if obstacle_name in (sim.model.geom_id2name(g) or "")]
+    if gids is None:
+        gids = [g for g in range(sim.model.ngeom)
+                if obstacle_name in (sim.model.geom_id2name(g) or "")]
     if not gids:
         return None
     lo = np.full(3, np.inf)
     hi = np.full(3, -np.inf)
     for gid in gids:
-        pos = sim.data.geom_xpos[gid]
-        rot = sim.data.geom_xmat[gid].reshape(3, 3)
-        size = sim.model.geom_size[gid]
-        gtype = int(sim.model.geom_type[gid])
-        if gtype == 6:  # box
-            half = np.abs(rot) @ size
-        elif gtype == 2:  # sphere
-            half = np.full(3, size[0])
-        elif gtype == 5:  # cylinder
-            half = np.abs(rot) @ np.array([size[0], size[0], size[1]])
-        elif gtype == 7:  # mesh
-            try:
-                mid = int(sim.model.geom_dataid[gid])
-                adr, num = int(sim.model.mesh_vertadr[mid]), int(sim.model.mesh_vertnum[mid])
-                verts = np.asarray(sim.model.mesh_vert[adr:adr + num]).reshape(-1, 3)
-                world = verts @ rot.T + pos
-                lo = np.minimum(lo, world.min(axis=0))
-                hi = np.maximum(hi, world.max(axis=0))
-                continue
-            except Exception:  # noqa: BLE001 — rbound fallback below
-                half = np.full(3, float(sim.model.geom_rbound[gid]))
-        else:
-            half = np.full(3, float(sim.model.geom_rbound[gid]))
-        lo = np.minimum(lo, pos - half)
-        hi = np.maximum(hi, pos + half)
+        glo, ghi = _geom_world_aabb(sim, gid)
+        lo = np.minimum(lo, glo)
+        hi = np.maximum(hi, ghi)
     if not np.all(np.isfinite(lo)):
         return None
     center = np.asarray(center)
@@ -243,6 +249,68 @@ def obstacle_half_extents(sim, obstacle_name, center, return_mid=False):
     # superquadric centered there still covers the whole box
     he = np.maximum(np.abs(hi - center), np.abs(center - lo))
     return np.clip(he, 0.02, 0.35).astype(np.float32)
+
+
+def _split_parts(sim, gids):
+    """2-means on geom centers; collapse to 1 part if clusters are close.
+
+    Replica of vlm_pipeline/fit_sq_gt.py::split_parts (importing fit_sq_gt
+    would re-execute this module: it imports from run_guided_... at top,
+    which is __main__ here — so the ~15 lines are duplicated verbatim)."""
+    centers = np.array([sim.data.geom_xpos[g] for g in gids])
+    if len(gids) < 4:
+        return [gids]
+    c0, c1 = centers[0], centers[-1]
+    for _ in range(12):
+        d0 = np.linalg.norm(centers - c0, axis=1)
+        d1 = np.linalg.norm(centers - c1, axis=1)
+        m = d0 <= d1
+        if m.all() or (~m).all():
+            return [gids]
+        c0n, c1n = centers[m].mean(0), centers[~m].mean(0)
+        if np.linalg.norm(c0n - c0) + np.linalg.norm(c1n - c1) < 1e-6:
+            break
+        c0, c1 = c0n, c1n
+    if np.linalg.norm(c0 - c1) < 0.04:  # parts not meaningfully separated
+        return [gids]
+    m = np.linalg.norm(centers - c0, axis=1) <= np.linalg.norm(centers - c1, axis=1)
+    return [[g for g, k in zip(gids, m) if k], [g for g, k in zip(gids, m) if not k]]
+
+
+def obstacle_main_part_extents(sim, obstacle_name):
+    """--sq_fit main: MAIN-part-only tight AABB fit (superquadric audit C3 —
+    the whole-object AABB folds appendages like the moka handle into the
+    keep-out; the main body alone covers what matters at ~1.08x the sphere).
+
+    Collidable geoms are split into <=2 parts by 2-means on geom centers
+    (exactly fit_sq_gt.split_parts); the LARGEST part (by summed per-geom
+    world-AABB volume) is kept and fitted with a tight AABB. Returns
+    (half-extents, AABB midpoint) — the same contract as
+    obstacle_half_extents(..., return_mid=True). Single-part objects
+    (wine bottle) are identical to --sq_fit mid."""
+    gids = [g for g in range(sim.model.ngeom)
+            if obstacle_name in (sim.model.geom_id2name(g) or "")
+            and (int(sim.model.geom_contype[g]) or int(sim.model.geom_conaffinity[g]))]
+    if not gids:
+        return None
+    parts = _split_parts(sim, gids)
+
+    def part_volume(pg):
+        v = 0.0
+        for g in pg:
+            lo, hi = _geom_world_aabb(sim, g)
+            v += float(np.prod(np.maximum(hi - lo, 1e-6)))
+        return v
+
+    main = max(parts, key=part_volume)
+    fit = obstacle_half_extents(sim, obstacle_name, None, return_mid=True, gids=main)
+    if fit is not None:
+        he, mid = fit
+        logging.info(
+            f"  [sq_fit:main] {obstacle_name}: {len(parts)} part(s), kept "
+            f"{len(main)}/{len(gids)} geoms (excluded {len(gids) - len(main)}), "
+            f"half-extents {np.round(he, 3).tolist()} mid {np.round(mid, 3).tolist()}")
+    return fit
 
 
 def parse_args():
@@ -356,10 +424,13 @@ def parse_args():
                              "certified clearance is below --adaptive_clearance — "
                              "double reactivity exactly where collisions/stalls happen.")
     parser.add_argument("--adaptive_clearance", type=float, default=0.12)
-    parser.add_argument("--sq_fit", type=str, default="sym", choices=["sym", "mid"],
+    parser.add_argument("--sq_fit", type=str, default="sym", choices=["sym", "mid", "main"],
                         help="Superquadric fit: 'sym' = legacy symmetrized-about-body-"
                              "origin half-extents; 'mid' = tight AABB-midpoint fit "
-                             "(removes phantom keep-out opposite protruding parts).")
+                             "(removes phantom keep-out opposite protruding parts); "
+                             "'main' = tight AABB of the LARGEST part only (2-means "
+                             "geom split as fit_sq_gt.split_parts; drops appendages "
+                             "like the moka handle from the keep-out).")
     parser.add_argument("--log_trajectories", action="store_true",
                         help="Save executed action sequences of SAFE SUCCESSFUL episodes "
                              "(npz per episode) for self-distillation finetuning. Images "
@@ -568,6 +639,11 @@ def run_eval(args):
                     if _fit is not None:
                         obstacle_scales, _mid = _fit
                         guidance_obstacle_pos = _mid  # shape centered on true AABB
+                elif args.sq_fit == "main":
+                    _fit = obstacle_main_part_extents(env.sim, obstacle_name)
+                    if _fit is not None:
+                        obstacle_scales, _mid = _fit
+                        guidance_obstacle_pos = _mid  # shape centered on MAIN part
                 else:
                     obstacle_scales = obstacle_half_extents(
                         env.sim, obstacle_name, obs[f"{obstacle_name}_pos"])

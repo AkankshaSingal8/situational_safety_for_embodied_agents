@@ -75,15 +75,30 @@ def sq_volume(s, e1, e2):
     return 2 * s[0] * s[1] * s[2] * e1 * e2 * beta(e1 / 2 + 1, e1) * beta(e2 / 2, e2 / 2)
 
 
-def fit_part(points, center=None):
+def fit_part(points, center=None, axis_aligned=False, eps_grid=(0.2, 0.4, 0.6, 0.8, 1.0)):
     """Fit one SQ deterministically: PCA frame; grid over (e1, e2); for each
     shape, the minimal CONTAINING scale via bisection (containment is monotone
-    in a uniform scale factor); keep the minimum-volume containing fit."""
+    in a uniform scale factor); keep the minimum-volume containing fit.
+
+    axis_aligned=True fixes the frame to world axes (the runtime barrier has
+    no rotation support; SafeLIBERO obstacles stand upright) and re-centers on
+    the AABB midpoint so the containing fit is not inflated by asymmetry.
+    """
+    if axis_aligned:
+        c = (points.max(0) + points.min(0)) / 2.0 if center is None else center
+        X = points - c
+        R = np.eye(3)
+        L = X
+        return _fit_in_frame(points, c, R, L, eps_grid)
     c = points.mean(0) if center is None else center
     X = points - c
     _, _, Vt = np.linalg.svd(X, full_matrices=False)
     R = Vt
     L = X @ R.T
+    return _fit_in_frame(points, c, R, L, eps_grid)
+
+
+def _fit_in_frame(points, c, R, L, eps_grid):
     base = np.maximum(np.abs(L).max(0), 5e-3)  # per-axis containing box = ratio prior
 
     best = None

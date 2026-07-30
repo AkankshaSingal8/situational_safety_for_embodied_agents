@@ -16,6 +16,8 @@ openpi.models.pi0_guided._eff_dist):
       the lost success rate — the sphere wins by under-covering.
 """
 
+import argparse
+
 import numpy as np
 
 EPS_DEFAULT = 0.4
@@ -51,6 +53,40 @@ def sq_inside_outside(p, s, eps=EPS_DEFAULT):
     """Paper eq. (1): g(x) = sum |x_i/a_i|^(2/eps2) ... ; g >= 1 is outside."""
     s = np.asarray(s, dtype=float)
     return np.sum(np.abs(p / s) ** (2.0 / eps), axis=-1) ** (eps / 2.0)
+
+
+def support_d_true(p, s):
+    """EXACT numpy mirror of the server's 2026-07-30 support-plane shape mode
+    (_eff_dist): n_raw = diffs/s^2, n_hat normalized, support = ||s*n_hat||,
+    d_true = diffs.n_hat - support. Lower bound on dist(p, ellipsoid(s))."""
+    diffs = np.asarray(p, dtype=float)
+    s = np.asarray(s, dtype=float)
+    n_raw = diffs / (s * s)
+    n_hat = n_raw / (np.linalg.norm(n_raw, axis=-1, keepdims=True) + 1e-8)
+    support = np.sqrt(np.sum((s * n_hat) ** 2, axis=-1) + 1e-12)
+    return np.sum(diffs * n_hat, axis=-1) - support
+
+
+def support_pseudo(p, s, r_base, shape_scale=1.0):
+    """Full mirror of _eff_dist shape mode (support form):
+    pseudo = dist - shape_scale * (r_eq - r_base), r_eq = dist - d_true.
+    At shape_scale=1, pseudo - (r_base + OFF) = d_true - OFF."""
+    diffs = np.asarray(p, dtype=float)
+    dists = np.linalg.norm(diffs, axis=-1)
+    r_eq = dists - support_d_true(diffs, s)
+    return dists - shape_scale * (r_eq - r_base)
+
+
+def support_boundary_point(u, s, offset=OFF):
+    """Point on the ENFORCED boundary {p : d_true(p) = offset} along ray u.
+    n_hat is constant along a ray (n_raw = t*u/s^2), so d_true(t u) is linear
+    in t and the crossing is closed-form: t* = (offset + support)/(u.n_hat)."""
+    s = np.asarray(s, dtype=float)
+    n_raw = u / (s * s)
+    n_hat = n_raw / (np.linalg.norm(n_raw, axis=-1, keepdims=True) + 1e-8)
+    support = np.sqrt(np.sum((s * n_hat) ** 2, axis=-1) + 1e-12)
+    t = (offset + support) / np.sum(u * n_hat, axis=-1)
+    return u * t[..., None]
 
 
 def sphere_dirs(n_th=180, n_ph=360):
@@ -94,27 +130,40 @@ def check_level_set(s, eps=EPS_DEFAULT):
     return err.max(), np.abs(g - 1.0).max()
 
 
-def check_offset_gap(s, eps=EPS_DEFAULT, offset=OFF, n_probe=1500):
-    """C2: for points ON the enforced boundary (radial offset), what is the
-    TRUE distance to the object surface? It should be `offset` everywhere;
-    any shortfall is keep-out the barrier claims but does not enforce."""
+def check_offset_gap(s, eps=EPS_DEFAULT, offset=OFF, n_probe=1500, form="radial"):
+    """C2: for points ON the enforced boundary, what is the TRUE distance to
+    the object surface? Nominal is `offset`; any shortfall is keep-out the
+    barrier claims but does not enforce.
+
+    form="radial": pre-2026-07-30 boundary dist = r_shape(u) + offset (the
+    audited under-enforcing form). form="support": the fixed support-plane
+    boundary {d_true = offset} (server _eff_dist as of 2026-07-30; expected
+    conservative — clearance >= offset everywhere)."""
     surf = surface_points(s, eps, n=220)
     rng = np.random.default_rng(0)
     u = rng.normal(size=(n_probe, 3))
     u /= np.linalg.norm(u, axis=-1, keepdims=True)
-    r = sq_radius(u, s, eps)
-    boundary = u * (r + offset)[:, None]
+    if form == "support":
+        boundary = support_boundary_point(u, s, offset)
+        # sanity: the mirror's pseudo - r_eff must vanish on this boundary
+        r_base = 0.05
+        b = support_pseudo(boundary, s, r_base) - (r_base + offset)
+        assert np.abs(b).max() < 1e-9, b
+    else:
+        r = sq_radius(u, s, eps)
+        boundary = u * (r + offset)[:, None]
     true_d = np.array([true_distance_to_surface(p, surf) for p in boundary])
     return true_d
 
 
-def check_relaxation(s, r_eff, r_base, eps=EPS_DEFAULT):
+def check_relaxation(s, r_eff, r_base, eps=EPS_DEFAULT, form="radial"):
     """C5: numpy mirror of the server's _eff_dist relaxation algebra.
 
-    b(p) = ||p-o|| - ss*(r_shape(u) - r_base) - ms*r_eff, with ss = ms*c.
-    Two things must hold: sphere mode (scales <= 0) must be bit-exact legacy,
-    and full corridor relaxation (c=0) must remove the whole keep-out, shape
-    term included — the failure commit 1b108a5 claims to have fixed.
+    radial (pre-fix): b(p) = ||p-o|| - ss*(r_shape(u) - r_base) - ms*r_eff.
+    support (2026-07-30): r_shape(u) is replaced by r_eq = dist - d_true, same
+    algebra (ss = ms*c). Two things must hold: sphere mode (scales <= 0) must
+    be bit-exact legacy, and full corridor relaxation (c=0) must remove the
+    whole keep-out, shape term included — the failure commit 1b108a5 fixed.
     """
     rng = np.random.default_rng(1)
     p = rng.normal(size=(4000, 3)) * 0.25
@@ -123,7 +172,10 @@ def check_relaxation(s, r_eff, r_base, eps=EPS_DEFAULT):
     rows = []
     for c in (1.0, 0.6, 0.25, 0.0):
         ss = 1.0 * c
-        b_shape = d - ss * (sq_radius(u, s, eps) - r_base) - 1.0 * c * r_eff
+        if form == "support":
+            b_shape = support_pseudo(p, s, r_base, shape_scale=ss) - 1.0 * c * r_eff
+        else:
+            b_shape = d - ss * (sq_radius(u, s, eps) - r_base) - 1.0 * c * r_eff
         b_sphere = d - 1.0 * c * r_eff          # legacy scalar path
         rows.append((c, b_shape.min(), (b_shape - b_sphere).max()))
     return rows
@@ -167,6 +219,12 @@ def check_target_clearance(scene_json="sq_viz/spatial_I.json"):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--form", choices=["radial", "support", "both"], default="both",
+                    help="C2 barrier form: radial = pre-fix, support = 2026-07-30 "
+                         "server _eff_dist, both = side by side")
+    args = ap.parse_args()
+    forms = ["radial", "support"] if args.form == "both" else [args.form]
     np.set_printoptions(suppress=True)
 
     print("=" * 78)
@@ -183,14 +241,22 @@ def main():
     print(f"    (should be exactly {OFF:.3f} m everywhere; less = under-enforced)")
     print("=" * 78)
     for name, o in OBJECTS.items():
-        for eps, tag in ((0.4, "boxy eps=0.4 (as run)"), (1.0, "ellipsoid eps=1.0")):
-            d = check_offset_gap(o["sym"], eps)
-            print(f"  {name:12s} {tag:24s} min {d.min()*1000:6.1f} mm  "
-                  f"p05 {np.percentile(d,5)*1000:6.1f}  median {np.median(d)*1000:6.1f}  "
-                  f"max {d.max()*1000:6.1f}   shortfall up to {(OFF-d.min())*1000:5.1f} mm")
-    print("  -> a radial offset is NOT the Minkowski dilation: on an anisotropic")
-    print("     shape the enforced surface sits CLOSER to the object than the")
-    print("     nominal margin in the oblique directions.\n")
+        for fit_key in ("sym", "mid", "body_only"):
+            if o[fit_key] is None:
+                continue
+            for form in forms:
+                for eps, tag in ((0.4, "boxy eps=0.4"), (1.0, "ellipsoid eps=1.0")):
+                    if form == "support" and eps != 1.0:
+                        continue  # support form is eps-free (ellipsoid bound)
+                    d = check_offset_gap(o[fit_key], eps, form=form)
+                    print(f"  {name:12s} {fit_key:9s} {form:7s} {tag:17s} "
+                          f"min {d.min()*1000:6.1f} mm  "
+                          f"p05 {np.percentile(d,5)*1000:6.1f}  median {np.median(d)*1000:6.1f}  "
+                          f"max {d.max()*1000:6.1f}   shortfall {(OFF-d.min())*1000:5.1f} mm")
+    print("  -> radial: on an anisotropic shape the enforced surface sits CLOSER")
+    print("     than nominal obliquely (the audited C2 under-enforcement).")
+    print("     support: the 2026-07-30 fix is a LOWER bound on true distance, so")
+    print("     min clearance >= nominal everywhere (conservative by design).\n")
 
     print("=" * 78)
     print("C3  VOLUME FLOOR — can any correct cover beat the sphere on volume?")
@@ -248,11 +314,12 @@ def main():
     for name, o in OBJECTS.items():
         r_base = o["sphere_r"]
         r_eff = r_base + OFF
-        print(f"\n  {name}  (r_obs_base={r_base:.3f}, r_eff={r_eff:.3f})")
-        print(f"    {'corridor scale c':>18s} {'min b [m]':>11s} {'b_shape - b_sphere max':>24s}")
-        for c, bmin, gap in check_relaxation(o["sym"], r_eff, r_base):
-            note = "  <- full relaxation: keep-out must vanish" if c == 0.0 else ""
-            print(f"    {c:>18.2f} {bmin:>11.4f} {gap:>24.4f}{note}")
+        for form in forms:
+            print(f"\n  {name}  [{form}]  (r_obs_base={r_base:.3f}, r_eff={r_eff:.3f})")
+            print(f"    {'corridor scale c':>18s} {'min b [m]':>11s} {'b_shape - b_sphere max':>24s}")
+            for c, bmin, gap in check_relaxation(o["sym"], r_eff, r_base, form=form):
+                note = "  <- full relaxation: keep-out must vanish" if c == 0.0 else ""
+                print(f"    {c:>18.2f} {bmin:>11.4f} {gap:>24.4f}{note}")
     print("\n  -> at c=0 the shape term and the scalar margin both vanish, so the")
     print("     exemption is complete in shape mode (commit 1b108a5 verified).")
 
