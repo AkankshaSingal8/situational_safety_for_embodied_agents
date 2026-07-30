@@ -2465,3 +2465,31 @@ as a clean negative. Data: rmcs_phase0/{gate.json,gate_A1_w120.json}, per-
 replan logs rmcs_phase0/*/*/*/k_diag_*.jsonl (reusable for any future
 autopsy). #37 falls back to the other unclaimed S4 gap (certificate
 distillation) or an attempt-level (not replan-level) liveness mechanism.
+
+## 2026-07-30 — SQ ELLIPSOID MAIN-PART ARM (job 42845021, n=20/task): DOMINATED — the empty space was doing work
+
+First run of the true "shape argument" (tight main-part ellipsoid eps=1.0,
+1.08x sphere volume) under C2-CORRECT enforcement (support-plane bound):
+
+| arm | vol vs sphere | TSR | CAR | t0 | t1 | t2 | t3 |
+|---|---|---|---|---|---|---|---|
+| sphere r3@0.09 (prod, n=200) | 1.00x | 71.0 | 23.5 | 72/4 | 30/34 | 98/26 | 84/30 |
+| SQ sym eps0.4 (n=200, C2-buggy) | 1.99x | 63.5 | 48.5 | 72/32 | 22/38 | 94/72 | 66/52 |
+| ellip main C2-fix (n=20/task) | 1.08x | 62.5 | 37.5 | 50/25 | 35/30 | 90/45 | 75/50 |
+
+VERDICT: promotion rule fails (TSR 62.5 did not recover toward sphere 71).
+The tight fit is DOMINATED by the inflated SQ-sym (63.5/48.5) — removing the
+"empty space" LOWERED CAR (48.5->37.5) without buying TSR back. Reading:
+(1) the inflated fit's slack was accidental protection (same mechanism as
+percep-error CAR advantage on the no-GT board) — keep-out volume is itself
+the CAR dial, largely decoupled from shape; (2) TSR losses are not volume-
+driven (t0 dropped to 50 at 1.08x — the support-plane bound is loose
+obliquely on elongated fits, i.e. correct enforcement costs TSR that the
+under-enforcing radial form was silently NOT paying); (3) t1 CAR did not
+collapse and TSR 35 is the best of the three arms (n=20 ±11pp) — consistent
+with C4 (t1 is exemption-bound, marginally eased by removing the handle
+slab from the approach).
+CLOSES the SQ debugging thread: sphere r3@0.09 stays production; SQ rows are
+quoted as volume-dial points with the C2 caveat (the n=200 SQ CAR was earned
+while under-enforcing obliquely by up to 69 mm — paper must footnote this).
+Data: sq_ellip_c2/ellip_main_corridor_n20/.
