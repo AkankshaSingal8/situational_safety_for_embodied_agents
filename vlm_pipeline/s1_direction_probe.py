@@ -24,6 +24,7 @@ import json
 import logging
 import math
 import pathlib
+import re
 
 import numpy as np
 
@@ -35,6 +36,8 @@ from openpi_client import websocket_client_policy as wcp
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 RESIZE = 224
 SETTLE = 10
+# Task #36 GO bar is ">=15/19 scenes"; anything under this is a broken harness.
+MIN_SCENES = 15
 
 
 def quat2axisangle(q):
@@ -96,12 +99,22 @@ def main():
             obs = env.set_init_state(inits[ep % len(inits)])
             for _ in range(SETTLE):
                 obs, *_ = env.step([0, 0, 0, 0, 0, 0, -1])
-            ob_key = [k for k in obs if k.endswith("_obstacle_pos")]
-            if not ob_key:
+            # Obstacle selection must mirror the eval client exactly: SafeLIBERO
+            # names obstacles `<object>_obstacle_<idx>`, so the observation key is
+            # `<object>_obstacle_<idx>_pos` — an `endswith("_obstacle_pos")` filter
+            # matches nothing and silently drops every scene.
+            ob_name = None
+            for n in [j.replace("_joint0", "") for j in env.sim.model.joint_names
+                      if "obstacle" in j]:
+                p = obs.get(f"{n}_pos")
+                if p is not None and p[2] > 0 and -0.5 < p[0] < 0.5 and -0.5 < p[1] < 0.5:
+                    ob_name = n
+                    break
+            if ob_name is None:
+                logging.warning("t%d ep%d: no obstacle observable, skipping", task_id, ep)
                 continue
-            ob_name = ob_key[0][:-4]
-            clean = ob_name.replace("_obstacle", "").replace("_", " ")
-            u = np.asarray(obs[ob_key[0]]) - np.asarray(obs["robot0_eef_pos"])
+            clean = re.sub(r"_obstacle(_\d+)?$", "", ob_name).replace("_", " ")
+            u = np.asarray(obs[f"{ob_name}_pos"]) - np.asarray(obs["robot0_eef_pos"])
             prompts = {
                 "task": task.language,
                 "approach1": f"pick up the {clean}",
@@ -123,7 +136,15 @@ def main():
     beats = [a > r["cos_task"] for a, r in zip(appr, rows)]
     med = float(np.median(appr)) if appr else float("nan")
     frac = float(np.mean(beats)) if beats else float("nan")
-    verdict = "GO" if (med >= 0.5 and frac >= 0.7) else "NO-GO"
+    # A probe that collected nothing is a harness failure, not evidence. Writing
+    # "NO-GO" on n=0 is how a zero-scene bug got recorded as a result on
+    # 2026-07-29; refuse to emit a verdict unless the scenes are actually there.
+    if len(rows) < MIN_SCENES:
+        verdict = "INVALID"
+        logging.error("S1 probe collected %d/%d scenes — NO VERDICT. Fix the "
+                      "harness before interpreting this run.", len(rows), MIN_SCENES)
+    else:
+        verdict = "GO" if (med >= 0.5 and frac >= 0.7) else "NO-GO"
     summary = {"n_scenes": len(rows), "median_cos_approach": med,
                "frac_approach_beats_task": frac, "verdict": verdict}
     logging.info("S1 PROBE SUMMARY: %s", json.dumps(summary))
