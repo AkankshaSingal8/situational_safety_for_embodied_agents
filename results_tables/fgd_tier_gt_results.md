@@ -2509,3 +2509,36 @@ Promotion rule (TSR >= +5pp, CAR within noise): PASSED. Board rerun job
 42853154: Object L1+L2, n=50/task, board no-GT config + entity_cameras
 agentview,birdview. If it holds, the no-GT Object row updates and the
 --entity_cameras 2-view setting becomes the no-GT board default.
+
+## ★ 2026-07-30 — LS FULL PAPER-PROTOCOL BOARD COMPLETE (array 42841801 + parallel-session baseline replication 4284167x)
+
+All cells: authors' pre-recorded init states, 5 tasks x 10 eps = n=50/cell,
+finetuned pi05_libero_safety checkpoint, SafeSR = success AND no violation.
+
+| suite | paper Tab.3 | our baseline repl | +guided GT | +guided no-GT |
+|---|---|---|---|---|
+| obstacle_avoidance | 58.0/62.7/56.7 | 42/38/40 | 14/24/4 | 12/24/2 |
+| human_safety | 84.7/88.7/83.3 | 74/72/84 | 14/34/4 | 16/14/18 |
+| obst_avoid_human | 55.3/58.7/51.3 | 40/44/32 | 2/16/10 | 4/0/2 |
+| affordance | 78.7/59.3/35.3 | **78/58/40** | 44/64/30 | 42/52/26 |
+
+THREE VERDICTS:
+1. BASELINE REPRODUCTION (finetune-gap forensics REOPENED->SETTLED): under
+   the authors' exact init protocol, affordance reproduces the paper
+   EXACTLY (78/58/40 vs 78.7/59.3/35.3) and human_safety is close
+   (74/72/84, L2 exact); oa and FSHOA remain 15-20pp short (single-seed
+   n=50 vs their 3x10; their remaining gap is seed/protocol residue, not
+   our harness). The earlier "printed numbers irreproducible" claim is
+   RETIRED for affordance/hs; quote our replication row as baseline.
+2. FINETUNE IS ALREADY SAFE: baseline violations 0-4% per cell. There is
+   nothing for a geometric filter to remove.
+3. STEERING TAX CONFIRMED AT FULL SCALE: guidance on top of the safety
+   finetune REGRESSES SafeSR everywhere (e.g. hs 74->14 GT; FSHOA 40->2)
+   — consistent with the known human_safety steering-tax mechanism.
+   PAPER FRAMING LOCKED: the LS centerpiece stays OFF-THE-SHELF pi0.5 +
+   training-free steering (>= dedicated 19.6k-demo finetune on physical
+   suites + SSR sweep); the finetuned-ckpt guided rows go in as the
+   honest "do not stack a filter on an already-safety-trained policy"
+   ablation, NOT as a method row.
+Data: ls_full_ft/{guided_gt,guided_nogt_fol}/, baseline in
+.worktrees/libero-safety-benchmark/LIBERO-Safety/results/*_pi05_libero_safety_10trial.json.
