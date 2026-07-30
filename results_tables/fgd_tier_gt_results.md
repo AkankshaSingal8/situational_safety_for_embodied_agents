@@ -2166,3 +2166,53 @@ confounded 0.55, and it costs nothing further. Joins the closed-intervention
 list with visual conditioning (2026-07-28) and the Stage 1-3 steering operators.
 If S1 is ever revisited, the honest reframing is a prompt that names NO object
 (so identification is not smuggled in) — a different experiment, not a v2.
+
+## 2026-07-30 — GT POINT-CLOUD SQ FITTING (fit_sq_gt.py) + THE MINKOWSKI FLOOR
+
+User direction: do a REAL fit (paper recipe: point clouds, per-part union,
+oriented frames) at the GT tier before any percep version. Implemented
+offline: surface samples from collidable geoms -> 2-means part split (moka =
+body+handle) -> per-part PCA frame -> grid over (e1,e2) with minimal
+CONTAINING scale by bisection -> semi-axes +0.10 inflation (C2-correct).
+
+Two fitter bugs found en route (both are why "fitting SQs is hard"):
+(a) Nelder-Mead on (scales, eps) does not converge — replaced with the
+deterministic grid+bisection (containment is monotone in uniform scale);
+(b) minimizing RAW volume picks boxy eps=0.2, which is exactly wrong: after
+the +10 cm pad a boxy shape fills its corners solid. The objective must be
+the INFLATED volume. With the fix every part selects the ellipsoid.
+
+Result (100% coverage everywhere):
+| scene | sphere (leaky) | AABB-sym arm* | fitted 2-part union | MINKOWSKI FLOOR |
+| moka (t1) | 24.4 L | 48.5 L* | 55.3 L | **~34.0 L** |
+| bottle (t3) | 17.2 L | 19.2 L* | 22.0 L | **~19.1 L** |
+*AABB volumes are understated: measured under the radial-offset bug (C2),
+which under-enforces the margin; the fitted/floor columns are honest.
+
+READ — why SQ "looks so big" decomposes exactly:
+1. PHYSICS (irreducible): the floor is 1.39x the sphere on the moka. ANY
+   correct keep-out at pad 0.10 is >= 34 L; the production sphere's 24.4 L
+   covers at most ~72% of the required set. "SQ bigger than sphere" is 39%
+   physics before fitting is even discussed.
+2. FIT SLACK (remaining): fitted union = 1.63x floor on the moka (smooth
+   ellipsoids must circumscribe box-like clouds; corner slack), 1.15x on the
+   bottle (near-optimal). Levers if tightness matters: 3-4 parts, or boxy
+   eps with EXACT rounded-corner dilation (the true dilation of a box is not
+   a superquadric — semi-axis inflation over-covers boxy shapes).
+
+C4 FLOOR (decisive, replaces the fit-based C4): on t1 the TRUE dilation
+extends 171 mm along the center->target ray vs target at 168 mm — the grasp
+target is inside the MINKOWSKI DILATION ITSELF. At pad eef 0.09 + d_safe
+0.01, NO correct cover of ANY shape class can free t1's grasp. t1 is
+infeasible by geometry; the only levers are the corridor exemption (built)
+or a smaller pad. This closes the fit-quality question for the TSR cells:
+shape fitting is now solved well enough offline, its Spatial TSR upside is
+bounded by feasibility, and the honest SQ sell remains the CAR dial with
+C2-correct enforcement.
+
+Percep path (user plan step 2): same fitter, input = masked-depth cloud from
+percep_obstacle instead of sim geoms. The current percep extents (p5-p95
+axis spread, max-fused) are not a fit; expect the 4.4x inflation to drop to
+~the GT slack once the same grid+bisection runs on the fused cloud. Server
+integration for the 2-part union: the guard-set M=2 slot (extra_obstacle_*)
+carries part 2 with zero new server shapes.
