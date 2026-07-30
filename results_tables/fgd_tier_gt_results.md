@@ -2116,3 +2116,53 @@ and the semantic self-guidance direction stays closed.
 
 Note: the .err log contains websocket EOFError tracebacks at server startup
 (handshake probes from the readiness loop); benign, all 20/20 scenes collected.
+
+## 2026-07-29 — S1 v2 WOULD FAIL: predicted from the v1 run, no new compute
+
+Before spending the GPU hour on the v2 probe
+(`vlm_pipeline/s1_direction_probe_v2.py`, prereg
+`docs/superpowers/specs/2026-07-29-s1-v2-prereg.md`), the v2 primary criterion
+is PREDICTABLE from v1. v2 scores cos(dv, u) with dv = v(approach) - v(task).
+v1 saved each vector's xy norm and its cosine to u, and a vector's component
+along u is exactly |v|*cos, so proj(dv) = |v_appr|cos_appr - |v_task|cos_task
+is recoverable and its SIGN is the sign of cos(dv, u).
+Tool: `vlm_pipeline/s1_predict_v2.py`.
+
+RESULT: sign(cos(dv,u)) > 0 on only **3/20** scenes (15%).
+| stratum | n | positive |
+| ceiling (cos_task >= 0.9) | 14 | **0/14** |
+| informative (cos_task < 0.8) | 5 | 3/5 |
+
+ROOT CAUSE — it is a MAGNITUDE effect, not a direction effect. The approach
+prompt makes the policy move LESS: |v_appr| > |v_task| on only 6/20 scenes,
+median norm ratio **0.84**. On the ceiling scenes both vectors already point at
+the hazard, so a SHORTER approach vector makes dv point AWAY from it — hence
+0/14. The instruction swap does not redirect the chunk toward the named object;
+the policy HESITATES when told to approach an object the task does not name.
+
+So v2's contrast criterion would fail with a NEGATIVE median, WORSE than v1's
+0.55. The five v2 defect fixes buy measurement validity, not a different
+outcome. (Caveat: v1 saved xy/full-chunk only; v2 scores 3D/prefix, which could
+change magnitudes but not plausibly the sign across 14/14.)
+
+### The deeper problem with S1's premise
+v1 criterion 1 PASSED decisively (median cos(v_appr, u) = 0.940), so v(approach)
+IS a good hazard-direction estimate — a mechanism using it DIRECTLY (rather than
+the CFG-style contrast) would likely pass. But that finding is near-vacuous for
+this project: we already have the hazard direction for free, exactly (GT tier)
+or from RGB-D at 4.5-8.4 cm (no-GT tier). S1's value proposition was never
+"obtain the direction"; it was to obtain SEMANTIC hazard knowledge without
+explicit geometry. The probe cannot demonstrate that because it feeds the
+obstacle NAME into the prompt, which already presupposes identification —
+the very step the no-GT tier's symbolic-identity stack solves at 96.9%.
+
+### DECISION: do not run v2 as specified. S1 closes as a clean negative.
+The publishable version is now MECHANISTIC rather than criterion-based:
+"instruction-swap self-guidance fails because the swap modulates action
+MAGNITUDE (ratio 0.84), not direction — the policy hesitates rather than
+redirecting; the contrast vector consequently points away from the hazard on
+14/14 obstacle-on-path scenes." That is a stronger negative result than v1's
+confounded 0.55, and it costs nothing further. Joins the closed-intervention
+list with visual conditioning (2026-07-28) and the Stage 1-3 steering operators.
+If S1 is ever revisited, the honest reframing is a prompt that names NO object
+(so identification is not smuggled in) — a different experiment, not a v2.
