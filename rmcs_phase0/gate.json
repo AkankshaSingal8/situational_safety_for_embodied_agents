@@ -1,0 +1,50 @@
+{
+  "diag_glob": "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/flow-guidance-tier-gt/rmcs_phase0/*/*/*/k_diag_*.jsonl",
+  "n_files": 3,
+  "cells": {
+    "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/flow-guidance-tier-gt/rmcs_phase0/goal_L2/safelibero_goal/II": {
+      "n_replans": 222,
+      "n_stalled": 11,
+      "stall_fraction": 0.04954954954954955,
+      "diversity_in_stall": 0.9090909090909091,
+      "revisit_rate": 0.3333333333333333,
+      "n_revisit_eligible": 9,
+      "n_episodes": 5
+    },
+    "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/flow-guidance-tier-gt/rmcs_phase0/long_L1/safelibero_long/I": {
+      "n_replans": 892,
+      "n_stalled": 77,
+      "stall_fraction": 0.08632286995515695,
+      "diversity_in_stall": 0.6103896103896104,
+      "revisit_rate": 0.375,
+      "n_revisit_eligible": 72,
+      "n_episodes": 10
+    },
+    "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/flow-guidance-tier-gt/rmcs_phase0/long_L2/safelibero_long/II": {
+      "n_replans": 929,
+      "n_stalled": 62,
+      "stall_fraction": 0.06673842841765339,
+      "diversity_in_stall": 0.41935483870967744,
+      "revisit_rate": 0.6727272727272727,
+      "n_revisit_eligible": 55,
+      "n_episodes": 10
+    }
+  },
+  "pooled": {
+    "n_replans": 2043,
+    "n_stalled": 150,
+    "stall_fraction": 0.07342143906020558,
+    "diversity_in_stall": 0.5533333333333333,
+    "revisit_rate": 0.49264705882352944,
+    "n_revisit_eligible": 136
+  },
+  "gate": {
+    "verdict": "NO-GO",
+    "note": "revisit_rate 0.493 < 0.5 (no loop to break)",
+    "thresholds": {
+      "diversity_in_stall": 0.25,
+      "revisit_rate": 0.5,
+      "min_stalled_pooled": 20
+    }
+  }
+}

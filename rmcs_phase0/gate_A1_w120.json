@@ -1,0 +1,50 @@
+{
+  "diag_glob": "rmcs_phase0/*/*/*/k_diag_*.jsonl",
+  "n_files": 3,
+  "cells": {
+    "rmcs_phase0/goal_L2/safelibero_goal/II": {
+      "n_replans": 222,
+      "n_stalled": 2,
+      "stall_fraction": 0.009009009009009009,
+      "diversity_in_stall": 0.5,
+      "revisit_rate": 0.0,
+      "n_revisit_eligible": 1,
+      "n_episodes": 5
+    },
+    "rmcs_phase0/long_L1/safelibero_long/I": {
+      "n_replans": 892,
+      "n_stalled": 75,
+      "stall_fraction": 0.08408071748878924,
+      "diversity_in_stall": 0.5466666666666666,
+      "revisit_rate": 0.34285714285714286,
+      "n_revisit_eligible": 70,
+      "n_episodes": 10
+    },
+    "rmcs_phase0/long_L2/safelibero_long/II": {
+      "n_replans": 929,
+      "n_stalled": 29,
+      "stall_fraction": 0.031216361679224973,
+      "diversity_in_stall": 0.41379310344827586,
+      "revisit_rate": 0.68,
+      "n_revisit_eligible": 25,
+      "n_episodes": 10
+    }
+  },
+  "pooled": {
+    "n_replans": 2043,
+    "n_stalled": 106,
+    "stall_fraction": 0.05188448360254528,
+    "diversity_in_stall": 0.5094339622641509,
+    "revisit_rate": 0.4270833333333333,
+    "n_revisit_eligible": 96
+  },
+  "gate": {
+    "verdict": "NO-GO",
+    "note": "revisit_rate 0.427 < 0.5 (no loop to break)",
+    "thresholds": {
+      "diversity_in_stall": 0.25,
+      "revisit_rate": 0.5,
+      "min_stalled_pooled": 20
+    }
+  }
+}

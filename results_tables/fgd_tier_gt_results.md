@@ -2433,3 +2433,35 @@ agentview,birdview, n=20/task; paired control = f0_obj_attrib/full_percep.
 Read rule: F0 showed GT entities buy +12.5 TSR; the probe closes ~55% of the
 xy error, so expect partial recovery; promote to n=50 board rerun iff TSR
 gain >= 5pp with CAR within noise.
+
+## 2026-07-30 — RMCS PHASE 0 (job 42844388): NO-GO, twice — route-memory selection dies at the gate
+
+Instrumented replay (5 weak cells, n=5 eps/task, 2043 replans, 150 stalled),
+pre-registered gate: diversity_in_stall >= 0.25 AND revisit_rate >= 0.50.
+
+| cell | n_replans | stalled | stall% | diversity | revisit |
+|---|---|---|---|---|---|
+| goal_L2 t0 | 222 | 11 | 5.0 | 0.91 | 0.33 |
+| long_L1 t1/t3 | 892 | 77 | 8.6 | 0.61 | 0.375 |
+| long_L2 t2/t3 | 929 | 62 | 6.7 | 0.42 | **0.67** |
+| POOLED | 2043 | 150 | 7.3 | 0.55 ✓ | 0.493 ✗ |
+
+Verdict NO-GO (revisit 0.493 < 0.5). Amendment A1 (single pre-declared
+re-analysis, same data, stall window 40->120 steps / 15->30 mm, motivated by
+"timeout cells but only 7% stalled" proxy concern): revisit drops to 0.427,
+n_stalled 106 — NO-GO CONFIRMED, and the churn hypothesis is refuted (longer
+windows find FEWER stalls: the failing episodes MOVE; time is not spent in
+small-net-displacement loops at 40- or 120-step scale).
+
+What survives: (1) K-candidates are diverse in stall (0.55) — selection has
+modes, but the selector does NOT repeatedly re-pick one failing route at
+replan granularity; (2) long_L2 alone shows revisit 0.67 but only 29-62
+stalled replans (~3-7%) — the loop exists there yet cannot account for the
+timeout budget. The video "approach-hold-re-approach" dither must live at a
+LONGER period (task-attempt level: failed grasp/place cycles with real
+motion), not at route-selection level. Cross-replan selection memory
+(RMCS) targets a mechanism that is not the binding one -> direction CLOSED
+as a clean negative. Data: rmcs_phase0/{gate.json,gate_A1_w120.json}, per-
+replan logs rmcs_phase0/*/*/*/k_diag_*.jsonl (reusable for any future
+autopsy). #37 falls back to the other unclaimed S4 gap (certificate
+distillation) or an attempt-level (not replan-level) liveness mechanism.
