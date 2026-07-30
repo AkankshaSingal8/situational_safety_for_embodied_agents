@@ -2077,3 +2077,42 @@ NEXT (cheap, ordered): (a) fix C2 (semi-axis inflation) — correctness, not a
 gamble; (b) ellipsoid eps=1.0 + mid fit + main-part-only as ONE arm at a dev
 cell, since C3 says that is the whole available headroom; (c) only if (b) moves,
 consider the paper's union-of-parts / point-cloud fitting project.
+
+## 2026-07-29 — S1 SEMANTIC SELF-GUIDANCE PROBE (job 42833897, n=20 valid scenes)
+
+First VALID run. The 2026-07-29 "NO-GO" (job 42800171) was a harness failure:
+the obstacle key filter used `endswith("_obstacle_pos")` while SafeLIBERO names
+observables `<object>_obstacle_<idx>_pos`, so all 20 scenes were dropped and
+`median=NaN` fell through to the else-branch and wrote NO-GO on n=0. Fixed
+(mirror the eval client's selection) + the probe now emits verdict INVALID
+below MIN_SCENES=15 instead of a verdict on nothing.
+
+PRE-REGISTERED VERDICT: **NO-GO**.
+| criterion | bar | measured | |
+| median cos(approach) | >= 0.50 | **0.940** | PASS, decisively |
+| frac approach beats task | >= 0.70 | **0.55** | FAIL |
+
+BUT the second criterion is confounded and this run cannot test it. cos_task
+median is 0.954 — the task prompt ALREADY points at the obstacle, because these
+are obstacle-on-path scenes where hazard and goal are nearly collinear in xy.
+There is no headroom for "approach" to beat it:
+| stratum | n | frac appr>task | mean delta |
+| cos_task >= 0.9 (ceiling) | 14 | 0.43 | -0.047 (noise) |
+| cos_task < 0.9 | 6 | 0.83 | +0.350 |
+| cos_task < 0.8 | 5 | **1.00** | **+0.427** |
+corr(cos_task, delta) = -0.498. Per task: t2 (the only cell where the task
+prompt does not already aim at the obstacle: cos_task 0.31/-0.94/0.57/0.40/
+-0.99) shows 5/5 scenes shifted toward the obstacle, deltas +0.13..+0.67.
+t0/t1/t3 are all ceiling (cos_task 0.88-1.00), deltas within +/-0.07 noise.
+
+READ: criterion 1 says the policy's task head CAN aim at a named obstacle
+(median cos 0.94). Criterion 2 measured collinearity of hazard and goal on
+these scenes, not steerability. The pre-registered verdict STANDS as NO-GO —
+we do not reinterpret a failed pre-registration after seeing the data.
+What is licensed is a CORRECTED probe with its own pre-registration, run on
+scenes SELECTED for cos_task < 0.8 (hazard off the goal axis), where the
+current data predicts a large positive effect. Until that runs, S1 is NO-GO
+and the semantic self-guidance direction stays closed.
+
+Note: the .err log contains websocket EOFError tracebacks at server startup
+(handshake probes from the readiness loop); benign, all 20/20 scenes collected.
