@@ -481,7 +481,7 @@ def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> 
     tail = b[:, prefix_len:] if b.shape[1] > prefix_len else b[:, prefix_len - 1:]
     tail_margin = jnp.min(tail, axis=1)
     return {"feasible": feasible, "min_margin": min_margin, "disp_norm": disp_norm,
-            "progress": progress, "tail_margin": tail_margin}
+            "progress": progress, "tail_margin": tail_margin, "net_disp": net}
 
 
 def _hdc_bias(g: GuidanceParams, k_batch: int) -> jnp.ndarray:
@@ -697,6 +697,11 @@ def guided_sample_actions(
     diag["margin_spread"] = jnp.broadcast_to(
         jnp.max(acc["min_margin"]) - jnp.min(acc["min_margin"]), (1,)
     )
+    # RMCS Phase 0 diagnostics: per-candidate executed-prefix displacement and
+    # margin, plus the selected index. Logged only — never used for control.
+    diag["cand_disp"] = acc["net_disp"]  # (K, 3)
+    diag["cand_min_margin"] = acc["min_margin"]  # (K,)
+    diag["cand_best_idx"] = jnp.broadcast_to(best.astype(jnp.float32), (1,))
     return selected, diag
 
 

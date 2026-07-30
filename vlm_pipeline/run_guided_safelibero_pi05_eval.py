@@ -364,6 +364,11 @@ def parse_args():
                         help="Save executed action sequences of SAFE SUCCESSFUL episodes "
                              "(npz per episode) for self-distillation finetuning. Images "
                              "are re-derivable by deterministic replay from the init state.")
+    parser.add_argument("--log_k_diag", action="store_true",
+                        help="RMCS Phase 0: log per-candidate diagnostics "
+                             "(cand_disp, cand_min_margin, best_idx, eef, obstacles) "
+                             "per replan to k_diag_{timestamp}.jsonl in results_dir. "
+                             "Diagnostics only; zero behavior change.")
     return parser.parse_args()
 
 
@@ -426,6 +431,7 @@ def run_eval(args):
     results_dir.mkdir(parents=True, exist_ok=True)
 
     episodes_log = results_dir / f"episodes_{timestamp}.jsonl"
+    k_diag_log = (results_dir / f"k_diag_{timestamp}.jsonl") if args.log_k_diag else None
     per_task_results = []
     total_episodes = total_successes = total_collisions = 0
     all_ets = []
@@ -766,6 +772,30 @@ def run_eval(args):
                                 dual_lam = float(np.clip(
                                     dual_lam + args.dual_kappa * (args.dual_mref - _m),
                                     0.0, args.dual_eta_max))
+                            # RMCS Phase 0: per-candidate diagnostics log. Keys
+                            # are absent for K==1 servers and the baseline arm.
+                            if k_diag_log is not None and diag.get("cand_disp") is not None:
+                                _gp = element.get("guidance") or {}
+                                _obst = [np.asarray(_gp["obstacle_pos"], dtype=float).tolist()] \
+                                    if "obstacle_pos" in _gp else []
+                                _o2 = _gp.get("obstacle2")
+                                if _o2 is not None:
+                                    _obst.append(np.asarray(_o2["pos"], dtype=float).tolist())
+                                _bi = diag.get("cand_best_idx")
+                                _rec = {
+                                    "task_id": int(task_id),
+                                    "ep": int(ep_idx),
+                                    "t": int(t),
+                                    "eef": np.asarray(obs["robot0_eef_pos"], dtype=float).tolist(),
+                                    "cand_disp": diag["cand_disp"],
+                                    "cand_min_margin": diag.get("cand_min_margin"),
+                                    "best_idx": (int(np.asarray(_bi).reshape(-1)[0])
+                                                 if _bi is not None else -1),
+                                    "obstacles": _obst,
+                                }
+                                with open(k_diag_log, "a") as _kf:
+                                    _kf.write(json.dumps(_rec) + "\n")
+                                    _kf.flush()
                         _n_exec = len(action_chunk)
                         if (args.adaptive_replan and diag is not None
                                 and float(diag.get("min_clearance", np.inf)) < args.adaptive_clearance):

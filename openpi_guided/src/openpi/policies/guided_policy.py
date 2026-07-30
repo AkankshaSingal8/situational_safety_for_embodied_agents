@@ -279,7 +279,10 @@ class GuidedPolicy(_policy.Policy):
         outputs = jax.tree.map(lambda x: np.asarray(x[0, ...]), outputs)
         outputs = self._output_transform(outputs)
         outputs["policy_timing"] = {"infer_ms": model_time * 1000}
-        outputs["guidance"] = {k: float(np.asarray(v)[0]) for k, v in diag.items()}
+        outputs["guidance"] = {
+            k: (np.asarray(v).tolist() if k.startswith("cand_") else float(np.asarray(v)[0]))
+            for k, v in diag.items()
+        }
         if rocs_center is not None and rocs_radius > 0.0:
             from openpi.models import rocs as _rocs
 
