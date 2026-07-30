@@ -2416,3 +2416,20 @@ Pre-registered reading rules: compare vs sphere 71.0/23.5 and SQ-sym-eps0.4
 63.5/48.5 (both n=200). C4 caveat stands: t1 unrescuable by ANY fit (target
 inside true dilation) — do not attribute t1 movement to the fit. Promote to
 n=200 only if TSR recovers toward sphere while keeping a clear CAR lead.
+
+## 2026-07-30 — F3 ENTITY MULTI-VIEW: offline probe GO (job 42844384); paired rollout arm submitted (job 42847447)
+
+Offline probe (Object I+II, 4 tasks x 10 settled scenes, gt_seg masks,
+1120 object-localizations/camset): fusing birdview into the entity stack
+HALVES xy error — med_xy 0.019 -> 0.009 m, p90_xy 0.049 -> 0.021 m
+(A=agentview vs B=+birdview; C=6 static views ~= B, med_xy 0.008, no reason
+to pay 6 renders). Largest gains on exactly the corridor entities F0 named:
+milk 29->8 mm, orange_juice 29->9, ketchup 29->11, alphabet_soup 21->10.
+Localization rate unchanged (685 vs 686/1120). All-set med3d: 29->25 mm
+(z is the bias-limited axis; xy is what corridor anchors consume).
+Client: new --entity_cameras flag (default agentview = board behavior).
+Arm (42847447): board no-GT Object L1 config + entity_cameras
+agentview,birdview, n=20/task; paired control = f0_obj_attrib/full_percep.
+Read rule: F0 showed GT entities buy +12.5 TSR; the probe closes ~55% of the
+xy error, so expect partial recovery; promote to n=50 board rerun iff TSR
+gain >= 5pp with CAR within noise.

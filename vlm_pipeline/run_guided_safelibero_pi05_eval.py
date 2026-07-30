@@ -365,6 +365,10 @@ def parse_args():
     parser.add_argument("--percep_z_correction", type=float, default=-0.03,
                         help="Surface-to-center z offset for percep estimates "
                              "(runtime smoke 42239326: est z biased +0.02..0.05).")
+    parser.add_argument("--entity_cameras", type=str, default="agentview",
+                        help="Comma-separated cameras fused for percep ENTITY "
+                             "localization (offline probe 42844384: adding "
+                             "birdview halves xy error, med 19->9 mm).")
     parser.add_argument("--mask_source", type=str, default="gt_seg",
                         choices=["gt_seg", "detector"],
                         help="Pixel-region source for ALL percep estimates: "
@@ -567,7 +571,8 @@ def run_eval(args):
                               and not k.startswith("robot0") and "_to_" not in k]
                 percep_entity_pos = {
                     f"{n}_pos": p for n, p in estimate_object_positions(
-                        env.sim, _obj_names, cameras=("agentview",),
+                        env.sim, _obj_names,
+                        cameras=tuple(args.entity_cameras.split(",")),
                         region_source=args.mask_source, detector=gdino_detector,
                         z_correction=args.percep_z_correction).items()}
                 logging.info(f"  [entity-percep] ep {ep_idx} localized "
