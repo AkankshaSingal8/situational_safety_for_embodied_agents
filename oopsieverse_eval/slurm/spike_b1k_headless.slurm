@@ -57,10 +57,36 @@ fi
 # up front so this doesn't depend on load order.
 LD_LIBRARY_PATH_ADDITIONS_CMD='ENVROOT=/ocean/projects/cis250185p/asingal/envs/oopsieverse_b1k/lib/python3.10/site-packages/isaacsim; LDP=$(find "$ENVROOT" -maxdepth 3 -type d -name bin 2>/dev/null | tr "\n" ":"); export LD_LIBRARY_PATH="$LDP:${LD_LIBRARY_PATH:-}"; echo "[slurm] LD_LIBRARY_PATH additions: $LDP"'
 
+# Vulkan ICD fix (job 42879166/42879055 failed with
+# "[gpu.foundation.plugin] No device could be created" -- Isaac Sim's
+# RTX renderer needs a real Vulkan device, not just CUDA). Diagnosed via
+# `vulkaninfo` inside the container: apptainer --nv binds the NVIDIA
+# driver .so files under /.singularity.d/libs/, but does NOT bind the
+# host's Vulkan ICD registration JSON
+# (/usr/share/vulkan/icd.d/nvidia_icd.x86_64.json) or the exact absolute
+# path that JSON's "library_path" points at (/usr/lib64/libGLX_nvidia.so.0).
+# Without these, the container's Vulkan loader only finds the software
+# llvmpipe ICD (no ray tracing) -- confirmed by `vulkaninfo --summary`
+# showing deviceType=PHYSICAL_DEVICE_TYPE_CPU / deviceName=llvmpipe.
+# Binding both files at their exact host paths and setting
+# VK_ICD_FILENAMES fixes it (confirmed: vulkaninfo then reports
+# deviceType=PHYSICAL_DEVICE_TYPE_DISCRETE_GPU / deviceName=NVIDIA H100).
+ICD_JSON=/usr/share/vulkan/icd.d/nvidia_icd.x86_64.json
+NVIDIA_GLX_LIB=/usr/lib64/libGLX_nvidia.so.0
+if [ ! -f "$ICD_JSON" ] || [ ! -f "$NVIDIA_GLX_LIB" ]; then
+    echo "ERROR: expected Vulkan ICD file(s) not found on this node ($ICD_JSON, $NVIDIA_GLX_LIB)."
+    echo "This diagnostic path is specific to Bridges2 H100 nodes seen so far -- if this fires,"
+    echo "the exact host path may differ on this node and needs re-diagnosing (see task-1-report.md)."
+    exit 1
+fi
+
 apptainer exec --nv \
     --bind /ocean/projects/cis250185p/asingal:/ocean/projects/cis250185p/asingal \
     --bind /jet/home/asingal:/jet/home/asingal \
+    --bind "$ICD_JSON:$ICD_JSON:ro" \
+    --bind "$NVIDIA_GLX_LIB:$NVIDIA_GLX_LIB:ro" \
     --env OMNIGIBSON_HEADLESS=1 \
+    --env VK_ICD_FILENAMES="$ICD_JSON" \
     "$SIF_PATH" \
     bash -c "$LD_LIBRARY_PATH_ADDITIONS_CMD && source /opt/miniconda3/etc/profile.d/conda.sh && conda activate oopsieverse_b1k && python -u '$EVAL_DIR/eval/b1k_headless_spike.py' --task_name pick_egg --n_steps 30 --out_dir '$EVAL_DIR/results/b1k_headless_spike'"
 
