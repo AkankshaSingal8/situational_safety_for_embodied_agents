@@ -2730,3 +2730,16 @@ function refactor + CPU pytest, defaults byte-identical. Dev n=20 gate
 (TSR +5pp pooled, viol ~0) before any full arm.
 
 Table 6 added to artifact (placeholders in shield columns until 42877287).
+
+## 2026-07-31 — GOAL L2 no-GT FIX ATTEMPT 1 (F3 2-view, job 42877126): HYPOTHESIS REFUTED — identity, not localization; attempt 2 = FOL id swap
+
+F3 rerun (n=200, board config + entity_cameras agentview,birdview):
+76.5/48.5, strict 39.5 (board 77.5/52.0, strict 40.0 — same cell within
+noise). Per-task: t1 ident_correct 0.14 (board 0.18), 43/50 collisions,
+strict 7/50. The 2-view localization fix does NOT move t1 — the symbolic
+scorer picks the wrong hazard regardless of position accuracy. Localization
+hypothesis REFUTED for Goal II; F3 remains valid for Object (corridor-
+anchor mechanism, different failure family).
+Attempt 2: slurm/goalII_fol_n50.slurm — identical board config except
+--obstacle_id_source fol (E3 precedent: FOL >= symbolic on both spatial
+cells, trends 12:6). Data: fgd_goalII_f3/results/.
