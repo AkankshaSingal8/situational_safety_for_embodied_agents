@@ -2776,3 +2776,36 @@ offline identity bench (must reproduce observed per-task accuracies before
 trusting) -> global prior-weighting recalibration with hard no-regression
 constraint on healthy cells -> ONE confirm run. Board cell stays 77.5/52.0
 (strict 40.0) meanwhile. Data: fgd_goalII_k2/results/.
+
+## ★ 2026-07-31 — IDENTITY ROOT CAUSE FOUND (offline bench, 320 scenes): VLM-prior PIPELINE bugs, not the ranking rule; recalibration 0.637->0.787 validated + applied; Goal II confirm job 42880750
+
+Offline identity bench (ident_scene_capture.py: 32 cells x 10 init states,
+CPU-only, no rendering; ident_offline_bench.py, reproduction-gated against
+observed per-task accuracies): the deployed no-GT board rows ran symbolic id
+WITH VLM priors, and THAT config is what fails (goal II t1 0.00 offline =
+board 0.18); the hand-table config scores 0.988 pooled offline. Two bugs:
+(1) _PRIOR_FLOOR=0.5 erases contrast (plate 0.1 and cream cheese 0.3 both
+floor to 0.5, then path proximity decides); (2) exact-name prior lookup
+misses composite names ("moka pot small" not in vlm_hazard_priors.json ->
+default 0.4 -> floored) — kills all four Long-II cells.
+Validated fix (810-config sweep, hard no-regression on 10 healthy cells):
+substring-fallback prior lookup + prior^1.5 + low-prior veto tau=0.6
+(protected/moving exempt) -> pooled 0.637->0.787, goal II t1 0->1.00,
+long II 0->0.5-0.8, healthy cells unchanged; applied-code bench reproduces
+exactly; table config bit-identical (change is vlm-arm-only). APPLIED +
+committed with capture/bench tooling. Confirm run job 42880750 (board
+Goal II no-GT config, n=200). Remaining ceiling: the ratings FILE inverts
+some classes (alphabet soup 0.8 vs yellow book 0.2) — object II t1 stays 0;
+regenerating priors with an ontology-anchored prompt = API-cost follow-up
+(user decision). Data: results_tables/safelibero_ident_scenes.jsonl.
+
+## 2026-07-31 — TABLE 6 SHIELD COLUMNS LANDED (job 42877287, n=50/cell, finetuned ckpt)
+
+posthoc strict(SR): oa 18/36/4(18), oah 0/22/6, hs 12/42/10, aff 38/60/30;
+reimpl: oa 16/36/2(10), oah 0/26/10, hs 18/42/12, aff 42/62/26.
+READING: light shields pay less TSR tax on easy cells (weakest intervention
+wins where nothing needs preventing) but LEAK where hazards are real —
+oa L2 viol 24%/26% (strict 4/2), oah L0 both 0 with violations; our arms
+hold viol ~0 in all 12 cells. Ours-improved full arms (42880261, dual +
+guard_topk2, dev gate +14.3/+14.9pp) pending -> final method row.
+Artifact Table 6 updated + republished. Data: ls_shields/.
