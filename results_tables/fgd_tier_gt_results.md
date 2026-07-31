@@ -2696,3 +2696,37 @@ same-predicate atoms can mask a real violation (measurement caveat for all
 LS violation numbers incl. the paper's). Generality claim route: Tier 1
 (paper-text predicate interface; MOVING is already a runtime-grounded
 time-varying predicate across 38 :dynamics tasks) at zero GPU.
+
+## 2026-07-31 — TABLE 6 (LS finetuned-ckpt four-method board): assembled from existing data; shield arms job 42877287; C1/C2 LS-runner port dispatched
+
+User directive: paper-ready LS board with baseline/AEGIS-posthoc/SOTA-reimpl/
+ours, ALL on the finetuned pi05_libero_safety checkpoint, full protocol
+(authors' init states, 4 suites x L0/1/2 x 5 tasks x 10 trials).
+
+Existing (verified by per-episode recomputation, aggregates match exactly):
+baseline = parallel session's authors'-harness replication (n=50/cell,
+oa 42/38/40, oa_hand 40/44/32, hs 74/72/84, aff 78/58/40); ours-GT and
+ours-no-GT = ls_full_ft (array 42841801). KEY FACT: strict SR == SR in all
+36 existing cells (violating episodes are all failures) -> Table 6 carries
+both metrics in one number.
+
+Missing shields submitted: slurm/ls_shields.slurm (array 42877287, 4 suites):
+posthoc arm = serve_policy_guided --repair_schedule posthoc --num_candidates 1
+--eef_radius 0.10 --no-use-companions (mirrors fgd_posthoc_row); reimpl arm =
+same but --repair_schedule uniform (mirrors fgd_n50_reimpl_r10 config: EEF-
+only, uniform, K=1). Client = ls_full_protocol guided_gt identification ->
+delta vs ls_full_ft/guided_gt isolates architecture. OUT=ls_shields/.
+
+Honesty framing pre-registered in the artifact note: finetuned baseline
+violates 0-4% so no filter can beat its SR where already safe; claims are
+(i) ours = smallest filter tax, (ii) don't stack filters on safety-trained
+policies; centerpiece stays off-the-shelf ckpt (Tables 4/4b/5).
+
+C1/C2 (steering-tax levers, the "more FOL logic" ask): LS runner lacks the
+corridor exemption AND guards only guard[0] (guard_set.py imported by the
+SafeLIBERO runner :707,717 but NOT by the LS runner). Implementation
+subagent dispatched: opt-in --corridor and --guard_topk K flags, pure-
+function refactor + CPU pytest, defaults byte-identical. Dev n=20 gate
+(TSR +5pp pooled, viol ~0) before any full arm.
+
+Table 6 added to artifact (placeholders in shield columns until 42877287).
