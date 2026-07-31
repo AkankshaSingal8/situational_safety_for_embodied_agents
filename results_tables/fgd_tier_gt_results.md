@@ -2826,3 +2826,21 @@ Other no-GT board cells keep their runs: the recalibration only changes
 vlm-arm identity picks on previously-WRONG cells (bench: healthy cells
 bit-identical), so existing wins are unaffected; Long II would likely
 improve further (ident 0->0.5-0.8 offline) — optional future rerun.
+
+## ★ 2026-07-31 — TABLE 6 COMPLETE (ours-improved full arms, job 42880261): OURS = BEST FILTER ON MEAN STRICT SR
+
+gt_dual (GT id + duality_disengage) strict: oa 12/18/8(v14), oah 2(v2)/14/2,
+hs 48/56/10, aff 46/64/38 -> mean 26.5. nogt_dual_k2 (fol percep + dual +
+guard_topk2): oa 18/28/2, oah 0(v2)/0/4, hs 50/48/26, aff 42/50/30 -> mean
+24.8. Filter ranking on mean strict: OURS-GT-dual 26.5 > reimpl 24.3 >
+posthoc 23.2 > ours-no-dual 21.7 (duality worth ~+5 mean). Ours beats BOTH
+shields in 7/12 cells (hs L0/L1, aff all 3, oa L2, oah L0); shields keep 3
+obstacle cells (lighter intervention where finetune already careful); both
+shields leak on oa L2 (viol 24-26%, strict 4/2) vs ours-GT-dual strict 8
+(viol 14 — duality returns some safety there) and no-GT <=4% viol
+everywhere. aff L1 ours 64 beats even the baseline 58. Table 6 method
+columns = dual arms (promoted config); ls_full_ft arms quoted as the
+no-duality ablation. Artifact republished. Task #41 core deliverable
+COMPLETE: 4-method LS board (baseline/posthoc/reimpl/ours x GT/no-GT),
+600 rollouts per arm, all cells n=50 exact with episode logs.
+Data: ls_improved_full/.
