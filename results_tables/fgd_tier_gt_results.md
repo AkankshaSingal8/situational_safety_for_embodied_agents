@@ -2560,3 +2560,39 @@ Table 1 caption). Artifact updated (merged onto parallel session's newer
 version; also corrected the Table-4 reproducibility footnote to reflect
 the authors'-protocol replication: affordance exact, hs close).
 Data: f3_board_n50/{L1,L2}/safelibero_object/.
+
+## 2026-07-30 — STRICT SR (success AND zero-violation): Table 1b + Table 4b derived; GT Spatial L1 filled by rerun (job 42869156)
+
+Strict SR = per-episode success ∧ no collision/violation, recomputed from
+episodes_*.jsonl matched cell-by-cell to board aggregates (exact TSR/CAR
+match required before trusting a log; caught that ours-GT board cells live
+in fgd_n50_composed/fgd_gap_finals/fgd_thin_obj_n50, not fgd_n50).
+
+SafeLIBERO (Table 1b, %): post-hoc 20.0/20.0/17.5/40.5/14.0/32.5/17.0/18.0,
+reimpl 18.0/23.5/25.5/43.5/13.5/32.0/18.5/21.5, ours-GT
+15.0†/71.0/46.0/52.5/19.0/63.0/36.0/35.5, ours-no-GT
+35.5/55.0/50.5/40.0/37.0/58.5/27.5/37.0 (order: Spat I/II, Goal I/II,
+Obj I/II, Long I/II). no-GT beats reimpl 8/8 and exceeds the baseline's
+min(TSR,CAR) bound 8/8; shields' means 22.4/24.5 vs no-GT 42.6 — TSR losses
+cancel CAR gains for shields, composed raises both jointly.
+† GT Spatial L1: board run (2026-07-12, r2 thin) predates episode logging;
+strict from protocol-identical n=200 rerun job 42869156
+(gt_spatL1_strict/, config pinned vs server-default drift: sphere r0.09,
+inflation .004, gamma .9, d_safe .01, uniform schedule, K=1, NO companions,
+no corridor; own aggregates 64.5/22.0 vs board 71.0/23.5 — CAR reproduces,
+TSR −6.5 ≈2σ; strict consistent with board bound ≤23.5). Table 1 untouched.
+
+Baseline column: June runs predate episode logging → quoted as upper bound
+min(TSR,CAR); exact-fill array job 42869536 (baseline_strict/, guided
+client --disable_guidance, seed 7, n=50/task, 4 suites × both levels)
+IN FLIGHT.
+
+LIBERO-Safety (Table 4b): all 45 Table-4 cells matched exactly (n=50, no
+reruns; no-GT cells live under ls_rows/guided_nogt_{fol,sym}). Guided arms:
+strict ≈ TSR (safe-rate ~100). Baseline drops where it violates: oa L2
+16→4 (FOL 6 now wins), oa_hand L0 8→6. Official-metric check
+(LIBERO-Safety bddl_base_domain.py): done = _check_success() only,
+_check_constraint evaluated separately and only while not done → their SR
+is plain task success = our TSR; Table 4 keeps official convention,
+Table 4b is our stricter addition.
+Artifact updated (Tables 1b, 4b + footnotes).
