@@ -140,6 +140,68 @@ def object_positions(obs):
             if k.endswith("_pos") and not k.startswith("robot0") and "_to_" not in k}
 
 
+def _corridor_anchor(desc, cands):
+    """Corridor exemption anchors (sanctioned target, destination).
+
+    Pure (no env): the task-referenced goal object is the anchor; the
+    destination may BE the guarded hazard (HRI duality). Extracted from the
+    episode loop for unit testing; positions are re-read from `{name}_pos`
+    every replan by the caller."""
+    from symbolic_identity import parse_target_heuristic
+    target = parse_target_heuristic(desc, list(cands))
+    return target, parse_destination(desc, cands, target)
+
+
+def _topk_guard(id_source, desc, cands, eef, movers, hazards, k=1):
+    """Ranked guard list from the identity source (pure, unit-testable).
+
+    k=1 reproduces the historical single-guard truncation for symbolic/fol
+    (isolates the identity source as the single difference between arms);
+    k>=2 adds the runner-up by the same score — guard_set.py for symbolic
+    (guard_set(...)[0:1] == [scored_obstacle_id(...)] by construction),
+    ranked[:k] for fol. The gt source returns ALL CheckRobotContact hazards
+    regardless of k (the payload sends at most two: primary + obstacle2)."""
+    if id_source == "symbolic":
+        from symbolic_identity import scored_obstacle_id
+        picked = scored_obstacle_id(desc, cands, eef, moving=movers) \
+            if cands else None
+        guard = [picked] if picked else []
+        if k >= 2 and guard and cands:
+            from guard_set import guard_set as _guard_set
+            extra = _guard_set(str(desc), cands, eef, k=k)
+            guard += [n for n in extra if n not in guard][:k - 1]
+        return guard
+    if id_source == "fol":
+        # Hard-FOL ranking, no VLM priors (LS offline: 12/15 vs 9/15
+        # top-1 on obstacle_avoidance).
+        from symbolic_identity import fol_obstacle_id
+        ranked = fol_obstacle_id(desc, cands, eef, moving=movers)
+        return ranked[:k]
+    return list(hazards)
+
+
+def _extend_guidance(payload, guard, pos_of, target, dest):
+    """Secondary guard + corridor anchors appended to the base payload.
+
+    Pure (positions via `pos_of(name) -> pos | None`); extracted for unit
+    tests. Server payload keys (guided_policy.py): `obstacle2` {pos, radius},
+    `target_pos`, `dest_pos` — the server relaxes the barrier inside a
+    capsule to target/dest (corridor_radius 0.07 default)."""
+    g1 = pos_of(guard[1]) if len(guard) > 1 else None
+    if g1 is not None:
+        payload["obstacle2"] = {
+            "pos": np.asarray(g1, dtype=np.float32),
+            "radius": obstacle_radius(guard[1]),
+        }
+    tp = pos_of(target) if target else None
+    dp = pos_of(dest) if dest else None
+    if tp is not None:
+        payload["target_pos"] = np.asarray(tp, dtype=np.float32)
+    if dp is not None:
+        payload["dest_pos"] = np.asarray(dp, dtype=np.float32)
+    return payload
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--suite", default="obstacle_avoidance")
@@ -159,6 +221,18 @@ def main():
                     help="settle-window displacement [m] marking MOVING(x) from "
                          "two percep snapshots (looser than the GT 0.01 — "
                          "correlated detector noise, med abs err 0.067)")
+    ap.add_argument("--corridor", action="store_true",
+                    help="Accepted for CLI parity with the SafeLIBERO runner. "
+                         "NOTE: this client already sends the corridor anchors "
+                         "(target_pos/dest_pos, re-read each replan) by "
+                         "default since the HRI forensics fix, so passing the "
+                         "flag does not change the payload.")
+    ap.add_argument("--guard_topk", type=int, default=1,
+                    help="Top-k guard set for the symbolic/fol identity "
+                         "sources (guard_set.py runner-up sent as obstacle2; "
+                         "the server accepts at most one secondary guard). "
+                         "1 = historical single-guard behavior. The gt source "
+                         "always guards every CheckRobotContact hazard.")
     ap.add_argument("--safety_prompt", action="store_true",
                     help="Append an avoidance clause naming the identified hazard to the prompt (pi0.7-style inference-time instruction)")
     ap.add_argument("--refuse_unsafe", action="store_true",
@@ -305,20 +379,9 @@ def main():
                      and WORKSPACE[1][0] < v[1] < WORKSPACE[1][1]
                      and v[2] > 0}
             eef = np.asarray(obs["robot0_eef_pos"])  # proprio: allowed in no-GT
-            if args.obstacle_id_source == "symbolic":
-                from symbolic_identity import scored_obstacle_id
-                picked = scored_obstacle_id(desc, cands, eef, moving=movers) \
-                    if cands else None
-                guard = [picked] if picked else []
-            elif args.obstacle_id_source == "fol":
-                # Hard-FOL ranking, no VLM priors (LS offline: 12/15 vs 9/15
-                # top-1 on obstacle_avoidance). Top-1 only, to isolate the
-                # identity source as the single difference between arms.
-                from symbolic_identity import fol_obstacle_id
-                ranked = fol_obstacle_id(desc, cands, eef, moving=movers)
-                guard = ranked[:1]
-            else:
-                guard = [h for h in hazards if f"{h}_pos" in obs]
+            guard = _topk_guard(
+                args.obstacle_id_source, desc, cands, eef, movers,
+                [h for h in hazards if f"{h}_pos" in obs], k=args.guard_topk)
             ident_correct = (bool(guard) and guard[0] in hazards) if hazards else None
             # pi0.7-style inference-time safety instruction: append an
             # avoidance clause naming the identified hazard to the PROMPT
@@ -331,9 +394,8 @@ def main():
                     logging.info(f"  [safety-prompt] '{prompt_text}'")
             # Corridor exemption anchors: sanctioned approach to target and
             # destination (destination may BE the guarded hazard — HRI).
-            from symbolic_identity import parse_target_heuristic
-            corridor_target = parse_target_heuristic(desc, list(cands))
-            corridor_dest = parse_destination(desc, cands, corridor_target)
+            # Always on in this client (see --corridor help).
+            corridor_target, corridor_dest = _corridor_anchor(desc, cands)
             if (args.duality_disengage and guard and corridor_dest is not None
                     and corridor_dest in cands and guard[0] in cands):
                 _ddist = float(np.linalg.norm(np.asarray(cands[guard[0]])
@@ -417,18 +479,8 @@ def main():
                         if stall_hdc_replans > 0:
                             element["guidance"]["hdc_scale"] = 0.01
                             stall_hdc_replans -= 1
-                        g1 = _guard_pos(guard[1]) if len(guard) > 1 else None
-                        if g1 is not None:
-                            element["guidance"]["obstacle2"] = {
-                                "pos": np.asarray(g1, dtype=np.float32),
-                                "radius": obstacle_radius(guard[1]),
-                            }
-                        tp = _guard_pos(corridor_target) if corridor_target else None
-                        dp = _guard_pos(corridor_dest) if corridor_dest else None
-                        if tp is not None:
-                            element["guidance"]["target_pos"] = np.asarray(tp, dtype=np.float32)
-                        if dp is not None:
-                            element["guidance"]["dest_pos"] = np.asarray(dp, dtype=np.float32)
+                        _extend_guidance(element["guidance"], guard, _guard_pos,
+                                         corridor_target, corridor_dest)
                     _res = client.infer(element)
                     chunk = np.asarray(_res["actions"][:args.replan_steps])
                     _diag = _res.get("guidance")
