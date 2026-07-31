@@ -2661,3 +2661,38 @@ survives for them, Goal L1 is a correction not a choice. Table 1b baseline
 column = exact rerun strict values (16.5/12.5/2.0/36.5/15.5/30.5/11.5/12.0);
 Long L2 cell 12.0 filled this session (array task finished after the
 parallel session's edit). Artifact republished (merged).
+
+## 2026-07-31 — TABLE 1b CLOSED (user-directed final form) + GOAL L2 no-GT STRICT-SR ROOT CAUSE + FIX JOB 42877126
+
+Table 1/1b final form (user directive): baseline Goal L1 quoted directly as
+the clean rerun 54.0/2.5 with the ‡ corruption footnote REMOVED (provenance
+now one neutral caption sentence in 1b); Table 1b baseline column exact
+16.5/12.5/2.0/36.5/15.5/30.5/11.5/12.0, header no longer "(bound)".
+Reading-note corrected: no-GT beats baseline 8/8 but SOTA-reimpl 7/8 —
+Goal L2 (40.0 vs 43.5) is the one strict-SR loss. Artifact republished.
+
+Goal L2 no-GT forensics (fgd_vlmfin goal_II episodes): the entire gap is
+task 1 — 46/50 success but 40/50 collisions (strict 8/50), ident_correct
+0.18 vs 0.94/0.78/1.0 on t0/t2/t3; GT arm collides only 19/50 on the same
+task. Same failure family F3 cured on Object L1 (single-view entity
+localization mis-anchors the guard); the board Goal II run (07-20,
+fgd_vlmfin_r10_09) predates F3. FIX: slurm/goalII_f3_n50.slurm = identical
+config (r0.10, corridor, percep, symbolic id, VLM priors) + entity_cameras
+agentview,birdview, n=200 — job 42877126 IN FLIGHT. Recovering half of
+t1's gap ⇒ strict ~48+, beating all three competitor columns.
+
+LS BDDL audit (contextual-FOL Tier-2 feasibility): NO-GO on stock
+LIBERO-Safety — zero state-conditional constraints in all 75 safety BDDLs
+(only CheckRobotContact/CheckContact/CheckGripperForce on fixed hazards);
+evaluator cannot express conditionals (:constraints flattened to
+OR-of-atoms, no Not, no distance predicate). COLLATERAL: (a) affordance
+suite has NO :constraints and reasoning_safety's two blocks use singular
+(:constraint which the parser silently drops ⇒ parsed constraints = [] ⇒
+violation rate vacuously 0 and guided guard set EMPTY on those suites —
+Table 4/4b needs a disclosure footnote (baseline "clean" safe-rates there
+are vacuous; steering tax on affordance is not guard geometry);
+(b) _check_constraint cost dict keys by predicate name (last-write-wins) —
+same-predicate atoms can mask a real violation (measurement caveat for all
+LS violation numbers incl. the paper's). Generality claim route: Tier 1
+(paper-text predicate interface; MOVING is already a runtime-grounded
+time-varying predicate across 38 :dynamics tasks) at zero GPU.
