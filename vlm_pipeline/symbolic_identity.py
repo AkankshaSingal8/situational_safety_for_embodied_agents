@@ -145,9 +145,16 @@ def load_vlm_priors(path: str, floor: float = 0.5) -> None:
 def _hazard_weight(name: str) -> float:
     clean = _clean_object_name(name).lower()
     if _VLM_PRIORS is not None:
-        rated = _VLM_PRIORS.get(clean.replace(" obstacle", ""))
-        if rated is None:  # unseen name: floor = protected, never invisible
-            rated = _HAZARD_DEFAULT
+        base = clean.replace(" obstacle", "")
+        rated = _VLM_PRIORS.get(base)
+        if rated is None:
+            # Composite-name fallback (ident bench 2026-07-31): exact lookup
+            # missed names like "moka pot small" (only "moka pot" rated),
+            # collapsing the true hazard to the unseen-name default while
+            # inflated grocery ratings won. Substring match mirrors the hand
+            # table's token-max behavior. No GT hazard knowledge consulted.
+            hits = [v for k, v in _VLM_PRIORS.items() if k in base or base in k]
+            rated = max(hits) if hits else _HAZARD_DEFAULT
         return max(rated, _PRIOR_FLOOR)
     toks = clean.split()
     ws = [HAZARD_PRIOR[t] for t in toks if t in HAZARD_PRIOR]
@@ -159,6 +166,16 @@ def _hazard_weight(name: str) -> float:
 # rated properties, not names — these are body-part classes, not objects.
 _PROTECTED_CLASSES = ("hand", "human", "person", "arm", "finger", "face")
 _PROTECTED_PATH_FLOOR = 0.5
+
+# Prior-entry calibration (offline ident bench 2026-07-31, 320 captured
+# SafeLIBERO scenes, results_tables/safelibero_ident_scenes.jsonl): the VLM
+# arm's pooled top-1 went 0.637 -> 0.787 with prior^1.5 + a low-prior veto,
+# with zero regression on any healthy cell (>=0.85) of either prior source.
+# ALPHA sharpens hazard/benign contrast against the path term; TAU bars
+# benign-class objects (floored plates/boxes) from the near-path argmax
+# unless PROTECTED/MOVING, with a fail-safe fallback if it empties the pool.
+_PRIOR_ALPHA = 1.5
+_VETO_TAU = 0.6
 
 
 def scored_obstacle_id(
@@ -242,9 +259,11 @@ def scored_obstacle_id(
         if k in protected:
             path = max(path, _PROTECTED_PATH_FLOOR)
             w = 1.0
-        return w * path * (1.0 - 0.8 * fracs[k])
+        return w ** _PRIOR_ALPHA * path * (1.0 - 0.8 * fracs[k])
 
-    ranking = sorted(partial, key=score, reverse=True)
+    eligible = [k for k in partial
+                if k in protected or _hazard_weight(k) >= _VETO_TAU]
+    ranking = sorted(eligible or partial, key=score, reverse=True)
     if _E5_CORRUPT in ("identity", "both") and len(ranking) > 1:
         return ranking[1]  # deliberate second-best pick
     return ranking[0]
