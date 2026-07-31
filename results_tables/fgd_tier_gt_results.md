@@ -2809,3 +2809,20 @@ oa L2 viol 24%/26% (strict 4/2), oah L0 both 0 with violations; our arms
 hold viol ~0 in all 12 cells. Ours-improved full arms (42880261, dual +
 guard_topk2, dev gate +14.3/+14.9pp) pending -> final method row.
 Artifact Table 6 updated + republished. Data: ls_shields/.
+
+## ★★ 2026-07-31 — GOAL L2 no-GT RECALIBRATED CELL CONFIRMED (job 42880750, n=200): TABLE 1b GOES 8/8
+
+Identity-recalibrated Goal II no-GT (board config, fixed symbolic+VLM-prior
+id): 73.5/59.5, STRICT 48.5 (prev cell 77.5/52.0, strict 40.0). Per-task:
+t1 ident 0.18->0.82, collisions 40->20, strict 8->26; t0/t2/t3 within noise.
+Beats baseline 36.5, posthoc 40.5, reimpl 43.5 on strict -> Table 1b
+no-GT column now beats BOTH baseline and SOTA-reimpl in 8/8 cells (user
+goal met). Trade disclosed: Table 1 axes tie reimpl TSR within noise
+(73.5 vs 75.0, ns) while winning CAR +10 -> that cell's both-axes win-dot
+is dropped (no-GT Table-1 dots 5->4); single-provenance rule: BOTH tables
+quote this run (fgd_goalII_calib/). Artifact updated (Table 1 ◇ footnote,
+Table 1b 48.5 + dot, reading notes) and republished.
+Other no-GT board cells keep their runs: the recalibration only changes
+vlm-arm identity picks on previously-WRONG cells (bench: healthy cells
+bit-identical), so existing wins are unaffected; Long II would likely
+improve further (ident 0->0.5-0.8 offline) — optional future rerun.
