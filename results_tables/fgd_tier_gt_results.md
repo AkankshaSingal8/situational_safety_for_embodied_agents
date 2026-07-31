@@ -2647,3 +2647,17 @@ Rerun = replication note: 7/8 cells validate baseline + bounds; Goal L1
 disclosed. Data: baseline_strict/results/. User may override to option B
 (wholesale unified-client baseline; would cost the Spatial L1 headline TSR
 edge 70.0 vs 74.5).
+
+### 2026-07-31 amendment to the baseline-strict entry above
+
+RETRACTION of the "bistability, keep June Goal L1" interpretation: parallel
+session's forensics found the June Goal L1 baseline INVALID — t3 ETS_median
+= 0.0 (mid-run server disconnect logged most t3 episodes as 0-step "safe
+failures", inflating CAR to 84). Verified in
+pi05_benchmark/safelibero_goal/I/results_2026_06_17-*.json. Table 1 Goal L1
+baseline corrected to the rerun 54.0/2.5 (‡ footnote); other 7 June cells
+show no corruption signature and replicate within noise -> option-A framing
+survives for them, Goal L1 is a correction not a choice. Table 1b baseline
+column = exact rerun strict values (16.5/12.5/2.0/36.5/15.5/30.5/11.5/12.0);
+Long L2 cell 12.0 filled this session (array task finished after the
+parallel session's edit). Artifact republished (merged).
