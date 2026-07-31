@@ -2743,3 +2743,19 @@ anchor mechanism, different failure family).
 Attempt 2: slurm/goalII_fol_n50.slurm — identical board config except
 --obstacle_id_source fol (E3 precedent: FOL >= symbolic on both spatial
 cells, trends 12:6). Data: fgd_goalII_f3/results/.
+
+## 2026-07-31 — GOAL L2 no-GT FIX ATTEMPT 2 (FOL id, job 42879176): WORSE — both scorers pick the on-path benign plate; attempt 3 = guard_k 2
+
+FOL identity swap: 75.5/41.5, strict 37.5 (< board 40.0). ident t1 0.00,
+t2 0.06 (symbolic: 0.18/0.78). Slurm-log tally: every identity error picks
+plate_1 over the true *_obstacle_1 (t1 gt=red_coffee_mug_obstacle_1 59/59
+wrong; t2 milk 18, t3 moka 10, white_storage_box 10) — the NEAR_PATH term
+dominates the hazard prior for an on-path benign object; FOL's rule-3
+(~REFERENCED & NEAR_PATH) fires on the plate even harder than the symbolic
+scorer. Clean negative #2 for this cell: neither localization (attempt 1)
+nor rule-form (attempt 2) is the lever; the ranking calibration is.
+Attempt 3 (no rule tweak, validated mechanism): symbolic + --guard_k 2 —
+guard the top-2 candidates; the true obstacle is the expected runner-up and
+the corridor exemption protects the sanctioned destination from the extra
+guard. slurm/goalII_k2_n50.slurm submitted.
+Data: fgd_goalII_fol/results/; ident tallies from goalII_fol_42879176.err.
