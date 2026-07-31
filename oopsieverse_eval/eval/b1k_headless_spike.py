@@ -16,15 +16,18 @@ renderer) can:
 This is a GO/NO-GO gate, not a policy/adapter integration -- no VLA, no
 learned policy, zero action every step.
 
-Headless mechanism: OmniGibson's `omnigibson.macros.gm.HEADLESS` macro,
-which OmniGibson reads at `import omnigibson` time (before `og.sim`/the Kit
-`SimulationApp` is constructed) to decide whether to pass
-`headless=True`/kit `--/app/window/enabled=false`-equivalent args when it
-boots Isaac Sim's Kit app. Must be set via `omnigibson.macros.gm.HEADLESS =
-True` (or `OMNIGIBSON_HEADLESS=1` env var, which macros.py reads at import)
-BEFORE `import omnigibson` fully initializes the sim -- see this script's
-imports below and the report for the exact file/line citation found in the
-installed package.
+Headless mechanism (verified directly against
+UT-Austin-RobIn/BEHAVIOR-1K@proj/safemanibench's
+`OmniGibson/omnigibson/macros.py`, not guessed):
+
+    gm.HEADLESS = os.getenv("OMNIGIBSON_HEADLESS", "False").lower() in ("true", "1", "t")
+
+`gm` (`omnigibson.macros.gm`) is read once at `import omnigibson` time
+(before the Kit `SimulationApp` boots), so the `OMNIGIBSON_HEADLESS` env
+var MUST be set before `import omnigibson` -- see this script's imports
+below. `gm` is a `MacroDict` that locks a key after its first read, so
+re-assigning `gm.HEADLESS` after import raises `AttributeError` -- do not
+try to set it programmatically after import.
 """
 
 from __future__ import annotations
@@ -74,10 +77,15 @@ def main():
     import omnigibson as og
     from omnigibson.macros import gm
 
-    # Belt-and-suspenders: also flip the macro directly in case the env var
-    # path is not honored by this OmniGibson version (verified against the
-    # installed source -- see report).
-    gm.HEADLESS = True
+    # Confirmed mechanism (OmniGibson/omnigibson/macros.py, ~line 133 in the
+    # UT-Austin-RobIn/BEHAVIOR-1K@proj/safemanibench fork):
+    #   gm.HEADLESS = os.getenv("OMNIGIBSON_HEADLESS", "False").lower() in ("true", "1", "t")
+    # gm is a MacroDict that locks each key after its first *read* -- and
+    # `import omnigibson` itself reads gm.HEADLESS while booting the Kit
+    # SimulationApp, so by the time we get here the value is already locked
+    # in from the OMNIGIBSON_HEADLESS env var set above (before import).
+    # Do NOT try to re-set gm.HEADLESS here -- MacroDict raises
+    # AttributeError on writes to an already-read, locked key.
     print(f"[spike] omnigibson.macros.gm.HEADLESS = {gm.HEADLESS}")
 
     from damagesim.omnigibson.damageable_env import OGDamageableEnvironment
