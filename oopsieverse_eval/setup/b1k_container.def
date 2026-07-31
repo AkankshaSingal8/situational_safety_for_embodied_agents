@@ -1,0 +1,65 @@
+Bootstrap: docker
+From: nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
+
+%labels
+    Author asingal2@andrew.cmu.edu
+    Description BEHAVIOR-1K / OmniGibson / Isaac Sim container for OopsieVerse
+                 B1K headless risk-gate spike on Bridges2. Bare-metal RHEL 8.10
+                 (glibc 2.28) cannot install Isaac Sim 4.5.0's pip wheel
+                 (omniverse_kit-*-manylinux_2_34_x86_64.whl needs glibc>=2.34);
+                 this container supplies a glibc 2.39 (Ubuntu 24.04) userland,
+                 mirroring the same fix already used for cosmos-policy
+                 (see cosmos-policy/cosmos_policy.def).
+
+%environment
+    export DEBIAN_FRONTEND=noninteractive
+    export PATH=/opt/miniconda3/bin:/usr/local/bin:$PATH
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+
+    apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        curl \
+        ffmpeg \
+        git \
+        git-lfs \
+        libgl1 \
+        libglvnd0 \
+        libglx0 \
+        libegl1 \
+        libegl1-mesa-dev \
+        libgl1-mesa-dri \
+        libglib2.0-0 \
+        libvulkan1 \
+        libx11-6 \
+        libxext6 \
+        libxrandr2 \
+        libxrender1 \
+        libxxf86vm1 \
+        mesa-vulkan-drivers \
+        vulkan-tools \
+        sudo \
+        tree \
+        wget \
+        ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+    # Isaac Sim's Vulkan loader needs an ICD it can find at runtime -- the
+    # NVIDIA driver's ICD is provided by the host driver via --nv at `exec`
+    # time (bind-mounted into the container), not baked in here.
+
+    # Miniconda -- BEHAVIOR-1K's install.py/setup.sh hardcode `conda`
+    # commands (conda create/activate/run), so we need a conda binary that
+    # is itself linked against this container's (newer) glibc, not the
+    # host's. This mirrors the "rebuild the env inside the container"
+    # step cosmos-policy needed for its uv venv (see build_cosmos_sif.slurm).
+    curl -fsSL -o /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash /tmp/miniconda.sh -b -p /opt/miniconda3
+    rm /tmp/miniconda.sh
+    /opt/miniconda3/bin/conda config --system --set auto_activate_base false
+
+%runscript
+    exec "$@"
