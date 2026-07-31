@@ -2596,3 +2596,31 @@ _check_constraint evaluated separately and only while not done → their SR
 is plain task success = our TSR; Table 4 keeps official convention,
 Table 4b is our stricter addition.
 Artifact updated (Tables 1b, 4b + footnotes).
+
+## ★ 2026-07-30 — BASELINE STRICT-SR ARRAY (job 42869536) + JUNE GOAL-L1 BASELINE CORRUPTION FOUND AND CORRECTED
+
+Protocol-identical baseline rerun (guided client --disable_guidance, seed 7,
+n=200/cell) vs June aggregates, strict SR now exact:
+
+| cell | June TSR/CAR | rerun TSR/CAR | strict | verdict |
+|---|---|---|---|---|
+| Spatial I | 67.0/14.0 | 74.5/16.5 | 16.5 | reproduces (TSR +7.5 ~2σ) |
+| Spatial II | 55.5/12.0 | 51.0/12.5 | 12.5 | reproduces |
+| Goal I | 51.0/23.0 | 54.0/2.5 | 2.0 | **JUNE CELL INVALID — corrected** |
+| Goal II | 66.5/35.0 | 66.5/39.5 | 36.5 | reproduces |
+| Object I | 40.5/14.0 | 49.0/17.0 | 15.5 | reproduces (TSR +8.5 ~2σ) |
+| Object II | 74.0/25.0 | 78.5/31.0 | 30.5 | reproduces |
+| Long I | 58.0/15.0 | 64.0/13.0 | 11.5 | reproduces |
+| Long II | 51.0/16.5 | IN FLIGHT (42869536_3) | — | pending |
+
+Goal-I forensics: June t3 ("open the top drawer...") ETS_median=0.0 — the
+June-era run_safelibero_pi05_eval.py had no reconnect handling; a mid-run
+server disconnect logged the remaining episodes as 0-step success=False
+collision=False ("safe failures"), inflating CAR (t3 June 6/84 vs valid
+34/4; the current file's reconnect guard comment describes exactly this
+corruption mode, added post-June). Corruption signature (per-task
+ETS_median<20) swept across ALL 8 June cells: ONLY Goal I t3 affected.
+Correction: Table 1 baseline Goal L1 := 54.0/2.5 (rerun, ‡ footnote);
+baseline CAR was overstated 9× — our Goal L1 margins STRENGTHEN.
+Table 1b baseline column now exact for 7/8 cells (Long II pending).
+Data: baseline_strict/results/. Artifact updated (Table 1 ‡, Table 1b).
