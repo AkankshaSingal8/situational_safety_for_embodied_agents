@@ -46,12 +46,23 @@ fi
 # confirmed citation from the installed package's macros.py) -- set the
 # env var; b1k_headless_spike.py relies on this being set before
 # `import omnigibson`.
+#
+# First attempt (job 42877662) segfaulted at Kit boot:
+# "ImportError: libhdx.so: cannot open shared object file" from
+# omni.physx/omni.kit.xr.core, even though libhdx.so DOES exist under
+# isaacsim/extscache/omni.usd.libs-*/bin/ -- a library-search-path issue,
+# not a missing file. Isaac Sim's pip distribution normally relies on each
+# extension's own bin/ dir being added to the loader path as extensions
+# start up; add every isaacsim extscache/exts*/bin dir to LD_LIBRARY_PATH
+# up front so this doesn't depend on load order.
+LD_LIBRARY_PATH_ADDITIONS_CMD='ENVROOT=/ocean/projects/cis250185p/asingal/envs/oopsieverse_b1k/lib/python3.10/site-packages/isaacsim; LDP=$(find "$ENVROOT" -maxdepth 3 -type d -name bin 2>/dev/null | tr "\n" ":"); export LD_LIBRARY_PATH="$LDP:${LD_LIBRARY_PATH:-}"; echo "[slurm] LD_LIBRARY_PATH additions: $LDP"'
+
 apptainer exec --nv \
     --bind /ocean/projects/cis250185p/asingal:/ocean/projects/cis250185p/asingal \
     --bind /jet/home/asingal:/jet/home/asingal \
     --env OMNIGIBSON_HEADLESS=1 \
     "$SIF_PATH" \
-    bash -c "source /opt/miniconda3/etc/profile.d/conda.sh && conda activate oopsieverse_b1k && python -u '$EVAL_DIR/eval/b1k_headless_spike.py' --task_name pick_egg --n_steps 30 --out_dir '$EVAL_DIR/results/b1k_headless_spike'"
+    bash -c "$LD_LIBRARY_PATH_ADDITIONS_CMD && source /opt/miniconda3/etc/profile.d/conda.sh && conda activate oopsieverse_b1k && python -u '$EVAL_DIR/eval/b1k_headless_spike.py' --task_name pick_egg --n_steps 30 --out_dir '$EVAL_DIR/results/b1k_headless_spike'"
 
 EXIT=$?
 echo "=== B1K headless spike done, exit=$EXIT ==="
