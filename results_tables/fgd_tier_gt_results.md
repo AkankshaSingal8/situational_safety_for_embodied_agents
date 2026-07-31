@@ -2624,3 +2624,26 @@ Correction: Table 1 baseline Goal L1 := 54.0/2.5 (rerun, ‡ footnote);
 baseline CAR was overstated 9× — our Goal L1 margins STRENGTHEN.
 Table 1b baseline column now exact for 7/8 cells (Long II pending).
 Data: baseline_strict/results/. Artifact updated (Table 1 ‡, Table 1b).
+
+## 2026-07-31 — BASELINE STRICT-SR ARRAY (job 42869536, unified guided client --disable_guidance, seed 7, n=200/cell): 7/8 REPLICATE; Goal L1 diverges; June baseline KEPT
+
+Rerun vs June (TSR/CAR, delta, rerun strict): Spat I 74.5/16.5 (+7.5/+2.5,
+16.5) · Spat II 51.0/12.5 (−4.5/+0.5, 12.5) · Goal I 54.0/2.5 (+3.0/−20.5,
+2.0) · Goal II 66.5/39.5 (0/+4.5, 36.5) · Obj I 49.0/17.0 (+8.5/+3.0, 15.5)
+· Obj II 78.5/31.0 (+4.5/+6.0, 30.5) · Long I 64.0/13.0 (+6.0/−2.0, 11.5) ·
+Long II 50.5/15.0 (−0.5/−1.5, 12.0).
+
+Goal L1 divergence is a single bistable task: t3 (top drawer + bowl) June
+6/84 (dither, safe timeout) -> rerun 34/4 (attempts drawer, collides).
+Plain serve_policy (June) vs guided server enabled=0 (rerun) sampling-path
+difference flips the mode; all other cells within ~2σ (largest TSR drift
++8.5 Obj I ≈ 2σ; Spat I 67.0->74.5 unpaired 1.7σ, ns).
+
+DECISION (option A): June baseline remains the board/paper reference
+everywhere (pre-registered; rerun cannot redefine it on a 1.7σ draw).
+Table 1b baseline column stays min(TSR,CAR) BOUNDS — mixing rerun strict
+into June rows is internally impossible (3 cells' rerun strict > June CAR).
+Rerun = replication note: 7/8 cells validate baseline + bounds; Goal L1
+disclosed. Data: baseline_strict/results/. User may override to option B
+(wholesale unified-client baseline; would cost the Spatial L1 headline TSR
+edge 70.0 vs 74.5).
