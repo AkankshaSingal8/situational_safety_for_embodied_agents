@@ -2759,3 +2759,20 @@ guard the top-2 candidates; the true obstacle is the expected runner-up and
 the corridor exemption protects the sanctioned destination from the extra
 guard. slurm/goalII_k2_n50.slurm submitted.
 Data: fgd_goalII_fol/results/; ident tallies from goalII_fol_42879176.err.
+
+## 2026-07-31 — GOAL L2 no-GT ATTEMPT 3 (symbolic + guard_k 2, job 42879662): FAILED — runner-up also wrong; escalating to offline identity benchmark
+
+64.5/48.0, strict 39.5 (board 40.0). t1: ident 0.18 unchanged, collisions
+40/50 unchanged (true obstacle STILL unguarded), TSR 45->18 (the second
+wrong guard blocks the task). k2-log tally: t1 top-2 = plate_1 +
+wine_bottle_1; the true red_coffee_mug_obstacle_1 is not even runner-up.
+Three clean negatives bracket the failure: not localization (42877126),
+not rule form (42879176), not guard breadth (42879662) — the RANKING
+CALIBRATION (path-proximity term vs hazard prior) is the lever, and blind
+n=200 probes are the wrong tool. Escalation (subagent dispatched):
+CPU-only scene capture (ident_scene_capture.py -> all 8 cells x 10 init
+states, positions + gt label, NO "_obstacle_" name leakage in scoring) ->
+offline identity bench (must reproduce observed per-task accuracies before
+trusting) -> global prior-weighting recalibration with hard no-regression
+constraint on healthy cells -> ONE confirm run. Board cell stays 77.5/52.0
+(strict 40.0) meanwhile. Data: fgd_goalII_k2/results/.
