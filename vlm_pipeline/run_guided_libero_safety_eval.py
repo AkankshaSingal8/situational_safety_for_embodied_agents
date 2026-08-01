@@ -47,6 +47,7 @@ ENGAGE_CONE_HARD_R = 0.14  # --engage_cone: always-engaged radius regardless of 
 # fully open (>= MAX) and fully closed-on-nothing (<= MIN, near-zero width).
 HOLDING_WIDTH_MAX = 0.045
 HOLDING_WIDTH_MIN = 0.002
+MOVER_LEAD_CAP = 0.10  # --mover_lead: extrapolation displacement cap [m]
 # Conservative envelope radii by name fragment (hand bodies are large).
 OBSTACLE_RADII = {"hand": 0.10, "car": 0.05, "train": 0.05, "ball": 0.04}
 MOVER_THRESHOLD = 0.01  # settle-window displacement [m] that marks MOVING(x)
@@ -369,6 +370,46 @@ def _holding_filter(guard, movers, is_holding):
     return [name for name in guard if name in movers]
 
 
+def _lead_positions(pos_of, prev_pos_of, movers, lead_steps, cap):
+    """MOVER_LEAD(hazard) predictive barrier anchor (pure, unit-testable).
+
+    `pos_of`/`prev_pos_of` are name -> pos mappings (dicts): the CURRENT
+    chunk-boundary's observed positions (for whichever entries survived
+    gating) and the PREVIOUS chunk-boundary's observed positions for the
+    same entity names, respectively. The caller tracks `prev_pos_of` across
+    queries AND pre-scales `lead_steps` by 1/elapsed_env_steps-since-last-
+    query, so `(pos - prev) * lead_steps` already equals the per-step-
+    velocity-times-STEPS extrapolation `pos + v*STEPS` -- this keeps the
+    helper itself elapsed-agnostic and pure.
+
+    Only entries whose name is in `movers` are extrapolated; STATIC entries
+    (name not in `movers`, or `movers is None` meaning the episode's movers
+    metadata is unavailable) pass through UNCHANGED. An entry with no
+    previous sample yet (first query for that name -- missing from
+    `prev_pos_of`) also passes through unchanged (conservative: no velocity
+    to extrapolate from). The extrapolation displacement
+    `(pos - prev) * lead_steps` is capped at `cap` meters (direction
+    preserved, magnitude clamped) before being added to `pos`.
+
+    Returns a NEW dict with exactly the keys of `pos_of` (values are
+    `np.ndarray`); this adjusted mapping is used ONLY for the guard payload
+    sent to the server -- logging/violation accounting keeps using the
+    unadjusted observed positions."""
+    out = {}
+    for name, pos in pos_of.items():
+        pos = np.asarray(pos, dtype=np.float64)
+        prev = None if (movers is None or name not in movers) else prev_pos_of.get(name)
+        if prev is None:
+            out[name] = pos
+            continue
+        disp = (pos - np.asarray(prev, dtype=np.float64)) * lead_steps
+        dist = float(np.linalg.norm(disp))
+        if dist > cap and dist > 0.0:
+            disp = disp * (cap / dist)
+        out[name] = pos + disp
+    return out
+
+
 def _extend_guidance(payload, guard, pos_of, target, dest):
     """Secondary guard + corridor anchors appended to the base payload.
 
@@ -465,6 +506,36 @@ def main():
                          "movers metadata is unavailable the fallback is "
                          "conservative: suppress nothing. Default off = "
                          "byte-identical legacy behavior.")
+    ap.add_argument("--mover_lead", type=float, default=None,
+                    help="MOVER_LEAD(hazard) predictive barrier anchor "
+                         "[env steps]. Composes AFTER --engage_radius/"
+                         "--engage_cone/--holding_disengage (applied to "
+                         "whichever guard entries survive gating -- "
+                         "adjusts positions, not membership): for entries "
+                         "classified as movers (episode movers metadata, "
+                         "as in --holding_disengage), replaces the "
+                         "position sent to the server with the "
+                         "constant-velocity extrapolation pos + v*STEPS, "
+                         "where v is the per-entity per-step velocity from "
+                         "finite differences between consecutive "
+                         "chunk-boundary queries (caller tracks previous "
+                         "positions per entity name and elapsed env steps "
+                         "between queries to normalize v). Extrapolation "
+                         f"displacement capped at {MOVER_LEAD_CAP} m "
+                         "(MOVER_LEAD_CAP). First query for an entity (no "
+                         "previous sample yet) -> observed position "
+                         "unchanged. Static entries unchanged. Adjustment "
+                         "is used ONLY for the guard payload sent to the "
+                         "server -- logging/violation accounting keep "
+                         "using observed positions; corridor anchors "
+                         "(target_pos/dest_pos) are also EXEMPT even if a "
+                         "guard entry's name equals the destination (HRI "
+                         "duality). With --ssm_margins, the speed-and-"
+                         "separation margin is computed from the "
+                         "extrapolated (not observed) primary guard "
+                         "position, since the barrier is now anchored "
+                         "predictively. None (default) = disabled, "
+                         "byte-identical legacy payloads.")
     ap.add_argument("--safety_prompt", action="store_true",
                     help="Append an avoidance clause naming the identified hazard to the prompt (pi0.7-style inference-time instruction)")
     ap.add_argument("--refuse_unsafe", action="store_true",
@@ -672,6 +743,8 @@ def main():
             prev_eef = np.asarray(obs["robot0_eef_pos"]).copy()
             cone_prev_eef = None  # --engage_cone: velocity grounded across chunk-boundary queries only
             holding_streak = 0  # --holding_disengage: consecutive band queries
+            lead_prev_pos = {}  # --mover_lead: last chunk-boundary observed pos per mover name
+            lead_steps_since_query = 0  # --mover_lead: env steps elapsed since last chunk-boundary query
             # Revision controllers (spec 2026-07-27): per-episode state.
             dual_lam = 0.0
             ep_actions = []                           # self-distillation log
@@ -729,7 +802,42 @@ def main():
                             else 0)
                         step_guard = _holding_filter(
                             step_guard, movers, _is_holding(_width, holding_streak))
-                    g0 = _guard_pos(step_guard[0]) if step_guard else None
+                    # MOVER_LEAD(hazard): predictive barrier anchor, applied
+                    # AFTER gating to whichever entries survived it (adjusts
+                    # positions, not membership). `_lead_pos`/`_lead_anchor_pos`
+                    # default to the unadjusted `_guard_pos` lookup so the
+                    # payload path is byte-identical when the flag is off.
+                    # `_lead_anchor_pos` additionally exempts the corridor
+                    # target/dest names (Task 1/2 contract: corridor anchors
+                    # are NEVER gated/adjusted here, even if a guard entry's
+                    # name happens to equal the destination — HRI duality,
+                    # e.g. "the hand is hazard AND destination").
+                    _lead_pos = _lead_anchor_pos = _guard_pos
+                    if args.mover_lead is not None:
+                        _cur_lead_map = {n: _guard_pos(n) for n in step_guard}
+                        _cur_lead_map = {n: p for n, p in _cur_lead_map.items()
+                                         if p is not None}
+                        _lead_elapsed = (lead_steps_since_query
+                                          if lead_steps_since_query > 0 else 1)
+                        _lead_eff_steps = args.mover_lead / _lead_elapsed
+                        _lead_adj = _lead_positions(
+                            _cur_lead_map, lead_prev_pos, movers,
+                            _lead_eff_steps, MOVER_LEAD_CAP)
+                        lead_prev_pos = dict(_cur_lead_map)
+                        lead_steps_since_query = 0
+
+                        def _lead_pos(name, _adj=_lead_adj, _fb=_guard_pos):
+                            return _adj.get(name, _fb(name))
+
+                        _lead_anchors = (corridor_target, corridor_dest)
+
+                        def _lead_anchor_pos(name, _adj=_lead_adj,
+                                              _fb=_guard_pos,
+                                              _exempt=_lead_anchors):
+                            if name in _exempt:
+                                return _fb(name)
+                            return _adj.get(name, _fb(name))
+                    g0 = _lead_pos(step_guard[0]) if step_guard else None
                     if g0 is not None and not args.disable_guidance:
                         r_obs = obstacle_radius(step_guard[0])
                         if args.ssm_margins:
@@ -761,7 +869,7 @@ def main():
                             element["guidance"]["hdc_scale"] = 0.01
                             stall_hdc_replans -= 1
                         _extend_guidance(element["guidance"], step_guard,
-                                         _guard_pos,
+                                         _lead_anchor_pos,
                                          corridor_target, corridor_dest)
                     _res = client.infer(element)
                     chunk = np.asarray(_res["actions"][:args.replan_steps])
@@ -793,6 +901,7 @@ def main():
                 if args.log_trajectories:
                     ep_actions.append(np.asarray(_a, dtype=np.float32))
                 obs, reward, done, info = env.step(_a.tolist())
+                lead_steps_since_query += 1  # --mover_lead: elapsed-steps tracking
                 if args.stall_recovery and in_retreat == 0:
                     eef_hist.append(np.asarray(obs["robot0_eef_pos"], dtype=np.float64))
                     if (len(eef_hist) == eef_hist.maxlen
@@ -860,6 +969,7 @@ def main():
         "engage_radius": args.engage_radius,
         "engage_cone": args.engage_cone,
         "holding_disengage": bool(args.holding_disengage),
+        "mover_lead": args.mover_lead,
         "refuse_unsafe": args.refuse_unsafe,
         "overall_TSR": float(np.mean([r["TSR"] for r in per_task])) if per_task else 0.0,
         "overall_violation_rate": float(np.mean([r["violation_rate"] for r in per_task])) if per_task else 0.0,

@@ -1,7 +1,8 @@
-"""CPU unit tests for `--engage_cone` (APPROACHING(eef, hazard) velocity gate)
-and `--holding_disengage` (HOLDING(eef) gripper-state suppression).
+"""CPU unit tests for `--engage_cone` (APPROACHING(eef, hazard) velocity gate),
+`--holding_disengage` (HOLDING(eef) gripper-state suppression), and
+`--mover_lead` (MOVER_LEAD(hazard) predictive barrier anchor).
 
-Covers `_cone_gate`, `_is_holding`, `_holding_filter` in
+Covers `_cone_gate`, `_is_holding`, `_holding_filter`, `_lead_positions` in
 run_guided_libero_safety_eval.py — pure, no GPU, no env creation, no
 mujoco/robosuite imports.
 """
@@ -296,3 +297,144 @@ def test_defaults_off_holding_disengage_leaves_payload_path_untouched():
     if holding_disengage:
         step_guard = ls._holding_filter(step_guard, {"moving_hand"}, True)
     assert step_guard == guard
+
+
+# --- `--mover_lead` (MOVER_LEAD(hazard) predictive barrier anchor) --------
+
+LEAD_CAP = ls.MOVER_LEAD_CAP
+
+
+def test_lead_positions_extrapolation_math_exact():
+    # mover with a small, sub-cap delta: anchor = pos + (pos-prev)*lead_steps.
+    pos_of = {"hand": np.array([0.20, 0.0, 1.0])}
+    prev_pos_of = {"hand": np.array([0.19, 0.0, 1.0])}  # delta = (0.01, 0, 0)
+    out = ls._lead_positions(pos_of, prev_pos_of, {"hand"}, lead_steps=3.0,
+                              cap=LEAD_CAP)
+    expected = np.array([0.23, 0.0, 1.0])  # 0.20 + 0.01*3, well under cap (0.03 < 0.10)
+    assert set(out.keys()) == {"hand"}
+    np.testing.assert_allclose(out["hand"], expected)
+
+
+def test_lead_positions_cap_saturation_direction_preserved():
+    # delta*lead_steps norm exceeds cap -> clamped to `cap` in the same direction.
+    pos_of = {"hand": np.array([0.0, 0.0, 1.0])}
+    prev_pos_of = {"hand": np.array([-0.1, 0.0, 1.0])}  # delta = (0.1, 0, 0)
+    out = ls._lead_positions(pos_of, prev_pos_of, {"hand"}, lead_steps=5.0,
+                              cap=LEAD_CAP)
+    # Uncapped displacement would be (0.5, 0, 0), norm 0.5 >> cap 0.10.
+    disp = out["hand"] - pos_of["hand"]
+    assert np.isclose(float(np.linalg.norm(disp)), LEAD_CAP)
+    np.testing.assert_allclose(disp / np.linalg.norm(disp), [1.0, 0.0, 0.0])
+    np.testing.assert_allclose(out["hand"], pos_of["hand"] + np.array([LEAD_CAP, 0.0, 0.0]))
+
+
+def test_lead_positions_first_query_passthrough():
+    # No previous sample for this entity yet -> observed position unchanged,
+    # even though it IS a mover.
+    pos_of = {"hand": np.array([0.2, 0.0, 1.0])}
+    prev_pos_of = {}  # entity absent -> first query
+    out = ls._lead_positions(pos_of, prev_pos_of, {"hand"}, lead_steps=10.0,
+                              cap=LEAD_CAP)
+    np.testing.assert_allclose(out["hand"], pos_of["hand"])
+
+
+def test_lead_positions_static_entry_untouched():
+    # name not in movers -> unchanged regardless of prev/lead_steps.
+    pos_of = {"table": np.array([0.5, 0.5, 0.8])}
+    prev_pos_of = {"table": np.array([0.1, 0.1, 0.8])}  # large delta, ignored
+    out = ls._lead_positions(pos_of, prev_pos_of, {"hand"}, lead_steps=10.0,
+                              cap=LEAD_CAP)
+    np.testing.assert_allclose(out["table"], pos_of["table"])
+
+
+def test_lead_positions_missing_movers_metadata_all_untouched():
+    # movers is None (episode movers metadata unavailable) -> conservative:
+    # every entry passes through unchanged, even ones with a real prev sample.
+    pos_of = {"hand": np.array([0.2, 0.0, 1.0])}
+    prev_pos_of = {"hand": np.array([0.0, 0.0, 1.0])}
+    out = ls._lead_positions(pos_of, prev_pos_of, None, lead_steps=10.0,
+                              cap=LEAD_CAP)
+    np.testing.assert_allclose(out["hand"], pos_of["hand"])
+
+
+def test_lead_positions_multiple_entries_independent():
+    pos_of = {
+        "mover_with_prev": np.array([1.0, 0.0, 1.0]),
+        "mover_first_query": np.array([2.0, 0.0, 1.0]),
+        "static": np.array([3.0, 0.0, 1.0]),
+    }
+    prev_pos_of = {
+        "mover_with_prev": np.array([0.9, 0.0, 1.0]),  # delta (0.1,0,0)
+        "static": np.array([2.9, 0.0, 1.0]),
+    }
+    movers = {"mover_with_prev", "mover_first_query"}
+    out = ls._lead_positions(pos_of, prev_pos_of, movers, lead_steps=0.5,
+                              cap=LEAD_CAP)
+    np.testing.assert_allclose(out["mover_with_prev"], [1.05, 0.0, 1.0])
+    np.testing.assert_allclose(out["mover_first_query"], pos_of["mover_first_query"])
+    np.testing.assert_allclose(out["static"], pos_of["static"])
+
+
+def test_argparse_mover_lead_default_none_and_wiring_present():
+    src = pathlib.Path(ls.__file__).read_text()
+    assert '"--mover_lead", type=float, default=None' in src
+    assert "if args.mover_lead is not None:" in src
+    assert "_lead_pos = _lead_anchor_pos = _guard_pos" in src
+    # Wiring composes AFTER _gate_guard -> _cone_gate -> _holding_filter.
+    hold_idx = src.index("step_guard = _holding_filter(")
+    lead_idx = src.index("if args.mover_lead is not None:")
+    assert hold_idx < lead_idx
+
+
+def test_lead_anchor_position_exempt_when_name_equals_corridor_dest():
+    # HRI duality: the guarded hazard's name can equal the corridor
+    # destination name (the hand is hazard AND destination). The primary
+    # guard position (obstacle_pos) IS extrapolated -- it's the guard entry
+    # -- but the corridor anchor slot (dest_pos) must stay at the OBSERVED
+    # position, never the predictive anchor, mirroring the Task 1/2 "corridor
+    # anchors are never gated" contract. This replicates the wiring's
+    # `_lead_pos` vs `_lead_anchor_pos` split (run_guided_libero_safety_eval.py).
+    store = {"hand": np.array([0.20, 0.0, 1.0])}
+    prev_store = {"hand": np.array([0.19, 0.0, 1.0])}
+    guard_pos = _pos_of(store)
+    guard = ["hand"]
+    corridor_dest = "hand"  # duality: hazard name == destination name
+    corridor_target = None
+    lead_adj = ls._lead_positions(
+        {n: guard_pos(n) for n in guard}, prev_store, {"hand"},
+        lead_steps=3.0, cap=LEAD_CAP)
+
+    def lead_pos(name):
+        return lead_adj.get(name, guard_pos(name))
+
+    def lead_anchor_pos(name, _exempt=(corridor_target, corridor_dest)):
+        if name in _exempt:
+            return guard_pos(name)
+        return lead_adj.get(name, guard_pos(name))
+
+    g0 = lead_pos(guard[0])
+    dest_pos = lead_anchor_pos(corridor_dest)
+    np.testing.assert_allclose(g0, [0.23, 0.0, 1.0])  # extrapolated
+    np.testing.assert_allclose(dest_pos, store["hand"])  # observed, unchanged
+    assert not np.allclose(g0, dest_pos)
+
+
+def test_defaults_off_mover_lead_leaves_payload_path_untouched():
+    # With --mover_lead unset (argparse default None), the wiring never
+    # calls _lead_positions; `_lead_pos` stays bound to the raw `_guard_pos`
+    # lookup, so g0/obstacle2 positions are exactly the observed positions —
+    # byte-identical to Task 2 behavior.
+    guard = ["static_obj", "moving_hand"]
+    store = {"static_obj": np.array([0.2, 0.0, 1.0]),
+             "moving_hand": np.array([-0.2, 0.0, 1.0])}
+    eef = np.array([0.0, 0.0, 1.0])
+    guard_pos = _pos_of(store)
+    mover_lead = None  # the argparse default
+    lead_pos = guard_pos
+    if mover_lead is not None:
+        adj = ls._lead_positions({n: guard_pos(n) for n in guard},
+                                  {}, {"moving_hand"}, mover_lead, LEAD_CAP)
+        lead_pos = lambda name: adj.get(name, guard_pos(name))  # noqa: E731
+    g0 = lead_pos(guard[0]) if guard else None
+    np.testing.assert_allclose(g0, store["static_obj"])
+    assert lead_pos is guard_pos
