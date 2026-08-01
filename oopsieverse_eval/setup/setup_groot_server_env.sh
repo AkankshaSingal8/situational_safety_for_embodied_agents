@@ -68,6 +68,34 @@ git -C "$CLONE_DIR" checkout n1.6.1-release
 pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cu128
 python -c "import torch; print('torch preinstalled OK:', torch.__version__)"
 
+# SECOND install-ordering fix (job 42907882 failed on this next line, same
+# failure *class* as the flash-attn one above -- a transitive build
+# dependency needing something this shell doesn't provide by default):
+# gr00t==0.1.0 also hard-depends on deepspeed==0.17.6, whose setup.py
+# unconditionally probes `CUDA_HOME` at *metadata-generation* time (before
+# any actual compilation) and raises `MissingCUDAException` if it's unset --
+# true here because this script never loaded a CUDA toolkit module, only
+# relying on torch's bundled cu128 runtime libs (which don't set CUDA_HOME
+# or provide nvcc). Because `pip install -e .` is one atomic command, that
+# single deepspeed failure again aborted the whole install, so numpy/
+# huggingface_hub/gr00t itself never landed -- identical cascade shape to
+# the flash-attn bug, different package.
+#
+# Fix: `module load cuda/12.6.1` (closest available toolkit to torch's
+# cu128 build; confirmed on this cluster to set CUDA_HOME=/opt/packages/
+# cuda/v12.6.1 and put nvcc on PATH) BEFORE this install, so deepspeed's
+# (and flash-attn's) CUDA op builders find a real toolkit. DS_BUILD_OPS=0 /
+# DS_SKIP_CUDA_CHECK=1 are set as a second line of defense in case the
+# module's CUDA_HOME still isn't picked up in some shell -- we only need
+# GR00T for single-GPU zero-shot inference here, not deepspeed's
+# distributed-training custom ops, so skipping deepspeed's AOT op
+# compilation (it falls back to JIT-on-first-use, never triggered by
+# inference-only code) is safe for this spike's purposes.
+module load cuda/12.6.1
+echo "CUDA_HOME=${CUDA_HOME:-<unset>}"
+export DS_BUILD_OPS=0
+export DS_SKIP_CUDA_CHECK=1
+
 pip install -e "$CLONE_DIR" --no-build-isolation
 
 # pyzmq for the PolicyServer/PolicyClient ZMQ REQ/REP wire protocol
