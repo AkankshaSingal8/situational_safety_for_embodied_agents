@@ -2879,3 +2879,19 @@ paper-worthy table; (2) engage gating still needed for oa (guards active) + hs t
 to 0.22/0.30/0.40 (0.15 would gate inside hand r_eff=0.20). Parity subagent dispatched: --exec_parity
 client flag + server flag deltas (cmd_clip hypothesis: 0.05 cap vs ~0.12 typical commands ≈ 2.4x).
 --engage_radius implemented (_gate_guard, 5 new tests, 13 pass), R=0 byte-identical, uncommitted.
+
+## 2026-08-01 — LS client: three groundable FOL predicate flags implemented (CPU-verified, default-off)
+
+Adds three differently-grounded predicates to `vlm_pipeline/run_guided_libero_safety_eval.py`, composing
+`_gate_guard → _cone_gate → _holding_filter → mover-lead` at chunk boundaries (commits ae0fc72, 796e600, 192d0ec):
+- `--engage_cone DEG` — APPROACHING(eef,hazard): velocity-cone engagement (proprioceptive finite-difference v);
+  hard always-engage radius 0.14 m; targets residual steering tax (hs L2 t13 signature).
+- `--holding_disengage` — HOLDING(·): gripper-width band (0.002,0.045) held ≥2 queries suppresses STATIC guards only;
+  movers/hands never suppressed; missing movers metadata → suppress nothing.
+- `--mover_lead STEPS` — MOVER_LEAD: constant-velocity extrapolated barrier anchor for movers (cap 0.10 m),
+  payload-only (logging/violations use observed positions); targets oa L2 t11/t14 added violations + hand suites.
+All default-off byte-identical to a329b5d; 61/61 CPU tests; per-task + whole-branch reviews Approved (0 critical/important).
+CAVEAT before trusting any --holding_disengage GPU arm: instrument one episode to confirm gripper-width formula
+abs(q0)+abs(q1) spans ~0–0.08 m on the live Panda gripper (band could otherwise be silently inert/always-on).
+Deployment: slot the promoted parity+gating config from dev gate 42899554 first; these predicates are the
+next lever if that gate leaves cells below baseline−2pp.
