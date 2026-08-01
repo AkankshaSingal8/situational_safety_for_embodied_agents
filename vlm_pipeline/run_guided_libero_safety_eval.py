@@ -944,6 +944,11 @@ def main():
                               else obs.get(f"{_name}_pos"))
                         if _p is not None:
                             _entities[_name] = _p
+                    # eef/grip are POST-step (s_{t+1}), paired here with the
+                    # action that produced them: record[t].eef == obs after
+                    # executing record[t].action. A consumer building
+                    # (s_t, a_t, s_{t+1}) triples must pair record[t-1].eef
+                    # with record[t].action.
                     _trec = _transition_record(
                         task_id, ep, t, obs["robot0_eef_pos"],
                         obs["robot0_gripper_qpos"], _a, _entities)

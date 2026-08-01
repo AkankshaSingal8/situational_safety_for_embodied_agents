@@ -972,6 +972,11 @@ def run_eval(args):
                         _entities = {k[:-4]: v for k, v in entity_view(obs).items()
                                      if k.endswith("_pos") and not k.startswith("robot0")
                                      and "_to_" not in k}
+                        # eef/grip are POST-step (s_{t+1}), paired here with
+                        # the action that produced them: record[t].eef == obs
+                        # after executing record[t].action. A consumer
+                        # building (s_t, a_t, s_{t+1}) triples must pair
+                        # record[t-1].eef with record[t].action.
                         _trec = _transition_record(
                             task_id, ep_idx, t, obs["robot0_eef_pos"],
                             obs["robot0_gripper_qpos"], action, _entities)

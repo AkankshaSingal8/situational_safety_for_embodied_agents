@@ -108,7 +108,7 @@ def test_ls_record_building_gated_behind_flag():
     # argparse `help=` prose, once as the actual wiring inside the env loop.
     assert "if args.log_transitions:" in LS_SRC
     gate_idx = LS_SRC.rindex("if args.log_transitions:")
-    block = LS_SRC[gate_idx:gate_idx + 1200]
+    block = LS_SRC[gate_idx:gate_idx + 1600]
     assert "_transition_record(" in block
     assert "transitions_fh = open(" in block
 
@@ -119,7 +119,7 @@ def test_sl_record_building_gated_behind_flag():
     # added later anywhere below the loop must not silently retarget this
     # check.
     step_idx = SL_SRC.index('env.step(action.tolist())')
-    block = SL_SRC[step_idx:step_idx + 3400]
+    block = SL_SRC[step_idx:step_idx + 3800]
     assert "if args.log_transitions:" in block
     assert "_transition_record(" in block
     assert "transitions_fh = open(" in block
