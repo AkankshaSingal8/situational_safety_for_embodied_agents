@@ -30,3 +30,7 @@ oopsieverse_eval/results/
 # Fresh openpi checkout (runtime dependency for the pi0.5 server, cloned by
 # setup/setup_pi05_server_env.sh -- not vendored/tracked as project source)
 oopsieverse_eval/external/openpi/
+
+# BEHAVIOR-1K Apptainer container image (~6.5GB binary, built by
+# setup/build_b1k_sif.slurm -- not source, not meant to be committed)
+oopsieverse_eval/setup/*.sif
