@@ -44,18 +44,36 @@ fi
 # even fail to find the checkpoint's embodiment tag at all.
 git -C "$CLONE_DIR" fetch --tags
 git -C "$CLONE_DIR" checkout n1.6.1-release
-pip install -e "$CLONE_DIR"
 
-# pyzmq for the ExternalRobotInferenceClient/PolicyServer wire protocol
+# CRITICAL ordering fix (first attempt at this failed -- see
+# groot_risk_gate_report.md "install ordering" postmortem): this tag's
+# pyproject.toml declares BOTH torch==2.7.1 AND flash-attn==2.7.4.post1 as
+# hard, non-optional base dependencies (no extras group to skip flash-attn).
+# flash-attn's own setup.py does `import torch` during pip's isolated
+# build-metadata step -- if torch isn't already present in the target env
+# BEFORE this install runs, pip's per-package build isolation gives
+# flash-attn's setup.py a fresh venv with no torch in it, so the build
+# fails with `ModuleNotFoundError: No module named 'torch'`. Worse, because
+# `pip install -e .` resolves/builds all of this tag's dependencies in one
+# atomic command, that single flash-attn failure aborted the ENTIRE
+# install -- so numpy/huggingface_hub/transformers etc. (all otherwise-fine
+# deps bundled in the same command) never got installed either, and every
+# downstream check (including the spike script's own `import numpy`)
+# failed on the very first line.
+#
+# Fix: install torch FIRST as its own step (so it's importable in the
+# current env), then install Isaac-GR00T with `--no-build-isolation` (pip
+# builds every package in the command against the current env instead of a
+# fresh isolated one per package, so flash-attn's setup.py now finds torch).
+pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cu128
+python -c "import torch; print('torch preinstalled OK:', torch.__version__)"
+
+pip install -e "$CLONE_DIR" --no-build-isolation
+
+# pyzmq for the PolicyServer/PolicyClient ZMQ REQ/REP wire protocol
 # (groot_server.py) -- NVIDIA's own recommended serving pattern, distinct
 # from every other policy server in this repo (REST/pickle-socket).
 pip install pyzmq
-
-# flash-attn is best-effort, same judgment call as openvla_server.py: if the
-# build fails, fall back to eager/sdpa attention in groot_server.py rather
-# than failing setup outright.
-pip install "flash-attn" --no-build-isolation || \
-  echo "WARNING: flash-attn build failed -- groot_server.py will fall back to sdpa/eager attention."
 
 mkdir -p "$HF_HOME"
 
