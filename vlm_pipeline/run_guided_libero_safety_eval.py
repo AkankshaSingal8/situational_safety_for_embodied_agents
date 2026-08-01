@@ -40,6 +40,7 @@ MAX_STEPS = {0: 600, 1: 600, 2: 600}  # benchmark's own horizon (LS
 # 2026-07-25: at 300/520 nearly EVERY episode died at the cap (median steps ==
 # cap in 18/18 cells) — successes only appeared where the cap was larger.
 DEFAULT_OBSTACLE_RADIUS = 0.065
+ENGAGE_CONE_HARD_R = 0.14  # --engage_cone: always-engaged radius regardless of heading
 # Conservative envelope radii by name fragment (hand bodies are large).
 OBSTACLE_RADII = {"hand": 0.10, "car": 0.05, "train": 0.05, "ball": 0.04}
 MOVER_THRESHOLD = 0.01  # settle-window displacement [m] that marks MOVING(x)
@@ -290,6 +291,50 @@ def _gate_guard(guard, pos_of, eef, radius):
     return gated
 
 
+def _cone_gate(guard, pos_of, eef, prev_eef, cone_deg, hard_radius):
+    """APPROACHING(eef, guard) velocity gate (pure, unit-testable).
+
+    Composes AFTER `_gate_guard` (call on its output): a guard entry
+    survives iff (a) dist(eef, guard_pos) <= hard_radius (always engaged at
+    close range — protects movers/hands whose heading is noisy), OR (b) the
+    eef velocity (finite difference eef - prev_eef, grounded by the caller
+    across consecutive chunk-boundary queries) is CLOSING on the entry: the
+    angle between the velocity vector and (guard_pos - eef) is <= cone_deg
+    degrees AND ||v|| > 1e-4 (stationary eef gates everything outside
+    hard_radius out). `prev_eef is None` (first query, no velocity grounding
+    yet) is the conservative fallback — every entry is treated as ENGAGED,
+    same as `_gate_guard`'s radius<=0 short-circuit. Entries with no
+    locatable position are dropped once a real velocity is available (mirrors
+    `_gate_guard`'s can't-certify-engagement rule); empty-guard and
+    runner-up entries are handled identically and independently, same as
+    `_gate_guard`. Corridor anchors are NOT gated here."""
+    if not guard or prev_eef is None:
+        return list(guard)
+    eef = np.asarray(eef, dtype=np.float64)
+    v = eef - np.asarray(prev_eef, dtype=np.float64)
+    speed = float(np.linalg.norm(v))
+    gated = []
+    for name in guard:
+        p = pos_of(name)
+        if p is None:
+            continue
+        p = np.asarray(p, dtype=np.float64)
+        if float(np.linalg.norm(p - eef)) <= hard_radius:
+            gated.append(name)
+            continue
+        if speed <= 1e-4:
+            continue
+        to_guard = p - eef
+        to_norm = float(np.linalg.norm(to_guard))
+        if to_norm <= 1e-9:
+            gated.append(name)
+            continue
+        cos_angle = max(-1.0, min(1.0, float(np.dot(v, to_guard) / (speed * to_norm))))
+        if math.degrees(math.acos(cos_angle)) <= cone_deg:
+            gated.append(name)
+    return gated
+
+
 def _extend_guidance(payload, guard, pos_of, target, dest):
     """Secondary guard + corridor anchors appended to the base payload.
 
@@ -359,6 +404,19 @@ def main():
                          "Composes with --duality_disengage (episode-level "
                          "guard clearing runs first) and --guard_topk (each "
                          "ranked guard gated on its own live position).")
+    ap.add_argument("--engage_cone", type=float, default=None,
+                    help="APPROACHING(eef, guard) velocity gate [deg]. "
+                         "Composes AFTER --engage_radius (applied to its "
+                         "output): a guard entry is kept iff dist(eef, "
+                         "guard) <= ENGAGE_CONE_HARD_R (0.14 m, always "
+                         "engaged at close range) OR the eef velocity "
+                         "(finite difference between consecutive "
+                         "chunk-boundary queries) is closing on it within "
+                         "this many degrees. First query (no velocity yet) "
+                         "is the conservative fallback: every entry is "
+                         "engaged. None (default) = disabled, legacy "
+                         "always-on guarding (byte-identical payloads). "
+                         "Corridor anchors are never gated.")
     ap.add_argument("--safety_prompt", action="store_true",
                     help="Append an avoidance clause naming the identified hazard to the prompt (pi0.7-style inference-time instruction)")
     ap.add_argument("--refuse_unsafe", action="store_true",
@@ -564,6 +622,7 @@ def main():
             frames = []
             eef_path_len = 0.0
             prev_eef = np.asarray(obs["robot0_eef_pos"]).copy()
+            cone_prev_eef = None  # --engage_cone: velocity grounded across chunk-boundary queries only
             # Revision controllers (spec 2026-07-27): per-episode state.
             dual_lam = 0.0
             ep_actions = []                           # self-distillation log
@@ -606,6 +665,12 @@ def main():
                     step_guard = _gate_guard(
                         guard, _guard_pos, obs["robot0_eef_pos"],
                         args.engage_radius)
+                    if args.engage_cone is not None:
+                        step_guard = _cone_gate(
+                            step_guard, _guard_pos, obs["robot0_eef_pos"],
+                            cone_prev_eef, args.engage_cone, ENGAGE_CONE_HARD_R)
+                    cone_prev_eef = np.asarray(
+                        obs["robot0_eef_pos"], dtype=np.float64).copy()
                     g0 = _guard_pos(step_guard[0]) if step_guard else None
                     if g0 is not None and not args.disable_guidance:
                         r_obs = obstacle_radius(step_guard[0])
@@ -734,6 +799,8 @@ def main():
         "obstacle_id_source": args.obstacle_id_source,
         "entity_pos_source": args.entity_pos_source,
         "exec_parity": bool(args.exec_parity),
+        "engage_radius": args.engage_radius,
+        "engage_cone": args.engage_cone,
         "refuse_unsafe": args.refuse_unsafe,
         "overall_TSR": float(np.mean([r["TSR"] for r in per_task])) if per_task else 0.0,
         "overall_violation_rate": float(np.mean([r["violation_rate"] for r in per_task])) if per_task else 0.0,
