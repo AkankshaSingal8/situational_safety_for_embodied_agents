@@ -1,7 +1,9 @@
-"""CPU unit tests for `--engage_cone` (APPROACHING(eef, hazard) velocity gate).
+"""CPU unit tests for `--engage_cone` (APPROACHING(eef, hazard) velocity gate)
+and `--holding_disengage` (HOLDING(eef) gripper-state suppression).
 
-Covers `_cone_gate` in run_guided_libero_safety_eval.py — pure, no GPU, no
-env creation, no mujoco/robosuite imports.
+Covers `_cone_gate`, `_is_holding`, `_holding_filter` in
+run_guided_libero_safety_eval.py — pure, no GPU, no env creation, no
+mujoco/robosuite imports.
 """
 
 import pathlib
@@ -184,4 +186,113 @@ def test_defaults_off_engage_cone_none_leaves_payload_path_untouched():
     if engage_cone is not None:
         step_guard = ls._cone_gate(step_guard, _pos_of(store), eef, None,
                                     engage_cone, HARD_R)
+    assert step_guard == guard
+
+
+# --- `--holding_disengage` (HOLDING(eef) gripper-state suppression) -------
+
+WIDTH_MIN = ls.HOLDING_WIDTH_MIN
+WIDTH_MAX = ls.HOLDING_WIDTH_MAX
+
+
+def test_is_holding_width_below_min_edge_not_holding():
+    # Near-zero width (closed on nothing) is excluded even with streak met.
+    assert ls._is_holding(WIDTH_MIN, streak=5) is False
+
+
+def test_is_holding_width_at_min_edge_exclusive_not_holding():
+    assert ls._is_holding(WIDTH_MIN, streak=5) is False
+
+
+def test_is_holding_width_at_max_edge_exclusive_not_holding():
+    assert ls._is_holding(WIDTH_MAX, streak=5) is False
+
+
+def test_is_holding_width_above_max_edge_not_holding():
+    # Fully open gripper.
+    assert ls._is_holding(0.08, streak=5) is False
+
+
+def test_is_holding_width_mid_band_holding_with_streak():
+    mid = (WIDTH_MIN + WIDTH_MAX) / 2.0
+    assert ls._is_holding(mid, streak=2) is True
+
+
+def test_is_holding_streak_requirement_below_two_not_holding():
+    mid = (WIDTH_MIN + WIDTH_MAX) / 2.0
+    assert ls._is_holding(mid, streak=1) is False
+    assert ls._is_holding(mid, streak=0) is False
+
+
+def test_is_holding_streak_exactly_two_is_holding():
+    mid = (WIDTH_MIN + WIDTH_MAX) / 2.0
+    assert ls._is_holding(mid, streak=2) is True
+    assert ls._is_holding(mid, streak=3) is True
+
+
+def test_holding_filter_static_suppressed_mover_kept():
+    guard = ["static_obj", "moving_hand"]
+    movers = {"moving_hand"}
+    out = ls._holding_filter(guard, movers, is_holding=True)
+    assert out == ["moving_hand"]
+
+
+def test_holding_filter_not_holding_passthrough_unchanged():
+    guard = ["static_obj", "moving_hand"]
+    movers = {"moving_hand"}
+    out = ls._holding_filter(guard, movers, is_holding=False)
+    assert out == guard
+
+
+def test_holding_filter_empty_guard_returns_empty():
+    out = ls._holding_filter([], {"moving_hand"}, is_holding=True)
+    assert out == []
+
+
+def test_holding_filter_missing_movers_metadata_no_suppression():
+    # movers is None -> metadata unavailable -> conservative: suppress nothing.
+    guard = ["static_obj", "another_static_obj"]
+    out = ls._holding_filter(guard, None, is_holding=True)
+    assert out == guard
+
+
+def test_holding_filter_all_static_all_suppressed_when_movers_known_empty():
+    # movers metadata IS available but empty (nothing observed moving this
+    # episode) -> every entry is static -> all suppressed while holding.
+    guard = ["static_obj_a", "static_obj_b"]
+    out = ls._holding_filter(guard, set(), is_holding=True)
+    assert out == []
+
+
+def test_holding_filter_never_suppresses_mover_or_hand_entries():
+    guard = ["hand_1", "static_obj"]
+    movers = {"hand_1"}
+    out = ls._holding_filter(guard, movers, is_holding=True)
+    assert "hand_1" in out
+    assert "static_obj" not in out
+
+
+def test_argparse_holding_disengage_default_off_and_wiring_present():
+    src = pathlib.Path(ls.__file__).read_text()
+    assert '"--holding_disengage", action="store_true"' in src
+    assert "if args.holding_disengage:" in src
+    # Order requirement: _gate_guard -> _cone_gate -> _holding_filter.
+    gate_idx = src.index("step_guard = _gate_guard(")
+    cone_idx = src.index("step_guard = _cone_gate(")
+    hold_idx = src.index("step_guard = _holding_filter(")
+    assert gate_idx < cone_idx < hold_idx
+
+
+def test_defaults_off_holding_disengage_leaves_payload_path_untouched():
+    # With --holding_disengage unset (argparse default False), the wiring
+    # never calls _holding_filter, so step_guard is exactly whatever
+    # _gate_guard/_cone_gate produced — byte-identical to Task 1 behavior.
+    guard = ["static_obj", "moving_hand"]
+    store = {"static_obj": np.array([0.2, 0.0, 1.0]),
+             "moving_hand": np.array([-0.2, 0.0, 1.0])}
+    eef = np.array([0.0, 0.0, 1.0])
+    holding_disengage = False  # the argparse default
+    step_guard = ls._gate_guard(guard, _pos_of(store), eef, radius=0.0)
+    if holding_disengage:
+        step_guard = ls._holding_filter(step_guard, {"moving_hand"}, True)
     assert step_guard == guard

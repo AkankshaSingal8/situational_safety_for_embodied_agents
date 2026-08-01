@@ -41,6 +41,12 @@ MAX_STEPS = {0: 600, 1: 600, 2: 600}  # benchmark's own horizon (LS
 # cap in 18/18 cells) — successes only appeared where the cap was larger.
 DEFAULT_OBSTACLE_RADIUS = 0.065
 ENGAGE_CONE_HARD_R = 0.14  # --engage_cone: always-engaged radius regardless of heading
+# --holding_disengage: HOLDING(eef) gripper-state suppression. Panda finger-
+# opening width (sum of the 2-vector robot0_gripper_qpos, each finger 0 (closed)
+# to ~0.04 (open)) fully open ~0.08 m. Holding-on-something band excludes both
+# fully open (>= MAX) and fully closed-on-nothing (<= MIN, near-zero width).
+HOLDING_WIDTH_MAX = 0.045
+HOLDING_WIDTH_MIN = 0.002
 # Conservative envelope radii by name fragment (hand bodies are large).
 OBSTACLE_RADII = {"hand": 0.10, "car": 0.05, "train": 0.05, "ball": 0.04}
 MOVER_THRESHOLD = 0.01  # settle-window displacement [m] that marks MOVING(x)
@@ -335,6 +341,34 @@ def _cone_gate(guard, pos_of, eef, prev_eef, cone_deg, hard_radius):
     return gated
 
 
+def _is_holding(width, streak):
+    """HOLDING(eef) gripper-state predicate (pure, unit-testable).
+
+    True iff the finger-opening `width` [m] is in the closed-on-something
+    band `HOLDING_WIDTH_MIN < width < HOLDING_WIDTH_MAX` (excludes both
+    fully open and fully closed-on-nothing / near-zero width) AND `streak`
+    (consecutive chunk-boundary queries with width in that band, INCLUDING
+    the current one — caller's responsibility to track) is >= 2. Both
+    thresholds are strict (open interval): width exactly at either edge is
+    NOT holding."""
+    return HOLDING_WIDTH_MIN < width < HOLDING_WIDTH_MAX and streak >= 2
+
+
+def _holding_filter(guard, movers, is_holding):
+    """HOLDING(eef) guard suppression (pure, unit-testable).
+
+    Composes AFTER `_gate_guard`/`_cone_gate` (call on their output): while
+    `is_holding` is True, drop STATIC guard entries — those whose name is
+    NOT in `movers` — and keep mover/hand entries (the safety asymmetry:
+    dynamic hazards are never suppressed by this flag). `is_holding` False
+    or an empty guard returns the guard list unchanged. `movers is None`
+    means the episode's movers metadata is unavailable: the conservative
+    fallback treats every entry as a mover, i.e. suppresses nothing."""
+    if not is_holding or not guard or movers is None:
+        return list(guard)
+    return [name for name in guard if name in movers]
+
+
 def _extend_guidance(payload, guard, pos_of, target, dest):
     """Secondary guard + corridor anchors appended to the base payload.
 
@@ -417,6 +451,20 @@ def main():
                          "engaged. None (default) = disabled, legacy "
                          "always-on guarding (byte-identical payloads). "
                          "Corridor anchors are never gated.")
+    ap.add_argument("--holding_disengage", action="store_true",
+                    help="HOLDING(eef) gripper-state suppression. Composes "
+                         "AFTER --engage_radius/--engage_cone (applied to "
+                         "their output): while the gripper's finger-opening "
+                         "width (robot0_gripper_qpos) has been in the "
+                         f"closed-on-something band ({HOLDING_WIDTH_MIN}, "
+                         f"{HOLDING_WIDTH_MAX}) m for >= 2 consecutive "
+                         "chunk-boundary queries, STATIC guard entries "
+                         "(name not in the episode's movers set) are "
+                         "dropped; mover/hand entries always stay — this "
+                         "flag can never suppress a dynamic hazard. If the "
+                         "movers metadata is unavailable the fallback is "
+                         "conservative: suppress nothing. Default off = "
+                         "byte-identical legacy behavior.")
     ap.add_argument("--safety_prompt", action="store_true",
                     help="Append an avoidance clause naming the identified hazard to the prompt (pi0.7-style inference-time instruction)")
     ap.add_argument("--refuse_unsafe", action="store_true",
@@ -623,6 +671,7 @@ def main():
             eef_path_len = 0.0
             prev_eef = np.asarray(obs["robot0_eef_pos"]).copy()
             cone_prev_eef = None  # --engage_cone: velocity grounded across chunk-boundary queries only
+            holding_streak = 0  # --holding_disengage: consecutive band queries
             # Revision controllers (spec 2026-07-27): per-episode state.
             dual_lam = 0.0
             ep_actions = []                           # self-distillation log
@@ -671,6 +720,15 @@ def main():
                             cone_prev_eef, args.engage_cone, ENGAGE_CONE_HARD_R)
                     cone_prev_eef = np.asarray(
                         obs["robot0_eef_pos"], dtype=np.float64).copy()
+                    if args.holding_disengage:
+                        _gw = np.asarray(obs["robot0_gripper_qpos"], dtype=np.float64)
+                        _width = float(abs(_gw[0]) + abs(_gw[1]))
+                        holding_streak = (
+                            holding_streak + 1
+                            if HOLDING_WIDTH_MIN < _width < HOLDING_WIDTH_MAX
+                            else 0)
+                        step_guard = _holding_filter(
+                            step_guard, movers, _is_holding(_width, holding_streak))
                     g0 = _guard_pos(step_guard[0]) if step_guard else None
                     if g0 is not None and not args.disable_guidance:
                         r_obs = obstacle_radius(step_guard[0])
@@ -801,6 +859,7 @@ def main():
         "exec_parity": bool(args.exec_parity),
         "engage_radius": args.engage_radius,
         "engage_cone": args.engage_cone,
+        "holding_disengage": bool(args.holding_disengage),
         "refuse_unsafe": args.refuse_unsafe,
         "overall_TSR": float(np.mean([r["TSR"] for r in per_task])) if per_task else 0.0,
         "overall_violation_rate": float(np.mean([r["violation_rate"] for r in per_task])) if per_task else 0.0,
