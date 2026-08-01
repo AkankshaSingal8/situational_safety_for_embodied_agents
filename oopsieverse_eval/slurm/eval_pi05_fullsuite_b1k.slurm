@@ -92,6 +92,11 @@ if [ ! -f "$ICD_JSON" ] || [ ! -f "$NVIDIA_GLX_LIB" ]; then
     exit 1
 fi
 
+# `cd` into the oopsieverse repo root before running the client -- several
+# task modules' own `reset(env)` hooks open their init-state pickle via a
+# hardcoded RELATIVE path, confirmed as the root cause of every
+# add_firewood/wipe_counter smoke-test trial failing (job 42907875, see
+# smoke_b1k_pi05.slurm's comment for the exact FileNotFoundError).
 apptainer exec --nv \
     --bind /ocean/projects/cis250185p/asingal:/ocean/projects/cis250185p/asingal \
     --bind /jet/home/asingal:/jet/home/asingal \
@@ -101,7 +106,7 @@ apptainer exec --nv \
     --env VK_ICD_FILENAMES="$ICD_JSON" \
     --env CUDA_VISIBLE_DEVICES=1 \
     "$SIF_PATH" \
-    bash -c "$LD_LIBRARY_PATH_ADDITIONS_CMD && source /opt/miniconda3/etc/profile.d/conda.sh && conda activate oopsieverse_b1k && python -u '$EVAL_DIR/eval/run_b1k_pi05_eval.py' --tasks $TASK_NAME --num_trials 30 --host localhost --port $PORT --results_dir '$EVAL_DIR/results/pi05_b1k_fullsuite/$TASK_NAME' --seed 7"
+    bash -c "$LD_LIBRARY_PATH_ADDITIONS_CMD && source /opt/miniconda3/etc/profile.d/conda.sh && conda activate oopsieverse_b1k && cd '$EVAL_DIR/external/oopsieverse' && python -u '$EVAL_DIR/eval/run_b1k_pi05_eval.py' --tasks $TASK_NAME --num_trials 30 --host localhost --port $PORT --results_dir '$EVAL_DIR/results/pi05_b1k_fullsuite/$TASK_NAME' --seed 7"
 
 EXIT=$?
 echo "=== $TASK_NAME done, exit=$EXIT ==="

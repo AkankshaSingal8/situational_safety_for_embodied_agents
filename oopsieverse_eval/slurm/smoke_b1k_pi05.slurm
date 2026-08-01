@@ -125,6 +125,14 @@ fi
 
 RESULTS_DIR="$EVAL_DIR/results/pi05_b1k_smoke/$TASK_NAME"
 
+# `cd` into the oopsieverse repo root before running the client: several
+# task modules' own `reset(env)` hooks (e.g. add_firewood.py, wipe_counter.py)
+# open their init-state pickle via a hardcoded RELATIVE path
+# ("oopsiebench/envs/behavior1k/init_states/<task>.pkl", not built from
+# __file__/an absolute repo root like teleop_b1k.py's own path helpers) --
+# confirmed to be the actual root cause of every add_firewood/wipe_counter
+# trial failing with FileNotFoundError in the first smoke-array run (job
+# 42907875), NOT a real "0% success"/silent-action-drop finding.
 apptainer exec --nv \
     --bind /ocean/projects/cis250185p/asingal:/ocean/projects/cis250185p/asingal \
     --bind /jet/home/asingal:/jet/home/asingal \
@@ -134,7 +142,7 @@ apptainer exec --nv \
     --env VK_ICD_FILENAMES="$ICD_JSON" \
     --env CUDA_VISIBLE_DEVICES=1 \
     "$SIF_PATH" \
-    bash -c "$LD_LIBRARY_PATH_ADDITIONS_CMD && source /opt/miniconda3/etc/profile.d/conda.sh && conda activate oopsieverse_b1k && python -u '$EVAL_DIR/eval/run_b1k_pi05_eval.py' --tasks $TASK_NAME --num_trials 3 --host localhost --port $PORT --results_dir '$RESULTS_DIR' $DIAGNOSE_FLAG --seed 7"
+    bash -c "$LD_LIBRARY_PATH_ADDITIONS_CMD && source /opt/miniconda3/etc/profile.d/conda.sh && conda activate oopsieverse_b1k && cd '$EVAL_DIR/external/oopsieverse' && python -u '$EVAL_DIR/eval/run_b1k_pi05_eval.py' --tasks $TASK_NAME --num_trials 3 --host localhost --port $PORT --results_dir '$RESULTS_DIR' $DIAGNOSE_FLAG --seed 7"
 
 EVAL_EXIT=$?
 echo "=== B1K x pi0.5 smoke test done for $TASK_NAME, exit=$EVAL_EXIT ==="

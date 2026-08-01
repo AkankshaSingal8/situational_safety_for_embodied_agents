@@ -259,9 +259,19 @@ class B1KAdapter:
 
         # reset_env doesn't return obs; grab the current obs by stepping
         # zero actions is wasteful/unsafe (would move the robot before we
-        # even start) -- instead read the last obs off the env directly via
-        # a fresh get_obs() call, which OmniGibson environments expose.
-        raw_obs, _info = self._env.get_obs()
+        # even start) -- instead read the last obs off the env directly.
+        #
+        # IMPORTANT: must call `get_observation()` (OGDamageableEnvironment's
+        # OWN override), NOT the base `Environment.get_obs()` inherited
+        # unchanged -- confirmed by reading damagesim/omnigibson/
+        # damageable_env.py directly: `eef_pos`/`eef_ori`/`health` are only
+        # added by `_process_obs()`, which is called from the overridden
+        # `reset()`/`step()` AND from `get_observation()` -- but NOT from
+        # plain `get_obs()`. Calling `get_obs()` here (an earlier bug)
+        # silently returned `eef_pos=None`/`eef_ori=None` for every
+        # post-reset observation, corrupting the very first pi0.5 call of
+        # every episode (and the diagnostic's own forced-motion test).
+        raw_obs, _info = self._env.get_observation()
         obs = self._build_obs(raw_obs)
 
         # Blank-frame guard, matching b1k_headless_spike.py's own check
