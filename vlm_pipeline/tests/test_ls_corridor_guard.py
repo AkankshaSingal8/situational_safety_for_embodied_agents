@@ -105,3 +105,96 @@ def test_payload_missing_positions_fail_safe():
                               "ghost_target", None)
     assert list(out) == ["enabled", "eef_pos", "obstacle_pos",
                          "obstacle_radius"]
+
+
+# --- engagement gating (--engage_radius) -----------------------------------
+# eef->moka_pot dist ~= 0.124 m, eef->ball dist ~= 0.374 m (from CANDS/EEF).
+
+def _query_payload(guard, radius, target=None, dest=None):
+    """Mirror of the episode loop's per-query payload construction:
+    gate -> primary position -> base payload -> _extend_guidance.
+    Returns None when the loop would send no guidance block."""
+    step_guard = ls._gate_guard(guard, CANDS.get, EEF, radius)
+    g0 = CANDS.get(step_guard[0]) if step_guard else None
+    if g0 is None:
+        return None
+    payload = {
+        "enabled": 1.0,
+        "eef_pos": np.asarray(EEF, dtype=np.float32),
+        "obstacle_pos": np.asarray(g0, dtype=np.float32),
+        "obstacle_radius": ls.obstacle_radius(step_guard[0]),
+    }
+    return ls._extend_guidance(payload, step_guard, CANDS.get, target, dest)
+
+
+def _payloads_equal(a, b):
+    if a is None or b is None:
+        return a is b
+    if list(a) != list(b):
+        return False
+    for k in a:
+        va, vb = a[k], b[k]
+        if isinstance(va, dict):
+            if not _payloads_equal(va, vb):
+                return False
+        elif isinstance(va, np.ndarray) or isinstance(vb, np.ndarray):
+            if not np.array_equal(np.asarray(va), np.asarray(vb)):
+                return False
+        elif va != vb:
+            return False
+    return True
+
+
+def test_engage_radius_zero_is_noop():
+    # Default R=0: gate returns the guard unchanged (fresh list) and the
+    # payload is identical to today's, for every guard shape.
+    for guard in ([], ["moka_pot_obstacle"],
+                  ["moka_pot_obstacle", "ball_obstacle"], ["ghost"]):
+        gated = ls._gate_guard(guard, CANDS.get, EEF, 0.0)
+        assert gated == guard and gated is not guard
+        assert _payloads_equal(
+            _query_payload(guard, 0.0, "banana_1", "plate_1"),
+            _query_payload(guard, -1.0, "banana_1", "plate_1"))
+
+
+def test_guard_included_when_within_radius():
+    out = _query_payload(["moka_pot_obstacle"], 0.15)
+    assert out is not None
+    assert np.allclose(out["obstacle_pos"], CANDS["moka_pot_obstacle"])
+
+
+def test_guard_dropped_when_outside_radius():
+    # 0.10 < 0.124 m eef->moka distance: no engaged guard -> the query
+    # carries no guidance block (same as the --disable_guidance path).
+    assert ls._gate_guard(["moka_pot_obstacle"], CANDS.get, EEF, 0.10) == []
+    assert _query_payload(["moka_pot_obstacle"], 0.10) is None
+
+
+def test_obstacle2_gated_independently():
+    guard = ["moka_pot_obstacle", "ball_obstacle"]
+    # R=0.15: primary engaged (0.124), runner-up out of range (0.374) ->
+    # obstacle2 dropped while the primary barrier stays.
+    out = _query_payload(guard, 0.15)
+    assert list(out) == ["enabled", "eef_pos", "obstacle_pos",
+                         "obstacle_radius"]
+    assert np.allclose(out["obstacle_pos"], CANDS["moka_pot_obstacle"])
+    # R=0.40: both engaged -> identical to the ungated two-guard payload.
+    assert _payloads_equal(_query_payload(guard, 0.40),
+                           _query_payload(guard, 0.0))
+    # Primary out of range, runner-up in range (order swapped): the engaged
+    # entry is promoted to the primary slot.
+    out = _query_payload(["ball_obstacle", "moka_pot_obstacle"], 0.15)
+    assert np.allclose(out["obstacle_pos"], CANDS["moka_pot_obstacle"])
+    assert "obstacle2" not in out
+
+
+def test_corridor_anchors_unaffected_by_gating():
+    # Anchors are never distance-gated: present whenever a guard engages...
+    out = _query_payload(["moka_pot_obstacle"], 0.15, "banana_1", "plate_1")
+    assert np.allclose(out["target_pos"], CANDS["banana_1"])
+    assert np.allclose(out["dest_pos"], CANDS["plate_1"])
+    # ...even though both anchors lie far outside R (banana 0.17, plate 0.37).
+    assert np.linalg.norm(CANDS["banana_1"] - EEF) > 0.15
+    # And _gate_guard itself only ever sees/filters guard entries.
+    assert ls._gate_guard(["moka_pot_obstacle"], CANDS.get, EEF, 0.15) == \
+        ["moka_pot_obstacle"]

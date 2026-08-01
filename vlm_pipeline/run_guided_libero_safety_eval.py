@@ -52,6 +52,92 @@ MOVER_THRESHOLD = 0.01  # settle-window displacement [m] that marks MOVING(x)
 ACTION_TO_CMD = np.array([1 / 0.05] * 3 + [1 / 0.5] * 3 + [1.0])
 WORKSPACE = ((-0.8, 0.8), (-0.8, 0.8))  # wide: hands intrude from the edge
 
+# --- Execution parity with the authors' LIBERO-Safety harness (--exec_parity)
+# Root-cause forensics 2026-08-01: the authors' client
+# (.worktrees/libero-safety-benchmark/run_libsafety_eval_openpi.py) runs the
+# SAME LS finetune ~2.2-2.5x faster in env steps because its conda env imports
+# LIBERO-Safety's VENDORED robosuite-1.4
+# (LIBERO-Safety/third_party/robosuite-1.4/.../config/osc_pose.json:
+# output_max=[2]*6, kp=750), while this client's env imports stock robosuite
+# 1.4.1 (output_max=[0.05]*3+[0.5]*3, kp=150). Under the vendored gains a raw
+# metric action a commands a 2*a [m] OSC goal at kp 750; our ACTION_TO_CMD
+# path commands 1*a [m] at kp 150 — half the commanded step at a fifth of the
+# stiffness. The controller CODE is byte-identical (diff verified); only the
+# JSON gains differ, so parity = patch the loaded config + raw passthrough.
+PARITY_OSC_OVERRIDES = {
+    "output_max": [2, 2, 2, 2, 2, 2],
+    "output_min": [-2, -2, -2, -2, -2, -2],
+    "kp": 750,
+    "kp_limits": [0, 1000],
+}
+PARITY_RESIZE = 224  # authors' client resizes 256 -> 224 with resize_with_pad
+
+
+def _parity_controller_config(cfg):
+    """Copy of an OSC_POSE controller config with the vendored LS gains.
+
+    Pure (input dict never mutated); non-gain keys pass through untouched."""
+    out = dict(cfg)
+    out.update(PARITY_OSC_OVERRIDES)
+    return out
+
+
+def _install_parity_controller():
+    """Monkeypatch robosuite.load_controller_config with the vendored gains.
+
+    LIBERO-Safety's ControlEnv calls suite.load_controller_config(
+    default_controller="OSC_POSE") internally (env_wrapper.py:208) with no
+    override hook, so patching the module attribute is the only client-side
+    seam. Idempotent; must run BEFORE any OffScreenRenderEnv is created."""
+    import robosuite
+    if getattr(robosuite.load_controller_config, "_exec_parity", False):
+        return
+    orig = robosuite.load_controller_config
+
+    def patched(*a, **kw):
+        cfg = orig(*a, **kw)
+        if isinstance(cfg, dict) and cfg.get("type") == "OSC_POSE":
+            cfg = _parity_controller_config(cfg)
+        return cfg
+
+    patched._exec_parity = True
+    robosuite.load_controller_config = patched
+    logging.info("[exec-parity] robosuite OSC_POSE gains patched to vendored "
+                 "LIBERO-Safety values (output_max 2, kp 750)")
+
+
+def _parity_images(img, wrist, size=PARITY_RESIZE):
+    """Authors' client-side image path: resize_with_pad to 224 + uint8.
+
+    Uses openpi_client.image_tools (PIL bilinear), the EXACT functions the
+    baseline harness calls — not the server's jax resize, whose interpolation
+    differs slightly. The server-side ResizeImages(224,224) model transform
+    then no-ops on the already-224 input, matching the baseline end to end."""
+    from openpi_client import image_tools
+    img = image_tools.convert_to_uint8(
+        image_tools.resize_with_pad(img, size, size))
+    wrist = image_tools.convert_to_uint8(
+        image_tools.resize_with_pad(wrist, size, size))
+    return img, wrist
+
+
+def _plan_actions(chunk, *, exec_parity=False, raw_actions=False):
+    """Executed env actions for a decoded chunk prefix (pure, unit-testable).
+
+    - exec_parity: authors'-harness raw passthrough — NO conversion, NO
+      client-side clip (robosuite scale_action clips to input bounds itself),
+      relying on the vendored controller gains installed by
+      _install_parity_controller(). Takes precedence over raw_actions.
+    - raw_actions: [-1,1]-command checkpoints (off-the-shelf pi05_libero).
+    - default: LS-finetune metric deltas -> stock-controller commands via
+      ACTION_TO_CMD (byte-identical to the historical path)."""
+    chunk = np.asarray(chunk)
+    if exec_parity:
+        return chunk
+    if raw_actions:
+        return np.clip(chunk, -1.0, 1.0)
+    return np.clip(chunk * ACTION_TO_CMD, -1.0, 1.0)
+
 
 def obstacle_radius(name):
     label = name.lower()
@@ -180,6 +266,30 @@ def _topk_guard(id_source, desc, cands, eef, movers, hazards, k=1):
     return list(hazards)
 
 
+def _gate_guard(guard, pos_of, eef, radius):
+    """Minimum-intervention engagement gate (pure, unit-testable).
+
+    radius <= 0 disables gating and returns the guard list unchanged (the
+    legacy always-on behavior — byte-identical payloads). Otherwise each
+    guard entry (primary AND the obstacle2 runner-up) is gated
+    INDEPENDENTLY: an entry survives only if its live position is within
+    `radius` [m] of the current end-effector position. If every entry is
+    gated out the caller sends the same no-guidance query that the
+    --disable_guidance / no-obstacle path sends. Entries with no locatable
+    position are dropped when gating is on (cannot certify engagement).
+    Corridor anchors (target_pos/dest_pos) are NOT gated here."""
+    if radius <= 0 or not guard:
+        return list(guard)
+    eef = np.asarray(eef, dtype=np.float64)
+    gated = []
+    for name in guard:
+        p = pos_of(name)
+        if p is not None and float(np.linalg.norm(
+                np.asarray(p, dtype=np.float64) - eef)) <= radius:
+            gated.append(name)
+    return gated
+
+
 def _extend_guidance(payload, guard, pos_of, target, dest):
     """Secondary guard + corridor anchors appended to the base payload.
 
@@ -233,6 +343,22 @@ def main():
                          "the server accepts at most one secondary guard). "
                          "1 = historical single-guard behavior. The gt source "
                          "always guards every CheckRobotContact hazard.")
+    ap.add_argument("--engage_radius", type=float, default=0.0,
+                    help="Minimum-intervention engagement gate [m]. At each "
+                         "server query a guard is included in the guidance "
+                         "payload only if dist(eef, guard) <= R (primary and "
+                         "obstacle2 gated independently); if no guard is "
+                         "within R the query carries no guidance block — "
+                         "identical to the --disable_guidance / no-obstacle "
+                         "path. Corridor anchors ride the guidance block, so "
+                         "they are sent whenever any guard is engaged. "
+                         "pi0.5 executes replan_steps-action chunks, so "
+                         "gating decisions happen at chunk boundaries (each "
+                         "query), not per env step. 0 = disabled, legacy "
+                         "always-on guarding (byte-identical payloads). "
+                         "Composes with --duality_disengage (episode-level "
+                         "guard clearing runs first) and --guard_topk (each "
+                         "ranked guard gated on its own live position).")
     ap.add_argument("--safety_prompt", action="store_true",
                     help="Append an avoidance clause naming the identified hazard to the prompt (pi0.7-style inference-time instruction)")
     ap.add_argument("--refuse_unsafe", action="store_true",
@@ -247,6 +373,26 @@ def main():
                          "destination, disable geometric keep-out for the "
                          "episode — HRI forensics: baseline violations are 0 "
                          "and keep-out only destroys success (54->18 TSR)")
+    ap.add_argument("--exec_parity", action="store_true",
+                    help="Execution parity with the authors' LIBERO-Safety "
+                         "harness (run_libsafety_eval_openpi.py): (1) patch "
+                         "robosuite's OSC_POSE gains to the vendored "
+                         "LIBERO-Safety values (output_max 2, kp 750 — vs "
+                         "stock 0.05/150; the ~2.2-2.5x env-step slowdown "
+                         "root cause), (2) raw action passthrough (no "
+                         "ACTION_TO_CMD, no client clip), (3) client-side "
+                         "resize_with_pad to 224 + uint8 exactly as the "
+                         "baseline client. Default off = byte-identical "
+                         "legacy behavior. Composes with --duality_disengage/"
+                         "--guard_topk/--engage_radius (guidance payloads are "
+                         "metric positions, untouched by execution parity); "
+                         "supersedes --raw_actions when both are set. "
+                         "Guidance-arm note: keep the server at "
+                         "--translation_scale 1.0 --cmd_clip 0.05 for the "
+                         "no-guidance arm; for guided arms consider "
+                         "--translation_scale 2.0 --cmd_clip 0.025 so the "
+                         "barrier's actuation model tracks the vendored "
+                         "controller's ~2x realized motion per unit action.")
     ap.add_argument("--raw_actions", action="store_true",
                     help="Checkpoint outputs [-1,1] commands (off-the-shelf "
                          "pi05_libero) — skip the metric ACTION_TO_CMD "
@@ -283,6 +429,11 @@ def main():
     ap.add_argument("--task_filter", type=int, nargs="*", default=None,
                     help="Restrict to these task_ids (diagnostics)")
     args = ap.parse_args()
+
+    if args.exec_parity:
+        # Must precede OffScreenRenderEnv creation: the wrapper snapshots the
+        # controller config at env construction time.
+        _install_parity_controller()
 
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs import OffScreenRenderEnv
@@ -430,6 +581,8 @@ def main():
                     wrist = np.ascontiguousarray(obs["robot0_eye_in_hand_image"][::-1, ::-1])
                     if args.save_videos:
                         frames.append(img)
+                    if args.exec_parity:
+                        img, wrist = _parity_images(img, wrist)
                     element = {
                         "observation/image": img,
                         "observation/wrist_image": wrist,
@@ -448,9 +601,14 @@ def main():
                             return percep_pos.get(name)
                         return obs.get(f"{name}_pos")
 
-                    g0 = _guard_pos(guard[0]) if guard else None
+                    # Engagement gate: per-query (chunk boundary) distance
+                    # gating of each guard entry; R=0 returns guard unchanged.
+                    step_guard = _gate_guard(
+                        guard, _guard_pos, obs["robot0_eef_pos"],
+                        args.engage_radius)
+                    g0 = _guard_pos(step_guard[0]) if step_guard else None
                     if g0 is not None and not args.disable_guidance:
-                        r_obs = obstacle_radius(guard[0])
+                        r_obs = obstacle_radius(step_guard[0])
                         if args.ssm_margins:
                             # A3: dynamic hazards get a speed-scaled margin;
                             # hazards that have never moved keep the legacy
@@ -479,7 +637,8 @@ def main():
                         if stall_hdc_replans > 0:
                             element["guidance"]["hdc_scale"] = 0.01
                             stall_hdc_replans -= 1
-                        _extend_guidance(element["guidance"], guard, _guard_pos,
+                        _extend_guidance(element["guidance"], step_guard,
+                                         _guard_pos,
                                          corridor_target, corridor_dest)
                     _res = client.infer(element)
                     chunk = np.asarray(_res["actions"][:args.replan_steps])
@@ -493,13 +652,15 @@ def main():
                     if (args.adaptive_replan and _diag is not None
                             and float(_diag.get("min_clearance", np.inf)) < args.adaptive_clearance):
                         _n_exec = 2
-                    if args.raw_actions:
-                        plan.extend(np.clip(chunk[:_n_exec], -1.0, 1.0))
-                        continue
-                    plan.extend(np.clip(chunk[:_n_exec] * ACTION_TO_CMD, -1.0, 1.0))
+                    plan.extend(_plan_actions(
+                        chunk[:_n_exec], exec_parity=args.exec_parity,
+                        raw_actions=args.raw_actions))
                 if in_retreat > 0:
                     _a = np.zeros(7)
-                    _a[2] = 0.4  # command-space lift; ~2 cm/step after cmd_clip
+                    # Scripted lift, ~2 cm/step in BOTH command conventions:
+                    # stock controller 0.4 * output_max 0.05 = 0.02 m; parity
+                    # (vendored gains) 0.01 * output_max 2 = 0.02 m.
+                    _a[2] = 0.01 if args.exec_parity else 0.4
                     in_retreat -= 1
                     if in_retreat == 0:
                         plan.clear()
@@ -572,6 +733,7 @@ def main():
         "guidance": not args.disable_guidance,
         "obstacle_id_source": args.obstacle_id_source,
         "entity_pos_source": args.entity_pos_source,
+        "exec_parity": bool(args.exec_parity),
         "refuse_unsafe": args.refuse_unsafe,
         "overall_TSR": float(np.mean([r["TSR"] for r in per_task])) if per_task else 0.0,
         "overall_violation_rate": float(np.mean([r["violation_rate"] for r in per_task])) if per_task else 0.0,

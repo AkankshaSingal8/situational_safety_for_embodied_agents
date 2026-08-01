@@ -2844,3 +2844,38 @@ no-duality ablation. Artifact republished. Task #41 core deliverable
 COMPLETE: 4-method LS board (baseline/posthoc/reimpl/ours x GT/no-GT),
 600 rollouts per arm, all cells n=50 exact with episode logs.
 Data: ls_improved_full/.
+
+## 2026-08-01 — LS steering-tax diagnosis: timeout paralysis, 175/600 episodes recoverable (Table 6 parity campaign)
+
+**Directive**: user wants ours > finetuned-π0.5 baseline SR on LIBERO-Safety. Per-task forensics
+(baseline 10trial JSONs vs ls_improved_full episode logs; note episode JSONL keys tasks by `task` int):
+- Failure mode is uniform: lost episodes hit the 600-step cap with violation=False and (for gt_dual)
+  ident_correct=True in ~all cells → correct guard, but steering near it stalls the policy (paralysis tax),
+  NOT wrong identity and NOT safety failures.
+- 175/600 episodes are "recoverable" (baseline succeeds, ours times out) = +29.2pp mean SR headroom.
+  Worst: hs (13/15 tasks affected), oah L0/L1/L2 anchors t0/t1/t5/t6/t10/t11, oa t0/t5/t6/t10/t11/t13,
+  aff t3/t4/t5/t10.
+- We already BEAT baseline in several cells (hs L0 t3 6v4, t4 6v5, hs L1 t9 8v4, aff L1 t9 10v5, aff L0
+  t2 2v0, aff L2 t14 8v6) → recovery + these wins puts mean SR above baseline (~53.5) in expectation.
+- Caution: gt arm ADDS violations at oa L2 t11 (4) and t14 (3) vs baseline 0/1 — gate must not worsen.
+**Fix in flight**: minimum-intervention engagement gating (--engage_radius R: guard sent only when
+dist(eef,guard)<=R; corridor anchors unchanged; R=0 byte-identical). Subagent implementing + hs-L2
+forensics. Dev gate pre-registered in slurm/ls_engage_dev.slurm: 3 tax suites × L0-2 × n=20/cell,
+arms gt_eng15/gt_eng25/nogt_eng25; promote iff pooled SR >= baseline-2pp AND viol <= baseline.
+
+## 2026-08-01 — AMENDMENT: hs collapse is a client-harness execution gap, not steering tax
+
+Subagent forensics on hs L2 gt_dual: with --duality_disengage the guard was CLEARED in 40/50 episodes
+(hazard≈destination or no BDDL hazard; t14 has no hazard at all) → no guidance block sent → plain policy;
+episodes still time out at 600 steps, viol 0, normal path lengths (0.4–0.95m). Our successful episodes
+take ~2.2–2.5x baseline steps (L0 t0 ~390 vs ~175 median; baseline finishes L2 in 130–210 steps under a
+310 cap). => The hs deficit (and a depressed floor under ALL filtered arms incl. posthoc/reimpl shields,
+which use the same client) is an execution-parity gap between our cosmos-guided client (raw 256px, metric
+ACTION_TO_CMD conversion, server --cmd_clip 0.05) and the authors' openpi harness (resize_with_pad 224,
+raw actions). Only hs L2 t13 (guard left_hand_1 active all 10 eps, 0/10 vs base 7/10) is genuine
+steering tax. Consequences: (1) Table 6 filtered-vs-filtered comparisons remain fair (same client), but
+every filtered arm is unfairly depressed vs the baseline column — fixing parity is required for a
+paper-worthy table; (2) engage gating still needed for oa (guards active) + hs t13; sweep radii revised
+to 0.22/0.30/0.40 (0.15 would gate inside hand r_eff=0.20). Parity subagent dispatched: --exec_parity
+client flag + server flag deltas (cmd_clip hypothesis: 0.05 cap vs ~0.12 typical commands ≈ 2.4x).
+--engage_radius implemented (_gate_guard, 5 new tests, 13 pass), R=0 byte-identical, uncommitted.
