@@ -432,6 +432,25 @@ def _extend_guidance(payload, guard, pos_of, target, dest):
     return payload
 
 
+def _transition_record(task, ep, t, eef, grip, action, entities):
+    """One `--log_transitions` JSONL record (pure, unit-testable).
+
+    `entities` is a name -> pos mapping (already resolved by the caller via
+    the runner's existing GT/percep position source — no perception built
+    here). All numeric fields are plain floats/lists so the record is
+    directly `json.dumps`-able."""
+    return {
+        "task": int(task),
+        "ep": int(ep),
+        "t": int(t),
+        "eef": [float(x) for x in eef],
+        "grip": [float(x) for x in grip],
+        "action": [float(x) for x in action],
+        "entities": {str(name): [float(x) for x in pos]
+                     for name, pos in entities.items()},
+    }
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--suite", default="obstacle_avoidance")
@@ -605,6 +624,14 @@ def main():
                          "for self-distillation finetuning.")
     ap.add_argument("--task_filter", type=int, nargs="*", default=None,
                     help="Restrict to these task_ids (diagnostics)")
+    ap.add_argument("--log_transitions", action="store_true",
+                    help="Append one JSON line per env.step() to "
+                         "<results_output_dir>/transitions_<suite>_L<level>.jsonl: "
+                         "task/ep/t, eef, grip, the action sent to env, and "
+                         "entity positions (the runner's existing GT/percep "
+                         "position source — no new perception). File opened "
+                         "lazily on first write, flushed per episode. Default "
+                         "off = zero overhead (no record built, no file).")
     args = ap.parse_args()
 
     if args.exec_parity:
@@ -640,6 +667,11 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y_%m_%d-%H_%M_%S")
     episodes_log = out_dir / f"episodes_{stamp}.jsonl"
+    # --log_transitions: file handle opened lazily on first write (main()-scope
+    # so it stays open across tasks/episodes; one file for the whole run).
+    transitions_fh = None
+    transitions_path = (pathlib.Path(args.results_output_dir)
+                         / f"transitions_{args.suite}_L{args.level}.jsonl")
 
     if args.refuse_unsafe:
         from e4_ssr_offline import is_unsafe
@@ -901,6 +933,24 @@ def main():
                 if args.log_trajectories:
                     ep_actions.append(np.asarray(_a, dtype=np.float32))
                 obs, reward, done, info = env.step(_a.tolist())
+                if args.log_transitions:
+                    # Entity positions: the runner's existing GT-tier live obs
+                    # (fresh every step, tracks :dynamics movers) or percep
+                    # snapshot (static within the episode) — same source
+                    # `_guard_pos` uses, over the identification candidate set.
+                    _entities = {}
+                    for _name in cands:
+                        _p = (percep_pos.get(_name) if percep_pos is not None
+                              else obs.get(f"{_name}_pos"))
+                        if _p is not None:
+                            _entities[_name] = _p
+                    _trec = _transition_record(
+                        task_id, ep, t, obs["robot0_eef_pos"],
+                        obs["robot0_gripper_qpos"], _a, _entities)
+                    if transitions_fh is None:
+                        transitions_path.parent.mkdir(parents=True, exist_ok=True)
+                        transitions_fh = open(transitions_path, "a")
+                    transitions_fh.write(json.dumps(_trec) + "\n")
                 lead_steps_since_query += 1  # --mover_lead: elapsed-steps tracking
                 if args.stall_recovery and in_retreat == 0:
                     eef_hist.append(np.asarray(obs["robot0_eef_pos"], dtype=np.float64))
@@ -926,6 +976,8 @@ def main():
 
             succ += int(done)
             viol += int(violated)
+            if transitions_fh is not None:
+                transitions_fh.flush()
             with open(episodes_log, "a") as ef:
                 _rec = {"task": task_id, "ep": ep, "refused": False,
                         "success": bool(done), "violation": bool(violated),
@@ -971,6 +1023,7 @@ def main():
         "holding_disengage": bool(args.holding_disengage),
         "mover_lead": args.mover_lead,
         "refuse_unsafe": args.refuse_unsafe,
+        "log_transitions": bool(args.log_transitions),
         "overall_TSR": float(np.mean([r["TSR"] for r in per_task])) if per_task else 0.0,
         "overall_violation_rate": float(np.mean([r["violation_rate"] for r in per_task])) if per_task else 0.0,
         "refused_tasks": sum(r["refused"] for r in per_task),
@@ -979,6 +1032,8 @@ def main():
     with open(out_dir / f"results_{stamp}.json", "w") as f:
         json.dump(results, f, indent=1)
     logging.info(json.dumps({k: results[k] for k in ("overall_TSR", "overall_violation_rate", "refused_tasks")}))
+    if transitions_fh is not None:
+        transitions_fh.close()
 
 
 if __name__ == "__main__":

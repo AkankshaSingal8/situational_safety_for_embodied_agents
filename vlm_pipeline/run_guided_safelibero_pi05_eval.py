@@ -313,6 +313,25 @@ def obstacle_main_part_extents(sim, obstacle_name):
     return fit
 
 
+def _transition_record(task, ep, t, eef, grip, action, entities):
+    """One `--log_transitions` JSONL record (pure, unit-testable).
+
+    `entities` is a name -> pos mapping (already resolved by the caller via
+    the runner's existing GT/percep position source — no perception built
+    here). All numeric fields are plain floats/lists so the record is
+    directly `json.dumps`-able."""
+    return {
+        "task": int(task),
+        "ep": int(ep),
+        "t": int(t),
+        "eef": [float(x) for x in eef],
+        "grip": [float(x) for x in grip],
+        "action": [float(x) for x in action],
+        "entities": {str(name): [float(x) for x in pos]
+                     for name, pos in entities.items()},
+    }
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate pi0.5 + in-denoising DCBF guidance on SafeLIBERO")
     parser.add_argument("--task_suite_name", type=str, default="safelibero_spatial",
@@ -444,6 +463,15 @@ def parse_args():
                              "(cand_disp, cand_min_margin, best_idx, eef, obstacles) "
                              "per replan to k_diag_{timestamp}.jsonl in results_dir. "
                              "Diagnostics only; zero behavior change.")
+    parser.add_argument("--log_transitions", action="store_true",
+                        help="Append one JSON line per env.step() to "
+                             "<results_output_dir>/transitions_<task_suite>_<level>.jsonl: "
+                             "task/ep/t, eef, grip, the action sent to env, and "
+                             "entity positions (the runner's existing GT/percep "
+                             "position source via entity_view() — no new "
+                             "perception). File opened lazily on first write, "
+                             "flushed per episode. Default off = zero overhead "
+                             "(no record built, no file).")
     return parser.parse_args()
 
 
@@ -507,6 +535,11 @@ def run_eval(args):
 
     episodes_log = results_dir / f"episodes_{timestamp}.jsonl"
     k_diag_log = (results_dir / f"k_diag_{timestamp}.jsonl") if args.log_k_diag else None
+    # --log_transitions: file handle opened lazily on first write (run_eval()
+    # scope so it stays open across tasks/episodes; one file for the whole run).
+    transitions_fh = None
+    transitions_path = (pathlib.Path(args.results_output_dir)
+                         / f"transitions_{args.task_suite_name}_{args.safety_level}.jsonl")
     per_task_results = []
     total_episodes = total_successes = total_collisions = 0
     all_ets = []
@@ -927,6 +960,26 @@ def run_eval(args):
                             collide_flag = True
                             logging.info(f"  Collision at t={t}")
 
+                    if args.log_transitions:
+                        # Written LAST (after everything in this iteration
+                        # that can still raise) so a mid-iteration exception
+                        # -> `continue` retry can never re-log this `t` and
+                        # duplicate a (task, ep, t) key. Entity positions: the
+                        # runner's existing GT/percep position source
+                        # (entity_view() — GT tier is live obs, fresh every
+                        # step; percep tier is the static episode-start
+                        # snapshot merged in by entity_view()).
+                        _entities = {k[:-4]: v for k, v in entity_view(obs).items()
+                                     if k.endswith("_pos") and not k.startswith("robot0")
+                                     and "_to_" not in k}
+                        _trec = _transition_record(
+                            task_id, ep_idx, t, obs["robot0_eef_pos"],
+                            obs["robot0_gripper_qpos"], action, _entities)
+                        if transitions_fh is None:
+                            transitions_path.parent.mkdir(parents=True, exist_ok=True)
+                            transitions_fh = open(transitions_path, "a")
+                        transitions_fh.write(json.dumps(_trec) + "\n")
+
                     if done:
                         break
                     t += 1
@@ -957,6 +1010,8 @@ def run_eval(args):
             task_successes += int(done)
             task_collisions += int(collide_flag)
             task_ets.append(t)
+            if transitions_fh is not None:
+                transitions_fh.flush()
             with open(episodes_log, "a") as ef:
                 ep_record = {"task": task_id, "ep": ep_idx, "success": bool(done),
                              "collision": bool(collide_flag), "steps": t}
@@ -1036,6 +1091,7 @@ def run_eval(args):
         "overall_ETS_mean": round(float(np.mean(all_ets)), 2),
         "overall_ETS_median": round(float(np.median(all_ets)), 2),
         "context_source": "libero_observation_object_pose_tier_gt",
+        "log_transitions": bool(args.log_transitions),
         "guidance": {
             "chunks": g_chunks,
             "active_chunks": g_active_chunks,
@@ -1060,6 +1116,8 @@ def run_eval(args):
         f"ETS={results['overall_ETS_mean']:.1f}, "
         f"guidance activation={results['guidance']['activation_rate']:.1%}"
     )
+    if transitions_fh is not None:
+        transitions_fh.close()
     return results
 
 
