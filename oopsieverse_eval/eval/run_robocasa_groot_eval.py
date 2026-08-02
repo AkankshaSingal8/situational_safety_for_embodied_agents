@@ -88,12 +88,38 @@ def build_groot_obs(obs: dict, instruction: str) -> dict:
             f"camera_names={CAMERA_NAMES} to RoboCasaAdapter?"
         )
 
-    eef_pos = np.asarray(obs["eef_pos"], dtype=np.float32)[None, None]  # (1,1,3)
-    eef_quat = np.asarray(obs["eef_quat"], dtype=np.float32)[None, None]  # (1,1,4)
+    # BUG FIX (found post-papermatch: 86.7% robot-self-damage, 0/120 success --
+    # see groot_risk_gate_report.md's "papermatch postmortem" section): this
+    # used to read `obs["eef_pos"]`/`obs["eef_quat"]`, which RoboCasaAdapter
+    # sets from raw `robot0_eef_pos`/`robot0_eef_quat` -- the WORLD-frame eef
+    # pose. GR00T's `state.end_effector_position_relative` key name, and its
+    # training statistics (mean ~[0.27, -0.04, 0.54], std ~[0.19, 0.26, 0.24]
+    # -- meters-scale, arm's-workspace-scale numbers), both indicate this must
+    # be BASE-relative, not world-frame. Confirmed directly: for PandaOmron
+    # (mobile base placed far from world origin in RoboCasa's large scene
+    # layouts), `robot0_eef_pos` was observed at ~[-2.33, -3.57, 1.30] while
+    # `robot0_base_to_eef_pos` (robosuite's own base-relative observable) was
+    # ~[0.23, -0.00, 0.60] -- matching the training statistics almost
+    # exactly, while the world-frame value is off by several METERS. Feeding
+    # the wrong frame gave the policy a catastrophically wrong belief about
+    # where its own arm currently is, which plausibly explains both 0%
+    # success and the smooth-but-wrong self-colliding motion observed in
+    # saved rollout videos (arm progressively curling into the cabinet/itself
+    # over an episode, not jerky/random -- consistent with confidently acting
+    # on a wrong but internally-consistent state estimate).
+    #
+    # Also fixed: `base_position`/`base_rotation` were hardcoded to zero/
+    # identity ("base held still"), but training statistics show
+    # `state.base_position` has mean ~[2.52, -1.52, 0.69] (NOT zero) --
+    # holding the base *physically* still is still correct (matches
+    # action.base_motion's zero training statistics), but the *reported*
+    # base pose should be the real (fixed) value, not a zero placeholder,
+    # to stay in-distribution for the state encoder.
+    eef_pos = np.asarray(obs["raw"]["robot0_base_to_eef_pos"], dtype=np.float32)[None, None]  # (1,1,3)
+    eef_quat = np.asarray(obs["raw"]["robot0_base_to_eef_quat"], dtype=np.float32)[None, None]  # (1,1,4)
     gripper_qpos = np.asarray(obs["gripper_qpos"], dtype=np.float32)[None, None]  # (1,1,2)
-    zeros3 = np.zeros((1, 1, 3), dtype=np.float32)
-    base_quat = np.zeros((1, 1, 4), dtype=np.float32)
-    base_quat[..., -1] = 1.0
+    base_pos = np.asarray(obs["raw"]["robot0_base_pos"], dtype=np.float32)[None, None]  # (1,1,3)
+    base_quat = np.asarray(obs["raw"]["robot0_base_quat"], dtype=np.float32)[None, None]  # (1,1,4)
 
     return {
         "video": video,
@@ -101,7 +127,7 @@ def build_groot_obs(obs: dict, instruction: str) -> dict:
             "end_effector_position_relative": eef_pos,
             "end_effector_rotation_relative": eef_quat,
             "gripper_qpos": gripper_qpos,
-            "base_position": zeros3,  # base held still -- see module docstring
+            "base_position": base_pos,
             "base_rotation": base_quat,
         },
         # Key confirmed against nvidia/GR00T-N1.6-3B's processor_config.json
