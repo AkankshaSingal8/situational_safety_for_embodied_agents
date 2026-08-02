@@ -668,3 +668,91 @@ def test_cli_train_and_g1_round_trip(tmp_path, monkeypatch):
         m = report["per_domain"][dom]
         assert "err_ratio" in m and "auc" in m and "spearman" in m \
             and "unmeasurable" in m and "pass" in m
+
+
+# --------------------------------------------------------------------------
+# target_maps/ — static per-task target JSON files consumed via --target_map
+# --------------------------------------------------------------------------
+
+TARGET_MAPS_DIR = pathlib.Path(__file__).resolve().parents[1] / "target_maps"
+
+# Entity names must look like a stripped `{name}_pos` obs key / transitions
+# `entities` dict key: snake_case, ending in an instance-index suffix
+# (LIBERO/SafeLIBERO always numbers object instances, e.g. `_1`, `__7_1`).
+_ENTITY_NAME_RE = __import__("re").compile(r"^[a-z][a-z0-9_]*_\d+$")
+
+
+@pytest.mark.parametrize("fname,expected_n_tasks", [
+    ("ls_obstacle_avoidance.json", 15),
+    ("safelibero_spatial_L1.json", 4),
+])
+def test_target_map_loads_and_keys_are_int_castable(fname, expected_n_tasks):
+    path = TARGET_MAPS_DIR / fname
+    assert path.exists(), f"missing {path}"
+    target_map = cm._load_target_map(str(path))
+    assert len(target_map) == expected_n_tasks
+    assert set(target_map.keys()) == set(range(expected_n_tasks))
+
+
+@pytest.mark.parametrize("fname", [
+    "ls_obstacle_avoidance.json",
+    "safelibero_spatial_L1.json",
+])
+def test_target_map_values_look_like_entity_names(fname):
+    """Every non-null target must match the naming convention the LS/SL
+    clients' `_resolve_entities` produce: a `{name}_pos` obs key with the
+    `_pos` suffix stripped (see run_guided_libero_safety_eval.py's `cands`/
+    `_resolve_entities` and run_guided_safelibero_pi05_eval.py's
+    `_resolve_entities`), i.e. lowercase snake_case ending in an
+    LIBERO-assigned instance index."""
+    raw = json.loads((TARGET_MAPS_DIR / fname).read_text())
+    for task, name in raw.items():
+        if name is None:
+            continue
+        assert _ENTITY_NAME_RE.match(name), (
+            f"{fname} task {task}: {name!r} does not look like a "
+            "stripped `_pos` entity name")
+
+
+def test_ls_target_map_matches_offline_parse_target_heuristic():
+    """Regression pin: the LS target map was derived by running
+    `symbolic_identity.parse_target_heuristic` offline against each task's
+    real (settled, workspace-filtered) `cands` set -- see
+    target_maps/README.md. This re-derives it from the frozen candidate
+    dump and checks the committed JSON hasn't drifted from that source."""
+    from symbolic_identity import parse_target_heuristic
+
+    # (task_id, language, workspace-filtered candidate names) for all 15
+    # obstacle_avoidance tasks (L0/L1/L2), captured via
+    # run_guided_libero_safety_eval.py's own `cands` construction (settle
+    # loop + WORKSPACE filter) -- see target_maps/README.md for the capture
+    # script/env.
+    cases = [
+        (0, "pick up the akita black bowl on the stove and place it on the plate",
+         ["akita_black_bowl_1", "akita_black_bowl_2", "cookies_1",
+          "glazed_rim_porcelain_ramekin_1", "plate_1"]),
+        (1, "pick up the book and place it in the back compartment of the caddy",
+         ["black_book_1", "bottle_of_beer__7_1", "white_yellow_mug_1"]),
+        (2, "put both moka pots on the stove",
+         ["bottle_of_ginger_beer_1", "moka_pot_1", "moka_pot_2"]),
+        (3, "put both the alphabet soup and the cream cheese box in the basket",
+         ["alphabet_soup_1", "bottle_of_carrot_juice_1", "cream_cheese_1",
+          "ketchup_1", "tomato_sauce_1"]),
+        (4, "put the white yellow mug in the microwave and close it",
+         ["white_yellow_mug_1"]),
+    ]
+    raw = json.loads((TARGET_MAPS_DIR / "ls_obstacle_avoidance.json").read_text())
+    for task_id, language, cands in cases:
+        expected = parse_target_heuristic(language, cands)
+        for level_offset in (0, 5, 10):  # same task repeats per level, L0/L1/L2
+            assert raw[str(task_id + level_offset)] == expected
+
+
+def test_sl_target_map_matches_bddl_goal_object():
+    """Regression pin: the SafeLIBERO-Spatial target map is the object named
+    in each task's `(:goal (And (On <obj> plate_1)))` predicate, which is
+    always `akita_black_bowl_1` for all 4 safelibero_spatial tasks -- the
+    *other* bowl instance (`akita_black_bowl_2`) is always the distractor,
+    per the BDDL `:init` region assignments. See target_maps/README.md."""
+    raw = json.loads((TARGET_MAPS_DIR / "safelibero_spatial_L1.json").read_text())
+    assert all(v == "akita_black_bowl_1" for v in raw.values())
