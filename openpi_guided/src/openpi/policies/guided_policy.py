@@ -332,14 +332,18 @@ class GuidedPolicy(_policy.Policy):
                 action_scale=cfg.consequence_action_scale,
                 action_clip=cfg.consequence_action_clip,
             )
-        except self._cseq.EntitiesMissingError as e:
-            # Fix round 1 (reviewer-mandated, binding): a payload without
-            # entity names is a HARD failure of the consequence-select path,
-            # not a silent degradation to a positional-only approximation.
+        except (self._cseq.EntitiesMissingError, self._cseq.HazardsMissingError) as e:
+            # Fix round 1 (entities) / fix round 2 (hazards) -- both
+            # reviewer-mandated, binding: a payload without entity names, or
+            # without hazard names that map to an entity slot, is a HARD
+            # failure of the consequence-select path, not a silent
+            # degradation (positional-only slots for the former; aggregating
+            # P(contact) over ALL entities incl. the task target for the
+            # latter -- mechanism-defeating, see HazardsMissingError).
             # Route to the legacy selection exactly like an empty-feasible
             # fallback, logging a warning so this is visible in server logs.
-            logging.warning("consequence_select: entities missing from guidance payload, "
-                             "falling back to legacy selection (%s)", e)
+            logging.warning("consequence_select: %s, falling back to legacy selection (%s)",
+                             type(e).__name__, e)
             logging.info("consequence_select: %s",
                          {"feasible": None, "chosen": None, "fallback": True})
             return selected, diag

@@ -126,6 +126,29 @@ def test_aggregate_p_any_all_masked_is_zero():
     assert np.isclose(p_any[0], 0.0)
 
 
+def test_aggregate_p_any_hazard_mask_ignores_high_target_contact_prob():
+    """HIGH fix regression: a candidate with near-certain TARGET contact
+    (slot 1, e.g. a successful grasp approach) but near-zero HAZARD contact
+    (slot 0) must score as near-feasible when aggregated over hazard_mask
+    only -- aggregating over entity_mask (all entities incl. target)
+    instead would make this exact progress-making candidate look
+    infeasible, which is the mechanism-defeating bug this fix resolves."""
+    contact_prob = np.array([[0.01, 0.98]])  # [hazard, target]
+    entity_mask = np.array([1.0, 1.0])   # both are valid model-input slots
+    hazard_mask = np.array([1.0, 0.0])   # only slot 0 (hazard) counts
+
+    p_any_all_entities = cs.aggregate_p_any(contact_prob, entity_mask)
+    p_any_hazard_only = cs.aggregate_p_any(contact_prob, hazard_mask)
+
+    assert p_any_all_entities[0] > 0.9   # would fail feasibility (>0.10)
+    assert p_any_hazard_only[0] < 0.05   # passes feasibility (<=0.10)
+
+    res_all = cs.select_candidate(p_any_all_entities, np.zeros(1), np.array([1.0]))
+    res_hazard = cs.select_candidate(p_any_hazard_only, np.zeros(1), np.array([1.0]))
+    assert res_all.fallback  # bug reproduction: all-entities aggregation -> unsafe
+    assert not res_hazard.fallback and res_hazard.chosen == 0  # fixed behavior
+
+
 # --------------------------------------------------------------------------
 # build_features: sorted(entities)[:E] slot construction from a raw
 # guidance payload (fix round 1 -- resolved entity-slot contract).
@@ -138,6 +161,7 @@ def test_build_features_sorted_entity_slot_order_and_presence_mask():
             "zeta": [0.0, 0.2, 0.9],   # sorts after hazard_a -> slot 1
             "hazard_a": [0.1, 0.0, 0.9],  # sorts first -> slot 0
         },
+        "hazards": ["hazard_a"],
     }
     eef = np.array([0.0, 0.0, 0.9])
     k, extra_h = 2, cs.H + 3
@@ -148,6 +172,11 @@ def test_build_features_sorted_entity_slot_order_and_presence_mask():
     np.testing.assert_array_equal(feats["entity_mask"][0], [1, 1, 0, 0, 0, 0, 0, 0])
     np.testing.assert_allclose(feats["entity_rel"][0, 0], [0.1, 0.0, 0.0])  # hazard_a
     np.testing.assert_allclose(feats["entity_rel"][0, 1], [0.0, 0.2, 0.0])  # zeta
+    # hazard_mask is a SUBSET of entity_mask: only hazard_a (slot 0), not
+    # zeta (present in entities/entity_mask but not in "hazards" -> the
+    # task-target-like slot must NOT be included in hazard_mask).
+    assert feats["hazard_mask"].shape == (k, cs.E)
+    np.testing.assert_array_equal(feats["hazard_mask"][0], [1, 0, 0, 0, 0, 0, 0, 0])
     assert feats["action_window"].shape == (k, cs.H, 3)  # truncated to H, not extra_h
     assert feats["grip"].shape == (k, 2)
     np.testing.assert_array_equal(feats["grip"], np.zeros((k, 2)))  # gripper_qpos absent
@@ -157,6 +186,7 @@ def test_build_features_gripper_qpos_passthrough_when_present():
     payload = {
         "eef_pos": [0.0, 0.0, 0.0],
         "entities": {"hazard_a": [0.1, 0.0, 0.0]},
+        "hazards": ["hazard_a"],
         "gripper_qpos": [0.011, 0.013],
     }
     feats = cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
@@ -166,11 +196,22 @@ def test_build_features_gripper_qpos_passthrough_when_present():
 def test_build_features_truncates_beyond_8_entities_alphabetically():
     names = [f"e{i}" for i in range(10)]  # e0..e9 -- already sorted
     entities = {n: [float(i), 0.0, 0.0] for i, n in enumerate(names)}
-    payload = {"eef_pos": [0.0, 0.0, 0.0], "entities": entities}
+    payload = {"eef_pos": [0.0, 0.0, 0.0], "entities": entities, "hazards": ["e0"]}
     feats = cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
     assert feats["entity_mask"][0].sum() == cs.E  # only first 8 populated
     for slot in range(cs.E):
         np.testing.assert_allclose(feats["entity_rel"][0, slot], [float(slot), 0.0, 0.0])
+
+
+def test_build_features_hazard_beyond_truncation_raises_hazards_missing_error():
+    """A hazard name that only exists past the E=8 truncation point (e.g.
+    e9, sorted last) can never be matched to a slot -> hard-fail, not a
+    silent 'aggregate over what happened to survive truncation'."""
+    names = [f"e{i}" for i in range(10)]
+    entities = {n: [float(i), 0.0, 0.0] for i, n in enumerate(names)}
+    payload = {"eef_pos": [0.0, 0.0, 0.0], "entities": entities, "hazards": ["e9"]}
+    with pytest.raises(cs.HazardsMissingError):
+        cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
 
 
 def test_build_features_missing_entities_raises_entities_missing_error():
@@ -185,8 +226,55 @@ def test_build_features_empty_entities_dict_raises_entities_missing_error():
         cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
 
 
-def test_build_features_action_scale_and_clip():
+def test_build_features_missing_hazards_raises_hazards_missing_error():
+    """entities present but no 'hazards' key -> hard fail, NOT a silent
+    aggregate-over-all-entities (which would include the target)."""
     payload = {"eef_pos": [0.0, 0.0, 0.0], "entities": {"hazard_a": [0.1, 0.0, 0.0]}}
+    with pytest.raises(cs.HazardsMissingError):
+        cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
+
+
+def test_build_features_empty_hazards_list_raises_hazards_missing_error():
+    payload = {"eef_pos": [0.0, 0.0, 0.0],
+               "entities": {"hazard_a": [0.1, 0.0, 0.0]}, "hazards": []}
+    with pytest.raises(cs.HazardsMissingError):
+        cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
+
+
+def test_build_features_hazards_not_subset_of_entities_raises_hazards_missing_error():
+    """None of the given hazard names match an entity slot -> hard fail
+    (server-side defensive check; the client is also expected to log-warn
+    on this, but the server cannot trust the client)."""
+    payload = {"eef_pos": [0.0, 0.0, 0.0],
+               "entities": {"hazard_a": [0.1, 0.0, 0.0]},
+               "hazards": ["typo_name_not_in_entities"]}
+    with pytest.raises(cs.HazardsMissingError):
+        cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
+
+
+def test_build_features_hazard_mask_excludes_target_like_entity():
+    """The core HIGH-fix regression test: a target-like entity present in
+    'entities' but absent from 'hazards' must NOT appear in hazard_mask,
+    even though it's a fully valid (masked-in) entity_mask slot for the
+    model's own forward pass."""
+    payload = {
+        "eef_pos": [0.0, 0.0, 0.0],
+        "entities": {"hazard_a": [0.1, 0.0, 0.0], "task_target": [0.2, 0.0, 0.0]},
+        "hazards": ["hazard_a"],
+    }
+    feats = cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
+    names = sorted(payload["entities"].keys())  # ["hazard_a", "task_target"]
+    hazard_slot = names.index("hazard_a")
+    target_slot = names.index("task_target")
+    assert feats["entity_mask"][0, hazard_slot] == 1
+    assert feats["entity_mask"][0, target_slot] == 1  # target still a valid model input
+    assert feats["hazard_mask"][0, hazard_slot] == 1
+    assert feats["hazard_mask"][0, target_slot] == 0  # but NOT a hazard-aggregation slot
+
+
+def test_build_features_action_scale_and_clip():
+    payload = {"eef_pos": [0.0, 0.0, 0.0], "entities": {"hazard_a": [0.1, 0.0, 0.0]},
+               "hazards": ["hazard_a"]}
     eef = np.zeros(3)
     disp = np.ones((1, cs.H, 3)) * 0.5
     feats = cs.build_features(payload, eef, disp, domain="SL", action_scale=2.0, action_clip=0.6)
@@ -195,7 +283,7 @@ def test_build_features_action_scale_and_clip():
 
 
 def test_build_features_pads_short_window():
-    payload = {"entities": {"hazard_a": [0.0, 0.0, 0.0]}}
+    payload = {"entities": {"hazard_a": [0.0, 0.0, 0.0]}, "hazards": ["hazard_a"]}
     eef = np.zeros(3)
     disp = np.ones((1, cs.H - 3, 3))  # shorter than H
     feats = cs.build_features(payload, eef, disp, domain="LS")
@@ -204,7 +292,7 @@ def test_build_features_pads_short_window():
 
 
 def test_build_features_unknown_domain_raises():
-    payload = {"entities": {"hazard_a": [0.0, 0.0, 0.0]}}
+    payload = {"entities": {"hazard_a": [0.0, 0.0, 0.0]}, "hazards": ["hazard_a"]}
     with pytest.raises(ValueError):
         cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="XX")
 
@@ -252,6 +340,7 @@ def test_build_features_matches_build_samples_entity_rel_and_mask():
     payload = {
         "eef_pos": anchor_eef.tolist(),
         "entities": {n: list(p) for n, p in entity_positions.items()},
+        "hazards": ["aaa_hazard"],  # only one of the three is the "hazard"
     }
     disp = np.zeros((1, cs.H, 3))  # content doesn't matter for this parity check
     feats = cs.build_features(payload, anchor_eef, disp, domain="LS")
@@ -261,6 +350,12 @@ def test_build_features_matches_build_samples_entity_rel_and_mask():
     # Slot order itself: consequence_model's own per-episode entity_order().
     expected_order = sorted(entity_positions.keys())
     assert s.entity_names[: len(expected_order)] == expected_order
+    # hazard_mask is the fix-round-2 addition: entity_mask (all 3 present)
+    # vs. hazard_mask (only "aaa_hazard", slot index from the SAME sorted
+    # order) must differ.
+    hazard_slot = expected_order.index("aaa_hazard")
+    assert feats["hazard_mask"][0].sum() == 1
+    assert feats["hazard_mask"][0, hazard_slot] == 1
 
 
 # --------------------------------------------------------------------------
@@ -305,12 +400,35 @@ def test_no_obstacle_name_substring_used_in_selection_logic():
 
 
 def test_guided_policy_hard_fails_missing_entities_into_fallback():
-    """Fix round 1: a payload without entities must be caught
-    (EntitiesMissingError) and routed to the legacy fallback with a logged
-    warning -- not silently degraded to the old fixed-slot mapping."""
+    """Fix round 1/2: a payload without entities OR without matching
+    hazards must be caught (EntitiesMissingError / HazardsMissingError) and
+    routed to the legacy fallback with a logged warning -- never silently
+    degraded (old fixed-slot mapping, or all-entities aggregation)."""
     src = (_REPO_ROOT / "openpi_guided" / "src" / "openpi" / "policies" / "guided_policy.py").read_text()
-    assert "except self._cseq.EntitiesMissingError as e:" in src
+    assert "except (self._cseq.EntitiesMissingError, self._cseq.HazardsMissingError) as e:" in src
     assert "logging.warning(" in src
+
+
+def test_run_ensemble_select_aggregates_over_hazard_mask_not_entity_mask():
+    """HIGH fix round 2 source check: run_ensemble_select must call
+    aggregate_p_any with hazard_mask, not entity_mask (the mechanism-
+    defeating bug the fix resolves)."""
+    src = (pathlib.Path(__file__).resolve().parents[1] / "consequence_select.py").read_text()
+    fn_start = src.index("def run_ensemble_select(")
+    fn_end = src.index("\ndef ", fn_start + 1) if "\ndef " in src[fn_start + 1:] else len(src)
+    body = src[fn_start:fn_end]
+    assert "aggregate_p_any(contact_prob, hazard_mask)" in body
+    assert "aggregate_p_any(contact_prob, entity_mask)" not in body
+
+
+def test_both_clients_attach_hazards_key():
+    """Fix round 2: both clients must attach payload['hazards'] alongside
+    'entities', and log-warn (not hard-assert) when a hazard name isn't a
+    subset of the entities dict."""
+    for fname in ("run_guided_libero_safety_eval.py", "run_guided_safelibero_pi05_eval.py"):
+        src = (_REPO_ROOT / "vlm_pipeline" / fname).read_text()
+        assert 'element["guidance"]["hazards"]' in src
+        assert "[consequence]" in src and "not found in" in src  # subset-validation log-warn
 
 
 def test_build_features_does_not_silently_use_legacy_pseudo_slots():
@@ -406,6 +524,7 @@ def test_run_ensemble_select_end_to_end(tiny_ensemble_dir):
     payload = {
         "eef_pos": [0.0, 0.0, 0.9],
         "entities": {"hazard_a": [0.03, 0.0, 0.9]},
+        "hazards": ["hazard_a"],
     }
     k = 4
     disp = np.zeros((k, cs.H, 3))
@@ -426,7 +545,8 @@ def test_run_ensemble_select_latency_under_10ms(tiny_ensemble_dir):
     K=8, tiny dims, asserted < 10 ms on CPU. Not a benchmark -- a smoke
     bound; warms up once (first call pays torch/JIT-free import overhead)."""
     models, norm = cs.load_ensemble_for_server(str(tiny_ensemble_dir), n_members=3)
-    payload = {"eef_pos": [0.0, 0.0, 0.9], "entities": {"hazard_a": [0.03, 0.0, 0.9]}}
+    payload = {"eef_pos": [0.0, 0.0, 0.9], "entities": {"hazard_a": [0.03, 0.0, 0.9]},
+               "hazards": ["hazard_a"]}
     k = 8
     disp = np.random.default_rng(0).normal(size=(k, cs.H, 3)) * 0.01
     feats = cs.build_features(payload, np.array([0.0, 0.0, 0.9]), disp, domain="LS")

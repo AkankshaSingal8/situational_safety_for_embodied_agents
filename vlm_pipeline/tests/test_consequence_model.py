@@ -109,6 +109,27 @@ def test_load_episodes_groups_and_sorts(data_dir):
         assert e.domain == "LS"
 
 
+def test_load_episodes_dedupes_duplicate_task_ep_t(tmp_path, caplog):
+    """A requeued SLURM job re-appending to the same transitions file would
+    double up (task, ep, t) records; load_episodes must keep only the first
+    occurrence and warn (opportunistic fix, fix round 2)."""
+    d = tmp_path / "data"
+    d.mkdir()
+    p = d / "transitions_obstacle_avoidance_L0.jsonl"
+    _write_episode(p, task=0, ep=0, n_steps=5)
+    n_lines_before_dup = len(p.read_text().strip().splitlines())
+    # Simulate a resumed job re-writing the same episode's records again.
+    _append_episode(p, task=0, ep=0, n_steps=5)
+    import logging as _logging
+    with caplog.at_level(_logging.WARNING):
+        episodes = cm.load_episodes(d)
+    assert len(episodes) == 1
+    ts = [r["t"] for r in episodes[0].records]
+    assert ts == list(range(5))  # deduped, not doubled or interleaved
+    assert len(episodes[0].records) == n_lines_before_dup
+    assert any("duplicate" in rec.message.lower() for rec in caplog.records)
+
+
 def test_entity_order_deterministic_and_capped(data_dir):
     episodes = cm.load_episodes(data_dir)
     ep = episodes[0]

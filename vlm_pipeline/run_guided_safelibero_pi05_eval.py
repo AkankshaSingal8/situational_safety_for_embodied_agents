@@ -723,6 +723,13 @@ def run_eval(args):
             # its top. Composed by the server's min() with the primary thin
             # sphere: flyovers hit the column, lateral grasp approaches never
             # do. Extents via the tier's own machinery (GT AABB / percep).
+            # guard2_name: identity of the guard-set secondary obstacle
+            # candidate (_second below), set only once its position actually
+            # resolves -- used to build the consequence-select `hazards`
+            # payload (fix round 2). above_payload is NOT a distinct hazard
+            # identity: it's the SAME `obstacle_name`, just a taller column
+            # shape variant, so it never contributes a second hazard name.
+            guard2_name = None
             above_payload = None
             if args.above_envelope and obstacle_name is not None and guidance_obstacle_pos is not None:
                 if args.obstacle_pos_source == "percep":
@@ -774,6 +781,7 @@ def run_eval(args):
                     else:
                         _p2 = np.asarray(obs.get(f"{_second}_pos"))
                     if _p2 is not None:
+                        guard2_name = _second
                         obstacle2_payload = {"pos": np.asarray(_p2, dtype=np.float32),
                                              "radius": obstacle_radius(_second)}
                         if args.obstacle_shape == "superquadric":
@@ -893,6 +901,32 @@ def run_eval(args):
                             element["guidance"]["gripper_qpos"] = [
                                 float(_x) for _x in obs["robot0_gripper_qpos"]
                             ]
+                            # `hazards`: the identified guard NAME(S) only
+                            # (fix round 2, HIGH reviewer finding) -- NOT the
+                            # task target, which is also present in
+                            # `entities`. Without this, the server would
+                            # aggregate P(contact) over ALL entities incl.
+                            # the target, and CONTACT-at-0.05m makes
+                            # target-contact ~certain for exactly the
+                            # progress-making candidates (mechanism-
+                            # defeating: permanent fallback or
+                            # target-avoiding selection). `obstacle_name` is
+                            # the primary guard; `guard2_name` (if resolved)
+                            # is the guard-set secondary -- both are also
+                            # `above_payload`/`obstacle2_payload`'s identity,
+                            # never the target. Must be a subset of
+                            # `entities`' keys; log a warning (not a hard
+                            # assert -- this is diagnostics, not control
+                            # flow) if not.
+                            _hazards = [n for n in (obstacle_name, guard2_name) if n]
+                            _missing = [n for n in _hazards if _ent is None or n not in _ent]
+                            if _missing:
+                                logging.warning(
+                                    "  [consequence] ep %s hazards %s not found in "
+                                    "entities payload %s", ep_idx, _missing,
+                                    sorted(_ent.keys()) if _ent else [])
+                            if _hazards:
+                                element["guidance"]["hazards"] = _hazards
                         result = client.infer(element)
                         action_chunk = result["actions"][:REPLAN_STEPS]
                         diag = result.get("guidance")

@@ -940,6 +940,29 @@ def main():
                         element["guidance"]["gripper_qpos"] = [
                             float(_x) for _x in obs["robot0_gripper_qpos"]
                         ]
+                        # `hazards`: the episode's GT hazard name(s) only
+                        # (fix round 2, HIGH reviewer finding) -- NOT the
+                        # task target, which is also present in `entities`.
+                        # Without this, the server would aggregate
+                        # P(contact) over ALL entities incl. the target, and
+                        # CONTACT-at-0.05m makes target-contact ~certain for
+                        # exactly the progress-making candidates
+                        # (mechanism-defeating: permanent fallback or
+                        # target-avoiding selection). Same source
+                        # (`hazards = hazard_names_from_constraints(env)`)
+                        # already logged per-episode in `episodes_log`
+                        # (`"hazards": hazards` below) -- not `step_guard`,
+                        # which is the (possibly wrong) IDENTIFIED
+                        # candidate, not ground truth. Must be a subset of
+                        # `entities`' keys; log a warning (not a hard
+                        # assert -- diagnostics, not control flow) if not.
+                        if hazards:
+                            _missing = [n for n in hazards if n not in _ent]
+                            if _missing:
+                                logging.warning(
+                                    "  [consequence] ep %s hazards %s not found in "
+                                    "entities payload %s", ep, _missing, sorted(_ent.keys()))
+                            element["guidance"]["hazards"] = list(hazards)
                     _res = client.infer(element)
                     chunk = np.asarray(_res["actions"][:args.replan_steps])
                     _diag = _res.get("guidance")

@@ -120,6 +120,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import math
 import random
 from dataclasses import dataclass, field
@@ -215,11 +216,20 @@ class EpisodeRecords:
 
 def load_episodes(data_dir: Path) -> List[EpisodeRecords]:
     """Load all `transitions_*.jsonl` under `data_dir` (recursive), grouped
-    by (source_file, task, ep) and sorted by t within each group."""
+    by (source_file, task, ep) and sorted by t within each group.
+
+    Dedupes duplicate (task, ep, t) records WITHIN a source file (first
+    occurrence wins, in file order), logging a warning per source file that
+    had duplicates. A requeued SLURM task appending to the same transitions
+    file (job resumed after a preemption/timeout without truncating prior
+    output) would otherwise silently double up records at the same t,
+    corrupting the H-step windows `build_samples` constructs from
+    consecutive `t` indices (opportunistic fix, consequence-steering-code
+    plan, fix round 2)."""
     data_dir = Path(data_dir)
     groups: Dict[Tuple[str, int, int], List[dict]] = {}
     for jf in sorted(data_dir.rglob("transitions_*.jsonl")):
-        domain = infer_domain(jf)
+        seen_t: Dict[Tuple[int, int, int], set] = {}
         with open(jf) as f:
             for line in f:
                 line = line.strip()
@@ -227,6 +237,16 @@ def load_episodes(data_dir: Path) -> List[EpisodeRecords]:
                     continue
                 rec = json.loads(line)
                 key = (str(jf), int(rec["task"]), int(rec["ep"]))
+                t = int(rec["t"])
+                t_seen = seen_t.setdefault(key, set())
+                if t in t_seen:
+                    logging.warning(
+                        "load_episodes: duplicate record at %s task=%s ep=%s t=%s "
+                        "in %s -- keeping first occurrence, dropping the rest "
+                        "(likely a requeued job re-appending to the same file)",
+                        key, rec["task"], rec["ep"], t, jf)
+                    continue
+                t_seen.add(t)
                 groups.setdefault(key, []).append(rec)
     episodes = []
     for (sf, task, ep), recs in groups.items():

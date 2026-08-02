@@ -57,6 +57,25 @@ recomputes candidates mid-episode (e.g. a mover entering the workspace
 partway through) could see slot 0 disagree between two requests in the same
 episode where training saw one fixed union; this is called out here should
 that ever become possible, not because it is possible today.
+
+**Hazard-only aggregation (RESOLVED, fix round 2, HIGH reviewer finding):**
+`entities` includes EVERY named object (hazards, the task target, etc.).
+Feasibility must aggregate P(contact) over HAZARD entities ONLY, never
+the full `entities` set -- CONTACT is 0.05m center-to-center, so any
+successful approach to the task TARGET makes target-contact ~certain,
+which would drive p_any -> 1 for exactly the progress-making candidates
+(mechanism-defeating: either permanent fallback, or a selector that
+actively avoids the target). Both clients now also attach
+`payload["hazards"]`: a list of names that MUST be a subset of
+`payload["entities"]`'s keys (client-side log-warns, not hard-asserts, on
+violation -- see `_resolve_entities` call sites). `build_features` maps
+these names to slot indices via the SAME `sorted(entities)[:E]` ordering
+and produces `hazard_mask` (a subset of `entity_mask`); the model's own
+forward pass is unaffected (still conditioned on the full `entity_mask`,
+matching training) -- only `run_ensemble_select`'s `aggregate_p_any` call
+is restricted to `hazard_mask`. Missing/unmatched `hazards` raises
+`HazardsMissingError`, handled by the same hard-fail-into-fallback pattern
+as `EntitiesMissingError`.
 --------------------------------------------------------------------------
 """
 
@@ -82,6 +101,21 @@ class EntitiesMissingError(RuntimeError):
     this is a HARD failure, not a silent degradation -- callers must catch
     it and route the query to the existing (legacy) best-of-K selection,
     logging a warning, exactly like an empty-feasible-set fallback. See
+    `GuidedPolicy._consequence_infer`."""
+
+
+class HazardsMissingError(RuntimeError):
+    """Raised by `build_features` when the guidance request payload has no
+    (non-empty) `hazards` list, OR none of the given hazard names match a
+    slot in `entities`. Fix round 2 (reviewer-mandated, binding, HIGH):
+    feasibility MUST aggregate P(contact) over HAZARD entities only, never
+    ALL entities -- CONTACT is 0.05m center-to-center, so any successful
+    approach to the task TARGET makes target-contact ~certain, which would
+    drive p_any -> 1 for exactly the progress-making candidates
+    (mechanism-defeating: permanent fallback, or a selector that actively
+    avoids the target). Missing/unmatched hazards is therefore a HARD
+    failure, not a silent fallback to all-entities aggregation -- same
+    fallback pattern as `EntitiesMissingError`. See
     `GuidedPolicy._consequence_infer`."""
 
 
@@ -230,14 +264,29 @@ def build_features(
     Entity slots reproduce `consequence_model.build_samples`'s construction
     exactly: `sorted(payload["entities"].keys())[:E]`, `rel = pos - eef`,
     `mask = 1` for populated slots (remaining slots zero/mask=0) -- see
-    `consequence_model.EpisodeRecords.entity_order`.
+    `consequence_model.EpisodeRecords.entity_order`. This is the input to
+    the MODEL (unchanged by fix round 2 -- matches training, which has no
+    hazard/target distinction at the feature level).
+
+    `payload["hazards"]` (fix round 2, HIGH reviewer finding, binding):
+    also required (non-empty list of names, each expected to be a key of
+    `payload["entities"]`) -- raises `HazardsMissingError` if absent/empty
+    or if NONE of the given names match an entity slot. This does not
+    change the model's input features; it produces `hazard_mask` (E,), a
+    SUBSET of `entity_mask` marking which slots are hazards (as opposed to
+    the task target or other non-hazard entities) -- `run_ensemble_select`
+    aggregates P(contact) over `hazard_mask` slots ONLY, never all of
+    `entity_mask`. Without this, feasibility would include target-contact
+    (CONTACT is 0.05m center-to-center, so any successful approach to the
+    target makes target-contact ~certain) and drive p_any -> 1 for exactly
+    the progress-making candidates -- mechanism-defeating.
 
     `grip`: from `payload["gripper_qpos"]` when present (client-attached by
     the same fix-round-1 change); zeros otherwise (grip has no mask bit in
     the model, unlike entity slots, so a missing value is an unconditional
     degraded input rather than a hard failure -- documented per
     task-3-brief's "acceptable degradation for v1" allowance, unlike the
-    entities case above).
+    entities/hazards case above).
     """
     if not payload.get("entities"):
         raise EntitiesMissingError(
@@ -245,6 +294,14 @@ def build_features(
             "consequence-select requires entity names to reproduce "
             "consequence_model's sorted(entities)[:E] training-time slot "
             "ordering. Caller must fall back to the legacy selection path."
+        )
+    if not payload.get("hazards"):
+        raise HazardsMissingError(
+            "guidance payload has no non-empty 'hazards' list -- "
+            "consequence-select requires hazard names (a subset of "
+            "'entities') to aggregate P(contact) over hazards only, "
+            "excluding the task target. Caller must fall back to the "
+            "legacy selection path."
         )
     if domain not in DOMAINS:
         raise ValueError(f"unknown domain {domain!r}; expected one of {DOMAINS}")
@@ -261,12 +318,26 @@ def build_features(
         action_window = np.clip(action_window, -action_clip, action_clip)
 
     names = sorted(payload["entities"].keys())[:E]
+    name_to_slot = {name: slot for slot, name in enumerate(names)}
     entity_rel = np.zeros((E, 3), dtype=np.float64)
     entity_mask = np.zeros((E,), dtype=np.float64)
     for slot, name in enumerate(names):
         pos = np.asarray(payload["entities"][name], dtype=np.float64).reshape(3)
         entity_rel[slot] = pos - eef_pos
         entity_mask[slot] = 1.0
+
+    hazard_mask = np.zeros((E,), dtype=np.float64)
+    for hz_name in payload["hazards"]:
+        slot = name_to_slot.get(hz_name)
+        if slot is not None:
+            hazard_mask[slot] = 1.0
+    if not hazard_mask.any():
+        raise HazardsMissingError(
+            f"none of hazards {list(payload['hazards'])!r} matched an "
+            f"entity slot in {names!r} (sorted(entities)[:E={E}]) -- "
+            "cannot aggregate hazard-only P(contact). Caller must fall "
+            "back to the legacy selection path."
+        )
 
     grip_raw = payload.get("gripper_qpos")
     grip = (np.asarray(grip_raw, dtype=np.float64).reshape(2)
@@ -277,6 +348,10 @@ def build_features(
         grip=np.broadcast_to(grip, (k, 2)).copy(),
         entity_rel=np.broadcast_to(entity_rel, (k, E, 3)).copy(),
         entity_mask=np.broadcast_to(entity_mask, (k, E)).copy(),
+        # Subset of entity_mask marking HAZARD slots only (fix round 2) --
+        # feeds `run_ensemble_select`'s aggregate_p_any; the model's own
+        # forward pass still uses the full entity_mask above, unchanged.
+        hazard_mask=np.broadcast_to(hazard_mask, (k, E)).copy(),
         domain=domain,
         action_window=action_window,
     )
@@ -346,6 +421,7 @@ def run_ensemble_select(
     grip = features["grip"]
     entity_rel_raw = features["entity_rel"]
     entity_mask = features["entity_mask"]
+    hazard_mask = features["hazard_mask"]  # fix round 2: aggregation subset
     action_window_raw = features["action_window"]
     domain = features["domain"]
 
@@ -371,7 +447,12 @@ def run_ensemble_select(
                 eef_t, grip_t, entity_rel_t, entity_mask_t, domain_onehot_t, action_window_t
             )
             contact_prob = torch.sigmoid(contact_logits).numpy()
-            p_any_members.append(aggregate_p_any(contact_prob, entity_mask))
+            # HIGH fix round 2: aggregate over HAZARD slots only, never all
+            # entities (which would include the task target -- see
+            # `HazardsMissingError` docstring for why that is
+            # mechanism-defeating). Model forward pass above still used the
+            # full entity_mask, matching training.
+            p_any_members.append(aggregate_p_any(contact_prob, hazard_mask))
             progress_members.append(progress.numpy())
 
     p_any_stack = np.stack(p_any_members, axis=0)      # (n_members, K)
