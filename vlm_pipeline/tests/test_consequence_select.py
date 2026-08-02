@@ -127,16 +127,17 @@ def test_aggregate_p_any_all_masked_is_zero():
 
 
 # --------------------------------------------------------------------------
-# build_features: fixed pseudo-slot construction from a raw guidance payload
+# build_features: sorted(entities)[:E] slot construction from a raw
+# guidance payload (fix round 1 -- resolved entity-slot contract).
 # --------------------------------------------------------------------------
 
-def test_build_features_fixed_slot_order_and_presence_mask():
+def test_build_features_sorted_entity_slot_order_and_presence_mask():
     payload = {
         "eef_pos": [0.0, 0.0, 0.9],
-        "obstacle_pos": [0.1, 0.0, 0.9],
-        # obstacle2 absent -> slot 1 masked
-        "target_pos": [0.0, 0.2, 0.9],
-        # dest_pos absent -> slot 3 masked
+        "entities": {
+            "zeta": [0.0, 0.2, 0.9],   # sorts after hazard_a -> slot 1
+            "hazard_a": [0.1, 0.0, 0.9],  # sorts first -> slot 0
+        },
     }
     eef = np.array([0.0, 0.0, 0.9])
     k, extra_h = 2, cs.H + 3
@@ -144,16 +145,48 @@ def test_build_features_fixed_slot_order_and_presence_mask():
     disp[:, :, 0] = 0.01  # constant x-displacement per step
     feats = cs.build_features(payload, eef, disp, domain="SL")
     assert feats["entity_mask"].shape == (k, cs.E)
-    np.testing.assert_array_equal(feats["entity_mask"][0], [1, 0, 1, 0, 0, 0, 0, 0])
-    np.testing.assert_allclose(feats["entity_rel"][0, 0], [0.1, 0.0, 0.0])
-    np.testing.assert_allclose(feats["entity_rel"][0, 2], [0.0, 0.2, 0.0])
+    np.testing.assert_array_equal(feats["entity_mask"][0], [1, 1, 0, 0, 0, 0, 0, 0])
+    np.testing.assert_allclose(feats["entity_rel"][0, 0], [0.1, 0.0, 0.0])  # hazard_a
+    np.testing.assert_allclose(feats["entity_rel"][0, 1], [0.0, 0.2, 0.0])  # zeta
     assert feats["action_window"].shape == (k, cs.H, 3)  # truncated to H, not extra_h
     assert feats["grip"].shape == (k, 2)
-    np.testing.assert_array_equal(feats["grip"], np.zeros((k, 2)))  # documented degradation
+    np.testing.assert_array_equal(feats["grip"], np.zeros((k, 2)))  # gripper_qpos absent
+
+
+def test_build_features_gripper_qpos_passthrough_when_present():
+    payload = {
+        "eef_pos": [0.0, 0.0, 0.0],
+        "entities": {"hazard_a": [0.1, 0.0, 0.0]},
+        "gripper_qpos": [0.011, 0.013],
+    }
+    feats = cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
+    np.testing.assert_allclose(feats["grip"][0], [0.011, 0.013])
+
+
+def test_build_features_truncates_beyond_8_entities_alphabetically():
+    names = [f"e{i}" for i in range(10)]  # e0..e9 -- already sorted
+    entities = {n: [float(i), 0.0, 0.0] for i, n in enumerate(names)}
+    payload = {"eef_pos": [0.0, 0.0, 0.0], "entities": entities}
+    feats = cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
+    assert feats["entity_mask"][0].sum() == cs.E  # only first 8 populated
+    for slot in range(cs.E):
+        np.testing.assert_allclose(feats["entity_rel"][0, slot], [float(slot), 0.0, 0.0])
+
+
+def test_build_features_missing_entities_raises_entities_missing_error():
+    payload = {"eef_pos": [0.0, 0.0, 0.0]}  # no "entities" key
+    with pytest.raises(cs.EntitiesMissingError):
+        cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
+
+
+def test_build_features_empty_entities_dict_raises_entities_missing_error():
+    payload = {"eef_pos": [0.0, 0.0, 0.0], "entities": {}}
+    with pytest.raises(cs.EntitiesMissingError):
+        cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="SL")
 
 
 def test_build_features_action_scale_and_clip():
-    payload = {"eef_pos": [0.0, 0.0, 0.0]}
+    payload = {"eef_pos": [0.0, 0.0, 0.0], "entities": {"hazard_a": [0.1, 0.0, 0.0]}}
     eef = np.zeros(3)
     disp = np.ones((1, cs.H, 3)) * 0.5
     feats = cs.build_features(payload, eef, disp, domain="SL", action_scale=2.0, action_clip=0.6)
@@ -162,7 +195,7 @@ def test_build_features_action_scale_and_clip():
 
 
 def test_build_features_pads_short_window():
-    payload = {}
+    payload = {"entities": {"hazard_a": [0.0, 0.0, 0.0]}}
     eef = np.zeros(3)
     disp = np.ones((1, cs.H - 3, 3))  # shorter than H
     feats = cs.build_features(payload, eef, disp, domain="LS")
@@ -171,8 +204,63 @@ def test_build_features_pads_short_window():
 
 
 def test_build_features_unknown_domain_raises():
+    payload = {"entities": {"hazard_a": [0.0, 0.0, 0.0]}}
     with pytest.raises(ValueError):
-        cs.build_features({}, np.zeros(3), np.zeros((1, cs.H, 3)), domain="XX")
+        cs.build_features(payload, np.zeros(3), np.zeros((1, cs.H, 3)), domain="XX")
+
+
+# --------------------------------------------------------------------------
+# Train/inference parity: cs.build_features must reproduce EXACTLY the
+# entity_rel/entity_mask/slot-order that cm.build_samples computed for the
+# equivalent (eef, entities) state -- the binding contract this fix round
+# resolves. (fix round 1)
+# --------------------------------------------------------------------------
+
+def test_build_features_matches_build_samples_entity_rel_and_mask():
+    # One synthetic episode, entities named so alphabetical sort is
+    # non-trivial (not already insertion order).
+    eef_start = (0.0, 0.0, 0.9)
+    entity_positions = {
+        "zzz_far": (0.5, 0.5, 0.9),
+        "aaa_hazard": (0.05, 0.0, 0.9),
+        "mid_one": (0.2, 0.1, 0.9),
+    }
+    n_steps = cs.H + 2
+    lines = []
+    eef = np.array(eef_start, dtype=np.float64)
+    for t in range(n_steps):
+        eef = eef + np.array([0.001, 0.0, 0.0])
+        rec = {
+            "task": 0, "ep": 0, "t": t,
+            "eef": eef.tolist(), "grip": [0.02, 0.02],
+            "action": [0.001, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0],
+            "entities": {n: list(p) for n, p in entity_positions.items()},
+        }
+        lines.append(rec)
+
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        p = pathlib.Path(td) / "transitions_obstacle_avoidance_L0.jsonl"
+        p.write_text("\n".join(json.dumps(r) for r in lines) + "\n")
+        episodes = cm.load_episodes(pathlib.Path(td))
+    assert len(episodes) == 1
+    samples = cm.build_samples(episodes, target_map=None)
+    assert len(samples) >= 1
+    s = samples[0]  # anchored at record index 1 -> state = record[0]
+
+    anchor_eef = np.asarray(lines[0]["eef"], dtype=np.float64)
+    payload = {
+        "eef_pos": anchor_eef.tolist(),
+        "entities": {n: list(p) for n, p in entity_positions.items()},
+    }
+    disp = np.zeros((1, cs.H, 3))  # content doesn't matter for this parity check
+    feats = cs.build_features(payload, anchor_eef, disp, domain="LS")
+
+    np.testing.assert_allclose(feats["entity_mask"][0], s.entity_mask)
+    np.testing.assert_allclose(feats["entity_rel"][0], s.entity_rel, atol=1e-9)
+    # Slot order itself: consequence_model's own per-episode entity_order().
+    expected_order = sorted(entity_positions.keys())
+    assert s.entity_names[: len(expected_order)] == expected_order
 
 
 # --------------------------------------------------------------------------
@@ -208,12 +296,46 @@ def test_pi0_guided_return_candidates_defaults_false_and_preserves_2_tuple():
 
 def test_no_obstacle_name_substring_used_in_selection_logic():
     """Global constraint: never use `_obstacle_` in decision logic. The
-    fixed pseudo-slot names in this module ("obstacle", "obstacle2") are
-    payload KEYS (pre-existing in guided_policy.py), not a name-substring
-    check -- verify no literal `_obstacle_` substring appears anywhere in
-    the new selection code."""
+    legacy dead-code pseudo-slot names in this module ("obstacle",
+    "obstacle2") are payload KEYS (pre-existing in guided_policy.py), not a
+    name-substring check -- verify no literal `_obstacle_` substring
+    appears anywhere in the selection code."""
     src = (pathlib.Path(__file__).resolve().parents[1] / "consequence_select.py").read_text()
     assert "_obstacle_" not in src
+
+
+def test_guided_policy_hard_fails_missing_entities_into_fallback():
+    """Fix round 1: a payload without entities must be caught
+    (EntitiesMissingError) and routed to the legacy fallback with a logged
+    warning -- not silently degraded to the old fixed-slot mapping."""
+    src = (_REPO_ROOT / "openpi_guided" / "src" / "openpi" / "policies" / "guided_policy.py").read_text()
+    assert "except self._cseq.EntitiesMissingError as e:" in src
+    assert "logging.warning(" in src
+
+
+def test_build_features_does_not_silently_use_legacy_pseudo_slots():
+    """The old fixed-slot helper must be retained only as unused dead code
+    (never called by `build_features`)."""
+    src = (pathlib.Path(__file__).resolve().parents[1] / "consequence_select.py").read_text()
+    assert "_build_features_legacy_pseudo_slots" in src  # retained for reference
+    # build_features's own body must not call it.
+    fn_start = src.index("def build_features(")
+    fn_end = src.index("\ndef ", fn_start + 1)
+    assert "_build_features_legacy_pseudo_slots" not in src[fn_start:fn_end]
+
+
+def test_both_clients_use_one_shared_entity_resolution_helper():
+    """Fix round 1: the training-data source (--log_transitions) and the
+    inference-time guidance payload must be built from ONE shared
+    per-client helper so they can never drift apart."""
+    for fname in ("run_guided_libero_safety_eval.py", "run_guided_safelibero_pi05_eval.py"):
+        src = (_REPO_ROOT / "vlm_pipeline" / fname).read_text()
+        assert "def _resolve_entities(" in src
+        # Called at least twice: once for the guidance payload, once for
+        # --log_transitions logging.
+        assert src.count("_resolve_entities(") >= 3  # def + >=2 call sites
+        assert 'element["guidance"]["entities"]' in src
+        assert 'element["guidance"]["gripper_qpos"]' in src
 
 
 # --------------------------------------------------------------------------
@@ -283,7 +405,7 @@ def test_run_ensemble_select_end_to_end(tiny_ensemble_dir):
     models, norm = cs.load_ensemble_for_server(str(tiny_ensemble_dir), n_members=3)
     payload = {
         "eef_pos": [0.0, 0.0, 0.9],
-        "obstacle_pos": [0.03, 0.0, 0.9],
+        "entities": {"hazard_a": [0.03, 0.0, 0.9]},
     }
     k = 4
     disp = np.zeros((k, cs.H, 3))
@@ -304,7 +426,7 @@ def test_run_ensemble_select_latency_under_10ms(tiny_ensemble_dir):
     K=8, tiny dims, asserted < 10 ms on CPU. Not a benchmark -- a smoke
     bound; warms up once (first call pays torch/JIT-free import overhead)."""
     models, norm = cs.load_ensemble_for_server(str(tiny_ensemble_dir), n_members=3)
-    payload = {"eef_pos": [0.0, 0.0, 0.9], "obstacle_pos": [0.03, 0.0, 0.9]}
+    payload = {"eef_pos": [0.0, 0.0, 0.9], "entities": {"hazard_a": [0.03, 0.0, 0.9]}}
     k = 8
     disp = np.random.default_rng(0).normal(size=(k, cs.H, 3)) * 0.01
     feats = cs.build_features(payload, np.array([0.0, 0.0, 0.9]), disp, domain="LS")

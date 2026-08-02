@@ -326,11 +326,23 @@ class GuidedPolicy(_policy.Policy):
         )
         eef_pos = np.asarray(payload.get("eef_pos", np.zeros(3)), dtype=np.float32)
         disp = np.asarray(acc["disp"])  # (K, action_horizon, 3), metric world-frame
-        features = self._cseq.build_features(
-            payload, eef_pos, disp, cfg.consequence_domain,
-            action_scale=cfg.consequence_action_scale,
-            action_clip=cfg.consequence_action_clip,
-        )
+        try:
+            features = self._cseq.build_features(
+                payload, eef_pos, disp, cfg.consequence_domain,
+                action_scale=cfg.consequence_action_scale,
+                action_clip=cfg.consequence_action_clip,
+            )
+        except self._cseq.EntitiesMissingError as e:
+            # Fix round 1 (reviewer-mandated, binding): a payload without
+            # entity names is a HARD failure of the consequence-select path,
+            # not a silent degradation to a positional-only approximation.
+            # Route to the legacy selection exactly like an empty-feasible
+            # fallback, logging a warning so this is visible in server logs.
+            logging.warning("consequence_select: entities missing from guidance payload, "
+                             "falling back to legacy selection (%s)", e)
+            logging.info("consequence_select: %s",
+                         {"feasible": None, "chosen": None, "fallback": True})
+            return selected, diag
         result = self._cseq.run_ensemble_select(
             self._consequence_models, self._consequence_norm, features,
             pessimism=cfg.consequence_pessimism, threshold=cfg.consequence_threshold,

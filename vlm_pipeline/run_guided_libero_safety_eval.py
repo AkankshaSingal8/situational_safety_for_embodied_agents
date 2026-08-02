@@ -432,6 +432,24 @@ def _extend_guidance(payload, guard, pos_of, target, dest):
     return payload
 
 
+def _resolve_entities(cands, percep_pos, obs):
+    """name -> pos mapping over the identification candidate set `cands`,
+    from the runner's existing GT-tier live obs (fresh every step, tracks
+    :dynamics movers) or percep snapshot (static within the episode) — the
+    same source `_guard_pos` uses. ONE shared helper (fix round 1,
+    reviewer-mandated, binding: entity names+positions sent in the guidance
+    request payload, option (a)) called from BOTH the guidance-payload
+    construction and the `--log_transitions` logging block, so the training
+    data source and the server-side inference payload can never drift
+    apart. Pure (positions via the caller's `percep_pos`/`obs`); no I/O."""
+    out = {}
+    for name in cands:
+        p = percep_pos.get(name) if percep_pos is not None else obs.get(f"{name}_pos")
+        if p is not None:
+            out[name] = p
+    return out
+
+
 def _transition_record(task, ep, t, eef, grip, action, entities):
     """One `--log_transitions` JSONL record (pure, unit-testable).
 
@@ -903,6 +921,25 @@ def main():
                         _extend_guidance(element["guidance"], step_guard,
                                          _lead_anchor_pos,
                                          corridor_target, corridor_dest)
+                        # Additive keys for the server-side consequence-select
+                        # layer (spec 2026-08-01, Task 3 fix round 1): entity
+                        # NAMES + positions (server payload.get()s this;
+                        # absent/old servers ignore it, so this is a
+                        # backward-compatible addition) and gripper qpos, from
+                        # the SAME `_resolve_entities` helper the
+                        # `--log_transitions` block below uses, so the guided
+                        # server's inference-time slot construction can
+                        # reproduce `consequence_model.build_samples`'s
+                        # `sorted(entities)[:E]` training contract exactly.
+                        _ent = _resolve_entities(cands, percep_pos, obs)
+                        if _ent:
+                            element["guidance"]["entities"] = {
+                                str(_n): [float(_x) for _x in _p]
+                                for _n, _p in _ent.items()
+                            }
+                        element["guidance"]["gripper_qpos"] = [
+                            float(_x) for _x in obs["robot0_gripper_qpos"]
+                        ]
                     _res = client.infer(element)
                     chunk = np.asarray(_res["actions"][:args.replan_steps])
                     _diag = _res.get("guidance")
@@ -934,16 +971,13 @@ def main():
                     ep_actions.append(np.asarray(_a, dtype=np.float32))
                 obs, reward, done, info = env.step(_a.tolist())
                 if args.log_transitions:
-                    # Entity positions: the runner's existing GT-tier live obs
-                    # (fresh every step, tracks :dynamics movers) or percep
-                    # snapshot (static within the episode) — same source
-                    # `_guard_pos` uses, over the identification candidate set.
-                    _entities = {}
-                    for _name in cands:
-                        _p = (percep_pos.get(_name) if percep_pos is not None
-                              else obs.get(f"{_name}_pos"))
-                        if _p is not None:
-                            _entities[_name] = _p
+                    # Entity positions: shared `_resolve_entities` helper —
+                    # same source `_guard_pos` and the guidance-payload
+                    # construction above use, over the identification
+                    # candidate set (kept as ONE helper so this training
+                    # data source and the inference-time payload can never
+                    # drift apart, fix round 1).
+                    _entities = _resolve_entities(cands, percep_pos, obs)
                     # eef/grip are POST-step (s_{t+1}), paired here with the
                     # action that produced them: record[t].eef == obs after
                     # executing record[t].action. A consumer building

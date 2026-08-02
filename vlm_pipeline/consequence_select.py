@@ -15,47 +15,57 @@ ensemble (`load_ensemble_for_server`, `run_ensemble_select`), and those are
 only called by the server when `--consequence_select MODEL_DIR` is passed.
 
 --------------------------------------------------------------------------
-Known contract gap (documented per task-3-brief's "acceptable degradation
-for v1" allowance, flagged here as the LEAD concern for a follow-up task):
+Entity-slot contract (RESOLVED, fix round 1 -- was a documented v1 gap in
+the initial version of this module; see task-3-report.md for history):
 
 `consequence_model.py`'s binding entity-slot contract is
 `sorted(union of entity NAMES seen in the episode)[:8]` -- alphabetical by
 NAME, built from the named `entities` dict logged by `--log_transitions`.
-The guided server's `guidance` request payload (see
-`guided_policy.GuidedPolicy._make_params`) carries ONLY bare positions
-(`obstacle_pos`, `obstacle2`, `target_pos`, `dest_pos`) -- no entity NAMES at
-all. The server therefore CANNOT reproduce the training-time alphabetical
-slot ordering; there is no name information in the payload to sort by.
+The guided server's `guidance` request payload now carries the SAME named
+`entities` dict (`{name: [x, y, z]}`, plus `gripper_qpos: [q0, q1]`),
+attached by BOTH eval clients (`run_guided_libero_safety_eval.py`,
+`run_guided_safelibero_pi05_eval.py`) via a single shared per-client helper
+(`_resolve_entities`) that is also the source for their `--log_transitions`
+logging -- the training-data source and the inference-time payload cannot
+drift apart because they are literally the same function call. `build_features`
+reproduces `consequence_model.build_samples`'s slot construction exactly:
+`sorted(payload["entities"].keys())[:E]`, `rel = pos - eef`, `mask = 1` for
+populated slots.
 
-v1 approximation (this module): a FIXED, documented slot order --
-slot 0 = obstacle_pos (primary guard), slot 1 = obstacle2.pos (secondary
-guard), slot 2 = target_pos, slot 3 = dest_pos, slots 4-7 unused/zero-mask.
-Presence mask is 1 iff the corresponding key is present in the RAW request
-payload (before `GuidanceParams` defaulting fills in far-away sentinels).
-None of these are name-substring checks on entity identity (the kind this
-codebase's decision logic must never use) -- they are the server's own
-existing payload *keys*, unrelated to that restriction.
+**Hard-fail contract.** When `payload["entities"]` is missing or empty (e.g.
+an older client, or a request with `enabled=0`/no guard active), this is
+NOT silently degraded to a positional-only approximation -- `build_features`
+raises `EntitiesMissingError` and the caller (`GuidedPolicy._consequence_infer`)
+catches it, logs a WARNING, and routes the query to the existing (legacy)
+best-of-K selection unchanged, exactly like an empty-feasible-set fallback.
+The old FIXED 4-pseudo-slot mapping (obstacle/obstacle2/target/dest keyed
+off bare positions) is retained ONLY as `_build_features_legacy_pseudo_slots`
+below for reference/back-compat -- it is dead code, never called by
+`build_features` or any server path, and MUST NOT be reintroduced as a
+silent fallback (that was the reviewer finding this fix round resolves).
 
-Because the trunk (`consequence_model.ConsequenceModel`) is NOT
-permutation-invariant across slots (documented in its own module
-docstring), this fixed ordering is very likely off-distribution relative to
-training, which used the per-episode alphabetical name ordering. The
-CONTACT head in particular reads out per-slot, so `P(contact any)` computed
-via this fixed mapping should be treated as a first-pass approximation, not
-a calibrated estimate. Fixing this properly requires adding entity NAMES to
-the guidance request payload (client-side change, out of scope for this
-server-side task) so the slot order can be reconstructed exactly. This is
-called out again in the Task 3 report.
+**Mid-episode entity caveat.** The training-time slot order is the union of
+entity names over the WHOLE episode (`EpisodeRecords.entity_order`), so an
+entity that only becomes visible/relevant partway through an episode still
+occupies the same slot for every sample in that episode. At inference the
+payload's `entities` dict reflects only the CURRENT step's identification
+candidate set (`cands`/`entity_view(obs)`), which in this codebase's current
+clients is effectively static per episode (the candidate set is computed
+once near episode start and not recomputed mid-episode), so this
+distinction is currently moot in practice -- but a future client that
+recomputes candidates mid-episode (e.g. a mover entering the workspace
+partway through) could see slot 0 disagree between two requests in the same
+episode where training saw one fixed union; this is called out here should
+that ever become possible, not because it is possible today.
 --------------------------------------------------------------------------
 """
 
 from __future__ import annotations
 
-import json
 import pathlib
 import sys
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence
 
 import numpy as np
 
@@ -66,17 +76,46 @@ E = _cm.E  # 8 entity slots
 H = _cm.H  # 10-step action/path horizon
 DOMAINS = _cm.DOMAINS  # ("LS", "SL")
 
-# Fixed v1 slot order (see module docstring for the contract gap this
-# approximates). Only the first 4 of E=8 slots are ever populated.
-PSEUDO_SLOTS = ("obstacle", "obstacle2", "target", "dest")
+class EntitiesMissingError(RuntimeError):
+    """Raised by `build_features` when the guidance request payload has no
+    (non-empty) `entities` dict. Fix round 1 (reviewer-mandated, binding):
+    this is a HARD failure, not a silent degradation -- callers must catch
+    it and route the query to the existing (legacy) best-of-K selection,
+    logging a warning, exactly like an empty-feasible-set fallback. See
+    `GuidedPolicy._consequence_infer`."""
 
-# Payload key -> nested-position accessor for each pseudo-slot.
-_SLOT_KEYS = {
+
+# --------------------------------------------------------------------------
+# DEAD CODE, retained only for reference (fix round 1): the original v1
+# fixed 4-pseudo-slot mapping this module used before the guidance payload
+# carried entity names. NOT called by `build_features` or any server path.
+# Reintroducing this as a silent fallback for missing `entities` is exactly
+# the pattern the reviewer's fix-round-1 finding prohibits -- see
+# `EntitiesMissingError` and the module docstring's "Hard-fail contract".
+# --------------------------------------------------------------------------
+_LEGACY_PSEUDO_SLOTS = ("obstacle", "obstacle2", "target", "dest")
+_LEGACY_SLOT_KEYS = {
     "obstacle": lambda payload: payload.get("obstacle_pos"),
     "obstacle2": lambda payload: (payload.get("obstacle2") or {}).get("pos"),
     "target": lambda payload: payload.get("target_pos"),
     "dest": lambda payload: payload.get("dest_pos"),
 }
+
+
+def _build_features_legacy_pseudo_slots(payload: dict, eef_pos: np.ndarray) -> tuple:
+    """UNUSED (see module docstring / `EntitiesMissingError`). Kept only so
+    the pre-fix-round-1 slot construction is visible for reference; returns
+    (entity_rel (E,3), entity_mask (E,)) using the fixed obstacle/obstacle2/
+    target/dest payload-key mapping. Not wired into `build_features`."""
+    eef_pos = np.asarray(eef_pos, dtype=np.float64).reshape(3)
+    entity_rel = np.zeros((E, 3), dtype=np.float64)
+    entity_mask = np.zeros((E,), dtype=np.float64)
+    for slot, name in enumerate(_LEGACY_PSEUDO_SLOTS):
+        pos = _LEGACY_SLOT_KEYS[name](payload)
+        if pos is not None:
+            entity_rel[slot] = np.asarray(pos, dtype=np.float64).reshape(3) - eef_pos
+            entity_mask[slot] = 1.0
+    return entity_rel, entity_mask
 
 
 # --------------------------------------------------------------------------
@@ -172,6 +211,10 @@ def build_features(
 
     `payload`: the RAW guidance request dict (before `GuidanceParams`
     defaulting), so key presence reflects what the client actually sent.
+    Requires `payload["entities"]` (a non-empty `{name: [x, y, z]}` dict,
+    attached client-side by `_resolve_entities` -- see module docstring);
+    raises `EntitiesMissingError` if absent/empty (hard-fail, fix round 1 --
+    callers must catch this and fall back, not silently degrade).
     `eef_pos`: (3,) current end-effector position (same for every candidate
     -- it is the anchor state, not something denoising varies).
     `disp_window`: (K, >=H, 3) per-candidate per-step metric world-frame
@@ -184,11 +227,28 @@ def build_features(
     concern). `action_scale`/`action_clip` let a caller correct for this if
     the client's `_plan_actions` mode is known (0 clip = no clip).
 
-    NOTE (documented per task-3-brief): the guidance payload never carries
-    gripper qpos. `grip` is fed as zeros here -- there is no mask bit for it
-    in the model (grip is not maskable, unlike entity slots), so this is an
-    unconditional degraded input, accepted for v1.
+    Entity slots reproduce `consequence_model.build_samples`'s construction
+    exactly: `sorted(payload["entities"].keys())[:E]`, `rel = pos - eef`,
+    `mask = 1` for populated slots (remaining slots zero/mask=0) -- see
+    `consequence_model.EpisodeRecords.entity_order`.
+
+    `grip`: from `payload["gripper_qpos"]` when present (client-attached by
+    the same fix-round-1 change); zeros otherwise (grip has no mask bit in
+    the model, unlike entity slots, so a missing value is an unconditional
+    degraded input rather than a hard failure -- documented per
+    task-3-brief's "acceptable degradation for v1" allowance, unlike the
+    entities case above).
     """
+    if not payload.get("entities"):
+        raise EntitiesMissingError(
+            "guidance payload has no non-empty 'entities' dict -- "
+            "consequence-select requires entity names to reproduce "
+            "consequence_model's sorted(entities)[:E] training-time slot "
+            "ordering. Caller must fall back to the legacy selection path."
+        )
+    if domain not in DOMAINS:
+        raise ValueError(f"unknown domain {domain!r}; expected one of {DOMAINS}")
+
     eef_pos = np.asarray(eef_pos, dtype=np.float64).reshape(3)
     disp_window = np.asarray(disp_window, dtype=np.float64)
     k = disp_window.shape[0]
@@ -200,20 +260,21 @@ def build_features(
     if action_clip > 0:
         action_window = np.clip(action_window, -action_clip, action_clip)
 
+    names = sorted(payload["entities"].keys())[:E]
     entity_rel = np.zeros((E, 3), dtype=np.float64)
     entity_mask = np.zeros((E,), dtype=np.float64)
-    for slot, name in enumerate(PSEUDO_SLOTS):
-        pos = _SLOT_KEYS[name](payload)
-        if pos is not None:
-            entity_rel[slot] = np.asarray(pos, dtype=np.float64).reshape(3) - eef_pos
-            entity_mask[slot] = 1.0
+    for slot, name in enumerate(names):
+        pos = np.asarray(payload["entities"][name], dtype=np.float64).reshape(3)
+        entity_rel[slot] = pos - eef_pos
+        entity_mask[slot] = 1.0
 
-    if domain not in DOMAINS:
-        raise ValueError(f"unknown domain {domain!r}; expected one of {DOMAINS}")
+    grip_raw = payload.get("gripper_qpos")
+    grip = (np.asarray(grip_raw, dtype=np.float64).reshape(2)
+            if grip_raw is not None else np.zeros(2, dtype=np.float64))
 
     return dict(
         eef=np.broadcast_to(eef_pos, (k, 3)).copy(),
-        grip=np.zeros((k, 2), dtype=np.float64),
+        grip=np.broadcast_to(grip, (k, 2)).copy(),
         entity_rel=np.broadcast_to(entity_rel, (k, E, 3)).copy(),
         entity_mask=np.broadcast_to(entity_mask, (k, E)).copy(),
         domain=domain,

@@ -313,6 +313,20 @@ def obstacle_main_part_extents(sim, obstacle_name):
     return fit
 
 
+def _resolve_entities(entities_obs):
+    """name -> pos mapping from an `entity_view(obs)`-shaped dict: every
+    `_pos` key except robot0 proprio and `_to_` relative-vector keys — the
+    same filter the `--log_transitions` block already applied inline. ONE
+    shared helper (fix round 1, reviewer-mandated, binding: entity
+    names+positions sent in the guidance request payload, option (a))
+    called from BOTH the guidance-payload construction and the
+    `--log_transitions` logging block, so the training data source and the
+    server-side inference payload can never drift apart. Pure; no I/O."""
+    return {k[:-4]: v for k, v in entities_obs.items()
+            if k.endswith("_pos") and not k.startswith("robot0")
+            and "_to_" not in k}
+
+
 def _transition_record(task, ep, t, eef, grip, action, entities):
     """One `--log_transitions` JSONL record (pure, unit-testable).
 
@@ -858,6 +872,27 @@ def run_eval(args):
                             if stall_hdc_replans > 0:
                                 element["guidance"]["hdc_scale"] = HDC_OVERRIDE
                                 stall_hdc_replans -= 1
+                            # Additive keys for the server-side
+                            # consequence-select layer (spec 2026-08-01,
+                            # Task 3 fix round 1): entity NAMES + positions
+                            # (server payload.get()s this; older servers
+                            # ignore it) and gripper qpos, from the SAME
+                            # `_resolve_entities` helper the
+                            # `--log_transitions` block below uses, so the
+                            # guided server's inference-time slot
+                            # construction can reproduce
+                            # `consequence_model.build_samples`'s
+                            # `sorted(entities)[:E]` training contract
+                            # exactly.
+                            _ent = _resolve_entities(entity_view(obs))
+                            if _ent:
+                                element["guidance"]["entities"] = {
+                                    str(_n): [float(_x) for _x in _p]
+                                    for _n, _p in _ent.items()
+                                }
+                            element["guidance"]["gripper_qpos"] = [
+                                float(_x) for _x in obs["robot0_gripper_qpos"]
+                            ]
                         result = client.infer(element)
                         action_chunk = result["actions"][:REPLAN_STEPS]
                         diag = result.get("guidance")
@@ -964,14 +999,16 @@ def run_eval(args):
                         # Written LAST (after everything in this iteration
                         # that can still raise) so a mid-iteration exception
                         # -> `continue` retry can never re-log this `t` and
-                        # duplicate a (task, ep, t) key. Entity positions: the
-                        # runner's existing GT/percep position source
+                        # duplicate a (task, ep, t) key. Entity positions:
+                        # shared `_resolve_entities` helper — same source
                         # (entity_view() — GT tier is live obs, fresh every
                         # step; percep tier is the static episode-start
-                        # snapshot merged in by entity_view()).
-                        _entities = {k[:-4]: v for k, v in entity_view(obs).items()
-                                     if k.endswith("_pos") and not k.startswith("robot0")
-                                     and "_to_" not in k}
+                        # snapshot merged in by entity_view()) the guidance
+                        # payload construction above uses (kept as ONE
+                        # helper so this training data source and the
+                        # inference-time payload can never drift apart,
+                        # fix round 1).
+                        _entities = _resolve_entities(entity_view(obs))
                         # eef/grip are POST-step (s_{t+1}), paired here with
                         # the action that produced them: record[t].eef == obs
                         # after executing record[t].action. A consumer
