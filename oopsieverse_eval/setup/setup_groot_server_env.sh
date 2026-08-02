@@ -87,6 +87,124 @@ export UV_PROJECT_ENVIRONMENT="$ENV_PREFIX"
 # pyzmq is already a direct dependency in gr00t's own pyproject.toml
 # (pyzmq==27.0.1) -- installed by `uv sync` above, no separate step needed.
 
+# FIFTH root-cause fix (see groot_risk_gate_report.md -- this one is a real
+# runtime ABI mismatch, not another install-bootstrap ordering bug): the
+# prebuilt flash-attn wheel `uv sync` pulls in (built for cp310/linux_x86_64)
+# was compiled against glibc >= 2.32; Bridges2 GPU-shared compute nodes run
+# an older system glibc (2.28), so `import flash_attn` raises
+# `ImportError: /lib64/libc.so.6: version 'GLIBC_2.32' not found` at RUNTIME
+# on the actual GPU node (confirmed directly: `python -c "import flash_attn"`
+# reproduces this exact error in this venv). No amount of install-ordering
+# fixing helps here -- the compiled .so itself is binary-incompatible with
+# this cluster. Building from source instead was considered and rejected
+# (heavy CUDA-toolchain compile, likely to hit its own issues, too large a
+# lift for a risk-gate spike); a container was also rejected as overkill.
+#
+# Fix: uninstall flash-attn entirely. `transformers.utils.is_flash_attn_2_available()`
+# only checks package *presence* (`importlib.util.find_spec`) plus a CUDA
+# check -- it does NOT smoke-test-import the compiled extension -- so with
+# flash-attn present but broken, transformers' own guarded
+# `if is_flash_attn_2_available(): from flash_attn... import ...` in
+# modeling_flash_attention_utils.py (triggered merely by importing
+# transformers.modeling_utils, i.e. by ANY HF model use, independent of
+# per-model attn_implementation choice) evaluates True and crashes. With
+# flash-attn uninstalled, that check correctly returns False and the import
+# is skipped entirely. VERIFIED directly (not assumed) in this venv:
+# `is_flash_attn_2_available()` -> False, `'flash_attn' not in sys.modules`
+# holds through `import transformers.modeling_utils` and
+# `from gr00t.model.modules.eagle_backbone import EagleBackbone`.
+#
+# This alone is NOT sufficient, though: GR00T's own bundled
+# Eagle-Block2A-2B-v2 modeling code (gr00t/model/modules/nvidia/
+# Eagle-Block2A-2B-v2/modeling_eagle3_vl.py) hard-codes
+# `config.vision_config._attn_implementation = "flash_attention_2"` and
+# `assert config.text_config._attn_implementation == "flash_attention_2"`
+# UNCONDITIONALLY in its __init__ (bypassing the availability check
+# entirely) -- so even with flash-attn uninstalled, constructing the model
+# would still explicitly request flash_attention_2 and fail a proper
+# "flash_attn not available" check inside transformers instead. That file
+# has been hand-patched in this CLONE_DIR (search "OOPSIEVERSE PATCH") to
+# force "eager" instead -- pure-PyTorch, no compiled extension, adequate
+# for this non-degeneracy risk-gate spike (slower, not incorrect). This
+# patch lives only in the local clone's working tree (not upstream, not
+# committed to Isaac-GR00T's own git history) -- if CLONE_DIR is ever
+# deleted and re-cloned, gr00t_n1d6_eagle_patch.py below re-applies it.
+"$ENV_PREFIX/bin/python" -m pip uninstall -y flash-attn
+
+# Companion patch: the checkpoint's own saved Eagle-Block2A-2B-v2 config sets
+# the TOP-LEVEL config._attn_implementation to "flash_attention_2", which
+# transformers validates (and raises on) in `_autoset_attn_implementation`
+# BEFORE `Eagle3_VLForConditionalGeneration.__init__` (and its own patched
+# sub-config handling below) even runs -- so this needs forcing too, one
+# level up, in EagleBackbone itself.
+EAGLE_BACKBONE_FILE="$CLONE_DIR/gr00t/model/modules/eagle_backbone.py"
+if ! grep -q "OOPSIEVERSE PATCH" "$EAGLE_BACKBONE_FILE"; then
+    echo "Applying OOPSIEVERSE PATCH (force eager attention, top level) to $EAGLE_BACKBONE_FILE ..."
+    python3 - "$EAGLE_BACKBONE_FILE" <<'PYEOF'
+import sys
+
+path = sys.argv[1]
+text = open(path).read()
+old = (
+    '            config = AutoConfig.from_pretrained(eagle_path, trust_remote_code=True)\n'
+    '            self.model = AutoModel.from_config(config, trust_remote_code=True)\n'
+)
+new = (
+    '            config = AutoConfig.from_pretrained(eagle_path, trust_remote_code=True)\n'
+    '            config._attn_implementation = "eager"  # OOPSIEVERSE PATCH\n'
+    '            self.model = AutoModel.from_config(config, trust_remote_code=True, attn_implementation="eager")\n'
+)
+assert old in text, "expected source snippet not found -- upstream file may have changed"
+open(path, "w").write(text.replace(old, new))
+print("Patched.")
+PYEOF
+    grep -q "OOPSIEVERSE PATCH" "$EAGLE_BACKBONE_FILE" || {
+        echo "ERROR: OOPSIEVERSE PATCH did not apply to $EAGLE_BACKBONE_FILE -- check manually."
+        exit 1
+    }
+else
+    echo "OOPSIEVERSE PATCH already present in $EAGLE_BACKBONE_FILE -- skipping."
+fi
+
+EAGLE_MODELING_FILE="$CLONE_DIR/gr00t/model/modules/nvidia/Eagle-Block2A-2B-v2/modeling_eagle3_vl.py"
+if ! grep -q "OOPSIEVERSE PATCH" "$EAGLE_MODELING_FILE"; then
+    echo "Applying OOPSIEVERSE PATCH (force eager attention) to $EAGLE_MODELING_FILE ..."
+    python3 - "$EAGLE_MODELING_FILE" <<'PYEOF'
+import re
+import sys
+
+path = sys.argv[1]
+text = open(path).read()
+
+text = text.replace(
+    '            elif config.vision_config.model_type == "siglip_vision_model":\n'
+    '                config.vision_config._attn_implementation = "flash_attention_2"\n',
+    '            elif config.vision_config.model_type == "siglip_vision_model":\n'
+    '                # OOPSIEVERSE PATCH: forced eager, see setup_groot_server_env.sh\n'
+    '                config.vision_config._attn_implementation = "eager"\n',
+)
+text = text.replace(
+    '            elif config.vision_config.model_type == "siglip2_vision_model":\n'
+    '                config.vision_config._attn_implementation = "flash_attention_2"\n',
+    '            elif config.vision_config.model_type == "siglip2_vision_model":\n'
+    '                config.vision_config._attn_implementation = "eager"  # OOPSIEVERSE PATCH\n',
+)
+text = re.sub(
+    r'assert \(\s*config\.text_config\._attn_implementation == "flash_attention_2"\s*\), f"(Qwen[23]) must use flash_attention_2 but got \{config\.text_config\._attn_implementation\}"',
+    r'config.text_config._attn_implementation = "eager"  # OOPSIEVERSE PATCH',
+    text,
+)
+open(path, "w").write(text)
+print("Patched.")
+PYEOF
+    grep -q "OOPSIEVERSE PATCH" "$EAGLE_MODELING_FILE" || {
+        echo "ERROR: OOPSIEVERSE PATCH did not apply (source lines may have changed upstream) -- check $EAGLE_MODELING_FILE manually."
+        exit 1
+    }
+else
+    echo "OOPSIEVERSE PATCH already present in $EAGLE_MODELING_FILE -- skipping."
+fi
+
 mkdir -p "$HF_HOME"
 
 "$ENV_PREFIX/bin/python" -c "
