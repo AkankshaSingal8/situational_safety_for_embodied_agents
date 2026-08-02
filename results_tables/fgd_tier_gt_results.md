@@ -2895,3 +2895,24 @@ CAVEAT before trusting any --holding_disengage GPU arm: instrument one episode t
 abs(q0)+abs(q1) spans ~0–0.08 m on the live Panda gripper (band could otherwise be silently inert/always-on).
 Deployment: slot the promoted parity+gating config from dev gate 42899554 first; these predicates are the
 next lever if that gate leaves cells below baseline−2pp.
+
+## 2026-08-01 — Consequence-constrained steering: full code pipeline implemented + reviewed (task #43, pre-GPU)
+
+Design frozen in docs/superpowers/specs/2026-08-01-consequence-steering-design.md (FOL predicate consequences,
+constrained selection over K flow samples, CBF backstop; prior-art map: exact combination unpublished, nearest
+SafeDojo 2606.20698 is training-time). Code (commits 5b1947f..cb78d08, 149 CPU tests, per-task + whole-branch
+reviews + 3 fix rounds, 0 open findings):
+- --log_transitions in both eval clients (post-step eef convention documented; shared _resolve_entities feeds
+  logger AND guidance payload — train/inference features provably identical, parity-tested vs build_samples).
+- vlm_pipeline/consequence_model.py: GRU+MLP ensemble (3× ~34k params), heads path/contact/holding/progress;
+  per-domain single-integrator baselines (LS parity 2.0/0.025, SL 0.05/1.0); G1 gate evaluated PER-DOMAIN
+  (err_ratio<=0.5, AUC>=0.90, Spearman>=0.6 in every domain present).
+- vlm_pipeline/consequence_select.py + server wiring: --consequence_select MODEL_DIR; feasible =
+  P(contact HAZARD slots only) + 1.0*std <= 0.10 (final review caught+fixed target-slot aggregation that would
+  have defeated the mechanism); argmax progress among feasible; empty/malformed -> exact legacy fallback
+  (verbatim backstop). torch single-thread pinned (10.6s->ms footgun on 256-core nodes).
+- PINNED eval pairings (final-review corrected): E1 server += --consequence_domain LS --consequence_action_scale 0.5
+  --consequence_action_clip 0 (TS=2.0); E2 += --consequence_domain SL --consequence_action_scale 20.0
+  --consequence_action_clip 0 (TS=0.05, K=8 required — departs from K=1 board config, disclose in E2).
+  Mandate: E1 1-task smoke checks fallback rate first; tune pessimism/threshold before any NO-GO call.
+Queued: data job 42908475 (LS oa parity + SafeLIBERO Spatial L1, ~250 eps). Next: train+G1 -> E1/E2 -> verdict.
