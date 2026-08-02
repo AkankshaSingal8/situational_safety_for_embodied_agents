@@ -23,7 +23,7 @@ ENV_PREFIX=/ocean/projects/cis250185p/asingal/envs/oopsieverse_groot_srv
 mkdir -p /ocean/projects/cis250185p/asingal/slurm_logs
 
 module load anaconda3
-source "$(conda info --base)/etc/profile.d/conda.sh"
+module load cuda/12.6.1
 
 if [ ! -d "$ENV_PREFIX" ]; then
     echo "=== Building oopsieverse_groot_srv env (first run) ==="
@@ -32,7 +32,11 @@ else
     echo "=== Reusing existing oopsieverse_groot_srv env ==="
 fi
 
-conda activate "$ENV_PREFIX"
+# NOTE: ENV_PREFIX is a `uv`-managed venv (see setup_groot_server_env.sh's
+# postmortem on why plain conda+pip couldn't install this package), NOT a
+# conda env -- `conda activate` on this path would fail/misbehave since
+# there's no conda-meta/ here. Source its own venv activate script instead.
+source "$ENV_PREFIX/bin/activate"
 export HF_HOME=/ocean/projects/cis250185p/asingal/oopsieverse_eval_cache/hf
 
 python "$WORKTREE/oopsieverse_eval/eval/groot_risk_gate_spike.py"
