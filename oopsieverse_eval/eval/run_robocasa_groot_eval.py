@@ -102,7 +102,11 @@ def build_groot_obs(obs: dict, instruction: str) -> dict:
             "base_position": zeros3,  # base held still -- see module docstring
             "base_rotation": base_quat,
         },
-        "language": {"task_description": [[instruction]]},
+        # Key confirmed against nvidia/GR00T-N1.6-3B's processor_config.json
+        # modality_configs["robocasa_panda_omron"]["language"]["modality_keys"]
+        # (see groot_risk_gate_spike.py's same fix -- job 42911087 first hit
+        # this as a KeyError with the simplified "task_description" key).
+        "language": {"annotation.human.action.task_description": [[instruction]]},
     }
 
 

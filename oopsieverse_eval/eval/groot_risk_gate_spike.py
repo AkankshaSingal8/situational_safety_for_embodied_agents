@@ -94,7 +94,13 @@ def make_obs(rng: np.random.Generator, structured: bool, instruction: str) -> di
     return {
         "video": video,
         "state": state,
-        "language": {"task_description": [[instruction]]},
+        # Key must exactly match nvidia/GR00T-N1.6-3B's processor_config.json
+        # modality_configs["robocasa_panda_omron"]["language"]["modality_keys"]
+        # (confirmed by reading that file directly, and by gr00t_policy.py's
+        # check_observation() iterating self.modality_configs["language"]
+        # .modality_keys) -- NOT the simplified "task_description" this
+        # script first used, which fails validation with a KeyError.
+        "language": {"annotation.human.action.task_description": [[instruction]]},
     }
 
 

@@ -36,7 +36,7 @@ assumption, corrected after reading gr00t/policy/gr00t_policy.py directly):
                 "gripper_qpos": <B,T,2> float32,
                 "base_position": <B,T,3> float32,
                 "base_rotation": <B,T,4> float32 (quat)},
-      "language": {"task_description": [[str]] shape (B,1)},
+      "language": {"annotation.human.action.task_description": [[str]] shape (B,1)},
     }
 Response: `(action_dict, info_dict)` where action_dict has
     {"end_effector_position": <B,T,3>, "end_effector_rotation": <B,T,3>,
