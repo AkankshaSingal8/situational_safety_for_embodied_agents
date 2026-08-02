@@ -65,6 +65,36 @@ class GuidanceConfig:
     progress_weight: float = 0.0  # A1 directed-progress term in best-of-K selection
     lookahead_weight: float = 0.0  # C tail-margin (dead-end) term in best-of-K selection
     tilt_lambda: float = 0.0  # derived barrier-gradient guidance strength [m/denoise-step]
+    # Consequence-steering selection layer (spec 2026-08-01, Task 3). None =
+    # off (default): candidate selection is bit-exact identical to the
+    # pre-existing best-of-K path. When set to a MODEL_DIR, a torch
+    # consequence-model ensemble is loaded once at server start and used to
+    # re-score the K fully-denoised candidates BEFORE the existing
+    # (margin/progress) selection; falls back to the existing selection when
+    # the ensemble's feasible set is empty. See `vlm_pipeline/
+    # consequence_select.py` for the selection rule and its documented
+    # slot-ordering approximation.
+    consequence_select: str | None = None
+    consequence_n_members: int = 3
+    consequence_pessimism: float = 1.0  # lambda in feasible = p_mean + lambda*p_std <= threshold
+    consequence_threshold: float = 0.10
+    # Domain tag fed to the consequence model (see consequence_model.py's
+    # "Domain tag" design decision: "SL" = SafeLIBERO-calibrated actuation
+    # (translation_scale=0.05, cmd_clip=1.0 -- this server's plain defaults),
+    # "LS" = LIBERO-Safety exec-parity calibration (2.0, 0.025). The server
+    # cannot infer this from the request payload, so it is a fixed startup
+    # flag; default matches this server's own plain-default actuation model.
+    consequence_domain: str = "SL"
+    # Corrects for the mismatch between the pre-`_plan_actions` command this
+    # server can see (`_prefix_acceptance`'s per-step metric `disp`) and the
+    # POST-`_plan_actions` env-step `action` the consequence model was
+    # trained on (identity under --exec_parity, clip(chunk) under
+    # --raw_actions, clip(chunk*ACTION_TO_CMD) by default -- see
+    # run_guided_libero_safety_eval.py:_plan_actions). 1.0/0.0 = no
+    # correction (documented default; set to match the eval client's mode
+    # that produced the training transitions).
+    consequence_action_scale: float = 1.0
+    consequence_action_clip: float = 0.0  # 0 = no clip
 
 
 def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
@@ -148,6 +178,48 @@ class GuidedPolicy(_policy.Policy):
                 bound, static_argnames=("num_candidates", "prefix_len", "num_steps")
             )
             self._extra_sample_kwargs = {}
+
+        # --- Consequence-steering selection layer (Task 3) ---------------
+        self._consequence_models = None
+        self._consequence_norm = None
+        self._sample_actions_candidates = None
+        if config.consequence_select:
+            if config.num_candidates <= 1:
+                raise ValueError(
+                    "--consequence_select requires --num_candidates > 1 "
+                    f"(got {config.num_candidates}); there is nothing to "
+                    "select among with a single candidate."
+                )
+            if config.adjoint_steps > 0 or config.renoise_attempts > 0:
+                raise ValueError(
+                    "--consequence_select is only supported with the default "
+                    "in-denoising best-of-K selection path "
+                    f"(adjoint_steps={config.adjoint_steps}, "
+                    f"renoise_attempts={config.renoise_attempts}; both must be 0)."
+                )
+            import sys as _sys
+            import pathlib as _pathlib
+
+            _repo_root = _pathlib.Path(__file__).resolve().parents[4]
+            if str(_repo_root) not in _sys.path:
+                _sys.path.insert(0, str(_repo_root))
+            from vlm_pipeline import consequence_select as _cseq  # noqa: PLC0415
+
+            self._cseq = _cseq
+            self._consequence_models, self._consequence_norm = _cseq.load_ensemble_for_server(
+                config.consequence_select, n_members=config.consequence_n_members
+            )
+            logging.info(
+                "Consequence-select ensemble loaded from %s (%d members, domain=%s, "
+                "pessimism=%s, threshold=%s)",
+                config.consequence_select, config.consequence_n_members,
+                config.consequence_domain, config.consequence_pessimism, config.consequence_threshold,
+            )
+            bound_candidates = types.MethodType(guided_sample_actions, self._model)
+            self._sample_actions_candidates = nnx_utils.module_jit(
+                bound_candidates,
+                static_argnames=("num_candidates", "prefix_len", "num_steps", "return_candidates"),
+            )
 
     def _make_params(self, payload: dict | None) -> GuidanceParams:
         cfg = self._config
@@ -239,6 +311,49 @@ class GuidedPolicy(_policy.Policy):
                 "feasible_count": np.asarray([float(margin >= 0.0)], dtype=np.float32)}
         return chunk[None], diag
 
+    def _consequence_infer(self, rng, observation, guidance, payload, **sample_kwargs):
+        """Runs the K-candidate denoise (no collapse), scores all K with the
+        consequence ensemble, and either overrides the selection (feasible
+        set non-empty) or falls back to the existing legacy selection
+        verbatim (feasible set empty) — the backstop is exact-by-construction
+        since `selected`/`diag` below ARE the legacy `guided_sample_actions`
+        selection output, not a re-derivation of it."""
+        cfg = self._config
+        selected, diag, x_0, acc, last_diag = self._sample_actions_candidates(
+            rng, observation, guidance=guidance,
+            num_candidates=cfg.num_candidates, return_candidates=True,
+            **sample_kwargs,
+        )
+        eef_pos = np.asarray(payload.get("eef_pos", np.zeros(3)), dtype=np.float32)
+        disp = np.asarray(acc["disp"])  # (K, action_horizon, 3), metric world-frame
+        features = self._cseq.build_features(
+            payload, eef_pos, disp, cfg.consequence_domain,
+            action_scale=cfg.consequence_action_scale,
+            action_clip=cfg.consequence_action_clip,
+        )
+        result = self._cseq.run_ensemble_select(
+            self._consequence_models, self._consequence_norm, features,
+            pessimism=cfg.consequence_pessimism, threshold=cfg.consequence_threshold,
+        )
+        logging.info("consequence_select: %s", result.log_dict())
+
+        if result.fallback:
+            return selected, diag
+
+        idx = result.chosen
+        chosen_actions = np.asarray(x_0)[idx : idx + 1]
+        chosen_diag = {k: np.asarray(v)[idx : idx + 1] for k, v in last_diag.items()}
+        chosen_diag["selected_margin"] = np.asarray(acc["min_margin"])[idx : idx + 1]
+        chosen_diag["feasible_count"] = np.asarray([float(result.feasible_count)], dtype=np.float32)
+        chosen_diag["cand_disp"] = np.asarray(acc["net_disp"])  # (K, 3), all candidates — logged only
+        chosen_diag["cand_min_margin"] = np.asarray(acc["min_margin"])
+        chosen_diag["cand_best_idx"] = np.asarray([float(idx)], dtype=np.float32)
+        chosen_diag["consequence_p_mean"] = np.asarray([float(result.p_mean[idx])], dtype=np.float32)
+        chosen_diag["consequence_p_std"] = np.asarray([float(result.p_std[idx])], dtype=np.float32)
+        chosen_diag["consequence_progress"] = np.asarray([float(result.progress_mean[idx])], dtype=np.float32)
+        chosen_diag["consequence_fallback"] = np.asarray([0.0], dtype=np.float32)
+        return chosen_actions, chosen_diag
+
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]
         obs = dict(obs)
         payload = obs.get("guidance", None)
@@ -267,6 +382,11 @@ class GuidedPolicy(_policy.Policy):
         start = time.monotonic()
         if self._config.renoise_attempts > 0:
             actions, diag = self._renoise_infer(sample_rng, observation, guidance)
+        elif self._consequence_models is not None:
+            actions, diag = self._consequence_infer(
+                sample_rng, observation, guidance, payload if isinstance(payload, dict) else {},
+                **sample_kwargs,
+            )
         else:
             actions, diag = self._sample_actions(
                 sample_rng, observation, guidance=guidance,

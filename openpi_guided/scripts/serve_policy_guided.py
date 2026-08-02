@@ -69,6 +69,15 @@ class Args:
     progress_weight: float = 0.0
     lookahead_weight: float = 0.0
     tilt_lambda: float = 0.0
+    # Consequence-steering selection layer (spec 2026-08-01, Task 3).
+    # None (default) = off, byte-identical to the pre-existing selection.
+    consequence_select: str | None = None
+    consequence_n_members: int = 3
+    consequence_pessimism: float = 1.0
+    consequence_threshold: float = 0.10
+    consequence_domain: str = "SL"
+    consequence_action_scale: float = 1.0
+    consequence_action_clip: float = 0.0
 
 
 def main(args: Args) -> None:
@@ -109,6 +118,13 @@ def main(args: Args) -> None:
         progress_weight=args.progress_weight,
         lookahead_weight=args.lookahead_weight,
         tilt_lambda=args.tilt_lambda,
+        consequence_select=args.consequence_select,
+        consequence_n_members=args.consequence_n_members,
+        consequence_pessimism=args.consequence_pessimism,
+        consequence_threshold=args.consequence_threshold,
+        consequence_domain=args.consequence_domain,
+        consequence_action_scale=args.consequence_action_scale,
+        consequence_action_clip=args.consequence_action_clip,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)

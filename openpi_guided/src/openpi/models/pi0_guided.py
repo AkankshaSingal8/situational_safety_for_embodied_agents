@@ -494,7 +494,13 @@ def _prefix_acceptance(x_0: jnp.ndarray, g: GuidanceParams, prefix_len: int) -> 
     tail = b[:, prefix_len:] if b.shape[1] > prefix_len else b[:, prefix_len - 1:]
     tail_margin = jnp.min(tail, axis=1)
     return {"feasible": feasible, "min_margin": min_margin, "disp_norm": disp_norm,
-            "progress": progress, "tail_margin": tail_margin, "net_disp": net}
+            "progress": progress, "tail_margin": tail_margin, "net_disp": net,
+            # Full per-step metric world-frame displacement (K, H, 3) — added
+            # for the consequence-select layer (openpi_guided/src/openpi/
+            # policies/guided_policy.py), which needs a per-candidate action
+            # window rather than just the summed prefix displacement. Purely
+            # additive key; existing consumers only read the keys above.
+            "disp": disp}
 
 
 def _hdc_bias(g: GuidanceParams, k_batch: int) -> jnp.ndarray:
@@ -608,7 +614,8 @@ def guided_sample_actions(
     num_candidates: int = 1,
     prefix_len: int = 5,
     noise: at.Float[at.Array, "b ah ad"] | None = None,
-) -> tuple[_model.Actions, dict]:
+    return_candidates: bool = False,
+) -> tuple[_model.Actions, dict] | tuple[_model.Actions, dict, _model.Actions, dict, dict]:
     """`Pi0.sample_actions` with a DCBF repair after every Euler step.
 
     Bind to a loaded Pi0 instance via `types.MethodType(guided_sample_actions,
@@ -617,6 +624,16 @@ def guided_sample_actions(
     `_dcbf_repair` call inside the loop, so subsequent denoising steps adapt to
     the correction — the property that distinguishes in-generation guidance
     from post-hoc filtering.
+
+    `return_candidates` (static, default False): when True and `k_batch > 1`,
+    additionally returns the full pre-collapse candidate set
+    `(selected, diag, x_0, acc, last_diag)` so a host-level layer
+    (`consequence_select`, spec 2026-08-01) can override which candidate is
+    selected BEFORE this function's own argmax collapse — `selected`/`diag`
+    are still the existing legacy selection, untouched, so a caller that
+    finds no override applicable can return them verbatim as an exact
+    backstop. Default False preserves the original 2-tuple return exactly
+    (byte-identical off path).
     """
     observation = _model.preprocess_observation(None, observation, train=False)
     dt = -1.0 / num_steps
@@ -715,6 +732,8 @@ def guided_sample_actions(
     diag["cand_disp"] = acc["net_disp"]  # (K, 3)
     diag["cand_min_margin"] = acc["min_margin"]  # (K,)
     diag["cand_best_idx"] = jnp.broadcast_to(best.astype(jnp.float32), (1,))
+    if return_candidates:
+        return selected, diag, x_0, acc, last_diag
     return selected, diag
 
 
