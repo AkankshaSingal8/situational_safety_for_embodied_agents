@@ -77,14 +77,29 @@ Design decisions (documented per the brief):
   regression loss against the entity-distance scale in the summed
   multi-head loss. Un-normalizing multiplies back by `path_std` so G1's
   terminal-point-error metric is reported in meters.
-- **G1 unmeasurable vs failed.** `evaluate_g1` reports `n_near_entity_samples`,
-  `n_contact_positives`, `n_slots_scored`, `n_progress_labeled` alongside
-  each metric, and an `"unmeasurable"` flag: if a held-out split happens to
-  contain zero near-entity samples, zero contact positives, or fewer than 2
-  progress-labeled samples, the corresponding metric is NaN and the printed
-  verdict reads `G1: FAIL(unmeasurable)` rather than a bare `FAIL` — a
-  no-GO from an unmeasured metric (e.g. an unlucky/too-small held-out
-  split) must not be conflated with a no-GO from a genuinely bad model,
+- **G1 per-domain gating (fix round 1, reviewer-mandated, binding).** The LS
+  and SL data-collection servers run at DIFFERENT single-integrator
+  calibrations (see `BASELINE_CONFIG`), so G1 metric (a) must not compare a
+  domain's samples against the other domain's baseline. `evaluate_g1`
+  computes all three G1 metrics SEPARATELY per domain present in the
+  held-out set (`report["per_domain"][domain]`, each gated against the
+  same fixed thresholds using that domain's own baseline calibration for
+  metric (a)) plus a pooled cut (`report["pooled"]`, informational only —
+  its metric (a) still uses each pooled sample's own domain calibration,
+  so it is well-defined, just not what the gate decision is based on). The
+  overall gate verdict (`report["pass"]`) is True iff EVERY domain present
+  passes its own thresholds; one `G1[<domain>]: ...` line is printed per
+  domain plus a final overall `G1: ...` line.
+- **G1 unmeasurable vs failed.** Each per-domain (and the pooled) metrics
+  dict reports `n_near_entity_samples`, `n_contact_positives`,
+  `n_slots_scored`, `n_progress_labeled` alongside each metric, and an
+  `"unmeasurable"` flag: if a held-out split happens to contain zero
+  near-entity samples, zero contact positives, or fewer than 2
+  progress-labeled samples (for that domain, or overall), the corresponding
+  metric is NaN and the printed verdict reads `FAIL(unmeasurable)` rather
+  than a bare `FAIL` — a no-GO from an unmeasured metric (e.g. an
+  unlucky/too-small held-out split, or a domain absent from held-out
+  entirely) must not be conflated with a no-GO from a genuinely bad model,
   since G1 failing halts all downstream GPU spend (design doc §5).
 - **GRU vs flattened-MLP.** GRU over the H action steps: chosen because H
   is fixed at 10 (so either works) but a recurrent trunk generalizes to
@@ -131,12 +146,33 @@ CONTACT_DIST = 0.05  # meters
 HOLD_LO, HOLD_HI = 0.002, 0.045
 DOMAINS = ("LS", "SL")
 
-# Calibrated single-integrator baseline (matches the guided-server barrier's
-# rollout model; see contextual_predictive_filter.py filter_chunk()).
-BASELINE_TRANSLATION_SCALE = 2.0
-BASELINE_CMD_CLIP = 0.025
+# Calibrated single-integrator baseline: (translation_scale, cmd_clip) PER
+# DOMAIN. Only the LS-domain data-collection server runs exec-parity-guided
+# (2.0, 0.025) -- see the "Guidance-arm note" in
+# run_guided_libero_safety_eval.py:587-591 (--exec_parity's promoted
+# guidance-arm config). SafeLIBERO-domain servers run
+# openpi_guided/scripts/serve_policy_guided.py's PLAIN DEFAULTS
+# (translation_scale=0.05, cmd_clip=1.0) -- exactly
+# contextual_predictive_filter.PredictiveFilterConfig's defaults
+# (translation_scale=0.050, max_translation_command=1.0), which is why that
+# module is the correct citation for the SL regime specifically, not the LS
+# one. Using the LS constants uniformly against SL-domain samples would
+# compare the model to the WRONG actuation model on that domain (reviewer
+# finding, fix round 1).
+BASELINE_CONFIG = {
+    "LS": (2.0, 0.025),
+    "SL": (0.05, 1.0),
+}
+BASELINE_TRANSLATION_SCALE, BASELINE_CMD_CLIP = BASELINE_CONFIG["LS"]  # back-compat default
 NEAR_ENTITY_RADIUS = 0.25  # G1 restricts the terminal-error comparison to
                             # samples with any entity within this radius
+
+
+def baseline_params_for_domain(domain: str) -> Tuple[float, float]:
+    """(translation_scale, cmd_clip) for `domain`; falls back to the LS
+    calibration for any domain not in BASELINE_CONFIG (defensive; DOMAINS
+    is currently exactly {LS, SL})."""
+    return BASELINE_CONFIG.get(domain, BASELINE_CONFIG["LS"])
 
 
 def _require_torch():
@@ -645,9 +681,15 @@ def single_integrator_terminal(
     cmd_clip: float = BASELINE_CMD_CLIP,
 ) -> np.ndarray:
     """Calibrated single-integrator baseline terminal displacement (relative
-    to the anchor eef), matching contextual_predictive_filter.filter_chunk's
-    rollout model: clip(action[:3], +-cmd_clip) * translation_scale, cumsum.
-    `action_window` shape (H, 3) or (N, H, 3)."""
+    to the anchor eef): clip(action[:3], +-cmd_clip) * translation_scale,
+    cumsum. Same rollout SHAPE as contextual_predictive_filter.filter_chunk,
+    but the (2.0, 0.025) LS default here is calibrated from the exec-parity
+    guidance-arm note in run_guided_libero_safety_eval.py:587-591, not from
+    contextual_predictive_filter.py (whose defaults, translation_scale=0.05/
+    max_translation_command=1.0, are instead the correct SL-domain
+    calibration -- see BASELINE_CONFIG / baseline_params_for_domain(), which
+    callers should use instead of these LS-only defaults when the sample's
+    domain is known). `action_window` shape (H, 3) or (N, H, 3)."""
     clipped = np.clip(action_window, -cmd_clip, cmd_clip)
     deltas = clipped * translation_scale
     cum = np.cumsum(deltas, axis=-2)
@@ -712,6 +754,133 @@ def _spearman(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.corrcoef(ra, rb)[0, 1])
 
 
+def _ok(v, thresh, ge=True):
+    if v is None or (isinstance(v, float) and math.isnan(v)):
+        return False
+    return v >= thresh if ge else v <= thresh
+
+
+def _g1_metrics_for_subset(
+    indices: np.ndarray,
+    held_samples: Sequence[Sample],
+    mean_path: np.ndarray,
+    mean_contact_prob: np.ndarray,
+    mean_progress: np.ndarray,
+    norm: NormStats,
+    err_ratio_thresh: float,
+    auc_thresh: float,
+    spearman_thresh: float,
+) -> dict:
+    """G1 metrics (a)/(b)/(c) + denominators + pass/unmeasurable for the
+    subset of `held_samples` at `indices`. The single-integrator baseline
+    for metric (a) uses EACH sample's OWN domain calibration
+    (`baseline_params_for_domain`), so this is correct whether `indices`
+    selects a single domain or is the full pooled set (reviewer fix round
+    1: a uniform LS-calibrated baseline was wrong for SL-domain samples)."""
+    n = len(indices)
+    out = {"n_samples": n}
+    if n == 0:
+        out.update({
+            "median_terminal_error_model": float("nan"),
+            "median_terminal_error_baseline": float("nan"),
+            "n_near_entity_samples": 0, "err_ratio": float("nan"),
+            "n_contact_positives": 0, "n_slots_scored": 0, "auc": float("nan"),
+            "n_progress_labeled": 0, "spearman": float("nan"),
+            "unmeasurable": True, "pass": False,
+        })
+        return out
+
+    sub_samples = [held_samples[i] for i in indices]
+    sub_path = mean_path[indices]
+    sub_contact_prob = mean_contact_prob[indices]
+    sub_progress = mean_progress[indices]
+
+    # --- (a) terminal-point error vs domain-calibrated single-integrator,
+    # restricted to samples with any entity within NEAR_ENTITY_RADIUS.
+    model_terminal = sub_path[:, -1, :] * norm.path_std  # back to meters
+    near_mask = []
+    baseline_terminal = np.zeros((n, 3))
+    realized_terminal = np.zeros((n, 3))
+    for k, s in enumerate(sub_samples):
+        dists = np.linalg.norm(s.entity_rel * s.entity_mask[:, None], axis=-1)
+        present = s.entity_mask.astype(bool)
+        near = bool(present.any() and (dists[present] < NEAR_ENTITY_RADIUS).any())
+        near_mask.append(near)
+        scale, clip = baseline_params_for_domain(s.domain)
+        baseline_terminal[k] = single_integrator_terminal(
+            s.action_window, translation_scale=scale, cmd_clip=clip)
+        realized_terminal[k] = s.path_target[-1]
+    near_mask = np.array(near_mask)
+
+    if near_mask.any():
+        model_err = np.linalg.norm(
+            model_terminal[near_mask] - realized_terminal[near_mask], axis=-1)
+        baseline_err = np.linalg.norm(
+            baseline_terminal[near_mask] - realized_terminal[near_mask], axis=-1)
+        med_model = float(np.median(model_err))
+        med_baseline = float(np.median(baseline_err))
+        err_ratio = med_model / med_baseline if med_baseline > 0 else float("nan")
+    else:
+        med_model = med_baseline = err_ratio = float("nan")
+
+    # --- (b) CONTACT AUC pooled over slots with any positive.
+    c_target = np.stack([s.contact_target for s in sub_samples])
+    c_mask = np.stack([s.contact_mask for s in sub_samples])
+    n_contact_positives = int(c_target[c_mask.astype(bool)].sum())
+    n_slots_scored = 0
+    flat_scores, flat_labels = [], []
+    for e in range(E):
+        m = c_mask[:, e].astype(bool)
+        if not m.any():
+            continue
+        if c_target[m, e].sum() == 0:
+            continue  # no positives in this slot; skip (pooled AUC needs both classes)
+        n_slots_scored += 1
+        flat_scores.append(sub_contact_prob[m, e])
+        flat_labels.append(c_target[m, e])
+    if flat_scores:
+        auc = _roc_auc(np.concatenate(flat_scores), np.concatenate(flat_labels))
+    else:
+        auc = float("nan")
+
+    # --- (c) Spearman(progress pred, realized) over progress-labeled samples.
+    p_mask = np.array([s.progress_mask for s in sub_samples], dtype=bool)
+    p_target = np.array([s.progress_target for s in sub_samples])
+    n_progress_labeled = int(p_mask.sum())
+    if n_progress_labeled >= 2:
+        spearman = _spearman(sub_progress[p_mask], p_target[p_mask])
+    else:
+        spearman = float("nan")
+
+    err_ok = _ok(err_ratio, err_ratio_thresh, ge=False)
+    auc_ok = _ok(auc, auc_thresh, ge=True)
+    spearman_ok = _ok(spearman, spearman_thresh, ge=True)
+    verdict = bool(err_ok and auc_ok and spearman_ok)
+    unmeasurable = any(isinstance(v, float) and math.isnan(v)
+                        for v in (err_ratio, auc, spearman))
+
+    out.update({
+        "median_terminal_error_model": med_model,
+        "median_terminal_error_baseline": med_baseline,
+        "n_near_entity_samples": int(near_mask.sum()),
+        "n_contact_positives": n_contact_positives,
+        "n_slots_scored": n_slots_scored,
+        "n_progress_labeled": n_progress_labeled,
+        "err_ratio": err_ratio,
+        "auc": auc,
+        "spearman": spearman,
+        "unmeasurable": unmeasurable,
+        "pass": verdict,
+    })
+    return out
+
+
+def _g1_tag(metrics: dict) -> str:
+    if metrics["pass"]:
+        return "PASS"
+    return "FAIL(unmeasurable)" if metrics.get("unmeasurable") else "FAIL"
+
+
 def evaluate_g1(
     held_samples: Sequence[Sample],
     models: Sequence["ConsequenceModel"],
@@ -720,19 +889,34 @@ def evaluate_g1(
     auc_thresh: float = 0.90,
     spearman_thresh: float = 0.6,
 ) -> dict:
-    """Computes G1 offline metrics on held-out samples and returns the report
-    dict (also the payload written to g1_report.json). Ensemble prediction =
-    mean over members for path/progress, mean-of-probabilities for contact
-    and holding."""
+    """Computes G1 offline metrics on held-out samples, PER-DOMAIN (each
+    domain gated against its own thresholds using ITS OWN single-integrator
+    baseline calibration -- LS and SL data-collection servers run at
+    different (translation_scale, cmd_clip), see BASELINE_CONFIG), plus a
+    pooled cut for information only. Returns the report dict (also the
+    payload written to g1_report.json). Overall gate verdict ("pass") is
+    True iff EVERY domain present in `held_samples` passes its own
+    thresholds. Ensemble prediction = mean over members for path/progress,
+    mean-of-probabilities for contact and holding."""
     _require_torch()
+    thresh_kwargs = dict(err_ratio_thresh=err_ratio_thresh, auc_thresh=auc_thresh,
+                          spearman_thresh=spearman_thresh)
     n = len(held_samples)
     report = {
         "n_samples": n,
-        "err_ratio": None, "auc": None, "spearman": None,
+        "domains_present": [],
+        "per_domain": {},
+        "pooled": _g1_metrics_for_subset(
+            np.array([], dtype=int), held_samples, np.zeros((0, H, 3)),
+            np.zeros((0, E)), np.zeros((0,)), norm, **thresh_kwargs),
+        "err_ratio_thresh": err_ratio_thresh,
+        "auc_thresh": auc_thresh,
+        "spearman_thresh": spearman_thresh,
         "unmeasurable": True,
         "pass": False,
     }
     if n == 0:
+        print("G1: FAIL(unmeasurable) (no held-out samples)")
         return report
 
     batch = samples_to_tensors(held_samples, norm)
@@ -751,92 +935,42 @@ def evaluate_g1(
     mean_contact_prob = np.mean(contact_probs, axis=0)  # (N, E)
     mean_progress = np.mean(progresses, axis=0)  # (N,)
 
-    # --- (a) terminal-point error vs single-integrator, restricted to
-    # samples with any entity within NEAR_ENTITY_RADIUS of the anchor eef.
-    model_terminal = mean_path[:, -1, :] * norm.path_std  # back to meters
-    near_mask = []
-    baseline_terminal = np.zeros((n, 3))
-    realized_terminal = np.zeros((n, 3))
-    for k, s in enumerate(held_samples):
-        dists = np.linalg.norm(s.entity_rel * s.entity_mask[:, None], axis=-1)
-        present = s.entity_mask.astype(bool)
-        near = bool(present.any() and (dists[present] < NEAR_ENTITY_RADIUS).any())
-        near_mask.append(near)
-        baseline_terminal[k] = single_integrator_terminal(s.action_window)
-        realized_terminal[k] = s.path_target[-1]
-    near_mask = np.array(near_mask)
+    domains_present = sorted({s.domain for s in held_samples})
+    all_idx = np.arange(n)
+    pooled = _g1_metrics_for_subset(
+        all_idx, held_samples, mean_path, mean_contact_prob, mean_progress,
+        norm, **thresh_kwargs)
 
-    if near_mask.any():
-        model_err = np.linalg.norm(
-            model_terminal[near_mask] - realized_terminal[near_mask], axis=-1)
-        baseline_err = np.linalg.norm(
-            baseline_terminal[near_mask] - realized_terminal[near_mask], axis=-1)
-        med_model = float(np.median(model_err))
-        med_baseline = float(np.median(baseline_err))
-        err_ratio = med_model / med_baseline if med_baseline > 0 else float("nan")
-    else:
-        med_model = med_baseline = err_ratio = float("nan")
+    per_domain = {}
+    for dom in domains_present:
+        dom_idx = np.array([i for i, s in enumerate(held_samples) if s.domain == dom])
+        per_domain[dom] = _g1_metrics_for_subset(
+            dom_idx, held_samples, mean_path, mean_contact_prob, mean_progress,
+            norm, **thresh_kwargs)
 
-    # --- (b) CONTACT AUC pooled over slots with any positive.
-    c_target = np.stack([s.contact_target for s in held_samples])
-    c_mask = np.stack([s.contact_mask for s in held_samples])
-    n_contact_positives = int(c_target[c_mask.astype(bool)].sum())
-    n_slots_scored = 0
-    flat_scores, flat_labels = [], []
-    for e in range(E):
-        m = c_mask[:, e].astype(bool)
-        if not m.any():
-            continue
-        if c_target[m, e].sum() == 0:
-            continue  # no positives in this slot; skip (pooled AUC needs both classes)
-        n_slots_scored += 1
-        flat_scores.append(mean_contact_prob[m, e])
-        flat_labels.append(c_target[m, e])
-    if flat_scores:
-        auc = _roc_auc(np.concatenate(flat_scores), np.concatenate(flat_labels))
-    else:
-        auc = float("nan")
-
-    # --- (c) Spearman(progress pred, realized) over progress-labeled samples.
-    p_mask = np.array([s.progress_mask for s in held_samples], dtype=bool)
-    p_target = np.array([s.progress_target for s in held_samples])
-    n_progress_labeled = int(p_mask.sum())
-    if n_progress_labeled >= 2:
-        spearman = _spearman(mean_progress[p_mask], p_target[p_mask])
-    else:
-        spearman = float("nan")
-
-    def _ok(v, thresh, ge=True):
-        if v is None or (isinstance(v, float) and math.isnan(v)):
-            return False
-        return v <= thresh if not ge else v >= thresh
-
-    err_ok = _ok(err_ratio, err_ratio_thresh, ge=False)
-    auc_ok = _ok(auc, auc_thresh, ge=True)
-    spearman_ok = _ok(spearman, spearman_thresh, ge=True)
-    verdict = bool(err_ok and auc_ok and spearman_ok)
-    unmeasurable = any(isinstance(v, float) and math.isnan(v)
-                        for v in (err_ratio, auc, spearman))
+    overall_pass = bool(domains_present) and all(per_domain[d]["pass"] for d in domains_present)
+    overall_unmeasurable = (not domains_present) or any(
+        per_domain[d]["unmeasurable"] for d in domains_present)
 
     report.update({
-        "median_terminal_error_model": med_model,
-        "median_terminal_error_baseline": med_baseline,
-        "n_near_entity_samples": int(near_mask.sum()),
-        "n_contact_positives": n_contact_positives,
-        "n_slots_scored": n_slots_scored,
-        "n_progress_labeled": n_progress_labeled,
-        "err_ratio": err_ratio,
-        "auc": auc,
-        "spearman": spearman,
-        "unmeasurable": unmeasurable,
-        "err_ratio_thresh": err_ratio_thresh,
-        "auc_thresh": auc_thresh,
-        "spearman_thresh": spearman_thresh,
-        "pass": verdict,
+        "domains_present": domains_present,
+        "per_domain": per_domain,
+        "pooled": pooled,
+        "unmeasurable": overall_unmeasurable,
+        "pass": overall_pass,
     })
-    tag = "FAIL(unmeasurable)" if (unmeasurable and not verdict) else ("PASS" if verdict else "FAIL")
-    print(f"G1: {tag} "
-          f"err_ratio={err_ratio:.4f} auc={auc:.4f} spearman={spearman:.4f}")
+
+    for dom in domains_present:
+        m = per_domain[dom]
+        print(f"G1[{dom}]: {_g1_tag(m)} "
+              f"err_ratio={m['err_ratio']:.4f} auc={m['auc']:.4f} "
+              f"spearman={m['spearman']:.4f} (n={m['n_samples']})")
+    overall_tag = "FAIL(unmeasurable)" if (overall_unmeasurable and not overall_pass) \
+        else ("PASS" if overall_pass else "FAIL")
+    print(f"G1: {overall_tag} "
+          f"pooled_err_ratio={pooled['err_ratio']:.4f} "
+          f"pooled_auc={pooled['auc']:.4f} pooled_spearman={pooled['spearman']:.4f} "
+          f"domains={domains_present}")
     return report
 
 

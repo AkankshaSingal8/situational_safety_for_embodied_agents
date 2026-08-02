@@ -295,6 +295,37 @@ def test_single_integrator_terminal_batched():
 
 
 # --------------------------------------------------------------------------
+# Per-domain baseline calibration (fix round 1, reviewer IMPORTANT 1)
+# --------------------------------------------------------------------------
+
+def test_baseline_config_has_ls_and_sl():
+    assert cm.BASELINE_CONFIG["LS"] == (2.0, 0.025)
+    assert cm.BASELINE_CONFIG["SL"] == (0.05, 1.0)
+
+
+def test_baseline_params_for_domain():
+    assert cm.baseline_params_for_domain("LS") == (2.0, 0.025)
+    assert cm.baseline_params_for_domain("SL") == (0.05, 1.0)
+
+
+def test_single_integrator_terminal_domain_calibration_differs():
+    # Same raw action window, LS vs SL calibration -> different terminal
+    # displacement, because the two domains' data-collection servers run
+    # different (translation_scale, cmd_clip). This is the exact bug the
+    # reviewer flagged: a uniform baseline was wrong for SL-domain samples.
+    window = np.tile(np.array([0.5, 0.5, 0.5]), (cm.H, 1))  # saturates both clips
+    ls_scale, ls_clip = cm.baseline_params_for_domain("LS")
+    sl_scale, sl_clip = cm.baseline_params_for_domain("SL")
+    ls_terminal = cm.single_integrator_terminal(window, ls_scale, ls_clip)
+    sl_terminal = cm.single_integrator_terminal(window, sl_scale, sl_clip)
+    assert not np.allclose(ls_terminal, sl_terminal)
+    # Hand-computed: clip(0.5, +-0.025)*2.0*H = 0.025*2.0*10 = 0.5 per axis (LS)
+    assert np.allclose(ls_terminal, np.full(3, 0.025 * 2.0 * cm.H))
+    # clip(0.5, +-1.0)*0.05*H = 0.5*0.05*10 = 0.25 per axis (SL, unclipped)
+    assert np.allclose(sl_terminal, np.full(3, 0.5 * 0.05 * cm.H))
+
+
+# --------------------------------------------------------------------------
 # Split determinism
 # --------------------------------------------------------------------------
 
@@ -461,11 +492,158 @@ def test_smoke_train_loss_decreases_and_g1_emitted(tmp_path):
 
     assert (out_dir / "consequence_model_member0.pt").exists()
     assert g1_report_path.exists()
-    assert "pass" in report and "err_ratio" in report and "auc" in report \
-        and "spearman" in report
-    assert report["n_near_entity_samples"] > 0
-    assert report["n_contact_positives"] > 0
-    assert report["n_slots_scored"] > 0
-    assert math.isfinite(report["err_ratio"]), report
-    assert math.isfinite(report["auc"]), report
+    assert "pass" in report and "domains_present" in report \
+        and "per_domain" in report and "pooled" in report
+    # All fixture episodes are LS-domain (filename "transitions_obstacle_
+    # avoidance_L0.jsonl" -> infer_domain -> "LS").
+    assert report["domains_present"] == ["LS"]
+    ls = report["per_domain"]["LS"]
+    for m in (ls, report["pooled"]):
+        assert "err_ratio" in m and "auc" in m and "spearman" in m
+        assert m["n_near_entity_samples"] > 0
+        assert m["n_contact_positives"] > 0
+        assert m["n_slots_scored"] > 0
+        assert math.isfinite(m["err_ratio"]), m
+        assert math.isfinite(m["auc"]), m
+        assert isinstance(m["unmeasurable"], bool)
     assert isinstance(report["unmeasurable"], bool)
+    assert report["pass"] == ls["pass"]  # single domain -> gate == that domain's verdict
+
+
+# --------------------------------------------------------------------------
+# Fix round 1 (reviewer): per-domain G1 gating, n==0 reporting, CLI coverage
+# --------------------------------------------------------------------------
+
+def test_evaluate_g1_domain_separated_baseline():
+    """Constructs Sample objects directly (bypassing build_samples/training)
+    for two domains with IDENTICAL action_window/path_target but different
+    `domain` tags, and checks that evaluate_g1 (a) reports both domains
+    separately under report["per_domain"], (b) uses each domain's OWN
+    single-integrator baseline calibration for metric (a) -- the exact bug
+    the reviewer flagged (a uniform LS-calibrated baseline compared against
+    SL-domain samples)."""
+    pytest.importorskip("torch")
+
+    def make_sample(domain, offset, contact):
+        entity_rel = np.zeros((cm.E, 3))
+        entity_mask = np.zeros((cm.E,))
+        entity_rel[0] = offset
+        entity_mask[0] = 1.0
+        contact_target = np.zeros((cm.E,))
+        contact_mask = np.zeros((cm.E,))
+        contact_mask[0] = 1.0
+        contact_target[0] = 1.0 if contact else 0.0
+        action_window = np.full((cm.H, 3), 0.01)
+        path_target = np.cumsum(np.full((cm.H, 3), 0.005), axis=0)
+        names = ["hz"] + [""] * (cm.E - 1)
+        return cm.Sample(
+            episode_key=("f", 0, 0), domain=domain, task=0,
+            eef=np.zeros(3), grip=np.array([0.02, 0.02]),
+            entity_rel=entity_rel, entity_mask=entity_mask, entity_names=names,
+            action_window=action_window, path_target=path_target,
+            contact_target=contact_target, contact_mask=contact_mask,
+            holding_target=1.0, progress_target=0.0, progress_mask=0.0,
+        )
+
+    samples = [
+        make_sample("LS", (0.02, 0.0, 0.0), True),
+        make_sample("LS", (0.15, 0.0, 0.0), False),
+        make_sample("SL", (0.02, 0.0, 0.0), True),
+        make_sample("SL", (0.15, 0.0, 0.0), False),
+    ]
+    norm = cm.compute_norm_stats(samples)
+    model = cm.ConsequenceModel()
+    report = cm.evaluate_g1(samples, [model], norm)
+
+    assert report["domains_present"] == ["LS", "SL"]
+    assert set(report["per_domain"].keys()) == {"LS", "SL"}
+    for dom in ("LS", "SL"):
+        m = report["per_domain"][dom]
+        assert m["n_samples"] == 2
+        assert m["n_near_entity_samples"] == 2
+        assert m["n_contact_positives"] == 1
+    assert report["pooled"]["n_samples"] == 4
+
+    ls_baseline_err = report["per_domain"]["LS"]["median_terminal_error_baseline"]
+    sl_baseline_err = report["per_domain"]["SL"]["median_terminal_error_baseline"]
+    # Hand-computed with action_window=0.01/step constant, path_target=
+    # cumsum(0.005/step) -> realized terminal = (0.05,0.05,0.05):
+    #   LS: clip(0.01,+-0.025)*2.0*10 = 0.2/axis -> baseline err = ||0.15||*sqrt(3) ~ 0.2598
+    #   SL: clip(0.01,+-1.0)*0.05*10 = 0.005/axis -> baseline err = ||-0.045||*sqrt(3) ~ 0.0779
+    assert ls_baseline_err > sl_baseline_err
+    assert abs(ls_baseline_err - 0.2598) < 1e-3
+    assert abs(sl_baseline_err - 0.0779) < 1e-3
+
+
+def test_evaluate_g1_zero_samples_prints_and_reports_fields(capsys):
+    pytest.importorskip("torch")
+    norm = cm.NormStats(rel_mean=np.zeros(3), rel_std=np.ones(3), path_std=np.ones(3),
+                         action_mean=np.zeros(3), action_std=np.ones(3))
+    model = cm.ConsequenceModel()
+    report = cm.evaluate_g1([], [model], norm)
+    captured = capsys.readouterr()
+    assert "G1:" in captured.out  # MINOR 4: n==0 must still print a G1 line
+    assert report["n_samples"] == 0
+    assert report["domains_present"] == []
+    assert report["per_domain"] == {}
+    assert report["pooled"]["n_samples"] == 0
+    assert report["pooled"]["n_near_entity_samples"] == 0
+    assert report["pooled"]["n_contact_positives"] == 0
+    assert report["pooled"]["n_progress_labeled"] == 0
+    assert report["unmeasurable"] is True
+    assert report["pass"] is False
+
+
+def test_cli_train_and_g1_round_trip(tmp_path, monkeypatch):
+    """Drives cmd_train and cmd_g1 through main() with synthetic argv on
+    tiny synthetic data -- IMPORTANT 2 (reviewer): no automated CLI coverage
+    previously existed; the module was only exercised via its internal
+    functions, never through argparse."""
+    pytest.importorskip("torch")
+    d = tmp_path / "data"
+    d.mkdir()
+    p = d / "transitions_obstacle_avoidance_L0.jsonl"
+    rng = np.random.default_rng(3)
+    for ep in range(6):
+        _append_episode(
+            p, task=0, ep=ep, n_steps=15,
+            eef_start=(0.0, 0.0, 0.9),
+            action_xyz=tuple(rng.uniform(-0.01, 0.01, size=3)),
+            entity_name="hazard_a",
+            entity_start=tuple(rng.uniform(-0.1, 0.3, size=3)),
+        )
+    target_map_path = tmp_path / "target_map.json"
+    target_map_path.write_text(json.dumps({"0": "hazard_a"}))
+    out_dir = tmp_path / "cli_out"
+
+    argv_train = [
+        "consequence_model.py", "train",
+        "--data_dir", str(d), "--out_dir", str(out_dir),
+        "--target_map", str(target_map_path),
+        "--n_members", "1", "--max_epochs", "2", "--patience", "2",
+    ]
+    monkeypatch.setattr(sys, "argv", argv_train)
+    cm.main()
+    assert (out_dir / "consequence_model_member0.pt").exists()
+    assert (out_dir / "norm_stats.json").exists()
+    assert (out_dir / "split.json").exists()
+    assert (out_dir / "train_history.json").exists()
+
+    argv_g1 = [
+        "consequence_model.py", "g1",
+        "--data_dir", str(d), "--model_dir", str(out_dir),
+        "--target_map", str(target_map_path), "--n_members", "1",
+    ]
+    monkeypatch.setattr(sys, "argv", argv_g1)
+    cm.main()
+
+    g1_path = out_dir / "g1_report.json"
+    assert g1_path.exists()
+    report = json.loads(g1_path.read_text())
+    assert "pass" in report and "domains_present" in report \
+        and "per_domain" in report and "pooled" in report
+    assert set(report["domains_present"]) <= {"LS", "SL"}
+    for dom in report["domains_present"]:
+        m = report["per_domain"][dom]
+        assert "err_ratio" in m and "auc" in m and "spearman" in m \
+            and "unmeasurable" in m and "pass" in m
