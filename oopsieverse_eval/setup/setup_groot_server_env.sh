@@ -96,6 +96,31 @@ echo "CUDA_HOME=${CUDA_HOME:-<unset>}"
 export DS_BUILD_OPS=0
 export DS_SKIP_CUDA_CHECK=1
 
+# THIRD install-ordering fix (job 42909156 failed on this same line again,
+# third distinct root cause under the identical failure shape -- confirmed
+# by reading flash-attn==2.7.4.post1's setup.py directly at that exact
+# pinned tag rather than guessing): flash-attn's `NinjaBuildExtension
+# .__init__()` does `import psutil` unconditionally, and setuptools
+# eagerly instantiates that class during plain metadata/sdist generation
+# (via `_add_defaults_ext()` -> `get_finalized_command('build_ext')`) --
+# i.e. `psutil` is needed even just to compute flash-attn's package
+# metadata, not only to actually compile it. It wasn't present because
+# nothing in this script had installed it yet.
+#
+# Fix: install psutil (+ ninja, ninja being flash-attn's declared
+# `setup_requires` build tool) as their own explicit, verified step BEFORE
+# the big gr00t install -- per the "smaller, verified steps instead of one
+# atomic command" principle: each of these three bootstrap-dependency bugs
+# (torch, CUDA_HOME, psutil) was hidden behind one all-or-nothing `pip
+# install -e .` swallowing the real error under a generic
+# metadata-generation-failed banner, so from here on any NEW failure in
+# this same command is presumed to be a genuine, different root cause,
+# not a fourth variant of "one more transitive build dep missing" --
+# check the actual traceback line-by-line before further edits, per this
+# postmortem's own advice to future runs.
+pip install psutil ninja
+python -c "import psutil, ninja; print('psutil/ninja OK:', psutil.__version__, ninja.__version__)"
+
 pip install -e "$CLONE_DIR" --no-build-isolation
 
 # pyzmq for the PolicyServer/PolicyClient ZMQ REQ/REP wire protocol
