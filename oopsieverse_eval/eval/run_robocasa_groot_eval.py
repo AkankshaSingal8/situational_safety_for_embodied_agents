@@ -52,6 +52,8 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 from robocasa_adapter import RoboCasaAdapter  # noqa: E402
 from robocasa_action_utils import build_env_action, json_default  # noqa: E402
+from groot_zmq_client import GrootZmqClient  # noqa: E402
+from motion_stats import eef_total_displacement, mean_frame_diff  # noqa: E402
 
 # 3 cameras required (see groot_server.py docstring): agentview_right (the
 # adapter's default primary), agentview_left (secondary -- must be
@@ -141,6 +143,7 @@ def run_episode(adapter: RoboCasaAdapter, client, save_video_path: str, n_action
     instruction = adapter.get_instruction()
     robot = adapter.env.robots[0]
     frames = []
+    eef_positions = [np.asarray(obs["eef_pos"], dtype=np.float64)]
     success = False
     n_steps = 0
 
@@ -151,6 +154,7 @@ def run_episode(adapter: RoboCasaAdapter, client, save_video_path: str, n_action
             env_action = build_env_action(robot, arm_delta, gripper)
             obs, success, episode_done, info = adapter.step(env_action)
             n_steps += 1
+            eef_positions.append(np.asarray(obs["eef_pos"], dtype=np.float64))
 
             frame = obs.get("agentview_image")
             if frame is not None:
@@ -170,6 +174,11 @@ def run_episode(adapter: RoboCasaAdapter, client, save_video_path: str, n_action
         "instruction": instruction,
         "health_summary": adapter.get_health_summary(),
         "video_path": save_video_path if frames else None,
+        # Motion-degeneracy check (task step 6): compare against
+        # groot_random_baseline_eval.py's numbers for the same task/seed --
+        # see motion_stats.py.
+        "eef_total_displacement": eef_total_displacement(eef_positions),
+        "mean_frame_diff": mean_frame_diff(frames),
     }
 
 
@@ -189,9 +198,17 @@ def main():
 
     os.makedirs(args.results_dir, exist_ok=True)
 
-    from gr00t.policy.server_client import PolicyClient
-
-    client = PolicyClient(host=args.server_host, port=args.server_port)
+    # Deliberately NOT `from gr00t.policy.server_client import PolicyClient`
+    # -- see groot_zmq_client.py's docstring: importing the real gr00t
+    # package here would pull torch/transformers/deepspeed into this sim
+    # env. GrootZmqClient reimplements just the wire protocol.
+    client = GrootZmqClient(host=args.server_host, port=args.server_port)
+    if not client.ping():
+        raise RuntimeError(
+            f"Could not reach groot_server.py at {args.server_host}:{args.server_port} "
+            "-- start it first (see ../servers/groot_server.py)."
+        )
+    print(f"GR00T server OK at {args.server_host}:{args.server_port}")
 
     all_results = []
     for task_name in args.tasks:
