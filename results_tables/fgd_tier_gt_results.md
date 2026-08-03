@@ -2916,3 +2916,19 @@ reviews + 3 fix rounds, 0 open findings):
   --consequence_action_clip 0 (TS=0.05, K=8 required — departs from K=1 board config, disclose in E2).
   Mandate: E1 1-task smoke checks fallback rate first; tune pessimism/threshold before any NO-GO call.
 Queued: data job 42908475 (LS oa parity + SafeLIBERO Spatial L1, ~250 eps). Next: train+G1 -> E1/E2 -> verdict.
+
+## 2026-08-02 — USER DIRECTIVE: Tables 4/4b REMOVED from the results board (off-the-shelf-ckpt LIBERO-Safety)
+
+User: "remove table 4 and 4b if it uses off the shelf pi0.5". Both tables are
+the LIBERO-Safety board on the released (off-the-shelf) pi0.5 checkpoint
+(Table 4 TSR/safe-rate, 4b strict SR) -> condition holds, both removed from
+the artifact (a9d41e73, version label remove-tables-4-4b). Also removed the
+header stat card sourced from them (safe-rate 60->100 etc.); Table 6's note
+no longer calls the off-the-shelf results "the centerpiece"; footer ckpt line
+now points at Table 6 (finetuned) with Table 5 refusal on released ckpt.
+Numbering kept stable (1/1b/2/3/5/6 — gap intentional) to avoid breaking the
+parallel session's draft references; renumber at LaTeX time.
+IMPLICATION: the paper's LIBERO-Safety story now rests entirely on Table 6
+(finetuned ckpt) + Table 5 refusal -> the parity campaign (42899554 gate ->
+full 600-rollout arms) is now the load-bearing LS result. Underlying data
+(ls runs, episode logs) untouched — only the presentation dropped.
