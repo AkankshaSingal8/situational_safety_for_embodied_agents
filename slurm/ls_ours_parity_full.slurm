@@ -29,7 +29,10 @@ PORT=$((8390 + SLURM_ARRAY_TASK_ID))
 SUITES=(obstacle_avoidance human_safety obstacle_avoidance_human affordance)
 SUITE=${SUITES[$SLURM_ARRAY_TASK_ID]}
 N=${N:-10}
-ENG=${ENG:-0.30}
+# Dev gate 42899554 (2026-08-03): all arms passed; gt_par_eng22 best pooled
+# (65.0), nogt tested at 0.30 -> per-arm radii. ENG_* override at submit.
+ENG_GT=${ENG_GT:-0.22}
+ENG_NOGT=${ENG_NOGT:-0.30}
 CPP="$LS:$WT/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
 
 conda activate aegis
@@ -56,14 +59,22 @@ for LVL in 0 1 2; do
     --suite "$SUITE" --level "$LVL" --num_trials_per_task "$N" \
     --host 127.0.0.1 --port "$PORT" \
     --obstacle_id_source gt --duality_disengage --exec_parity \
-    --engage_radius "$ENG" \
+    --engage_radius "$ENG_GT" \
     --results_output_dir "$OUT/gt_par_full"
   python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
     --suite "$SUITE" --level "$LVL" --num_trials_per_task "$N" \
     --host 127.0.0.1 --port "$PORT" \
     --obstacle_id_source fol --entity_pos_source percep \
     --duality_disengage --guard_topk 2 --exec_parity \
-    --engage_radius "$ENG" \
+    --engage_radius "$ENG_NOGT" \
     --results_output_dir "$OUT/nogt_par_full"
+  # Baseline AT PARITY: conseq-data cross-check (2026-08-03) showed exec
+  # parity lifts the unfiltered baseline itself (oa 68/78/80 vs authors'
+  # harness 42/38/40) -> Table 6 comparator must be self-run at parity.
+  python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
+    --suite "$SUITE" --level "$LVL" --num_trials_per_task "$N" \
+    --host 127.0.0.1 --port "$PORT" \
+    --disable_guidance --exec_parity \
+    --results_output_dir "$OUT/base_par"
 done
 echo "LS_OURS_PAR_${SUITE}_COMPLETE"

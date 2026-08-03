@@ -2932,3 +2932,34 @@ IMPLICATION: the paper's LIBERO-Safety story now rests entirely on Table 6
 (finetuned ckpt) + Table 5 refusal -> the parity campaign (42899554 gate ->
 full 600-rollout arms) is now the load-bearing LS result. Underlying data
 (ls runs, episode logs) untouched — only the presentation dropped.
+
+## ★★ 2026-08-03 — DEV GATE 42899554 PASSED (all 4 arms) + BASELINE-AT-PARITY DISCOVERY; full parity campaign launched (42943477/42943478)
+
+Gate scoring (3 tax suites x L0-2, n=20/cell, pre-registered bar: pooled SR
+>= Table6-baseline-pooled - 2pp AND viol <= baseline):
+  gt_par         60.6 / viol 0.6% / med steps 414
+  gt_par_eng22   65.0 / viol 0.6% / med steps 342  <- promoted (GT)
+  gt_par_eng30   63.3 / viol 0.6% / med steps 362
+  nogt_par_eng30 63.3 / viol 0.0% / med steps 348  <- promoted (no-GT)
+vs Table6-baseline pooled 51.8. ALL PASS with margin; timeout paralysis
+cured (med steps 600 -> 130-450 band; exec-parity alone recovers +9pp).
+eng22 vs eng30 within noise (n=180); eng22 promoted on point estimate.
+
+KEY DISCOVERY (conseq-data cross-check, n=50/level): the UNFILTERED
+baseline itself improves massively under exec parity — oa 68/78/80 vs
+authors'-harness replication 42/38/40 (and viol 4/0/14 vs ~0-4). READ: the
+authors'-harness baseline column is NOT a valid comparator for parity arms;
+Table 6 final form must quote a SELF-RUN baseline-at-parity column (one
+harness, all methods). Against it, eng22 oa cells (70/80/70, viol 0/0/5)
+are SR-parity with baseline (68/78/80) while CUTTING L2 violations 14->5 —
+the pre-registered honest claim shape. Also disclose: authors' printed
+paper numbers (58-63 oa) sit BETWEEN our authors'-harness replication and
+our parity client — provenance footnote stands.
+
+Launched: 42943477 = ls_ours_parity_full (4 suites, gt_par_full ENG_GT=0.22,
+nogt_par_full ENG_NOGT=0.30, + NEW base_par arm --disable_guidance
+--exec_parity, N=10); 42943478 = ls_shields_parity (posthoc + reimpl under
+--exec_parity, parallel session's staging, submitted unmodified). Table 6
+rebuild on completion. Consequence data (42908475) also complete:
+ls_baseline 54.3k / ls_guided 24.9k / sl_baseline 13.4k / sl_guided 7.4k
+transition lines -> training + G1 next.
