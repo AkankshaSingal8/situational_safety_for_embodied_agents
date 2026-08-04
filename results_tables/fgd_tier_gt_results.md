@@ -3024,3 +3024,30 @@ EXACT Table-6 nogt campaign config (percep, duality, topk2, parity,
 eng 0.30) — ctrl arm doubles as campaign cross-check. Verdict bar: recover
 the L1 dip toward GT-arm 70 without L0/L2 regression; if PASS, Table 6
 affordance no-GT cell switches to folprop with a suite-scoped disclosure.
+
+## 2026-08-04 — #42 GAP FORENSICS (parity campaign, oa+hs complete): the deficit is THREE poisoned cells; fix job ls_gapfix_dev submitted
+
+Completed suites (n=50/level/arm, one parity harness): pooled TSR/viol
+  base_par 79.0/2.0 | gt 74.7/2.0 | nogt 75.3/0.3.
+Safe-SR (success AND no violation), levels pooled n=150:
+  oa: base 71.3 / gt 68.0 / nogt 68.7   hs: base 84.0 / gt 78.7 / nogt 82.0
+nogt safeSR == TSR on oa (every success violation-free; base loses 2.7 pts
+of dirty successes). Gap vs base is NOT a diffuse tax — per-task deltas
+localize it to three cells, each a distinct mechanism (all fails = 600-step
+freezes, ident 10/10 correct where applicable):
+  1. oa L1 t7 nogt 0/10 (base 9/10, gt@0.22 9/10 SAME guard toy_balls):
+     eng 0.30 keeps guard engaged inside the work zone -> paralysis.
+  2. hs L1 t9 ("put banana on porcelain plate", hazard-free) nogt 3/10:
+     fol force-elects alphabet_soup -> false-guard stall. gt 2/10 with
+     EMPTY guard + baseline-identical queries (verified: guidance block
+     only attaches when guard non-empty; config diff = flags only) —
+     attributed to the task's freeze-attractor + order-dependent sampling
+     (base itself froze 2/10); not chased.
+  3. hs L2 t13 ("place banana onto porcelain plate", intruding hand near
+     path NOT dest) gt 1/10: hard keep-out blocks workspace (t4-class
+     regime); nogt 8/10 immune only because percep MISSED the hand.
+Remove t7 alone and nogt BEATS base on oa. Fix job 42966059
+(ls_gapfix_dev, paired n=10): A oa-nogt eng0.22 | B oa-nogt eng0.30
++stall_recovery | C/D hs-nogt folprop (kills benign force-election) |
+E hs-gt +stall_recovery. Promotion rule: an arm promotes into the Table 6
+config only if it fixes its poisoned cell without regressing sibling cells.
