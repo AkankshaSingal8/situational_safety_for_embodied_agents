@@ -2976,3 +2976,31 @@ our governor refuses everything. L2 refusal 100 on the 4 available tasks
 (prior released-ckpt 5-task run: 80 = 4/5) — footnoted on the board.
 Board Table 5 + header stat card updated, artifact republished
 (label table5-finetuned-ckpt). Data: ls_refusal_ft/.
+
+## 2026-08-03 — #43 G1 OFFLINE GATE: SL PASS / LS marginal FAIL → E2 launched, E1 blocked
+
+Per-domain ensembles (3 members, GRU+MLP, per-domain single-integrator
+calibration from BASELINE_CONFIG), held-out episode splits committed in
+consequence_train/{ls,sl}_model/split.json; reports in g1_report.json.
+
+  G1[SL] (train 15,629 / held 3,926):  PASS  err_ratio 0.039 (bar <=0.5),
+    AUC 0.932 (bar >=0.90), progress Spearman 0.714 (bar >=0.6).
+  G1[LS] (train 61,409 / held 15,712): FAIL  err_ratio 0.127, AUC 0.9988
+    — both crush their bars — but progress Spearman 0.5974 vs 0.6.
+    Episode-level bootstrap (B=2000 over 42 held-out episodes): 95% CI
+    [0.524, 0.669], P(rho>=0.6)=0.47 — the miss is statistically
+    indistinguishable from the threshold. Ledgered as a marginal fail; NOT
+    seed-shopping a rescue (validation-must-beat-noise). E1 (LS) GPU eval
+    is therefore NOT launched under the pre-registered rule; best
+    achievable verdict for #43 is now PARTIAL (E2 leg only) unless the
+    user opts to revisit the LS progress head.
+
+Launched 42964336 = consequence_e2_spatial: Spatial L1, GT tier, standard
+pi0.5, server = board guided config EXCEPT --num_candidates 8 (selector
+needs K>1; disclosed departure from the K=1 board cell) + pinned pairing
+(--consequence_domain SL --consequence_action_scale 20.0
+--consequence_action_clip 0). Stage-1 smoke (task 0, n=10) gates on
+selector fallback rate from server logs (abort if never fires or >=90%
+fallback); stage-2 full n=50/task into consequence_e2/full. E2 GO bar:
+TSR AND CAR >= all four cached comparators (baseline / AEGIS post-hoc /
+SOTA-reimpl / ours-current-guided).

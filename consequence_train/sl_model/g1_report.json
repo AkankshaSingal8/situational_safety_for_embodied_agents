@@ -1,0 +1,41 @@
+{
+  "n_samples": 3926,
+  "domains_present": [
+    "SL"
+  ],
+  "per_domain": {
+    "SL": {
+      "n_samples": 3926,
+      "median_terminal_error_model": 0.010605534891772711,
+      "median_terminal_error_baseline": 0.2742308506101862,
+      "n_near_entity_samples": 3540,
+      "n_contact_positives": 484,
+      "n_slots_scored": 2,
+      "n_progress_labeled": 3926,
+      "err_ratio": 0.03867374829700788,
+      "auc": 0.9321745923852083,
+      "spearman": 0.7141233290987026,
+      "unmeasurable": false,
+      "pass": true
+    }
+  },
+  "pooled": {
+    "n_samples": 3926,
+    "median_terminal_error_model": 0.010605534891772711,
+    "median_terminal_error_baseline": 0.2742308506101862,
+    "n_near_entity_samples": 3540,
+    "n_contact_positives": 484,
+    "n_slots_scored": 2,
+    "n_progress_labeled": 3926,
+    "err_ratio": 0.03867374829700788,
+    "auc": 0.9321745923852083,
+    "spearman": 0.7141233290987026,
+    "unmeasurable": false,
+    "pass": true
+  },
+  "err_ratio_thresh": 0.5,
+  "auc_thresh": 0.9,
+  "spearman_thresh": 0.6,
+  "unmeasurable": false,
+  "pass": true
+}
