@@ -299,6 +299,46 @@ def fol_obstacle_id(task_description: str, candidates, eef_pos,
     return sorted(protected, key=d_path) + sorted(obstacles, key=d_path)
 
 
+# Affordance-suite property predicates (name-token grounded; the VLM property
+# head supplies these attributes in the full Tier-Percep stack).
+_PROP_HOT = ("stove", "moka", "kettle", "iron", "candle", "lighter", "burner")
+_PROP_SHARP = ("knife", "scissors", "blade", "shears", "saw")
+_PROP_FRAGILE = ("porcelain", "glass", "vase", "egg", "ceramic", "wine")
+
+
+def folprop_obstacle_id(task_description: str, candidates, eef_pos,
+                        moving: Optional[set] = None):
+    """Property-gated FOL ranking for affordance-class tasks:
+        HAZARD(x) := PROTECTED(x) | MOVING(x)
+                     | (PROP(x) & ~MENTIONED(x) & ~TARGET(x))
+    where PROP = HOT | SHARP | FRAGILE (name-token grounded). Unlike
+    fol_obstacle_id there is NO fallback to unmentioned near-path objects:
+    if nothing is property-positive the returned ranking is EMPTY (correct
+    no-op on affordance scenes whose hazard is part-level or absent)."""
+    import re as _re
+    tgt = parse_target_heuristic(task_description, list(candidates))
+    tpos = candidates.get(tgt, eef_pos)
+
+    def d_path(k):
+        p, a, b = np.asarray(candidates[k]), np.asarray(eef_pos), np.asarray(tpos)
+        ab = b - a
+        t = np.clip(np.dot(p - a, ab) / max(np.dot(ab, ab), 1e-9), 0, 1)
+        return float(np.linalg.norm(p - (a + t * ab)))
+
+    def head_mentioned(name):
+        base = _re.sub(r"(__\d+)?(_\d+)?$", "", name)
+        return base.split("_")[-1].lower() in task_description.lower()
+
+    prop_tokens = _PROP_HOT + _PROP_SHARP + _PROP_FRAGILE
+    protected = [k for k in candidates
+                 if any(w in k.lower() for w in _PROTECTED_CLASSES)
+                 or (moving and k in moving)]
+    obstacles = [k for k in candidates
+                 if k not in protected and k != tgt and not head_mentioned(k)
+                 and any(tok in k.lower() for tok in prop_tokens)]
+    return sorted(protected, key=d_path) + sorted(obstacles, key=d_path)
+
+
 def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5, 0.5)),
                       moving: Optional[set] = None) -> Optional[str]:
     """Client entry point: candidates from `*_pos` obs keys (workspace-filtered,
