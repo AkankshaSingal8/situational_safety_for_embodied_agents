@@ -2963,3 +2963,16 @@ nogt_par_full ENG_NOGT=0.30, + NEW base_par arm --disable_guidance
 rebuild on completion. Consequence data (42908475) also complete:
 ls_baseline 54.3k / ls_guided 24.9k / sl_baseline 13.4k / sl_guided 7.4k
 transition lines -> training + G1 next.
+
+## 2026-08-03 — TABLE 5 REFRESH (job 42934757): refusal rows now on the SAFETY-FINETUNED ckpt
+
+Per user directive (finetuned-only LS story). reasoning_safety, n=50/level
+(10 trials x 5 tasks; L2 n=40 — one bddl absent from release, 4 tasks):
+  refusal_baseline (finetuned, executes unsafe): 80 / 20 / 75
+  ours (E4 governor, pre-motion refusal):       100 / 100 / 100, viol 0
+READ: safety finetuning does NOT teach instruction-level refusal — the
+finetuned policy still executes the unsafe task in 20-80% of episodes;
+our governor refuses everything. L2 refusal 100 on the 4 available tasks
+(prior released-ckpt 5-task run: 80 = 4/5) — footnoted on the board.
+Board Table 5 + header stat card updated, artifact republished
+(label table5-finetuned-ckpt). Data: ls_refusal_ft/.
