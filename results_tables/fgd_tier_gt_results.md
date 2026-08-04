@@ -3004,3 +3004,23 @@ selector fallback rate from server logs (abort if never fires or >=90%
 fallback); stage-2 full n=50/task into consequence_e2/full. E2 GO bar:
 TSR AND CAR >= all four cached comparators (baseline / AEGIS post-hoc /
 SOTA-reimpl / ours-current-guided).
+
+## 2026-08-03 — AFFORDANCE FOLPROP: offline validation PASS, paired smoke 42964719 submitted
+
+Per user directive (fix the affordance no-GT dip with an affordance FOL).
+New identity source `folprop` (commit c63d13c):
+  HAZARD(x) := PROTECTED(x) | MOVING(x) | (PROP(x) & ~MENTIONED(x) & ~TARGET(x)),
+  PROP = HOT|SHARP|FRAGILE (name-token; VLM property head supplies these in
+  the full Tier-Percep stack). NO near-path fallback -> guard set may be
+  EMPTY = the GT arm's correct no-op on affordance (GT L1 70 vs fol 38-40;
+  the -28 dip was fol force-electing an on-path non-hazard, 42631100).
+Offline membership check on all 5 affordance scenes (position-independent):
+  frypan task -> [moka_pot] (HOT, unmentioned); hammer -> [left_hand,
+  porcelain_mug]; knife/fork/pour -> [] (hazard mentioned/target or
+  part-level — correctly outside object-barrier scope). 7 new CPU tests +
+  48 existing identity tests pass; all other id sources byte-identical.
+Smoke 42964719: affordance x L0/1/2 x n=10 x {ctrl_fol, folprop} under the
+EXACT Table-6 nogt campaign config (percep, duality, topk2, parity,
+eng 0.30) — ctrl arm doubles as campaign cross-check. Verdict bar: recover
+the L1 dip toward GT-arm 70 without L0/L2 regression; if PASS, Table 6
+affordance no-GT cell switches to folprop with a suite-scoped disclosure.
