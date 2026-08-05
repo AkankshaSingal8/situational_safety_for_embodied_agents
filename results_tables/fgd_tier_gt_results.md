@@ -3051,3 +3051,23 @@ Remove t7 alone and nogt BEATS base on oa. Fix job 42966059
 +stall_recovery | C/D hs-nogt folprop (kills benign force-election) |
 E hs-gt +stall_recovery. Promotion rule: an arm promotes into the Table 6
 config only if it fixes its poisoned cell without regressing sibling cells.
+
+## 2026-08-05 — #43 E2 VERDICT: NO-GO — learned-critic selection does not beat the CBF method on Spatial L1
+
+Job 42964336 (smoke gate PASS: 121/409 replans critic-selected). Full run
+n=200, GT tier, K=8, pinned pairing (domain SL, action_scale 20, clip 0):
+  ours+critic: TSR 64.5 / CAR 28.5 (strict 20.0); selector engaged 25.5%
+  of 8272 replans (74.5% empty-feasible fallback to CBF repair).
+vs comparators (GO bar: >= ALL on BOTH axes):
+  base 67.0/14.0 | posthoc 5.0/45.0 | reimpl 62.0/28.5 | ours-CBF ~67.5/33.8
+  -> TSR below base/ours-CBF; CAR below posthoc/ours-CBF. E2 FAIL.
+Per-task: t1 collapses (16 TSR) — feasibility veto appears to fight the
+policy on the hardest task rather than reroute it.
+Pre-registered verdict rule: G1[LS] FAIL + E2 FAIL = **NO-GO**. Idea parked:
+the offline gates showed the critic predicts consequences well (path err
+8-25x better than single-integrator, contact AUC 0.93-0.999), but
+constrained best-of-8 selection over policy samples converts that into no
+rollout gain — with 3/4 replans having an empty feasible set, selection
+pressure is too weak and the certified CBF fallback (unchanged machinery)
+carries the safety. The paper's method remains the CBF flow-guidance;
+critic material usable as a negative-result/analysis note if space allows.
