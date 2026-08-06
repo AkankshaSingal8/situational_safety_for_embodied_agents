@@ -3110,3 +3110,27 @@ the folprop hypothesis; smoke 42964719 (queued) is the fix test. Per-task
 L2: t12 0/10 in ALL arms incl. baseline (policy can't do the task — not a
 filter problem). Parity element 2-3 data now complete:
 ls_ours_parity_full/ all four suites x 3 arms x L0-2, n=50 per cell.
+
+## ★ 2026-08-06 — UNIFORM RERUN 8/8 COMPLETE (42934796): 6 cells reproduce/improve; Long L2 + Object L2 CAR regress via VLM-prior identity — provenance decision needed
+
+Final cell Long L2 (n=200): 46.0/58.5 vs board 44.0/79.5 — TSR reproduces,
+CAR −21 (~6σ). Full rerun board (TSR/CAR): Spatial 69.5/44.5, 79.5/59.5;
+Goal 69.5/60.0, 76.5/67.5; Object 54.0/55.5, 80.5/56.5; Long 46.5/55.5,
+46.0/58.5.
+FORENSICS (per-task, old 42405251 vs new): collisions double in every Long
+L2 task (41->83 tot; t0 12->26, t2 23->34); t2 succ 5->16. Rollout
+ident_correct: OLD = 1.00 all tasks; NEW = 0.50-0.76. Object L2 same
+signature (ident 0.48-0.74, t0 coll 40/50). ROOT CAUSE: the July-19 Long II
+/ 2-view Object II board cells did NOT run the VLM-priors identity the
+July-31 offline bench assumed ("board rows ran VLM priors") — their rollout
+ident was already 1.0. The rerun's recalibrated VLM-prior config (offline
+0.5-0.8 on Long II, known inverted-class ceiling in the ratings FILE) is a
+big lift over broken VLM-priors but strictly WORSE than what those cells
+actually ran. The uniform rerun is therefore a genuine single-provenance
+config, but it trades away ident=1.0 on 2/8 cells -> CAR −21/−9.5.
+DECISION (user): (a) accept rerun as the quoted board (uniform provenance,
+weaker Long/Object L2), or (b) regenerate vlm_hazard_priors.json with the
+ontology-anchored prompt (small API cost, already-scoped follow-up; offline
+bench gate first, then rerun ONLY the two flagged cells). Recommendation:
+(b) — the failure is a known ratings-file artifact, not method. Data:
+nogt_uniform_board/ (8 cells, n=200, episode-log recomputed).
