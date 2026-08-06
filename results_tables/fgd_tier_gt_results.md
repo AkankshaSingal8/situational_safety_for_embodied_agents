@@ -3099,3 +3099,14 @@ exactly this rescue on hs-t13; if it promotes, OAH inherits the same lever +
 per-suite radius. aff L1 gt 62 > base 48 (guidance helps); aff gt L2 42 read
 blocked on base repair. Data: ls_ours_parity_full/{base_par,gt_par_full,
 nogt_par_full}/{obstacle_avoidance_human,affordance}/.
+
+## 2026-08-06 — Affordance L2 repair (43064314) complete: suite closes; GT arm beats baseline pooled
+
+aff L2 (n=50, all viol 0): base 46.0, gt 42.0, nogt 30.0. Affordance suite
+pooled (L0-2, viol 0 everywhere -> safe-SR == TSR): base 56.7, GT 58.7
+(**beats baseline**), nogt 42.7. nogt deficit driven by fol force-election
+guarding benign on-path objects (L0 52 vs base 76, L2 30 vs 46) — exactly
+the folprop hypothesis; smoke 42964719 (queued) is the fix test. Per-task
+L2: t12 0/10 in ALL arms incl. baseline (policy can't do the task — not a
+filter problem). Parity element 2-3 data now complete:
+ls_ours_parity_full/ all four suites x 3 arms x L0-2, n=50 per cell.
