@@ -3071,3 +3071,31 @@ rollout gain — with 3/4 replans having an empty feasible set, selection
 pressure is too weak and the certified CBF fallback (unchanged machinery)
 carries the safety. The paper's method remains the CBF flow-guidance;
 critic material usable as a negative-result/analysis note if space allows.
+
+## 2026-08-06 — Parity elements 2-3 (OAH + affordance, 42943477_2/3): OAH is the new gap suite; t13-class hand paralysis dominates
+
+Element 3 (affordance) FAILED at 2:46 — server died (keepalive timeout) mid
+nogt L2 (32/50 eps, quarantined to ls_ours_parity_full/_partial_quarantine/);
+base affordance L2 never ran. Repair job 43064314 submitted (nogt+base aff L2
+only, identical config). Completed cells (n=50/level, episode-log recomputed):
+
+| suite | L | base TSR/viol% | gt TSR/viol% | nogt TSR/viol% |
+| oah | 0 | 64.0/6.0 | 42.0/0 | 36.0/0 |
+| oah | 1 | 68.0/0   | 46.0/0 | 18.0/6.0 |
+| oah | 2 | 76.0/10.0| 32.0/2.0 | 64.0/2.0 |
+| aff | 0 | 76.0/0   | 72.0/0 | 52.0/0 |
+| aff | 1 | 48.0/0   | 62.0/0 | 46.0/0 |
+| aff | 2 | (repair) | 42.0/0 | (repair) |
+
+OAH forensics (per-task, all guards are "OBJ_with_hand_1" = hand holding an
+object intruding near the workspace): GT arm saves ~8 violations (base t4=3,
+t14=5 -> gt 1 total) but loses ~26 successes, concentrated in t13 (10->0),
+t9 (8->1), t11 (10->4), t1 (10->5), t14 (2->0). Same regime as hs-L2-t13:
+intruder near path but NOT dest -> hard keep-out paralysis. NOT an identity
+problem (guards correct everywhere in GT; nogt topk2 adds benign co-guards
+and percep sometimes misses the hand -> t13 nogt 10/10 "immune by blindness",
+t3/t8/t12/t13 empty guards). Fix path: gapfix arm E (stall_recovery) tests
+exactly this rescue on hs-t13; if it promotes, OAH inherits the same lever +
+per-suite radius. aff L1 gt 62 > base 48 (guidance helps); aff gt L2 42 read
+blocked on base repair. Data: ls_ours_parity_full/{base_par,gt_par_full,
+nogt_par_full}/{obstacle_avoidance_human,affordance}/.
