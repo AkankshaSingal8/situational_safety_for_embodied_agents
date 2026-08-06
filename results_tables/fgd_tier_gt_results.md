@@ -3134,3 +3134,25 @@ ontology-anchored prompt (small API cost, already-scoped follow-up; offline
 bench gate first, then rerun ONLY the two flagged cells). Recommendation:
 (b) — the failure is a known ratings-file artifact, not method. Data:
 nogt_uniform_board/ (8 cells, n=200, episode-log recomputed).
+
+## ★ 2026-08-06 — GAPFIX VERDICTS (43010653): folprop PROMOTES on human_safety (hs-L1 78->94 = baseline); radius/stall arms FAIL oa-t7 and hs-t13
+
+Paired n=10/task vs campaign cells (ls_gapfix_dev/):
+- A oa-L1 nogt eng0.22: t7 0->2 only (gt@0.22 is 9/10 -> radius was NOT the
+  nogt root cause; ident 10/10 correct, so PERCEP POSITION NOISE keeps the
+  guard engaged in the work zone). t9 9->7. pooled 64=64. NO PROMOTION.
+- B oa-L1 nogt eng0.30+stall_recovery: t7 0->2, t9 9->6, pooled 60. NO.
+- C hs-L1 nogt folprop: t9 3->7, t7 8->10, t8 8->10 -> POOLED 78->94 =
+  MATCHES BASELINE (94), viol 0. PROMOTES.
+- D hs-L2 nogt folprop: pooled 80=80 (t10 4->6, t13 8->9, t14 8->6, within
+  noise), viol 0. PROMOTES with C (one theory across the suite).
+- E hs-L2 gt+stall_recovery: t13 1->0 — stall_recovery does NOT rescue the
+  hand-intruder keep-out paralysis (it is workspace blocking, not a stall
+  attractor). Pooled 60->68 (t10/t14 gains) but target cell FAILED. NO.
+POST-PROMOTION no-GT arm (fol->folprop on hs): oa 70/64/72 (68.7), hs
+88/94/80 (87.3 > base 84.0 — SUITE BEATS BASELINE), aff pending folprop
+smoke, oah 36/18/64 (39.3, open). Remaining holes: (1) oa-t7 nogt = percep
+noise (lever: multi-view entities, not queued); (2) paralysis class hs-t13
+gt + OAH both arms -> NEW dev job ls_cone_dev.slurm (--engage_cone 60:
+APPROACHING velocity gate, hard 0.14m core) arms F1 hs-L2-gt / F2 oah-gt /
+F3 oah-nogt, same promotion rule. Data: ls_gapfix_dev/.
