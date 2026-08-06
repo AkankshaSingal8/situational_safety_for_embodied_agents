@@ -3156,3 +3156,14 @@ noise (lever: multi-view entities, not queued); (2) paralysis class hs-t13
 gt + OAH both arms -> NEW dev job ls_cone_dev.slurm (--engage_cone 60:
 APPROACHING velocity gate, hard 0.14m core) arms F1 hs-L2-gt / F2 oah-gt /
 F3 oah-nogt, same promotion rule. Data: ls_gapfix_dev/.
+
+## 2026-08-06 — folprop affordance smoke (42964719, TIMEOUT at 3:30): L0/L1 STRONG (+12 each), L2 rerun queued
+
+ctrl_fol complete (48.0/40.0/40.0, pooled 42.7 — reproduces the campaign
+affordance nogt pooled 42.7 exactly, level mix shifts within noise).
+folprop: L0 60.0 (+12), L1 52.0 (+12), all viol 0 — the property theory's
+empty-guard behavior recovers the benign-force-election tax as designed.
+L2 partial (44/50, t14 1/4) showed t13 8->4 vs ctrl — unreadable until
+complete; partial quarantined (ls_aff_folprop/_partial_quarantine/), L2-only
+rerun 43075445 queued (slurm/ls_aff_folprop_L2rerun.slurm). Verdict #45
+blocked only on that cell.
