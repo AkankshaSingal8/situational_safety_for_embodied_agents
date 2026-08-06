@@ -3167,3 +3167,29 @@ L2 partial (44/50, t14 1/4) showed t13 8->4 vs ctrl — unreadable until
 complete; partial quarantined (ls_aff_folprop/_partial_quarantine/), L2-only
 rerun 43075445 queued (slurm/ls_aff_folprop_L2rerun.slurm). Verdict #45
 blocked only on that cell.
+
+## 2026-08-06 — VLM-grounded property predicates (user-approved API run): state-aware rule preserves hs promotion offline; folpropvlm arm queued for affordance rollout
+
+Batched Haiku queries (N=5 majority per our multi-prompt protocol, ~1c
+total): HOT/SHARP/FRAGILE booleans for all 58 LS object classes
+(ls_vlm_properties_n5.json) + HEAT_SOURCE (ls_vlm_heat_source_n5.json;
+only 'candle' positive, unanimous). Findings:
+1. Raw class-level properties are NOT guard-equivalent to hand tokens
+   (40-41/59 scenes at topk2): VLM FRAGILE is broader (plates/mugs/glass
+   bottles, unanimous 5/5 — defensible physics the hand list excluded) and
+   'alphabet soup: hot' is SYSTEMATIC (5/5) — would re-poison the hs-t9
+   cell folprop just fixed. Class-level semantics are right; hazard is
+   STATE-level (a sealed can on a table is not hot).
+2. State-aware rule fixes it: PROP_eff = SHARP | FRAGILE | HEAT_SOURCE |
+   (HOT & NEAR(heat_source, 0.15m)). Deployment scope (hs+aff, where
+   folprop is promoted): hs 15/15 scenes MATCH hand-folprop (membership is
+   position-independent -> holds across init states; promotion preserved by
+   construction). aff 10/15: diffs are milder-only (frypan-on-stove guards
+   [] vs [moka_pot_1] — fixture stove invisible to obj_pos; hammer scenes
+   swap one benign mug for another).
+3. Therefore only affordance needs rollout confirmation. folpropvlm
+   identity source (VLM tables + state rule) being implemented with CPU
+   tests; affordance x L0-2 paired arm to follow.
+Claim upgrade if it holds: every predicate in the promoted FOL theory
+(MENTIONED, PROTECTED, HOT, SHARP, FRAGILE, HEAT_SOURCE, MOVING, NEAR) is
+VLM- or observation-grounded — no hand lexicon.

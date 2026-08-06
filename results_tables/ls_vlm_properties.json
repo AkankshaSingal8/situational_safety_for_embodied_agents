@@ -1,0 +1,292 @@
+{
+ "akita black bowl": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "alphabet soup": {
+  "fragile": false,
+  "hot": true,
+  "sharp": false
+ },
+ "apple": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "banana": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "basket": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "billiard balls": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "black book": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "bottle of beer": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "bottle of carrot juice": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "bottle of dish soap": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "bottle of ginger beer": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "bottle of perfume": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "bottle of sake": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "bottle of shampoo": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "brownie": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "can of bay leaves": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "can of coffee": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "can of soda": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "can of soda with hand": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "candle": {
+  "fragile": false,
+  "hot": true,
+  "sharp": false
+ },
+ "chefmate frypan": {
+  "fragile": false,
+  "hot": true,
+  "sharp": false
+ },
+ "classic blue mug": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "cookies": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "cream cheese": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "cutting board": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "dish towel": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "egg": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "eyeglasses": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "fork": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "frypan": {
+  "fragile": false,
+  "hot": true,
+  "sharp": false
+ },
+ "game console": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "glazed rim porcelain ramekin": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "hammer": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "ketchup": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "keyboard": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "knife": {
+  "fragile": false,
+  "hot": false,
+  "sharp": true
+ },
+ "left hand": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "lemon": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "milk": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "moka pot": {
+  "fragile": false,
+  "hot": true,
+  "sharp": false
+ },
+ "notebook": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "plate": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "plate with hand": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "porcelain bowl": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "porcelain mug": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "red coffee mug": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "salad porcelain plate": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "scissors": {
+  "fragile": false,
+  "hot": false,
+  "sharp": true
+ },
+ "tomato sauce": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "toy balls": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "toy car": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "toy motorbike": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "toy train": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "vase": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "water ball": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ },
+ "white yellow mug": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "wine bottle": {
+  "fragile": true,
+  "hot": false,
+  "sharp": false
+ },
+ "wood bowl": {
+  "fragile": false,
+  "hot": false,
+  "sharp": false
+ }
+}
