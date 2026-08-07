@@ -3281,3 +3281,16 @@ siblings or violations):
   calibration; accept iff viol < base 5.3%).
 Still in flight: 43138518 F3-L2 cone remainder (last Table 6 cell),
 43150843 folpropvlm affordance. One consolidated monitor (bgb3wvaji).
+
+## ★ 2026-08-07 — CONE CONFIRM COMPLETE (43138518 remainder): oah no-GT L2 BEATS BASELINE BOTH AXES
+
+F3 oah-noGT L2 cone n=50 (single clean file, quarantine held): TSR 78.8 /
+viol 2.4% vs base 76.0 / 10.0%. Watch item t14 resolves FAVORABLY: 25/50
+succ @ 6 viol vs base 2/10 @ 5 viol (50% viol rate). Per-task: t10 46/50,
+t11 48/50, t12 32/50 (base 60%), t13 46/50, t14 25/50.
+OAH no-GT cone column final (n=50/level): L0 53.6 (v2.8%) / L1 44.4 (v0) /
+L2 78.8 (v2.4) -> pooled 58.9 TSR, 1.7% viol vs base 69.3 / 5.3%.
+Residual = L0 t4 (0/50) + L1 t9/t5/t6 freezes -> rescue job 43152095
+(holding_disengage / eef_radius 0.06) targets exactly these.
+Table 6 board: every planned cell now landed; folpropvlm (43150843) and
+margin/rescue arms (43152008/43152095) are upgrades on top.
