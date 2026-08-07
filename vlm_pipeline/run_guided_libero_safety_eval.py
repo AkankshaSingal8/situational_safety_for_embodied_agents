@@ -500,6 +500,11 @@ def main():
                          "ident + guidance. Static snapshot: dynamic hazards "
                          "keep their settle-end estimate (documented no-GT tax)")
     ap.add_argument("--percep_z_correction", type=float, default=-0.03)
+    ap.add_argument("--entity_cameras", type=str, default="agentview",
+                    help="Comma-separated cameras fused for percep entity "
+                         "localization (SafeLIBERO probe 42844384: +birdview "
+                         "halves xy error; cameras absent from the model are "
+                         "skipped per-view)")
     ap.add_argument("--percep_mover_threshold", type=float, default=0.06,
                     help="settle-window displacement [m] marking MOVING(x) from "
                          "two percep snapshots (looser than the GT 0.01 — "
@@ -688,7 +693,7 @@ def main():
 
         def percep_snapshot(env, names):
             return estimate_object_positions(
-                env.sim, names, cameras=("agentview",),
+                env.sim, names, cameras=tuple(args.entity_cameras.split(",")),
                 region_source="detector", detector=gdino_detector,
                 z_correction=args.percep_z_correction)
     bm = benchmark.get_benchmark_dict()[args.suite]()
