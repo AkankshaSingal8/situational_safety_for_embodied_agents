@@ -3294,3 +3294,31 @@ Residual = L0 t4 (0/50) + L1 t9/t5/t6 freezes -> rescue job 43152095
 (holding_disengage / eef_radius 0.06) targets exactly these.
 Table 6 board: every planned cell now landed; folpropvlm (43150843) and
 margin/rescue arms (43152008/43152095) are upgrades on top.
+
+## 2026-08-07 — #43 E1 LAUNCHED (user-requested): critic steering trial on LS obstacle_avoidance
+
+User asked to (a) debug why our method trails baseline SR on LS and (b) try the
+learned critic for steering here. Root cause (consolidated from 08-04/06/07
+forensics): **task-blind paralysis** — all three deficit cells are the same
+failure class, geometric repair blocking task-critical motion when the hazard
+overlaps the work zone (oa t7 guard-in-work-zone; aff folprop property-guard
+freezes; oah hand-held-hazard-near-goal 600-step freezes with correct guards
+and zero violations). Baseline beats us on those cells only by colliding.
+Hand-gate arms (cone/2-view/holding_disengage/eef0.06) are in flight
+(43152008/43152095/43152153); the **generalized** fix is task-aware constrained
+selection = consequence-critic progress head ranks safety-feasible candidates,
+CBF repair as fallback — exactly the pre-registered E1 that was blocked at G1
+on a 0.0026 Spearman miss (0.5974 vs 0.60; err_ratio 0.127, AUC 0.9988 both
+crushed their bars). User request unblocks it.
+
+Launched 43155835 = slurm/consequence_e1_ls.slurm: exec-parity LS server +
+pinned pairing (--consequence_select consequence_train/ls_model
+--consequence_domain LS --consequence_action_scale 0.5 --consequence_action_clip 0),
+client GT tier (gt, eng0.22, duality_disengage, exec_parity). Stage 1 smoke =
+oa L0 **t7 only** (the freeze cell) n=10, gate: selector fires and fallback
+< 90% (else exit 3, tune pessimism/threshold — E2 lesson: 74.5% empty-feasible).
+Stage 2 = oa L0-2 n=10/task into consequence_e1/full. Scoring: vs gt_par_full
+oa 70.7/4.0 and base-at-parity 74.0/4.0; t7 cell vs gt@0.22's 9/10 reference.
+Caveats to disclose: marginal G1[LS] Spearman; model trained on oa only (oah
+would be OOD — extension only if oa passes). Monitor consolidated: bh1zf9u8r
+over 43150843/43152008/43152095/43152153/43155835.
