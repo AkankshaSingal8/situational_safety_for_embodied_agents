@@ -3252,3 +3252,32 @@ L0 viol 4.4% (11 eps, t4-concentrated) is the confirm-scale watch item.
 F3 oah noGT+cone: L0 53.6/2.8, L1 44.4/0 (reproduce dev 50/48); L2 died at
 40/250 (quarantined ls_cone_confirm/_partial_quarantine/), remainder job
 43138518 (L2 only). Data: ls_cone_confirm/.
+
+## 2026-08-07 — NO-GT MARGIN PUSH launched (user directive: no-GT must beat baseline+SOTA on SR by a strong margin)
+
+Deficit decomposition after cone/folprop promotions (all vs base-at-parity):
+oa ~-3 (t7 alone flips the suite), aff -9.4 (folprop L0 60 vs 76, L2 30 vs
+46), oah -15..-20 residual. Forensics on cone-confirm n=50 (F3): residual
+oah failures are 600-step freezes with CORRECT guards and ZERO violations —
+hand hazard inside the engagement core near the goal (L0 t4 0/50 vs base
+5/10; L1 t9 14/50 vs 8/10; mild tax t5 39/50, t6 37/50 vs 10/10). Baseline
+wins those cells only by colliding (base t4 3 viol/10). Watch item: cone t1
+L0 viol 7/50 (14%). HDC rerouting is dead (killed at smoke 2026-07-16);
+corridor anchors already always-on; duality_disengage exempts dest-adjacent
+guards only.
+
+Client change (committed 5cfde12): --entity_cameras ported from SafeLIBERO
+runner (probe 42844384: +birdview halves xy error, med 19->9mm); default
+byte-identical; all LS arenas (table/empty) define birdview.
+
+Jobs (n=10/task dev, promotion rule = fix target cells w/o regressing
+siblings or violations):
+- 43152008 ls_nogt_margin_dev: A oa nogt fol eng0.30+cone60 (t7 paralysis);
+  B oa nogt fol eng0.22+2view (t7 percep-noise root cause, gt@0.22=9/10);
+  C aff nogt folprop eng0.30+cone60 (property-guard paralysis, cone cured
+  same regime on oah +16.7).
+- 43152095 ls_oah_rescue (L0+L1, cone config): R1 +holding_disengage
+  (carry-phase blocking); R2 server eef_radius 0.09->0.06 (barrier
+  calibration; accept iff viol < base 5.3%).
+Still in flight: 43138518 F3-L2 cone remainder (last Table 6 cell),
+43150843 folpropvlm affordance. One consolidated monitor (bgb3wvaji).
