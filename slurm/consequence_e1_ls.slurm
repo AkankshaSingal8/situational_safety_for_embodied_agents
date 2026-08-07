@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=62000M
 #SBATCH --exclude=w002,w004,w005,w006,w007,w008,w009,w010
-#SBATCH --time=05:00:00
+#SBATCH --time=06:00:00
 #SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
 #SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
 #
@@ -31,10 +31,16 @@
 # --consequence_action_scale 0.5 --consequence_action_clip 0 (TS=2.0).
 #
 # Stage 1 SMOKE: oa L0 task 7 only (the freeze cell), n=10; gate on server
-# consequence_select lines -- abort (exit 3) if selector never fires or
-# fallback >= 90% (mandate: tune pessimism/threshold before any NO-GO call).
-# Stage 2: oa L0-2, n=10/task (150 eps) -> compare vs gt_par_full oa
-# (70.7 SR / 4.0 viol) and baseline-at-parity oa (74.0 / 4.0).
+# consequence_select lines -- abort (exit 3) if selector never fires.
+# Stage 2a E1-PINNED: oa L0-2, n=10/task, pre-registered rule (threshold
+#   0.10 / pessimism 1.0). E2 evidence: this fell back 74.5% of replans.
+# Stage 2b E1-COMPOSE: same cells, threshold 1.0 / pessimism 0 -- the
+#   feasibility gate never empties, so the critic ALWAYS ranks the K
+#   repair-certified candidates by predicted progress (compose-not-compete;
+#   safety stays with the in-denoising repair, the critic only breaks
+#   freeze ties). Server restart between arms (threshold is server-side).
+# Score vs gt_par_full oa (70.7 SR / 4.0 viol) + baseline-at-parity
+# (74.0 / 4.0); t7-cell paired check.
 set -euo pipefail
 source /jet/home/asingal/miniconda3/etc/profile.d/conda.sh
 ROOT=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
@@ -49,32 +55,35 @@ SRVLOG=/ocean/projects/cis250185p/asingal/slurm_logs/conseq_e1_${SLURM_JOB_ID}_s
 CPP="$LS:$WT/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
 test -f "$MODEL/consequence_model_member0.pt"
 
-conda activate aegis
-export XLA_PYTHON_CLIENT_MEM_FRACTION=0.85
-PYTHONPATH="$WT/openpi_guided/src" python \
-  "$WT/openpi_guided/scripts/serve_policy_guided.py" \
-  --port "$PORT" --repair_schedule ramp --num_candidates 8 --eef_radius 0.09 \
-  --translation_scale 2.0 --cmd_clip 0.025 \
-  --consequence_select "$MODEL" \
-  --consequence_domain LS --consequence_action_scale 0.5 \
-  --consequence_action_clip 0 \
-  --policy.config=pi05_libero --policy.dir="$LS_WEIGHTS" \
-  > "$SRVLOG" 2>&1 &
-SERVER_PID=$!
+start_server () {  # $1 = threshold, $2 = pessimism
+  conda activate aegis
+  export XLA_PYTHON_CLIENT_MEM_FRACTION=0.85
+  PYTHONPATH="$WT/openpi_guided/src" python \
+    "$WT/openpi_guided/scripts/serve_policy_guided.py" \
+    --port "$PORT" --repair_schedule ramp --num_candidates 8 --eef_radius 0.09 \
+    --translation_scale 2.0 --cmd_clip 0.025 \
+    --consequence_select "$MODEL" \
+    --consequence_domain LS --consequence_action_scale 0.5 \
+    --consequence_action_clip 0 \
+    --consequence_threshold "$1" --consequence_pessimism "$2" \
+    --policy.config=pi05_libero --policy.dir="$LS_WEIGHTS" \
+    >> "$SRVLOG" 2>&1 &
+  SERVER_PID=$!
+  for _ in $(seq 1 240); do
+    python -c "import socket; s=socket.create_connection(('127.0.0.1',$PORT),1); s.close()" 2>/dev/null && break
+    sleep 5
+  done
+  kill -0 "$SERVER_PID"
+  conda activate openvla_libero_merged
+  export MUJOCO_GL=egl
+  export LIBERO_CONFIG_PATH="$LS/.libero_config"
+  export PYTHONPATH="$CPP"
+}
 trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
-for _ in $(seq 1 240); do
-  python -c "import socket; s=socket.create_connection(('127.0.0.1',$PORT),1); s.close()" 2>/dev/null && break
-  sleep 5
-done
-kill -0 "$SERVER_PID"
-
-conda activate openvla_libero_merged
-export MUJOCO_GL=egl
-export LIBERO_CONFIG_PATH="$LS/.libero_config"
-export PYTHONPATH="$CPP"
 GTFLAGS="--obstacle_id_source gt --duality_disengage --exec_parity --engage_radius 0.22"
 
-# ---- Stage 1: smoke (oa L0 t7 = freeze cell, n=10) + fallback-rate gate ----
+# ---- Stage 1: smoke (oa L0 t7 = freeze cell, n=10) + wiring gate ----------
+start_server 0.10 1.0
 python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
   --suite obstacle_avoidance --level 0 --task_filter 7 \
   --num_trials_per_task "$N" \
@@ -87,17 +96,23 @@ echo "SMOKE consequence_select lines: total=$TOTAL fallback=$FB"
 if [ "$TOTAL" -eq 0 ]; then
   echo "SMOKE_GATE_FAIL: selector never fired (wiring problem)"; exit 3
 fi
-if [ $((FB * 10)) -ge $((TOTAL * 9)) ]; then
-  echo "SMOKE_GATE_FAIL: fallback rate >= 90% ($FB/$TOTAL) -- tune pessimism/threshold"
-  exit 3
-fi
 echo "SMOKE_GATE_PASS ($FB/$TOTAL fallback)"
 
-# ---- Stage 2: full E1 (oa L0-2, n=10/task) --------------------------------
+# ---- Stage 2a: E1-pinned (oa L0-2, n=10/task, threshold .10/pess 1.0) -----
 for LVL in 0 1 2; do
   python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
     --suite obstacle_avoidance --level "$LVL" --num_trials_per_task "$N" \
     --host 127.0.0.1 --port "$PORT" $GTFLAGS \
-    --results_output_dir "$OUT/full"
+    --results_output_dir "$OUT/full_pinned"
+done
+kill "$SERVER_PID"; wait "$SERVER_PID" 2>/dev/null || true; sleep 10
+
+# ---- Stage 2b: E1-compose (threshold 1.0 / pessimism 0 = always rank) -----
+start_server 1.0 0.0
+for LVL in 0 1 2; do
+  python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
+    --suite obstacle_avoidance --level "$LVL" --num_trials_per_task "$N" \
+    --host 127.0.0.1 --port "$PORT" $GTFLAGS \
+    --results_output_dir "$OUT/full_compose"
 done
 echo "CONSEQ_E1_COMPLETE"
