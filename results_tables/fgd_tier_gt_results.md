@@ -3243,3 +3243,12 @@ CONFIRM RUN queued at n=50 (Table-6 provenance): oah x L0-2 x both arms
 under promoted config. Projected Table-6 means with cone on OAH:
 GT 68.4, noGT 64.8 vs base 71.0, posthoc 52.5, reimpl 50.0.
 Data: ls_cone_dev/.
+
+## 2026-08-07 — Cone confirm n=50 (43127635, TIMEOUT at 7h): GT arm COMPLETE and reproduces; F3-L2 remainder queued
+
+F2 oah GT+cone n=50/task COMPLETE: 64.4/55.2/70.0 -> pooled 63.2 viol 1.9%
+(dev projection 65.3 — reproduces; vs pre-cone 40.0, base 69.3 viol 5.3%).
+L0 viol 4.4% (11 eps, t4-concentrated) is the confirm-scale watch item.
+F3 oah noGT+cone: L0 53.6/2.8, L1 44.4/0 (reproduce dev 50/48); L2 died at
+40/250 (quarantined ls_cone_confirm/_partial_quarantine/), remainder job
+43138518 (L2 only). Data: ls_cone_confirm/.
