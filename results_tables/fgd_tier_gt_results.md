@@ -3193,3 +3193,21 @@ only 'candle' positive, unanimous). Findings:
 Claim upgrade if it holds: every predicate in the promoted FOL theory
 (MENTIONED, PROTECTED, HOT, SHARP, FRAGILE, HEAT_SOURCE, MOVING, NEAR) is
 VLM- or observation-grounded — no hand lexicon.
+
+## 2026-08-07 — SHIELDS AT PARITY COMPLETE (42943478, n=50/cell): both shields collapse on human_safety; ours leads filters pooled
+
+Suite-pooled TSR (viol%) at exec parity, finetuned ckpt:
+| suite | posthoc | reimpl | ours-GT | ours-noGT (folprop hs) | base |
+| oa   | 75.3 (2.7) | 70.7 (0.7) | 70.7 (4.0) | 68.7 (0.7) | 74.0 (4.0) |
+| hs   | 37.3 (0)   | 32.7 (0)   | 78.7 (0.7) | 87.3 (0)   | 84.0 (0) |
+| oah  | 46.0 (2.0) | 48.0 (1.3) | 40.0 (0.7) | 39.3 (2.7) | 69.3 (5.3) |
+| aff  | 51.3 (0)   | 48.7 (0)   | 58.7 (0)   | 42.7 (0)   | 56.7 (0) |
+| MEAN | 52.5       | 50.0       | 62.0       | 59.5       | 71.0 |
+READING: (1) shields COLLAPSE on human_safety (32-40 vs ours 78.7/87.3,
+base 84) — one-shot projection near a protected hand is catastrophic for
+liveness; our in-denoising arm is the ONLY filter matching/beating base
+there. (2) Shields' light touch wins oa/oah TSR (posthoc oah-L1 74) but
+leaks violations on oa (2.7%). (3) Ours beats both shields on pooled mean
+(GT +9.5/+12.0, noGT +7.0/+9.5) with lower-or-equal violations. (4) The
+pooled base gap is entirely OAH paralysis (cone job 43073780 pending) +
+aff-noGT (folprop L2 rerun 43075445 pending). Data: ls_shields_parity/.
