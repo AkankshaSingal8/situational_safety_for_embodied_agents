@@ -3322,3 +3322,22 @@ oa 70.7/4.0 and base-at-parity 74.0/4.0; t7 cell vs gt@0.22's 9/10 reference.
 Caveats to disclose: marginal G1[LS] Spearman; model trained on oa only (oah
 would be OOD — extension only if oa passes). Monitor consolidated: bh1zf9u8r
 over 43150843/43152008/43152095/43152153/43155835.
+
+## ★★ 2026-08-07 — FOLPROPVLM VERDICT (43150843, aff L0-2 n=50/level): PROMOTES — VLM-grounded identity WINS the suite
+
+Paired affordance arms (same harness, viol 0 everywhere):
+  fol 42.7 | folprop 47.3 | folpropvlm 56.0 | base 56.7 (pooled n=150 each)
+Per level: L0 76 (=base; folprop 60; t4 1->10, the frypan cell where the
+VLM table + invisible-stove-fixture drops the hallucinated guard) /
+L1 50 (folprop 52, noise) / L2 42 (folprop 30; t10 5->8, t14 3->7).
+Promotion rule satisfied: fixes both poisoned levels (L0/L2), sibling L1
+within noise. => No-GT identity theory = FOLPROPVLM EVERYWHERE:
+  - aff: 47.3 -> 56.0 (this run)
+  - hs: carries over free (guard sets == folprop on 15/15 cached scenes;
+    L0 provenance cell running in 43152153)
+  - oa/oah: folpropvlm reduces to protected/moving-first = fol behavior
+    (hand/obstacle guards, no property gating regression risk)
+Claim upgrade locked: every predicate in the no-GT tier is VLM- or
+observation-grounded — no hand-written property lexicon.
+Watch: margin-dev arm C (43152008) tests cone on folprop aff; if cone
+promotes too, run one folpropvlm+cone compose arm before finalizing.
