@@ -3364,3 +3364,18 @@ election is load-bearing on oa/oah. Residual shared vocabulary: the
 PROTECTED class set (hand/human) — a universal, not a tuned lexicon.
 Upgrade candidate (not queued, API): VLM OUT_OF_CONTEXT(x) anomaly
 predicate could subsume the geometric intruder cue and unify the theories.
+
+## 2026-08-07 — TOP-UPS LANDED (43152153): hs no-GT suite fully folprop-provenanced at 88.7 (> base 84.0); oa GT+cone first GT suite win
+
+1. hs L0 nogt folprop n=50: 92.0 (v0) vs fol 88.0 / base 88.0 (t4 8->9,
+   t2 6->7). hs no-GT suite now single-provenance folprop (== folpropvlm,
+   guard-set identity 15/15): L0 92 / L1 94 / L2 80 -> pooled 88.7 vs base
+   84.0, viol 0 everywhere. First suite where no-GT beats baseline with
+   clean provenance at every level.
+2. oa GT + eng0.22 + cone60 n=10/task: pooled 79.3 TSR / 4.7% viol vs
+   gt-plain 70.7 / 4.0 and base 74.0 / 2.7. L2 86 vs base 66 (t14 6/10 vs
+   base 0/10, t12 8 vs 4); L0 74 vs 72; L1 78 vs 84 (t6 5->9 vs gt but t9
+   8 vs 10). WATCH: L1 t7 viol 4/10 (base 2/10) — cone disengage windows
+   admit contact on the toy_balls cell; pooled viol +2.0pp vs base.
+   Promotion held pending n=50 confirm (viol axis must not regress at
+   scale); TSR axis clears the bar (+5.3 over baseline).
