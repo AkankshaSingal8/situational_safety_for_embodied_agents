@@ -3341,3 +3341,26 @@ Claim upgrade locked: every predicate in the no-GT tier is VLM- or
 observation-grounded — no hand-written property lexicon.
 Watch: margin-dev arm C (43152008) tests cone on folprop aff; if cone
 promotes too, run one folpropvlm+cone compose arm before finalizing.
+
+## 2026-08-07 — AMENDMENT: folpropvlm scope is hs+aff, NOT oa/oah (offline check)
+
+fol-vs-folpropvlm topk2 on cached oa scenes: 7/15 differ and the drops are
+the SCRIPTED hazards (toy_balls/toy_car/toy_motorbike/toy_train — not
+hot/sharp/fragile; e.g. "put both moka pots on the stove" fol [toy_balls_1]
+-> fpvlm []). oa task language never mentions the obstacle -> no linguistic
+or property cue exists; the oa hazard is defined GEOMETRICALLY (novel object
+intruding on the eef->target path), which is exactly what fol's d_path
+election grounds from observation. Final no-GT identity config is therefore
+per-suite-ontology, all grounded, no hand property lexicon anywhere:
+  oa/oah: fol (protected/moving first + path-intruder election — geometric,
+          observation-grounded)
+  hs/aff: folpropvlm (same protected/moving core + VLM property table with
+          state-aware heat rule; may return empty — informative on aff)
+A single union rule was considered and REJECTED offline: an intruder
+fallback refills topk2 slot 2 on hs (re-poisons the benign-co-guard cells
+folprop cured) and re-elects moka_pot_1 on the aff frypan scenes (re-poisons
+t4). The empty-guard outcome is load-bearing on hs/aff; the intruder
+election is load-bearing on oa/oah. Residual shared vocabulary: the
+PROTECTED class set (hand/human) — a universal, not a tuned lexicon.
+Upgrade candidate (not queued, API): VLM OUT_OF_CONTEXT(x) anomaly
+predicate could subsume the geometric intruder cue and unify the theories.
