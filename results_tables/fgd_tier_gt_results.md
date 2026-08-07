@@ -3225,3 +3225,21 @@ L0/L2 regression beyond noise): PASS.
 TABLE 6 no-GT config now: fol on oa/oah, folprop on hs+aff. Post-promotion
 no-GT suite row: oa 68.7, hs 87.3, aff 47.3, oah 39.3 -> mean 60.7 (vs
 posthoc 52.5, reimpl 50.0, base 71.0). Data: ls_aff_folprop/.
+
+## ★★ 2026-08-07 — ENGAGE-CONE VERDICT (43073780, n=10/task): OAH PARALYSIS LARGELY CURED (+25.3 GT / +16.7 noGT pooled); hs-t13 NOT fixed
+
+APPROACHING-gate (cone 60deg, hard core 0.14m) vs campaign refs:
+- F2 oah GT+cone:  68/54/74 (pooled 65.3) vs ref 42/46/32 (40.0). +25.3.
+  Beats base at L0 (68>64), ~ties L2 (74 vs 76 with viol 0 vs 5!), L1 still
+  short (54 vs 68: t7/t9 residual). No sibling regressions. PROMOTES.
+- F3 oah noGT+cone: 50/48/70 (pooled 56.0) vs ref 36/18/64 (39.3). +16.7.
+  L1 18->48 (t6 0->10, viol 3->0). Watch item: L2 t14 0->3 succ but viol
+  1->4 (cone admits approach to the alcohol-bottle hand cell). PROMOTES
+  with viol disclosure.
+- F1 hs-L2 GT+cone: 64 vs 60 (ns), t13 2/10 — NOT fixed: the hand sits
+  within/near the 0.14m hard core of the goal region; cone can't help.
+  NO promotion for hs (GT hs-t13 remains the one open GT hole).
+CONFIRM RUN queued at n=50 (Table-6 provenance): oah x L0-2 x both arms
+under promoted config. Projected Table-6 means with cone on OAH:
+GT 68.4, noGT 64.8 vs base 71.0, posthoc 52.5, reimpl 50.0.
+Data: ls_cone_dev/.
