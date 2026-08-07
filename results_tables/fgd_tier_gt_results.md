@@ -3379,3 +3379,17 @@ predicate could subsume the geometric intruder cue and unify the theories.
    admit contact on the toy_balls cell; pooled viol +2.0pp vs base.
    Promotion held pending n=50 confirm (viol axis must not regress at
    scale); TSR axis clears the bar (+5.3 over baseline).
+
+## 2026-08-07 — OAH RESCUE VERDICT (43152095, n=10/task L0-1): NO PROMOTION — t4 is structural
+
+R1 (+holding_disengage): L0 56 / L1 48; R2 (eef_radius 0.06): 52 / 48;
+cone-ref (n=50) 53.6 / 44.4; base 64 / 68. t4 UNMOVED at 0/10 in BOTH arms
+(freeze is approach-phase, not carry-phase; smaller barrier still cores the
+goal). Everything else within n=10 noise (t6 +2.6, t9 +1..3, t8 -2..-3).
+Verdict: neither lever promotes (validation-must-beat-noise). oah no-GT
+final config remains eng0.30+cone60. t4 joins hs-t13 as the disclosed
+structural class: hand-held hazard INSIDE the goal region -- baseline
+completes it only by contacting the hand (base t4: 5/10 succ, 3 viol).
+Remaining oah gap attribution: t4-class (structural), t7/t8 (policy-hard,
+base <=40%), mild approach taxes t5/t9. The learned-critic compose arm
+(43160056) is the one live mechanism aimed at this class.
