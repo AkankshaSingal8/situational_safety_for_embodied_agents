@@ -3211,3 +3211,17 @@ leaks violations on oa (2.7%). (3) Ours beats both shields on pooled mean
 (GT +9.5/+12.0, noGT +7.0/+9.5) with lower-or-equal violations. (4) The
 pooled base gap is entirely OAH paralysis (cone job 43073780 pending) +
 aff-noGT (folprop L2 rerun 43075445 pending). Data: ls_shields_parity/.
+
+## 2026-08-07 — #45 VERDICT: folprop PROMOTES on affordance (paired smoke 42964719 + L2 rerun 43075445)
+
+Paired n=50/cell vs ctrl_fol under Table-6 nogt config: L0 60.0 vs 48.0
+(+12), L1 52.0 vs 40.0 (+12), L2 30.0 vs 40.0 (-10; per-cell 1sigma ~10 ->
+within noise; rerun after 42964719 TIMEOUT partial, quarantined). Pooled
+47.3 vs 42.7 (+4.7, 0.8sigma — individually ns; promotion rests on the
+consistent L0/L1 lift + theory prediction + the DECISIVE hs evidence
+78->94, one identity theory across both suites). All viol 0 (vacuous
+channel). Pre-registered criterion (L1 recovery toward GT 62 without
+L0/L2 regression beyond noise): PASS.
+TABLE 6 no-GT config now: fol on oa/oah, folprop on hs+aff. Post-promotion
+no-GT suite row: oa 68.7, hs 87.3, aff 47.3, oah 39.3 -> mean 60.7 (vs
+posthoc 52.5, reimpl 50.0, base 71.0). Data: ls_aff_folprop/.
