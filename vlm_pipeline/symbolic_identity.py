@@ -339,6 +339,100 @@ def folprop_obstacle_id(task_description: str, candidates, eef_pos,
     return sorted(protected, key=d_path) + sorted(obstacles, key=d_path)
 
 
+# VLM-grounded property tables (folpropvlm arm): per-base-class boolean
+# predicates generated OFFLINE by the VLM property head (N=5 majority-voted,
+# results_tables/ls_vlm_{properties,heat_source}_n5.json). Lazy-loaded and
+# cached at module level; unit tests inject tables via kwargs instead.
+_VLM_PROP_TABLE: Optional[dict] = None
+_VLM_HEAT_TABLE: Optional[dict] = None
+
+# HOT is state-dependent: a hot-CLASS object is only an effective hazard when
+# a heat source is nearby to have heated it (xy-agnostic 3D distance gate).
+_HEAT_PROXIMITY_M = 0.15
+
+
+def _vlm_base_class(name: str) -> str:
+    """Base-class normalization matching the table-build convention."""
+    base = re.sub(r"(_\d+)+$", "", name).replace("_", " ").strip()
+    base = re.sub(r"\s+\d+(\s|$)", " ", base).strip()
+    return base.lower()
+
+
+def _load_vlm_prop_tables():
+    global _VLM_PROP_TABLE, _VLM_HEAT_TABLE
+    if _VLM_PROP_TABLE is None or _VLM_HEAT_TABLE is None:
+        import json
+        from pathlib import Path
+        root = Path(__file__).resolve().parent.parent / "results_tables"
+        with open(root / "ls_vlm_properties_n5.json") as f:
+            _VLM_PROP_TABLE = json.load(f)
+        with open(root / "ls_vlm_heat_source_n5.json") as f:
+            _VLM_HEAT_TABLE = json.load(f)
+    return _VLM_PROP_TABLE, _VLM_HEAT_TABLE
+
+
+def folpropvlm_obstacle_id(task_description: str, candidates, eef_pos,
+                           moving: Optional[set] = None,
+                           properties: Optional[dict] = None,
+                           heat_sources: Optional[dict] = None):
+    """VLM-grounded folprop: identical FOL structure to folprop_obstacle_id
+        HAZARD(x) := PROTECTED(x) | MOVING(x)
+                     | (PROP(x) & ~MENTIONED(x) & ~TARGET(x))
+    but PROP(x) is the state-aware VLM rule instead of name tokens:
+        prop_effective(x) = SHARP(x) | FRAGILE(x) | HEAT_SOURCE(x)
+                            | (HOT(x) & exists s: HEAT_SOURCE(s)
+                               & ||pos(x)-pos(s)|| < 0.15)
+    Predicates come from the cached N=5 majority-voted VLM tables (or the
+    `properties`/`heat_sources` kwargs in tests). A base class absent from a
+    table has all properties False. No near-path fallback: may return []."""
+    import re as _re
+    if properties is None or heat_sources is None:
+        props_tab, heat_tab = _load_vlm_prop_tables()
+        if properties is None:
+            properties = props_tab
+        if heat_sources is None:
+            heat_sources = heat_tab
+
+    tgt = parse_target_heuristic(task_description, list(candidates))
+    tpos = candidates.get(tgt, eef_pos)
+
+    def d_path(k):
+        p, a, b = np.asarray(candidates[k]), np.asarray(eef_pos), np.asarray(tpos)
+        ab = b - a
+        t = np.clip(np.dot(p - a, ab) / max(np.dot(ab, ab), 1e-9), 0, 1)
+        return float(np.linalg.norm(p - (a + t * ab)))
+
+    def head_mentioned(name):
+        base = _re.sub(r"(__\d+)?(_\d+)?$", "", name)
+        return base.split("_")[-1].lower() in task_description.lower()
+
+    def prop(k, key):
+        return bool(properties.get(_vlm_base_class(k), {}).get(key, False))
+
+    def is_heat_source(k):
+        return bool(heat_sources.get(_vlm_base_class(k), False))
+
+    heat_pos = [np.asarray(candidates[s]) for s in candidates
+                if is_heat_source(s)]
+
+    def prop_effective(k):
+        if prop(k, "sharp") or prop(k, "fragile") or is_heat_source(k):
+            return True
+        if prop(k, "hot"):
+            p = np.asarray(candidates[k])
+            return any(float(np.linalg.norm(p - hp)) < _HEAT_PROXIMITY_M
+                       for hp in heat_pos)
+        return False
+
+    protected = [k for k in candidates
+                 if any(w in k.lower() for w in _PROTECTED_CLASSES)
+                 or (moving and k in moving)]
+    obstacles = [k for k in candidates
+                 if k not in protected and k != tgt and not head_mentioned(k)
+                 and prop_effective(k)]
+    return sorted(protected, key=d_path) + sorted(obstacles, key=d_path)
+
+
 def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5, 0.5)),
                       moving: Optional[set] = None) -> Optional[str]:
     """Client entry point: candidates from `*_pos` obs keys (workspace-filtered,

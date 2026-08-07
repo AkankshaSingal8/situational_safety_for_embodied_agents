@@ -253,8 +253,9 @@ def _topk_guard(id_source, desc, cands, eef, movers, hazards, k=1):
     symbolic/fol/folprop (isolates the identity source as the single
     difference between arms); k>=2 adds the runner-up by the same score —
     guard_set.py for symbolic (guard_set(...)[0:1] == [scored_obstacle_id(...)]
-    by construction), ranked[:k] for fol/folprop (folprop may return [] —
-    property-gated, no near-path fallback). The gt source returns ALL
+    by construction), ranked[:k] for fol/folprop/folpropvlm (the folprop
+    variants may return [] — property-gated, no near-path fallback). The gt
+    source returns ALL
     CheckRobotContact hazards regardless of k (the payload sends at most
     two: primary + obstacle2)."""
     if id_source == "symbolic":
@@ -278,6 +279,13 @@ def _topk_guard(id_source, desc, cands, eef, movers, hazards, k=1):
         # HOT/SHARP/FRAGILE by name token; may return [] (no-guard no-op).
         from symbolic_identity import folprop_obstacle_id
         ranked = folprop_obstacle_id(desc, cands, eef, moving=movers)
+        return ranked[:k]
+    if id_source == "folpropvlm":
+        # VLM-grounded folprop: PROP predicates from the cached N=5
+        # majority-voted VLM tables with the state-aware HOT rule; may
+        # return [] (no-guard no-op).
+        from symbolic_identity import folpropvlm_obstacle_id
+        ranked = folpropvlm_obstacle_id(desc, cands, eef, moving=movers)
         return ranked[:k]
     return list(hazards)
 
@@ -485,7 +493,7 @@ def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8150)
     ap.add_argument("--disable_guidance", action="store_true")
-    ap.add_argument("--obstacle_id_source", choices=["gt", "symbolic", "fol", "folprop"], default="gt")
+    ap.add_argument("--obstacle_id_source", choices=["gt", "symbolic", "fol", "folprop", "folpropvlm"], default="gt")
     ap.add_argument("--entity_pos_source", choices=["gt", "percep"], default="gt",
                     help="'percep' = episode-start RGB-D back-projection "
                          "(GroundingDINO regions) for ALL positions consumed by "
@@ -503,7 +511,8 @@ def main():
                          "default since the HRI forensics fix, so passing the "
                          "flag does not change the payload.")
     ap.add_argument("--guard_topk", type=int, default=1,
-                    help="Top-k guard set for the symbolic/fol/folprop identity "
+                    help="Top-k guard set for the symbolic/fol/folprop/"
+                         "folpropvlm identity "
                          "sources (guard_set.py runner-up sent as obstacle2; "
                          "the server accepts at most one secondary guard). "
                          "1 = historical single-guard behavior. The gt source "
