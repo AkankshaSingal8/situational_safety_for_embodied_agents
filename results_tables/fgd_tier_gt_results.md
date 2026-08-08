@@ -3469,3 +3469,44 @@ fallback; scored on landing for completeness. NOTE for parallel session:
 its smoke stage uses --level 0 --task_filter 7 but oa L0 task ids are
 t0-t4 -> the filter yields ZERO tasks and the wiring gate
 (consequence_select lines == 0 -> exit 3) may abort the job spuriously.
+
+## 2026-08-07 — MARGIN CAMPAIGN: three jobs scored + critic E1-compose verdict
+
+**E1-compose (43160056, parallel-session run of the compose arm; threshold 1.0
+= critic ranks all K repair-certified candidates by progress head):** oa L0-2
+n=150: 67.3 TSR / 3.3 viol / 64.7 ssr vs gt_par_full 70.7/4.0/68.0. Wash with
+big opposing swings: fixes t6 (5->9), helps t14 (3->4, base 0); regresses t2
+(7->2), t7 (9->5), t8 (4->1). Consistent with the failed G1 progress-Spearman
+(0.5974): the head's ORDERING is mediocre, and compose applies it everywhere
+instead of only in stalls. NO-PROMOTE as-is. Fix in flight (free, offline):
+vlm_pipeline/consequence_rank_retrain.py — same-episode pairwise logistic
+rank loss on the progress head (selector consumes an ordering, so train the
+ordering), same split as ls_model; gate = held-out Spearman >= 0.65 without
+err_ratio/AUC regression, else critic stays a negative-result note. Pinned E1
+(43155835, smoke@t7 + threshold-0.10 arm) still queued.
+
+**oa GT cone (43152153 arm 2): PROMOTE.** gt+eng0.22+cone60: 79.3/4.7/75.3
+(n=150) vs gt_par_full 70.7/4.0/68.0 AND base 74.0/4.0/71.3 — GT tier now
+beats baseline on TSR and safe-SR. Viol delta = 1 episode (7v6, noise); t7
+9/10 (v4) same TSR as gt_par with viol 2->4 (watch item at n=50 confirm if
+run). Broad gains: t3 3->6, t6 5->9, t12 5->8, t13 8->10, t14 3->6.
+
+**hs L0 folprop top-up (43152153 arm 1): CLEAN PROVENANCE.** 92.0/0 (n=50).
+Full-folprop hs no-GT suite = L0 92.0 + L1/L2 87.0 -> pooled 88.7/0/88.7
+(n=150) vs base 84.0/0. Replaces the mixed-provenance 87.3 figure.
+
+**folpropvlm affordance (43150843): PROMOTE as the aff no-GT cell.** 56.0/0/
+56.0 (n=150) vs paired folprop 47.3/0 and ctrl_fol 42.7/0; baseline 56.7/0.
+VLM-grounded property tables DIFFER from the hand table on aff (unlike hs)
+and fix its over-guarding: t4 1->10, t14 3->7, t9 1->3. The no-GT aff cell is
+now baseline-parity at zero violations with fully general (VLM) grounding.
+
+**oah rescue (43152095): R1 REJECT, R2 HOLD.** R1 (+holding_disengage):
+targets unfixed (t4 0/10, t9 4/10), t1 picks up 2 violations — reject. R2
+(eef 0.06): L0 52.0/0, L1 48.0/0 vs F3 53.6/2.8, 44.4/0 — pooled +1.0 TSR,
+viol -> 0, t9 6/10 (vs 14/50) but t4 still 0/10 and deltas are n=10 noise;
+passes its viol gate but does not clear the noise bar for a server-config
+promotion (would also need L2 rerun). oah column stays F3 cone (58.9/1.7).
+
+Pending for final Table 6: 43152008 (oa/aff no-GT cone + 2-view arms — the
+no-GT analogue of the +8.6 oa GT cone jump), 43155835 (pinned E1).
