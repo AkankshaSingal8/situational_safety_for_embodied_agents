@@ -3449,3 +3449,23 @@ Paper placement: part-level predicate formalism + VLM part table as
 capability; grounding gap disclosed as the no-GT limitation; fork-bddl
 comma bug reported as benchmark erratum. Reports:
 ls_affordance_parts_smoke/report{_v1,_v2,}.json
+
+## 2026-08-07 — E1-COMPOSE VERDICT (43160056, oa L0-2 GT n=10/task): learned-critic NO-GO on LS
+
+Compose mode (threshold 1.0 / pessimism 0: critic always ranks the K
+repair-certified candidates by predicted progress):
+  compose 67.3 / v3.3% | gt-plain 70.7 / 4.0 | gt+cone 79.3 / 4.7 |
+  base 74.0 / 4.0.
+Per-task: gains t6 5->9, t11 8->10, t14 3->4; losses t2 7->2, t7 9->5,
+t8 4->1 — with marginal ranking quality (G1 Spearman 0.597) always-rank
+nets NEGATIVE. The geometric cone gate beats the learned selector on the
+exact paralysis mechanism it was built for, at every level.
+#43 final standing: G1 marginal fail (LS) + E2 NO-GO (SL) + E1-compose
+NO-GO (LS) => the consequence-critic line is closed for ICRA; paper keeps
+it as a negative-result note (selection-over-certified-candidates does not
+beat geometric engagement gating at this data scale). E1-pinned
+(43155835, parallel session) still queued — expected ~= gt-plain via
+fallback; scored on landing for completeness. NOTE for parallel session:
+its smoke stage uses --level 0 --task_filter 7 but oa L0 task ids are
+t0-t4 -> the filter yields ZERO tasks and the wiring gate
+(consequence_select lines == 0 -> exit 3) may abort the job spuriously.
