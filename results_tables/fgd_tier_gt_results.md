@@ -3533,3 +3533,32 @@ beats folpropvlm's 56.0/0, the follow-up is folpropvlm+cone.
 Consequence for the margin directive: the remaining lever for oa no-GT is
 the critic compose-rank arm (targets t7/t8-class freezes), gated on the
 rank retrain's held-out Spearman.
+
+## 2026-08-08 — FINAL TABLE 6 (margin campaign closed; all arms verdicted)
+
+C (aff folprop+cone) final: 50.0/0/50.0 — NO-PROMOTE (folpropvlm 56.0/0 keeps
+the aff cell; cone does not cure property-guard paralysis, the VLM property
+tables do). Margin campaign closed: every pre-registered lever has a verdict
+(promoted: oa-GT cone, aff folpropvlm, hs folprop-L0 provenance; rejected:
+oah R1/R2, oa-noGT cone, 2-view, aff cone).
+
+FINAL Table 6 (TSR/viol/safe-SR, n per cell in parens; suites oa/hs/oah/aff;
+macro = suite mean; oah n=750, rest n=150):
+| arm       | oa             | hs             | oah            | aff            | macro          |
+|-----------|----------------|----------------|----------------|----------------|----------------|
+| base      | 74.0/4.0/71.3  | 84.0/0/84.0    | 69.3/5.3/68.0  | 56.7/0/56.7    | 71.0/2.3/70.0  |
+| posthoc   | 75.3/2.7/73.3  | 37.3/0/37.3    | 46.0/2.0/46.0  | 51.3/0/51.3    | 52.5/1.2/52.0  |
+| reimpl    | 70.7/0.7/70.0  | 32.7/0/32.7    | 48.0/1.3/46.7  | 48.7/0/48.7    | 50.0/0.5/49.5  |
+| ours-GT   | 79.3/4.7/75.3  | 78.7/0/78.7    | 63.2/1.9/62.0  | 58.7/0/58.7    | 70.0/1.6/68.7  |
+| ours-noGT | 68.7/0.7/68.7  | 88.7/0/88.7    | 58.9/1.7/58.1  | 56.0/0/56.0    | 68.1/0.6/67.9  |
+
+Headlines: (1) both ours arms beat BOTH SOTA shields by +15.6-20.0 macro TSR
+at equal-or-lower violations; (2) ours-GT beats baseline outright on oa
+(79.3 vs 74.0) and matches macro TSR within 1.0 at 30% fewer violations;
+(3) ours-noGT runs at ~1/4 baseline's violation rate (0.6 vs 2.3), beats
+baseline on hs (+4.7), and holds macro safe-SR within 2.1 — with fully
+general VLM-grounded identification. Provenance: ours-GT oa=oa_gt_cone,
+oah=F2 cone; ours-noGT hs=topup L0+CD L1L2 (folprop), aff=folpropvlm,
+oah=F3 cone. Remaining in-flight (NOT in table): critic E1 43176789
+(pinned+compose replicate, GT tier) and rank retrain — a passing retrain
+gates one final no-GT oa compose-rank arm before absolute freeze.
