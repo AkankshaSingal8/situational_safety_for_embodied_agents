@@ -3615,3 +3615,18 @@ eng0.30 + cone60. No-GT now beats baseline on TWO suites (hs 88.7 vs
 84.0, aff 58.0 vs 56.7), both at zero violations.
 Updated no-GT pooled: 63.8 TSR / 1.2% viol / 63.2 safe-SR (n=1200).
 Remaining upgrade arm: oa GT+cone n=50 confirm (43177509, running).
+
+## 2026-08-08 — #43 E1 COMPLETE (43176789): pinned NO-GO, compose wash CONFIRMED at n=300
+
+Smoke t7 (pinned): 9/10 TSR / v4; fallback 863/884 (97.6%) — the E2
+empty-feasible pathology reproduces on LS exactly. Pinned full: 68.7/5.3/64.7
+vs gt_par_full 70.7/4.0/68.0 — worse on all axes, NO-GO (selector ~= noise
+around the incumbent at 97.6% fallback).
+Compose replicate pooled with run 1 (n=300): 67.3/2.7/65.7 — the -3.4 TSR
+wash CONFIRMS across two independent runs. t7 seed-variant (5/10 vs 9/10);
+t2 (6/20) and t8 (4/20) regressions consistent; t3/t14 freeze gains persist
+but small. VERDICT: with the MSE progress head, the critic beats the
+incumbent in NEITHER mode. Sole remaining pre-registered lever: rank-loss
+retrained head (member 2 training, gate Spearman >= 0.65); on PASS, one
+compose-rank arm on oa (GT + no-GT weak cells); on FAIL, critic closes as
+the paper's negative-result note and Table 6 above is absolute-final.
