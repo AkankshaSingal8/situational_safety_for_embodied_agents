@@ -3767,3 +3767,16 @@ snapshot beats the fresh-but-noisy track. Dynamic-tax diagnosis remains
 valid; the correct fix is FILTERED tracking (EMA / jump-gated update), noted
 as future work — not another arm now (oah viol already 1.7%). Flag stays in
 tree (default off) with this ledger entry as its record.
+
+## 2026-08-08 — Arm F (43193006) VERDICT: REJECT — per-replan mover re-perception hurts
+
+F1 oah nogt cone+refresh: L0 52.0/2.0 (~= F3 53.6/2.8, wash) but L1 34.0/4.0
+vs F3 44.4/0 — TSR -10.4 AND violations up (t9 2.8->1, t8 3.4->2, t6 v0->v2).
+Root cause (consistent with arm B's lesson): per-replan single-frame
+re-detection of a MOVING hand is noisier than the settle-end snapshot;
+fresh-but-noisy anchors flicker the engagement gate and misplace the barrier
+in both directions. The stable snapshot + per-step radius inflation (A2) +
+hard core is the better dynamics model at current detector quality. The
+"documented no-GT tax on dynamic hazards" is thus not recoverable by naive
+refresh — it needs either temporal filtering of the mover track (Kalman on
+detections) or better per-frame hand localization. oah no-GT cell stays F3.
