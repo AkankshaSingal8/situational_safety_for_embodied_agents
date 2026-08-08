@@ -3808,3 +3808,18 @@ At current discordant ratios both success claims and both violation claims
 cross p<0.05. Paper language until then: "beats both shields (p<1e-15);
 exceeds baseline on obstacle (GT) and human-safety (no-GT) with favorable
 paired trends (p=0.17/0.25 at n=150), confirmed at n=450 in Table X."
+
+## 2026-08-08 — Arm D VERDICT: NO-PROMOTE, multi-view direction CLOSED
+
+D (oa no-GT, eng0.22 + agentview,birdview + consistency tau 0.06): 69.3/0.7
+pooled = incumbent 68.7/0.7 (wash). The gate WORKED as designed — t0 8/10,
+t10 10/10 (arm B's blind-mean collapse prevented) — but t7 stays 2/10: zero
+recovery. Diagnosis: t7's percep error is CORRELATED across views
+(systematic detector-bbox/depth bias on that scene geometry), not
+independent noise; a second view can neither harm (gated) nor help (agrees
+or is discarded). Multi-view lever closed after 3 arms (B raw: harmful;
+D gated: neutral). Remaining t7 candidates: region-quality fixes (SAM-mask
+depth region instead of bbox rectangle; 512px percep render) — or disclose
+t7 as the quantified no-GT geometric tax. Arm E (repulsor) partial L0:
+59.5/7.1 vs F3 53.6/2.8 — TSR +5.9 but viol +4.3, the expected soft-channel
+trade; verdict at completion vs the violation gate.
