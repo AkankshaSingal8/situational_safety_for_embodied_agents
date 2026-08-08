@@ -3576,3 +3576,31 @@ C (aff folprop+cone): 50.0 vs folprop 47.3 (cone +6 on L2) but < fpvlm
 lever; promotion iff pooled > 56.0, viol 0.
 No-GT final config (pending only the compose arm): oa fol plain / hs
 folprop / oah fol+cone60@0.30 / aff folpropvlm.
+
+## ★★★ 2026-08-08 — TABLE 6 FINAL ASSEMBLY (all campaign jobs landed; two upgrade arms still running)
+
+All cells episode-log recomputed, exec-parity throughout, single harness.
+Config provenance: ours-GT = gt identity, eng0.22 (+cone60 on oah);
+ours-noGT = percep entities + eng0.30 + duality_disengage + topk2, identity
+fol (oa/oah, +cone60 on oah), folprop (hs), folpropvlm (aff).
+
+| method | obst-avoid | human safety | obst-avoid-human | affordance | pooled TSR | viol% | safe-SR |
+|---|---|---|---|---|---|---|---|
+| baseline (parity) | 74.0/4.0 | 84.0/0.0 | 69.3/5.3 | 56.7/0.0 | 71.0 | 2.3 | 70.0 |
+| AEGIS post-hoc | 75.3/2.7 | 37.3/0.0 | 46.0/2.0 | 51.3/0.0 | 52.5 | 1.2 | 52.0 |
+| SOTA reimpl | 70.7/0.7 | 32.7/0.0 | 48.0/1.3 | 48.7/0.0 | 50.0 | 0.5 | 49.5 |
+| ours GT | 70.7/4.0 | 78.7/0.0 | 63.2/1.9 | 58.7/0.0 | 65.5 | 1.7 | 64.4 |
+| ours no-GT | 68.7/0.7 | **88.7**/0.0 | 58.9/1.7 | 56.0/0.0 | 63.5 | 1.2 | 63.0 |
+
+(n: shields/base 150/suite; ours oah 750, others 150.)
+Standings: ours no-GT beats BOTH shields pooled by +11.0/+13.5 TSR
+(+11.0/+13.5 safe-SR) at comparable violls; beats baseline on human_safety
+(+4.7) and on oah-L2 (78.8/2.4 vs 76.0/10.0); halves baseline violations
+pooled (1.2 vs 2.3). Baseline retains pooled TSR lead (+7.5) via three
+mechanisms ledgered 2026-08-07/08: oa-t7 (percep noise, all levers
+exhausted), oah t4-class (structural: hazard inside goal; baseline
+completes only by contact), oah t7/t8 (policy-hard). Both shields collapse
+where hazards are protected humans (hs 37.3/32.7 vs ours 88.7).
+Upgrade arms still running (auto-swap on promotion): 43177491 aff
+folpropvlm+cone (>56.0 promotes); 43177509 oa GT+cone n=50 (79.3 dev,
+promotes iff viol <= base).
