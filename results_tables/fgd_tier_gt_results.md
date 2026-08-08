@@ -3422,3 +3422,30 @@ Pipeline built:
    discrimination >= 4/5 objects. Job 43166942 (40 min, no policy server).
 If PASS -> next: part-repeller arm (small barrier on unsafe-part centroid,
 no-GT tier percep) as an affordance TSR lever, n=10 dev.
+
+## 2026-08-07 — PART-GROUNDING SMOKE VERDICT (43166942/43167195/43167295): NO-GO for no-GT part enforcement
+
+Three rounds vs GT part centroids (goal Checkgrippercontactpart sets),
+gate = unsafe-part side discrimination >=4/5 objects:
+  v1 256px agentview: 2/5 (fork tines 5.4cm OK, frypan surface 6.5cm OK;
+     hammer/mug no in-workspace detection; knife blade drifts to middle)
+  v2 512px 2-view + prompt fallbacks: 1/5 (birdview part boxes swallow the
+     object -- frypan err 6.5->19.8cm; fusion actively harmful)
+  v3 agentview 512 + handle-mirror (unsafe ~= 2*whole - handle): 2/5;
+     mirror never fired -- bare-noun whole-object prompts ("knife","mug")
+     returned NOTHING in-workspace on all 5 objects (single-word captions
+     pick background; eval-time prompts carry the instance suffix).
+Stable sub-results: fork tines + frypan surface discriminate repeatedly;
+knife blade never (box centroid = object middle); hammer/mug undetectable.
+VERDICT: open-vocab PART grounding is below the bar for control on these
+assets -- part-box centroids drift to the object body at 5-10cm scale.
+Kept: results_tables/ls_vlm_affordance_parts.json (VLM part labels, N=5
+unanimous, semantically correct 5/5) -- the failure is spatial grounding,
+not VLM affordance knowledge. GT-tier part-repeller (exact centroids from
+goal geom sets) remains implementable but is NOT queued: eef_radius 0.09
+vs ~10cm part separation makes grasp-blocking paralysis likely, and the
+affordance no-GT cell is already at baseline parity (56.0 vs 56.7).
+Paper placement: part-level predicate formalism + VLM part table as
+capability; grounding gap disclosed as the no-GT limitation; fork-bddl
+comma bug reported as benchmark erratum. Reports:
+ls_affordance_parts_smoke/report{_v1,_v2,}.json
