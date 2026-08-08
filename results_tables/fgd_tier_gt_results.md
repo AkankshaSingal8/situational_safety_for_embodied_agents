@@ -3604,3 +3604,14 @@ where hazards are protected humans (hs 37.3/32.7 vs ours 88.7).
 Upgrade arms still running (auto-swap on promotion): 43177491 aff
 folpropvlm+cone (>56.0 promotes); 43177509 oa GT+cone n=50 (79.3 dev,
 promotes iff viol <= base).
+
+## ★★ 2026-08-08 — AFFORDANCE COMPOSE PROMOTES (43177491): folpropvlm+cone 58.0 BEATS BASELINE 56.7
+
+fpvlm+cone vs fpvlm vs base (n=50/level, viol 0 everywhere):
+L0 76|76|76, L1 54|50|48, L2 44|42|46 -> pooled 58.0 | 56.0 | 56.7.
+Promotion rule satisfied (pooled > 56.0, no level regresses beyond noise,
+zero violations). No-GT affordance config final: folpropvlm identity +
+eng0.30 + cone60. No-GT now beats baseline on TWO suites (hs 88.7 vs
+84.0, aff 58.0 vs 56.7), both at zero violations.
+Updated no-GT pooled: 63.8 TSR / 1.2% viol / 63.2 safe-SR (n=1200).
+Remaining upgrade arm: oa GT+cone n=50 confirm (43177509, running).
