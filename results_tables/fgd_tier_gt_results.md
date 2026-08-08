@@ -3780,3 +3780,16 @@ hard core is the better dynamics model at current detector quality. The
 "documented no-GT tax on dynamic hazards" is thus not recoverable by naive
 refresh — it needs either temporal filtering of the mover track (Kalman on
 detections) or better per-frame hand localization. oah no-GT cell stays F3.
+
+## 2026-08-08 — Arm F2 launched (43198145): FILTERED per-replan re-perception (dynamic suite)
+
+User directive: re-run perception grounding through the rollout on the
+dynamic suite (oah — the one suite with moving hazards; hs hands are static
+placement, verified via mover logs: oah movers include *_with_hand_* carried
+hazards). Arm F's raw replacement lost to the static snapshot (L1 44.4->34.0,
+detector noise). F2 = gated EMA track: --percep_refresh_alpha 0.35 blends
+accepted re-detections, innovations > 0.15 m discarded as outliers (track
+kept; a perception miss can never un-guard). oah L0+L1 n=10/task on the
+confirmed cone config. Promote iff beats F3 static snapshot (L0 53.6/2.8,
+L1 44.4/0) without violation regression; also read t4/t9 freeze cells (a
+tracked hand may release stale goal-adjacent gating).
