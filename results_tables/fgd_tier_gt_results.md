@@ -3644,3 +3644,25 @@ n=10/task, compose mode (thr 1.0 / pess 0), Arm1 GT (vs gt_par_full
 config (vs 68.7/0.7/68.7). Promotion rule: beat the incumbent on TSR
 without regressing violations; else critic closes as negative result and
 Table 6 is absolute-final.
+
+## 2026-08-08 — #43 COMPOSE-RANK VERDICT (43177745): mechanism validated, no Table 6 amendment — BOARD ABSOLUTE-FINAL
+
+GT-rank: 77.3/3.3/74.0 (n=150) vs matched-config incumbent gt_par_full
+70.7/4.0/68.0 — +6.6 TSR at lower violations; paired McNemar 25:15 discordant
+in rank's favor, exact p=0.154 (favorable trend, not significant at n=150).
+Freeze cells cured WITHOUT hand gates: t2 9/10 (incumbent 7, compose-MSE 2),
+t12 9/10 (5). vs the PROMOTED cone cell 79.3/4.7/75.3: 77.3 < 79.3 -> per the
+pre-registered rule, NO cell swap (two independent mechanisms — hand cone
+gate and learned rank-compose — land within noise of each other ~78).
+noGT-rank: 64.7/1.3/64.0 vs incumbent 68.7/0.7/68.7 — NO-PROMOTE (t7 1/10;
+percep noise at engagement dominates, as the A/B arms already showed).
+
+CRITIC CLOSES: (a) deployment verdict — does not exceed the frozen board on
+either tier; Table 6 (2026-08-08 entry above) is ABSOLUTE-FINAL. (b) mechanism
+verdict for the paper — rank-loss training of the progress head (Spearman
+0.597->0.754) converts compose selection from a -3.4 wash (n=300) to a +6.6
+trend (p=0.15) and cures obstacle-freeze cells with zero hand engineering:
+a learned selector recovers what the hand-tuned cone gate recovers. Write-up
+slot: negative-result/analysis section + one line in discussion (learned
+task-aware selection as the generalization path for the paralysis failure
+class). Artifacts: conseq_compose_rank/, consequence_train/ls_model_rank/.
