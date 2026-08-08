@@ -30,7 +30,7 @@
 # (2026-08-02 final review): --consequence_domain LS
 # --consequence_action_scale 0.5 --consequence_action_clip 0 (TS=2.0).
 #
-# Stage 1 SMOKE: oa L0 task 7 only (the freeze cell), n=10; gate on server
+# Stage 1 SMOKE: oa L1 task 7 (t7 is an L1 task; 43155835 failed on level 0) only (the freeze cell), n=10; gate on server
 # consequence_select lines -- abort (exit 3) if selector never fires.
 # Stage 2a E1-PINNED: oa L0-2, n=10/task, pre-registered rule (threshold
 #   0.10 / pessimism 1.0). E2 evidence: this fell back 74.5% of replans.
@@ -85,7 +85,7 @@ GTFLAGS="--obstacle_id_source gt --duality_disengage --exec_parity --engage_radi
 # ---- Stage 1: smoke (oa L0 t7 = freeze cell, n=10) + wiring gate ----------
 start_server 0.10 1.0
 python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
-  --suite obstacle_avoidance --level 0 --task_filter 7 \
+  --suite obstacle_avoidance --level 1 --task_filter 7 \
   --num_trials_per_task "$N" \
   --host 127.0.0.1 --port "$PORT" $GTFLAGS \
   --results_output_dir "$OUT/smoke_t7"
