@@ -3666,3 +3666,30 @@ a learned selector recovers what the hand-tuned cone gate recovers. Write-up
 slot: negative-result/analysis section + one line in discussion (learned
 task-aware selection as the generalization path for the paralysis failure
 class). Artifacts: conseq_compose_rank/, consequence_train/ls_model_rank/.
+
+## ★★★ 2026-08-08 — OA GT+CONE CONFIRMED AT n=750 (43177509) + TABLE 6 TRUE FINAL
+
+Confirm: 76.4 TSR / 4.13% viol (L0 74.8, L1 74.0, L2 80.4) vs base
+74.0 / 4.00% and gt-plain 70.7 / 4.00%. Dev viol watch RESOLVED: per-task
+viol rates match baseline's own on the same tasks (t7 24% vs 20%, t11 34%
+vs 30%; pooled Delta = 1 event/750). PROMOTED with viol-parity disclosure.
+
+TABLE 6 — TRUE FINAL (both late promotions in):
+| method | oa | hs | oah | aff | pooled TSR | viol% | safe-SR |
+|---|---|---|---|---|---|---|---|
+| baseline (parity) | 74.0/4.0 | 84.0/0 | 69.3/5.3 | 56.7/0 | 71.0 | 2.3 | 70.0 |
+| AEGIS post-hoc | 75.3/2.7 | 37.3/0 | 46.0/2.0 | 51.3/0 | 52.5 | 1.2 | 52.0 |
+| SOTA reimpl | 70.7/0.7 | 32.7/0 | 48.0/1.3 | 48.7/0 | 50.0 | 0.5 | 49.5 |
+| ours GT | **76.4**/4.1 | 78.7/0 | 63.2/1.9 | **58.7**/0 | 69.6 | 2.5 | 67.6 |
+| ours no-GT | 68.7/0.7 | **88.7**/0 | 58.9/1.7 | **58.0**/0 | 63.8 | 1.2 | 63.2 |
+(n: ours oa-GT 750, oah 750 both tiers; others 150.)
+
+Headlines: EACH of our tiers beats the unfiltered baseline on 2/4 suites
+(GT: oa+aff; no-GT: hs+aff — hs by +4.7 at zero violations); both beat
+both SOTA shields pooled by +11 to +20 TSR; no-GT halves baseline
+violations (1.2 vs 2.3). GT pooled gap to baseline is down to 1.4 (69.6
+vs 71.0), fully attributed to hs-t13 + oah-t4 structural cells where
+baseline succeeds only by contacting a human hand. Campaign complete:
+no queued arms remain. Final configs — GT: gt identity, eng0.22 + cone60
+(oa, oah); no-GT: percep + eng0.30 + duality + topk2, fol (oa),
+fol+cone60 (oah), folprop (hs), folpropvlm+cone60 (aff).
