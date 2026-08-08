@@ -140,7 +140,8 @@ def make_noise_fn(norm, sigma: float, outlier_p: float,
     return f
 
 
-def train_member_v2(train_samples, held_samples, norm, seed, args):
+def train_member_v2(train_samples, held_samples, norm, seed, args,
+                    partial_path=None):
     import torch
     torch.manual_seed(seed)
     model = cm.ConsequenceModel()
@@ -156,7 +157,19 @@ def train_member_v2(train_samples, held_samples, norm, seed, args):
     ep_keys = list(ep_to_idx)
     rng = np.random.default_rng(seed)
     best_held, best_state, since = float("inf"), None, 0
-    for epoch in range(args.max_epochs):
+    start_epoch = 0
+    if partial_path is not None and partial_path.exists():
+        # Epoch-level ratchet (login-node reaper kills runs mid-member):
+        # resume model + optimizer + early-stop bookkeeping mid-training.
+        ck = torch.load(partial_path, map_location="cpu")
+        model.load_state_dict(ck["state_dict"])
+        opt.load_state_dict(ck["opt_state"])
+        best_held, since, start_epoch = ck["best_held"], ck["since"], ck["epoch"] + 1
+        best_state = ck.get("best_state")
+        rng = np.random.default_rng(seed + 1000 + start_epoch)
+        print(f"  resumed member seed={seed} at epoch {start_epoch} "
+              f"(best_held {best_held:.4f})")
+    for epoch in range(start_epoch, args.max_epochs):
         order = []
         for k in rng.permutation(len(ep_keys)):
             order.extend(ep_to_idx[ep_keys[k]])
@@ -196,8 +209,15 @@ def train_member_v2(train_samples, held_samples, norm, seed, args):
             since += 1
             if since >= args.patience:
                 break
+        if partial_path is not None:
+            torch.save({"state_dict": model.state_dict(),
+                        "opt_state": opt.state_dict(),
+                        "best_state": best_state, "best_held": best_held,
+                        "since": since, "epoch": epoch}, partial_path)
     if best_state is not None:
         model.load_state_dict(best_state)
+    if partial_path is not None and partial_path.exists():
+        partial_path.unlink()
     return model, dict(seed=seed, best_held_loss=best_held)
 
 
@@ -255,7 +275,8 @@ def main():
             histories.append(dict(seed=m, resumed=True))
             print(f"member {m}: resumed")
             continue
-        model, hist = train_member_v2(train_samples, held_samples, norm, m, args)
+        model, hist = train_member_v2(train_samples, held_samples, norm, m, args,
+                                      partial_path=out_dir / f"member{m}_partial.pt")
         torch.save({"state_dict": model.state_dict(), "seed": m}, ckpt)
         models.append(model)
         histories.append(hist)
