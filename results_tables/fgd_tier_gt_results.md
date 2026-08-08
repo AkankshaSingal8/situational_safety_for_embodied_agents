@@ -3630,3 +3630,17 @@ incumbent in NEITHER mode. Sole remaining pre-registered lever: rank-loss
 retrained head (member 2 training, gate Spearman >= 0.65); on PASS, one
 compose-rank arm on oa (GT + no-GT weak cells); on FAIL, critic closes as
 the paper's negative-result note and Table 6 above is absolute-final.
+
+## 2026-08-08 — #43 RANK RETRAIN GATE: PASS — compose-rank arm launched (43177745)
+
+Rank-loss retrain (same-episode pairwise logistic loss on the progress head,
+same split/target_map as ls_model): held-out Spearman 0.5974 -> **0.7541**
+(gate >= 0.65 PASS), err_ratio 0.1735 (bar 0.5), AUC 0.9988 unchanged.
+2-member ensemble (member 2 repeatedly reaped on login node; server runs
+--consequence_n_members 2 — disclosed). g1_report_2member.json committed
+alongside checkpoints. Launched 43177745 = conseq_compose_rank: oa L0-2
+n=10/task, compose mode (thr 1.0 / pess 0), Arm1 GT (vs gt_par_full
+70.7/4.0/68.0, compose-MSE 67.3/2.7/65.7 n=300), Arm2 no-GT incumbent
+config (vs 68.7/0.7/68.7). Promotion rule: beat the incumbent on TSR
+without regressing violations; else critic closes as negative result and
+Table 6 is absolute-final.
