@@ -3518,3 +3518,18 @@ Log: "consequence_select lines: total=1 fallback=1 -> SMOKE_GATE_FAIL
 + the E2-known fallback saturation. No rerun: the compose arm (43160056)
 already gives the full-coverage E1 verdict (NO-GO) and pinned's expected
 behavior is ~= gt-plain via fallback. #43 remains closed.
+
+## 2026-08-08 — MARGIN DEV A/B verdicts (43152008, C still running)
+
+A (oa no-GT fol + eng0.30/cone60): 69.3/2.0 pooled (n=150) vs incumbent
+68.7/0.7 — cone does NOT transfer to no-GT (GT tier gained +8.6). t7 3/10(v1):
+the no-GT t7 failure is percep noise at engagement, not gating. NO-PROMOTE.
+B (oa no-GT fol + eng0.22 + agentview,birdview): 56.0/2.7 — REJECT; birdview
+fusion collapses t0 0/10, t10 1/10 (mislocalization on those scenes) while
+t7 stays 4/10. Single-view percep remains production.
+C (aff folprop + cone) partial: L0 60.0/0 (= folprop ref, cone no-op), L1
+23 eps 69.6/0 trending above folprop's 52 — verdict at job end; if pooled
+beats folpropvlm's 56.0/0, the follow-up is folpropvlm+cone.
+Consequence for the margin directive: the remaining lever for oa no-GT is
+the critic compose-rank arm (targets t7/t8-class freezes), gated on the
+rank retrain's held-out Spearman.
