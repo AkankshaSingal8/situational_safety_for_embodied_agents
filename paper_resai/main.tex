@@ -19,6 +19,8 @@ Neuro-Symbolic Hazard Identification for Safe Steering\\of Frozen Vision-Languag
 \author{Anonymous submission to the IROS 2026 Workshop on Embodied\\
 Neuro-Symbolic AI for Reliable and Safe Robotics (ReS AI)}
 
+\graphicspath{{figs/}}
+
 \begin{document}
 \maketitle
 
@@ -42,6 +44,13 @@ This identification question is where the neuro-symbolic design space is widest,
 \textbf{(3) More VLM authority fails unsafe.} Both natural escalations --- whole-scene VLM identification, and VLM \emph{composition} of the rule from a predicate library --- were implemented, pre-registered, and killed by their own gates (Sec.~\ref{sec:negative}). The characteristic composition failure is an over-restrictive conjunction that fires on nothing, leaving the true hazard unguarded: the system fails \emph{unsafe}, the worst direction for a safety component.
 
 The symbolic decision layer feeds a training-free enforcement layer (Sec.~\ref{sec:enforce}) that steers the frozen policy's flow-matching denoising and re-verifies a discrete-CBF chain on the executed action prefix --- so the certificate is independent of which mechanism produced the action. We summarize system-level results on LIBERO-Safety (Sec.~\ref{sec:results}): violations of a never-safety-trained checkpoint eliminated on the physical suites, and the benchmark's safety-reasoning track swept by the symbolic instruction judge (100/100/80\% refusal vs.\ best published 80/72/36\%).
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.98\textwidth]{fig_pipeline.pdf}
+\caption{\textbf{The division of labor.} A real LIBERO-Safety scene (left; obstacle-avoidance suite) is processed by \emph{neural} components (blue) that only answer local, checkable questions --- per-object predicates and open-vocabulary localization --- while a fixed \emph{symbolic} layer (amber) makes every safety-critical decision: hazard election by the three-literal rule of Eq.~\eqref{eq:fol} and routing into avoid / disengage / refuse regimes. Enforcement searches the frozen flow policy's noise space, and a discrete-CBF chain re-checked on the executed prefix (green) certifies the output independently of which neural search produced it.}
+\label{fig:pipeline}
+\end{figure*}
 
 \section{Related Work}
 \label{sec:related}
@@ -107,6 +116,13 @@ FOL rule, Eq.~\eqref{eq:fol} & 62.5/32.5 & 90.0/40.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.99\columnwidth]{fig_results.pdf}
+\caption{(a) Identification swap (Table~\ref{tab:e3}, Spatial L1/L2 mean): the ground-truth-free FOL rule matches privileged identity on both axes. (b)~Safety-reasoning suite: the symbolic instruction judge refuses unsafe instructions where the best published model partially complies --- and the unguided policy executes them.}
+\label{fig:results}
+\end{figure}
 
 Table~\ref{tab:e3} holds the enforcement stack fixed and swaps only the identity source. The ground-truth-free FOL rule is statistically indistinguishable from privileged simulator identity (all $p\ge0.18$), and every trend favors the rule (pooled discordant episodes 12:6 in its favor). The residual cost of removing privileged state is \emph{geometric} (localization error), not semantic. A deliberate-corruption study shows the failure direction: forcing the second-best identity pick costs collision avoidance (70$\to$25\%), not task success --- identification errors fail \emph{unsafe}, which is why the identification layer, not the barrier, is the reliability-critical component.
 
