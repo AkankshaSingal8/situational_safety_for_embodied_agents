@@ -3755,3 +3755,15 @@ AND noisy-input Spearman >= 0.60 AND err_ratio/AUC bars. Training running
 g1_report, aborts unless v2.gate_pass). Eval: oa L0-2 n=10/task, GT tier
 (vs cone 79.3/4.7/75.3, rank-v1 77.3/3.3/74.0, incumbent 70.7/4.0/68.0) and
 no-GT tier (vs 68.7/0.7/68.7). Promotion rule unchanged.
+
+## 2026-08-08 — Arm F verdict (43193006): REJECT — raw per-replan mover refresh regresses
+
+F1 (oah cone + --percep_refresh_movers): L0 52.0/2.0 (~= F3 53.6/2.8 wash);
+L1 34.0/4.0 vs F3 44.4/0 — WORSE both axes (t8 2/10 vs 3.4/10 avg, t9 1/10,
+t6 +2 viol). Mechanism inverted: raw GroundingDINO+depth on a MOVING hand is
+jittery per replan; the jittering barrier anchor causes engagement flicker
+(more repair, more freezes) and two new violations. The stable-but-stale
+snapshot beats the fresh-but-noisy track. Dynamic-tax diagnosis remains
+valid; the correct fix is FILTERED tracking (EMA / jump-gated update), noted
+as future work — not another arm now (oah viol already 1.7%). Flag stays in
+tree (default off) with this ledger entry as its record.
