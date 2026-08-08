@@ -127,12 +127,22 @@ def _region_estimate(depth, region_mask, K, T, depth_window=0.20):
 
 def estimate_obstacle_pos(sim, obstacle_name, cameras=("agentview", "birdview"),
                           camera_height=256, camera_width=256,
-                          region_source="gt_seg", detector=None):
+                          region_source="gt_seg", detector=None,
+                          consistency_tau=None):
     """Estimate the obstacle's world position from RGB-D renders.
 
     Renders depth (+ instance segmentation for gt_seg) per camera via
     sim.render, builds the obstacle's pixel region, back-projects, and fuses
     across cameras by mean. Returns (pos, n_views) or (None, 0).
+
+    `consistency_tau` (meters, None = off): consistency-gated fusion. Blind
+    mean fusion imports secondary-view failures wholesale (margin-dev arm B
+    2026-08-08: birdview mislocalization collapsed oa t0 to 0/10 and t10 to
+    1/10 while the target cell t7 barely moved). With tau set, multi-view
+    estimates are mean-fused ONLY when their max pairwise distance is within
+    tau; on disagreement the FIRST camera in `cameras` (the trusted primary,
+    agentview in all clients) wins alone. Secondary views can then only
+    refine, never override.
     """
     from robosuite.utils.camera_utils import get_real_depth_map
 
@@ -185,6 +195,11 @@ def estimate_obstacle_pos(sim, obstacle_name, cameras=("agentview", "birdview"),
             ests.append(est)
     if not ests:
         return None, 0
+    if consistency_tau is not None and len(ests) > 1:
+        spread = max(np.linalg.norm(a - b)
+                     for i, a in enumerate(ests) for b in ests[i + 1:])
+        if spread > consistency_tau:
+            return ests[0], 1
     fused = np.mean(ests, axis=0)
     if _E5_CORRUPT in ("position", "both"):
         global _e5_call_count
@@ -253,7 +268,7 @@ def estimate_obstacle_extent(sim, obstacle_name, cameras=("agentview", "birdview
 def estimate_object_positions(sim, names, cameras=("agentview",),
                               camera_height=256, camera_width=256,
                               region_source="gt_seg", detector=None,
-                              z_correction=-0.03):
+                              z_correction=-0.03, consistency_tau=None):
     """Batch per-object localization for the full Tier-Percep entity stack.
 
     Returns {name: pos} for every object whose estimate succeeded; failures
@@ -266,7 +281,8 @@ def estimate_object_positions(sim, names, cameras=("agentview",),
         pos, n_views = estimate_obstacle_pos(
             sim, name, cameras=cameras,
             camera_height=camera_height, camera_width=camera_width,
-            region_source=region_source, detector=detector)
+            region_source=region_source, detector=detector,
+            consistency_tau=consistency_tau)
         if pos is not None:
             out[name] = pos + np.array([0.0, 0.0, z_correction])
     return out

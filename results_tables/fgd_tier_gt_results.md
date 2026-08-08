@@ -3693,3 +3693,26 @@ baseline succeeds only by contacting a human hand. Campaign complete:
 no queued arms remain. Final configs — GT: gt identity, eng0.22 + cone60
 (oa, oah); no-GT: percep + eng0.30 + duality + topk2, fol (oa),
 fol+cone60 (oah), folprop (hs), folpropvlm+cone60 (aff).
+
+## 2026-08-08 — PER-SUITE NO-GT RESCUE launched (43192793): table un-frozen for one targeted round
+
+User directive: no-GT must beat baseline PER-SUITE. Bottleneck decomposition
+(all campaign evidence):
+- oa (-5.3): PERCEP NOISE at engagement, localized to t7-class (gt@0.22 9/10
+  vs nogt 2/10). Cone no-transfer (A); blind 2-view rejected (B: birdview
+  failures imported at t0/t10). NEW LEVER: consistency-GATED fusion —
+  percep_obstacle.estimate_obstacle_pos(consistency_tau): views mean-fuse
+  only when within tau, else primary (agentview) wins alone; client flag
+  --entity_view_tau (default 0 = byte-identical). Arm D: oa nogt eng0.22 +
+  agentview,birdview + tau 0.06.
+- oah (-10.4): HARD-REPAIR FREEZES on goal-adjacent hand-held hazards (t4
+  0/50, t9 14/50, correct guards, ZERO violations — pure repair tax). All
+  gating levers exhausted (cone promoted, holding_disengage/eef006
+  rejected). NEW LEVER: server --repulsor_eta 0.005 (SafeLIBERO's soft
+  channel that un-sticks obstacle-on-grasp where hard repair scores 0-10%)
+  — never tried on LS. Arm E: oah nogt cone + eta 0.005, L0+L1.
+- aff (-0.7): statistical tie (1 episode); t12 0/10 in every arm incl.
+  baseline (policy limitation) — no lever, disclosed.
+- hs: already beats baseline (+4.7).
+Both arms n=10/task dev; promotion rule unchanged; winners get n=50 confirm
+before the table re-freezes.

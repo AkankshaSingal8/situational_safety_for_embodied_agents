@@ -500,6 +500,12 @@ def main():
                          "ident + guidance. Static snapshot: dynamic hazards "
                          "keep their settle-end estimate (documented no-GT tax)")
     ap.add_argument("--percep_z_correction", type=float, default=-0.03)
+    ap.add_argument("--entity_view_tau", type=float, default=0.0,
+                    help="Consistency-gated multi-view fusion (meters; 0 = "
+                         "off = blind mean). Views are mean-fused only when "
+                         "their estimates agree within tau; on disagreement "
+                         "the first --entity_cameras view wins alone (arm B "
+                         "forensics: blind birdview mean collapsed t0/t10)")
     ap.add_argument("--entity_cameras", type=str, default="agentview",
                     help="Comma-separated cameras fused for percep entity "
                          "localization (SafeLIBERO probe 42844384: +birdview "
@@ -695,7 +701,8 @@ def main():
             return estimate_object_positions(
                 env.sim, names, cameras=tuple(args.entity_cameras.split(",")),
                 region_source="detector", detector=gdino_detector,
-                z_correction=args.percep_z_correction)
+                z_correction=args.percep_z_correction,
+                consistency_tau=(args.entity_view_tau or None))
     bm = benchmark.get_benchmark_dict()[args.suite]()
     task_ids = [i for i in range(bm.get_num_tasks())
                 if getattr(bm.get_task(i), "level", None) == args.level]
