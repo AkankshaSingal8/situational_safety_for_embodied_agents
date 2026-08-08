@@ -500,6 +500,15 @@ def main():
                          "ident + guidance. Static snapshot: dynamic hazards "
                          "keep their settle-end estimate (documented no-GT tax)")
     ap.add_argument("--percep_z_correction", type=float, default=-0.03)
+    ap.add_argument("--percep_refresh_movers", action="store_true",
+                    help="No-GT tier: re-run percep localization for MOVER "
+                         "entities at every chunk boundary, so dynamic "
+                         "hazards (hands) are guarded at their CURRENT "
+                         "position instead of the settle-end snapshot (the "
+                         "documented no-GT tax on dynamic hazards). Static "
+                         "entities keep the snapshot; guard membership and "
+                         "identity are unchanged. Default off = "
+                         "byte-identical.")
     ap.add_argument("--entity_view_tau", type=float, default=0.0,
                     help="Consistency-gated multi-view fusion (meters; 0 = "
                          "off = blind mean). Views are mean-fused only when "
@@ -853,10 +862,21 @@ def main():
                         )),
                         "prompt": prompt_text,
                     }
+                    if (args.percep_refresh_movers and percep_pos is not None
+                            and movers):
+                        # Per-replan mover re-perception (2026-08-08): refresh
+                        # ONLY mover entities so the dynamic-hazard barrier
+                        # anchors to the CURRENT hand position. A failed
+                        # re-localization keeps the previous estimate
+                        # (fail-safe: never un-guards on a perception miss).
+                        _fresh = percep_snapshot(env, sorted(movers))
+                        percep_pos.update(_fresh)
+
                     def _guard_pos(name):
                         # GT tier: LIVE obs every replan (tracks :dynamics
-                        # movers). Percep tier: static settle-end snapshot —
-                        # the documented no-GT tax on dynamic hazards.
+                        # movers). Percep tier: settle-end snapshot, movers
+                        # optionally refreshed per replan above
+                        # (--percep_refresh_movers).
                         if percep_pos is not None:
                             return percep_pos.get(name)
                         return obs.get(f"{name}_pos")
