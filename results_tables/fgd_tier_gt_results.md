@@ -3716,3 +3716,20 @@ User directive: no-GT must beat baseline PER-SUITE. Bottleneck decomposition
 - hs: already beats baseline (+4.7).
 Both arms n=10/task dev; promotion rule unchanged; winners get n=50 confirm
 before the table re-freezes.
+
+## 2026-08-08 — Arm F launched (43193006): per-replan mover re-perception
+
+User question exposed a real gap: at the no-GT tier, percep positions were a
+ONE-SHOT settle-end snapshot while the GT tier reads live positions every
+replan — the hand was guarded where it WAS, not where it IS (code comment
+had it as "the documented no-GT tax on dynamic hazards"). New flag
+--percep_refresh_movers: at every chunk boundary, re-run GroundingDINO+depth
+for MOVER entities only (~1 object, so per-replan cost is one detector call);
+static entities keep the snapshot; a failed re-localization keeps the prior
+estimate (never un-guards). Guard membership/identity unchanged. Arm F =
+oah no-GT cone + refresh, L0+L1 n=10/task vs F3 reference (L0 53.6/2.8,
+L1 44.4/0). Hypothesis: stale hand positions cause BOTH residual violations
+(hand moved toward eef) and some freezes (hand pinned at a stale
+goal-adjacent position that permanently gates); refresh should help both.
+Now three rescue arms in flight: D (gated 2-view, oa), E (soft repulsor,
+oah), F (mover refresh, oah) under monitor bi5iwb3ww.
