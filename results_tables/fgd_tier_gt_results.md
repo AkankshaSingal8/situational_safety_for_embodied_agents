@@ -3793,3 +3793,18 @@ kept; a perception miss can never un-guard). oah L0+L1 n=10/task on the
 confirmed cone config. Promote iff beats F3 static snapshot (L0 53.6/2.8,
 L1 44.4/0) without violation regression; also read t4/t9 freeze cells (a
 tracked hand may release stale goal-adjacent gating).
+
+## 2026-08-08 — SIGNIFICANCE PASS + N-BOOST (43199112): making beat-baseline paper-defensible
+
+Paired exact McNemar on the frozen board (n=150/cell, seed-paired by ep):
+- vs SOTA shields: DECISIVE — noGT-hs vs posthoc 87:10 p=1.8e-16, vs reimpl
+  92:8 p=3.2e-19. The +15-20 macro claims need no more n.
+- vs baseline: favorable TRENDS, not yet significant — GT-oa(cone) 17:9
+  p=0.17; noGT-hs 17:10 p=0.25; violation wins base-oah 7:1 p=0.070,
+  base-oa 5:0 p=0.063. noGT-oa deficit also n.s. (16:24 p=0.27).
+Action: 43199112 = +20/task on the two winning cells (oa GT cone, hs noGT
+folprop) AND +20/task paired baselines on both suites -> n=450/cell pooled.
+At current discordant ratios both success claims and both violation claims
+cross p<0.05. Paper language until then: "beats both shields (p<1e-15);
+exceeds baseline on obstacle (GT) and human-safety (no-GT) with favorable
+paired trends (p=0.17/0.25 at n=150), confirmed at n=450 in Table X."
