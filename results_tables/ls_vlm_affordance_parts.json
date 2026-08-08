@@ -1,0 +1,62 @@
+{
+ "classic blue mug": {
+  "grasp_part": "handle",
+  "unsafe_part": "rim",
+  "votes": {
+   "grasp_part": {
+    "handle": 5
+   },
+   "unsafe_part": {
+    "rim": 5
+   }
+  }
+ },
+ "fork": {
+  "grasp_part": "handle",
+  "unsafe_part": "tines",
+  "votes": {
+   "grasp_part": {
+    "handle": 5
+   },
+   "unsafe_part": {
+    "tines": 5
+   }
+  }
+ },
+ "frypan": {
+  "grasp_part": "handle",
+  "unsafe_part": "cooking surface",
+  "votes": {
+   "grasp_part": {
+    "handle": 5
+   },
+   "unsafe_part": {
+    "cooking surface": 5
+   }
+  }
+ },
+ "hammer": {
+  "grasp_part": "handle",
+  "unsafe_part": "head",
+  "votes": {
+   "grasp_part": {
+    "handle": 5
+   },
+   "unsafe_part": {
+    "head": 5
+   }
+  }
+ },
+ "knife": {
+  "grasp_part": "handle",
+  "unsafe_part": "blade",
+  "votes": {
+   "grasp_part": {
+    "handle": 5
+   },
+   "unsafe_part": {
+    "blade": 5
+   }
+  }
+ }
+}
