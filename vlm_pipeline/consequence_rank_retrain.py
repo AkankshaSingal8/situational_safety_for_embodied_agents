@@ -152,6 +152,10 @@ def main():
     ap.add_argument("--ref_model_dir", required=True,
                     help="existing model dir whose split.json is reused (comparability)")
     ap.add_argument("--out_dir", required=True)
+    ap.add_argument("--target_map", default=None,
+                    help="task->target-entity JSON (REQUIRED for progress "
+                         "labels; without it every progress_mask is 0 and "
+                         "both progress losses train on nothing)")
     ap.add_argument("--rank_weight", type=float, default=1.0)
     ap.add_argument("--rank_margin", type=float, default=0.005)
     ap.add_argument("--n_members", type=int, default=3)
@@ -171,8 +175,15 @@ def main():
     train_keys, held_keys = cm.load_split(ref_dir / "split.json")
     train_eps = [e for e in episodes if e.key in set(train_keys)]
     held_eps = [e for e in episodes if e.key in set(held_keys)]
-    train_samples = cm.build_samples(train_eps)
-    held_samples = cm.build_samples(held_eps)
+    target_map = ({int(k): v for k, v in
+                   json.loads(pathlib.Path(args.target_map).read_text()).items()}
+                  if args.target_map else {})
+    train_samples = cm.build_samples(train_eps, target_map)
+    held_samples = cm.build_samples(held_eps, target_map)
+    n_labeled = sum(s.progress_mask > 0 for s in train_samples)
+    if n_labeled == 0:
+        raise SystemExit("no progress-labeled train samples -- pass --target_map")
+    print(f"progress-labeled train samples: {n_labeled}/{len(train_samples)}")
     print(f"train {len(train_samples)} / held {len(held_samples)} samples "
           f"({len(train_eps)}/{len(held_eps)} episodes, split from {ref_dir})")
     norm = cm.compute_norm_stats(train_samples)
