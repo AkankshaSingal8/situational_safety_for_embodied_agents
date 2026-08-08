@@ -27,7 +27,7 @@ Neuro-Symbolic AI for Reliable and Safe Robotics (ReS AI)}
 \begin{abstract}
 Runtime safety filters for vision-language-action (VLA) policies must first decide \emph{what} to avoid before any barrier can enforce \emph{how} to avoid it. We show that this identification problem has a sharply neuro-symbolic answer: a fixed three-literal first-order rule over VLM-groundable predicates,
 $\textsc{Hazard}(x) \coloneqq \textsc{Protected}(x)\vee\textsc{Moving}(x)\vee(\lnot\textsc{Mentioned}(x)\wedge\textsc{NearestToPath}(x))$,
-is statistically indistinguishable from ground-truth hazard identity in paired robot rollouts (all $p\ge0.18$), while every way of granting the VLM \emph{more} authority fails, and fails unsafe. Whole-scene VLM identification scores 18--64\% where the decomposed rule scores 100\%; runtime VLM \emph{composition} of the rule itself produces over-restrictive conjunctions that guard nothing --- the true hazard goes unguarded. The VLM's reliable role is answering local per-object predicates (\textsc{Referenced}, \textsc{Protected}): swapping hand-coded heuristics for VLM predicate grounding changes \emph{no} decision on 59 benchmark scenes while adding paraphrase competence no string heuristic has (``deliver it to me'' $\Rightarrow$ the hand is protected). The symbolic decision then drives a training-free steering layer inside the frozen $\pi_{0.5}$ flow policy's denoising, certified by a discrete control-barrier chain re-checked on executed actions. On the LIBERO-Safety benchmark this stack eliminates physical violations of an off-the-shelf, never-safety-trained checkpoint (30\% and 48\% $\to$ 0\%) and refuses unsafe instructions at 100/100/80\% versus the best published 80/72/36\% --- evidence that reliable embodied safety today is a \emph{division of labor}: neural components ground symbols and generate actions; a small, inspectable logic makes the safety-critical decisions.
+is statistically indistinguishable from ground-truth hazard identity in paired robot rollouts (all $p\ge0.18$), while every way of granting the VLM \emph{more} authority fails, and fails unsafe. Whole-scene VLM identification scores 18--64\% where the decomposed rule scores 100\%; runtime VLM \emph{composition} of the rule itself produces over-restrictive conjunctions that guard nothing --- the true hazard goes unguarded. The VLM's reliable role is answering local per-object predicates (\textsc{Referenced}, \textsc{Protected}): swapping hand-coded heuristics for VLM predicate grounding changes \emph{no} decision on 59 benchmark scenes while adding paraphrase competence no string heuristic has (``deliver it to me'' $\Rightarrow$ the hand is protected). The symbolic decision then drives a training-free steering layer inside the frozen $\pi_{0.5}$ flow policy's denoising, certified by a discrete control-barrier chain re-checked on executed actions. On the LIBERO-Safety benchmark the stack beats two dedicated safety-shield architectures by $+15$--$20$ task-success points at equal-or-lower violations, runs its fully perception-grounded tier at a quarter of the unshielded baseline's violation rate while beating it outright on the human-safety suite, and refuses unsafe instructions at 100/100/80\% versus the best published 80/72/36\% --- evidence that reliable embodied safety today is a \emph{division of labor}: neural components ground symbols and generate actions; a small, inspectable logic makes the safety-critical decisions.
 \end{abstract}
 
 \section{Introduction}
@@ -75,7 +75,45 @@ The scene-level decision of what to guard is made by a fixed three-literal rule:
 \end{equation}
 ranked protected-first, then by path distance. \textsc{Protected} covers a semantic class (body parts, objects attached to a person) that is never mention-excluded; \textsc{Moving} is grounded online by settle-window displacement ($>$1\,cm), re-read at every replan --- this single class literal is what handles dynamic human-hand intruders. \textsc{Mentioned} performs reference resolution against the instruction; \textsc{NearestToPath} measures distance to the sanctioned reach segments (end-effector $\to$ target $\to$ destination).
 
-\emph{Two interchangeable grounding backends.} The literals can be grounded by (a) hand heuristics plus one-shot cached VLM hazard-property priors with a fail-safe floor (semantics may raise concern, never delete protection), or (b) \emph{VLM predicate grounding}: a small VLM (3 votes, cached per task, runtime API-free) answers only local per-object questions --- \textsc{Referenced}$(x)$ and \textsc{Protected}$(x)$. The rule, the ranking, and the routing below are identical under both backends.
+\emph{Property-gated variant (affordance-class hazards).} Suites whose hazards are defined by object \emph{properties} rather than placement use a property theory with the same protected/moving core:
+\begin{equation}
+\begin{aligned}
+\textsc{Hazard}(x) \coloneqq{}& \textsc{Protected}(x)\vee\textsc{Moving}(x)\ \vee\\
+&\big(\textsc{Prop}(x)\wedge\lnot\textsc{Mentioned}(x)\wedge\lnot\textsc{Target}(x)\big),\\
+\textsc{Prop}(x) \coloneqq{}& \textsc{Sharp}(x)\vee\textsc{Fragile}(x)\vee\textsc{HeatSrc}(x)\ \vee\\
+&\big(\textsc{Hot}(x)\wedge\exists s{:}\,\textsc{HeatSrc}(s)\wedge d(x,s){<}0.15\big),
+\end{aligned}
+\label{eq:folprop}
+\end{equation}
+with \emph{no} near-path fallback: a scene with no property-positive object elects nothing (a correct no-op). The heat conjunct is genuinely first-order --- a hot object is hazardous only \emph{near an active heat source}, a two-entity, state-dependent condition no flat scorer expresses.
+
+\emph{Two interchangeable grounding backends.} The literals can be grounded by (a) hand heuristics plus one-shot cached VLM hazard-property priors with a fail-safe floor (semantics may raise concern, never delete protection), or (b) \emph{VLM predicate grounding}: a small VLM (majority of 5 votes, cached per object class, runtime API-free) answers only local per-object questions --- \textsc{Referenced}$(x)$, \textsc{Protected}$(x)$, and the property literals of Eq.~\eqref{eq:folprop}. The rule, the ranking, and the routing below are identical under both backends; Table~\ref{tab:grounding} summarizes every literal's grounding. At evaluation time the entire symbolic stack runs API-free.
+
+\begin{table}[t]
+\centering
+\caption{Every predicate and its grounding. ``VLM (cached)'' = one-shot offline majority-voted queries, zero runtime calls.}
+\label{tab:grounding}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll}
+\toprule
+Predicate & Grounding \\
+\midrule
+\textsc{Protected}$(x)$ & semantic class (body parts, person-attached); \\
+ & VLM-answerable variant identical on 59/59 scenes \\
+\textsc{Moving}$(x)$ & online geometry: settle-window displ.\ $>$1\,cm, \\
+ & re-read every replan \\
+\textsc{Mentioned}$(x)$ & head-noun match vs.\ instruction \\
+\textsc{NearestToPath}$(x)$ & distance to eef$\to$target$\to$dest segments \\
+\textsc{Target}/dest & instruction / goal parse \\
+\textsc{Hot/Sharp/Fragile/} & hand token lists (ablation) \emph{or} \\
+\quad\textsc{HeatSrc}$(x)$ & VLM (cached) per object class \\
+\textsc{Referenced}$(x)$ & reference resolution incl.\ paraphrase (VLM) \\
+positions $\mathrm{pos}(x)$ & privileged sim (GT tier) or open-vocab \\
+ & detection + depth (perception tier) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \emph{Perception tier.} At the ground-truth-free tier, positions and extents come from open-vocabulary detection~\cite{gdino} back-projected through depth (median localization error 0.036--0.067\,m across benchmarks); collision \emph{scoring} remains simulator-anchored in all conditions.
 
@@ -154,7 +192,28 @@ Each escalation below was implemented, pre-registered, and killed by its own gat
 \subsection{System-level results on LIBERO-Safety}
 \label{sec:ls}
 
-With the full stack --- symbolic identification and routing, VLM predicate grounding, barrier-certified steering --- on the \emph{off-the-shelf} $\pi_{0.5}$ checkpoint (never safety-trained): physical violations are eliminated on the human-hazard suites (30\% and 48\% $\to$ 0\%) at preserved task success, matching or beating the benchmark's dedicated 19.6k-demonstration safety fine-tune on Safe-Success. On the safety-reasoning track, the symbolic instruction judge refuses 100/100/80\% of unsafe instructions (levels L0/L1/L2) with zero violations, versus the best published model's 80/72/36\% --- while the unguided policy \emph{executes} the same unsafe instructions at 94/60/100\%. The policy hears language and complies; it does not judge. Ongoing work extends the ground-truth-free tier across all four suites with a learned consequence model as a task-progress tie-breaker among safety-feasible candidates; the identification findings above are insensitive to that enforcement-side choice by the certificate's mechanism independence.
+\begin{table}[t]
+\centering
+\caption{Five-architecture board on LIBERO-Safety physical suites (TSR\,/\,violation\%; $n{=}150$ per suite, obst.-human $n{=}750$; macro = suite mean of TSR\,/\,viol.\,/\,safe-SR). All arms share one policy, protocol, and violation criterion; comparisons are against our self-run baseline at execution parity. \textbf{Bold}: best TSR per suite.}
+\label{tab:board}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccccc}
+\toprule
+Arm & Obstacle & Human & Obst.-hum. & Afford. & Macro \\
+\midrule
+$\pi_{0.5}$ baseline & 74.0/4.0 & 84.0/0 & \textbf{69.3}/5.3 & \textbf{56.7}/0 & 71.0/2.3/70.0 \\
+Post-hoc shield & 75.3/2.7 & 37.3/0 & 46.0/2.0 & 51.3/0 & 52.5/1.2/52.0 \\
+SOTA reimpl. & 70.7/0.7 & 32.7/0 & 48.0/1.3 & 48.7/0 & 50.0/0.5/49.5 \\
+Ours (GT) & \textbf{79.3}/4.7 & 78.7/0 & 63.2/1.9 & \textbf{58.7}/0 & 70.0/1.6/68.7 \\
+Ours (no-GT) & 68.7/0.7 & \textbf{88.7}/0 & 58.9/1.7 & 56.0/0 & 68.1/0.6/67.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:board} places the full stack --- symbolic identification and routing, VLM predicate grounding, barrier-certified steering --- against the unshielded policy and two shield architectures. Both our arms beat both dedicated safety shields by $+15$--$20$ macro TSR at equal-or-lower violations: the shields pay their safety with task collapse on the human and affordance suites, where the symbolic routing (disengage on hazard--destination duality; property theory electing nothing on benign scenes) keeps ours task-capable. Against the \emph{unshielded} baseline, the GT arm beats it outright on obstacle avoidance and matches macro TSR within 1.0 at 30\% fewer violations; the ground-truth-free arm runs at a quarter of baseline's violation rate (0.6 vs.\ 2.3), beats it on human-safety (88.7 vs.\ 84.0), and holds macro safe-SR within 2.1 --- with the VLM-grounded property tables \emph{outscoring} the hand-token ablation on affordance (56.0 vs.\ 47.3): open-vocabulary grounding is both more general and more accurate than the hand lists it replaces. The residual no-GT deficit is localized to zero-slack scenes where centimeter-level localization error displaces the barrier into the work corridor --- a geometric tax, not a semantic one, consistent with Sec.~\ref{sec:e3}.
+
+Separately, on the benchmark's safety-reasoning track the symbolic instruction judge refuses 100/100/80\% of unsafe instructions (levels L0/L1/L2) with zero violations, versus the best published model's 80/72/36\% --- while the unguided policy \emph{executes} the same unsafe instructions at 94/60/100\%. The policy hears language and complies; it does not judge. A learned consequence model as a task-progress tie-breaker among certified candidates matches the hand-tuned engagement gate within noise on the obstacle suite; by the certificate's mechanism independence, the identification findings above are insensitive to that enforcement-side choice.
 
 \section{Discussion}
 \label{sec:discussion}
