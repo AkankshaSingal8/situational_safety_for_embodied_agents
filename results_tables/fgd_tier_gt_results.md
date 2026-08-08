@@ -3393,3 +3393,32 @@ completes it only by contacting the hand (base t4: 5/10 succ, 3 viol).
 Remaining oah gap attribution: t4-class (structural), t7/t8 (policy-hard,
 base <=40%), mild approach taxes t5/t9. The learned-critic compose arm
 (43160056) is the one live mechanism aimed at this class.
+
+## 2026-08-07 — AFFORDANCE PART-LEVEL PIPELINE (user-directed): VLM table committed; grounding smoke 43166942
+
+CORRECTION to today's "part-contact violations measured" note: the
+Checkgrippercontactpart predicate is the affordance suite's :GOAL, and the
+bddls have NO :constraints section — success itself = "grasped by the
+allowed part"; viol 0.0% on affordance is VACUOUS (no violation predicate
+exists). Consequence: affordance TSR already scores part-level safety, and
+part-aware guidance has direct TSR headroom (base only 56.7).
+
+Semantics (explore agent, bddl_base_domain.py:1120-1133): goal geom-id list
+matches the TRAILING INT of per-object geom names (knife_1_g23 -> "23");
+listed set = ALLOWED/grasp geoms; complement over the object's group-0
+contact geoms = unsafe part. Latent benchmark bug found: fork bddls (L0/L2)
+use comma-separated ids; the tokenizer keeps commas so only the last id
+ever matches (effectively single-geom goal).
+
+Pipeline built:
+1. results_tables/ls_vlm_affordance_parts.json (d467987): N=5 UNANIMOUS
+   Haiku labels for all 5 constrained classes — knife blade/handle, hammer
+   head/handle, fork tines/handle, classic blue mug rim/handle, frypan
+   cooking surface/handle. ~1 cent.
+2. vlm_pipeline/smoke_affordance_parts.py (731da45): per L0 task, GT part
+   centroids from goal geom sets (comma bug corrected for OUR reference)
+   vs GroundingDINO free-text part prompts ("knife blade" passes verbatim;
+   detector accepts arbitrary captions). Gate: unsafe-part side
+   discrimination >= 4/5 objects. Job 43166942 (40 min, no policy server).
+If PASS -> next: part-repeller arm (small barrier on unsafe-part centroid,
+no-GT tier percep) as an affordance TSR lever, n=10 dev.
