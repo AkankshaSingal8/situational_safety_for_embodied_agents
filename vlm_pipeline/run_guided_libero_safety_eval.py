@@ -500,6 +500,17 @@ def main():
                          "ident + guidance. Static snapshot: dynamic hazards "
                          "keep their settle-end estimate (documented no-GT tax)")
     ap.add_argument("--percep_z_correction", type=float, default=-0.03)
+    ap.add_argument("--percep_refresh_alpha", type=float, default=0.0,
+                    help="With --percep_refresh_movers: EMA weight for the "
+                         "mover track (0 = raw replacement, the arm-F mode "
+                         "that LOST to the static snapshot via detector "
+                         "noise). alpha in (0,1] blends each accepted "
+                         "re-detection into a smooth track.")
+    ap.add_argument("--percep_refresh_gate", type=float, default=0.15,
+                    help="Innovation gate (meters) for filtered refresh: a "
+                         "re-detection farther than this from the current "
+                         "track is treated as a detector outlier and "
+                         "discarded (track kept).")
     ap.add_argument("--percep_refresh_movers", action="store_true",
                     help="No-GT tier: re-run percep localization for MOVER "
                          "entities at every chunk boundary, so dynamic "
@@ -869,8 +880,27 @@ def main():
                         # anchors to the CURRENT hand position. A failed
                         # re-localization keeps the previous estimate
                         # (fail-safe: never un-guards on a perception miss).
+                        # Arm-F forensics: RAW replacement (alpha=0) is
+                        # noisier than the static snapshot and REGRESSED
+                        # L1 44.4->34.0; alpha>0 runs a gated EMA track
+                        # instead -- outlier detections (innovation beyond
+                        # --percep_refresh_gate) are discarded, accepted ones
+                        # blend smoothly.
                         _fresh = percep_snapshot(env, sorted(movers))
-                        percep_pos.update(_fresh)
+                        _a = args.percep_refresh_alpha
+                        if _a <= 0:
+                            percep_pos.update(_fresh)
+                        else:
+                            for _n, _p in _fresh.items():
+                                _prev = percep_pos.get(_n)
+                                _p = np.asarray(_p, dtype=np.float64)
+                                if _prev is None:
+                                    percep_pos[_n] = _p
+                                    continue
+                                _prev = np.asarray(_prev, dtype=np.float64)
+                                if np.linalg.norm(_p - _prev) > args.percep_refresh_gate:
+                                    continue  # detector outlier: keep track
+                                percep_pos[_n] = (1.0 - _a) * _prev + _a * _p
 
                     def _guard_pos(name):
                         # GT tier: LIVE obs every replan (tracks :dynamics
