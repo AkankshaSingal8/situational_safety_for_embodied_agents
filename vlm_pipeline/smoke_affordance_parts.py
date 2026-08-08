@@ -106,13 +106,23 @@ def main():
                "n_allowed_geoms": n_a, "n_unsafe_geoms": n_u,
                "gt_grasp": None if gt_grasp is None else [round(float(x), 4) for x in gt_grasp],
                "gt_unsafe": None if gt_unsafe is None else [round(float(x), 4) for x in gt_unsafe]}
+        short = cls.split()[-1]  # "classic blue mug" -> "mug"
         for field, gt_this, gt_other in (
                 ("unsafe_part", gt_unsafe, gt_grasp),
                 ("grasp_part", gt_grasp, gt_unsafe)):
-            prompt = f"{cls} {labels[field]}"
-            pos, nv = estimate_obstacle_pos(
-                sim, prompt, cameras=("agentview",),
-                region_source="detector", detector=det)
+            part = labels[field]
+            # v2 (smoke 43166942 FAIL 2/5): 512px, 2-camera fusion, and
+            # simpler prompt fallbacks -- long captions ("classic blue mug
+            # rim") returned nothing in-workspace at 256px.
+            pos, nv, prompt = None, 0, None
+            for prompt in (f"{short} {part}", f"{cls} {part}",
+                           f"{part} of the {short}", part):
+                pos, nv = estimate_obstacle_pos(
+                    sim, prompt, cameras=("agentview", "birdview"),
+                    camera_height=512, camera_width=512,
+                    region_source="detector", detector=det)
+                if pos is not None:
+                    break
             entry = {"prompt": prompt, "n_views": nv}
             if pos is not None and gt_this is not None:
                 entry["pos"] = [round(float(x), 4) for x in pos]
