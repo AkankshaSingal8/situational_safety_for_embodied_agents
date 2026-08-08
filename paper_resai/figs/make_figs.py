@@ -107,6 +107,18 @@ def fig_pipeline():
     arrow(ax, 0.56, 0.555, 0.56, 0.48)
     arrow(ax, 0.687, 0.32, 0.717, 0.58)
     arrow(ax, 0.852, 0.495, 0.852, 0.40)
+    # K-candidate fan on the steering box
+    ax.text(0.7325, 0.885, r"$K{=}8$ chunks", fontsize=6.2, color=C_NEURAL_E)
+    for dy in (-0.012, 0.0, 0.012):
+        ax.plot([0.700, 0.717], [0.72, 0.80 + dy], lw=0.8, color=C_NEURAL_E)
+    # replan loop: certificate -> execute prefix -> next observation
+    from matplotlib.patches import FancyArrowPatch
+    ax.add_patch(FancyArrowPatch((0.85, 0.075), (0.10, 0.185),
+                                 arrowstyle="-|>", mutation_scale=10, lw=1.1,
+                                 color=C_CERT_E, linestyle=(0, (4, 2)),
+                                 connectionstyle="arc3,rad=0.18"))
+    ax.text(0.47, 0.001, "execute certified 5-step prefix; re-observe and replan",
+            fontsize=6.4, color=C_CERT_E, ha="center", style="italic")
 
     fig.savefig("fig_pipeline.pdf", bbox_inches="tight", dpi=300)
     print("wrote fig_pipeline.pdf")

@@ -48,7 +48,7 @@ The symbolic decision layer feeds a training-free enforcement layer (Sec.~\ref{s
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.98\textwidth]{fig_pipeline.pdf}
-\caption{\textbf{The division of labor.} A real LIBERO-Safety scene (left; obstacle-avoidance suite) is processed by \emph{neural} components (blue) that only answer local, checkable questions --- per-object predicates and open-vocabulary localization --- while a fixed \emph{symbolic} layer (amber) makes every safety-critical decision: hazard election by the three-literal rule of Eq.~\eqref{eq:fol} and routing into avoid / disengage / refuse regimes. Enforcement searches the frozen flow policy's noise space, and a discrete-CBF chain re-checked on the executed prefix (green) certifies the output independently of which neural search produced it.}
+\caption{\textbf{The division of labor.} A real LIBERO-Safety scene (left; obstacle-avoidance suite) is processed by \emph{neural} components (blue) that only answer local, checkable questions --- per-object predicates and open-vocabulary localization --- while a fixed \emph{symbolic} layer (amber) makes every safety-critical decision: hazard election by the three-literal rule of Eq.~\eqref{eq:fol} and routing into avoid / disengage / refuse regimes. Enforcement searches the frozen flow policy's noise space over $K{=}8$ candidate chunks, and a discrete-CBF chain re-checked on the executed prefix (green) certifies the output independently of which neural search produced it; the certified 5-step prefix executes and the loop replans from the next observation.}
 \label{fig:pipeline}
 \end{figure*}
 
@@ -144,8 +144,15 @@ Enforcement operates on the frozen flow policy without touching its weights: the
 
 \emph{Setup.} Frozen $\pi_{0.5}$~\cite{pi05} flow VLA; two benchmarks: SafeLIBERO~\cite{sota2607} (LIBERO tasks with a hazardous distractor near the reach path; collision $=$ $>$1\,mm ground-truth hazard displacement) and LIBERO-Safety~\cite{liberosafety} (named-object hazards, dynamic human-hand intruders, affordance and safety-reasoning suites; the benchmark's own contact-predicate violations). All comparisons are paired against self-run baselines under one protocol.
 
-\subsection{The symbolic rule matches ground truth (paired)}
+\subsection{SafeLIBERO: the symbolic rule matches ground truth}
 \label{sec:e3}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_safelibero.pdf}
+\caption{\textbf{SafeLIBERO, qualitatively.} (a)~An unshielded rollout: the policy drives through the hazardous distractor and topples the moka pot while reaching the bowl. (b)~A barrier-guided rollout on the same task family: the bowl is carried clear and the hazard is never touched. (c)~The compiled constraint, visualized: the FOL rule elects the moka pot ($\lnot\textsc{Mentioned}\wedge\textsc{NearestToPath}$; it is not named by the instruction and sits on the reach path), and its barrier's $h{=}0$ boundary (red) is projected into the camera view with the parsed target circled in green. The sphere-with-companions barrier plus per-step inflation is everything the enforcement layer sees --- symbols in, geometry out.}
+\label{fig:safelibero}
+\end{figure*}
 
 \begin{table}[t]
 \centering
@@ -169,7 +176,7 @@ FOL rule, Eq.~\eqref{eq:fol} & 62.5/32.5 & 90.0/40.0 \\
 \label{fig:results}
 \end{figure}
 
-Table~\ref{tab:e3} holds the enforcement stack fixed and swaps only the identity source. The ground-truth-free FOL rule is statistically indistinguishable from privileged simulator identity (all $p\ge0.18$), and every trend favors the rule (pooled discordant episodes 12:6 in its favor). The residual cost of removing privileged state is \emph{geometric} (localization error), not semantic. A deliberate-corruption study shows the failure direction: forcing the second-best identity pick costs collision avoidance (70$\to$25\%), not task success --- identification errors fail \emph{unsafe}, which is why the identification layer, not the barrier, is the reliability-critical component.
+SafeLIBERO places a hazardous distractor near the reach path of standard LIBERO tasks (Fig.~\ref{fig:safelibero}); the unguided policy collides in up to 86--88\% of episodes. With the full stack, the ground-truth-free tier reaches 70.0\,TSR\,/\,46.5\,CAR on Spatial~L1 --- collision avoidance $2$--$3\times$ the unguided baseline's (14.0) at matched task success --- and dominates both a post-hoc shield and the reimplemented in-denoising SOTA on both axes in half the benchmark's cells. The identification-side evidence is the controlled experiment: Table~\ref{tab:e3} holds the enforcement stack fixed and swaps only the identity source. The ground-truth-free FOL rule is statistically indistinguishable from privileged simulator identity (all $p\ge0.18$), and every trend favors the rule (pooled discordant episodes 12:6 in its favor). The residual cost of removing privileged state is \emph{geometric} (localization error), not semantic. A deliberate-corruption study shows the failure direction: forcing the second-best identity pick costs collision avoidance (70$\to$25\%), not task success --- identification errors fail \emph{unsafe}, which is why the identification layer, not the barrier, is the reliability-critical component.
 
 \subsection{VLM predicate grounding: same decisions, more competence}
 \label{sec:grounding}
