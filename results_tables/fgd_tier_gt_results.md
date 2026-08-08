@@ -3733,3 +3733,25 @@ L1 44.4/0). Hypothesis: stale hand positions cause BOTH residual violations
 goal-adjacent position that permanently gates); refresh should help both.
 Now three rescue arms in flight: D (gated 2-view, oa), E (soft repulsor,
 oah), F (mover refresh, oah) under monitor bi5iwb3ww.
+
+## 2026-08-08 — CRITIC V2 implemented + eval queued (43196727)
+
+User-approved improvement bundle, all three aimed at measured failures:
+1. LABELS: composite-distance discounted progress — D = d(eef,target) +
+   d(target,dest), label = sum gamma^(k/H) * per-step reduction over 5
+   chunks (dest auto-derived from bddl goals, task-id-verified:
+   target_maps/ls_obstacle_avoidance_dest.json). Fixes myopia (t7 detours)
+   and stage-blindness (post-grasp d(eef,target)~=0 carried no signal).
+2. TRAINING: percep-noise injection (sigma 2 cm + 10% outliers U(5,15) cm,
+   normalized-space, meters-calibrated) — v1 collapsed at no-GT because it
+   trained on clean GT positions; this is the no-GT lever.
+3. USAGE: server --consequence_stall_gate 0.01 — critic overrides the
+   legacy winner ONLY when its predicted progress < 1 cm (exact legacy-index
+   recovery by chunk match). Kills the compose-everywhere t2/t8 regressions
+   by construction.
+Gates (pre-registered, in consequence_v2_retrain.py): clean Spearman >= 0.70
+AND noisy-input Spearman >= 0.60 AND err_ratio/AUC bars. Training running
+(2 members, ratchet); eval job 43196727 queued SELF-GATING (waits for
+g1_report, aborts unless v2.gate_pass). Eval: oa L0-2 n=10/task, GT tier
+(vs cone 79.3/4.7/75.3, rank-v1 77.3/3.3/74.0, incumbent 70.7/4.0/68.0) and
+no-GT tier (vs 68.7/0.7/68.7). Promotion rule unchanged.
