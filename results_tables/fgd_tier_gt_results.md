@@ -3510,3 +3510,11 @@ promotion (would also need L2 rerun). oah column stays F3 cone (58.9/1.7).
 
 Pending for final Table 6: 43152008 (oa/aff no-GT cone + 2-view arms — the
 no-GT analogue of the +8.6 oa GT cone jump), 43155835 (pinned E1).
+
+## 2026-08-07 — E1-PINNED (43155835, parallel session): aborted at its own smoke gate (9 min); NOT resubmitted
+
+Log: "consequence_select lines: total=1 fallback=1 -> SMOKE_GATE_FAIL
+(>=90% fallback)". Predicted failure mode (L0 task_filter 7 = zero tasks)
++ the E2-known fallback saturation. No rerun: the compose arm (43160056)
+already gives the full-coverage E1 verdict (NO-GO) and pinned's expected
+behavior is ~= gt-plain via fallback. #43 remains closed.
