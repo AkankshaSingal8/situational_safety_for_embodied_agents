@@ -94,6 +94,13 @@ Each regime is a symbolic, inspectable decision: the system can state \emph{whic
 
 Enforcement operates on the frozen flow policy without touching its weights: the 10-step Euler denoise map $F(z,\mathrm{obs})$ is deterministic in the initial noise $z$, so safe behaviors form a preimage $\{z: F(z)\ \text{passes the safety check}\}$ that can be searched by best-of-$K$ seed selection, Feynman--Kac particle reweighting at mid-denoising steps, or gradient ascent of the clearance margin through the denoise map --- optionally composed with a soft repulsive velocity field. Every emitted action remains exactly on the policy manifold. Safety of the executed 5-step prefix is certified by a discrete-CBF chain $B_j\ge(1-\gamma)B_{j-1}$ under an actuation-limited single-integrator model, \emph{re-checked on the final decoded chunk}: the certificate is a property of the output, hence independent of which neural search produced it, and fail-visible when no candidate passes. Full operator definitions, feasibility theorem, and paired enforcement comparisons appear in the companion full paper; here the enforcement layer plays the role of the \emph{actuator} of the symbolic decision.
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.98\textwidth]{fig_scenes.pdf}
+\caption{Simulation testbeds. (a)~LIBERO-Safety obstacle avoidance: the elected guard (a spillable bottle) sits directly beside the task target. (b)~Human-safety suite: a hand enters the workspace mid-episode and is captured online by the \textsc{Moving}/\textsc{Protected} literals. (c)~SafeLIBERO: a hazardous distractor placed on the reach path. (d)~A certified rollout: the task completes with zero hazard contact under the checked prefix certificate.}
+\label{fig:scenes}
+\end{figure*}
+
 \section{Experiments}
 \label{sec:results}
 
