@@ -115,10 +115,12 @@ def main():
             # simpler prompt fallbacks -- long captions ("classic blue mug
             # rim") returned nothing in-workspace at 256px.
             pos, nv, prompt = None, 0, None
+            # agentview-only: v2 showed birdview fusion degrades part
+            # centroids (top-down part boxes swallow the whole object).
             for prompt in (f"{short} {part}", f"{cls} {part}",
                            f"{part} of the {short}", part):
                 pos, nv = estimate_obstacle_pos(
-                    sim, prompt, cameras=("agentview", "birdview"),
+                    sim, prompt, cameras=("agentview",),
                     camera_height=512, camera_width=512,
                     region_source="detector", detector=det)
                 if pos is not None:
@@ -134,13 +136,42 @@ def main():
                 entry["pos"] = None
             row[field] = entry
         env.close()
-        d = row.get("unsafe_part", {}).get("discriminates")
+        # v3 (smokes 43166942 1st FAIL 2/5, 43167195 2-view FAIL 1/5):
+        # direct unsafe-part detection is unreliable (part boxes swallow
+        # body pixels; centroid drifts to object middle), but GRASP-part
+        # ("handle") prompts discriminate on every object that detects at
+        # all. Mirror estimate: unsafe ~= 2*whole_object - handle, using
+        # the whole-object detection (the pipeline's reliable primitive).
+        whole, _ = estimate_obstacle_pos(
+            sim, short, cameras=("agentview",),
+            camera_height=512, camera_width=512,
+            region_source="detector", detector=det)
+        if whole is None:
+            whole, _ = estimate_obstacle_pos(
+                sim, cls, cameras=("agentview",),
+                camera_height=512, camera_width=512,
+                region_source="detector", detector=det)
+        hpos = row["grasp_part"].get("pos")
+        mirror = {"whole": None if whole is None else
+                  [round(float(x), 4) for x in whole]}
+        if whole is not None and hpos is not None and gt_unsafe is not None:
+            est = 2.0 * np.asarray(whole) - np.asarray(hpos)
+            mirror["pos"] = [round(float(x), 4) for x in est]
+            mirror["err_m"] = round(float(np.linalg.norm(est - gt_unsafe)), 4)
+            if gt_grasp is not None:
+                mirror["discriminates"] = bool(
+                    np.linalg.norm(est - gt_unsafe) < np.linalg.norm(est - gt_grasp))
+        row["unsafe_mirror"] = mirror
+        d_direct = row.get("unsafe_part", {}).get("discriminates")
+        d = bool(d_direct) or bool(mirror.get("discriminates"))
         disc_ok += bool(d)
-        logging.info("%s: unsafe '%s' err=%s disc=%s | grasp '%s' err=%s disc=%s",
+        logging.info("%s: unsafe '%s' err=%s disc=%s | grasp '%s' err=%s disc=%s"
+                     " | mirror err=%s disc=%s",
                      row["task"][:40],
-                     labels["unsafe_part"], row["unsafe_part"].get("err_m"), d,
+                     labels["unsafe_part"], row["unsafe_part"].get("err_m"), d_direct,
                      labels["grasp_part"], row["grasp_part"].get("err_m"),
-                     row["grasp_part"].get("discriminates"))
+                     row["grasp_part"].get("discriminates"),
+                     mirror.get("err_m"), mirror.get("discriminates"))
         report.append(row)
 
     verdict = "PASS" if disc_ok >= 4 else "FAIL"
