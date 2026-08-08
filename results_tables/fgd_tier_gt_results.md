@@ -3562,3 +3562,17 @@ oah=F2 cone; ours-noGT hs=topup L0+CD L1L2 (folprop), aff=folpropvlm,
 oah=F3 cone. Remaining in-flight (NOT in table): critic E1 43176789
 (pinned+compose replicate, GT tier) and rank retrain — a passing retrain
 gates one final no-GT oa compose-rank arm before absolute freeze.
+
+## 2026-08-08 — MARGIN DEV VERDICTS (43152008, n=10/task): A noise / B FAIL / C superseded; oa-t7 disclosed unfixed
+
+A (oa nogt cone eng0.30): pooled 69.3/v2.0 vs plain 68.7/v0.7 — t7 0->3
+partial wake, given back at t9 9->6 / t2 7->5; viol up. NO PROMOTION.
+B (oa nogt 2view eng0.22): 56.0 POISONED — t7 0->4 but t0 8->0, t10 10->1;
+birdview entity fusion is unreliable in LS scenes (consistent with parts
+smoke). REJECTED. oa-t7 percep-noise cell stays open in no-GT (0/10 plain,
+3/10 cone, 4/10 2view vs base 9/10) — disclosed as the no-GT oa limitation.
+C (aff folprop+cone): 50.0 vs folprop 47.3 (cone +6 on L2) but < fpvlm
+56.0. Compose arm folpropvlm+cone submitted (43177491) as the final aff
+lever; promotion iff pooled > 56.0, viol 0.
+No-GT final config (pending only the compose arm): oa fol plain / hs
+folprop / oah fol+cone60@0.30 / aff folpropvlm.
