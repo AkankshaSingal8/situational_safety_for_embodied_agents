@@ -78,6 +78,14 @@ class GuidanceConfig:
     consequence_n_members: int = 3
     consequence_pessimism: float = 1.0  # lambda in feasible = p_mean + lambda*p_std <= threshold
     consequence_threshold: float = 0.10
+    # Stall-gated intervention (v2, 2026-08-08): when > 0, the consequence
+    # selector only OVERRIDES the legacy lexicographic winner if that
+    # winner's own predicted progress is below this threshold (meters of
+    # discounted composite-distance reduction) -- i.e. the critic breaks
+    # predicted stalls and leaves healthy selections untouched (the
+    # compose-everywhere mode's t2/t8 regressions came from reranking
+    # replans the legacy selection already handled well). 0 = off.
+    consequence_stall_gate: float = 0.0
     # Domain tag fed to the consequence model (see consequence_model.py's
     # "Domain tag" design decision: "SL" = SafeLIBERO-calibrated actuation
     # (translation_scale=0.05, cmd_clip=1.0 -- this server's plain defaults),
@@ -355,6 +363,20 @@ class GuidedPolicy(_policy.Policy):
 
         if result.fallback:
             return selected, diag
+
+        if cfg.consequence_stall_gate > 0.0:
+            # Identify the legacy winner exactly: `selected` IS one of the
+            # K candidate chunks, so match it back to its index.
+            x0_np = np.asarray(x_0)
+            sel_np = np.asarray(selected)[0]
+            legacy_idx = int(np.argmin(
+                np.abs(x0_np - sel_np[None]).reshape(x0_np.shape[0], -1).max(axis=1)))
+            if float(result.progress_mean[legacy_idx]) >= cfg.consequence_stall_gate:
+                logging.info(
+                    "consequence_select: stall_gate kept legacy idx %d "
+                    "(progress %.4f >= %.4f)", legacy_idx,
+                    float(result.progress_mean[legacy_idx]), cfg.consequence_stall_gate)
+                return selected, diag
 
         idx = result.chosen
         chosen_actions = np.asarray(x_0)[idx : idx + 1]

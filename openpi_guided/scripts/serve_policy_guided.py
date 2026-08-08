@@ -75,6 +75,7 @@ class Args:
     consequence_n_members: int = 3
     consequence_pessimism: float = 1.0
     consequence_threshold: float = 0.10
+    consequence_stall_gate: float = 0.0
     consequence_domain: str = "SL"
     consequence_action_scale: float = 1.0
     consequence_action_clip: float = 0.0
@@ -122,6 +123,7 @@ def main(args: Args) -> None:
         consequence_n_members=args.consequence_n_members,
         consequence_pessimism=args.consequence_pessimism,
         consequence_threshold=args.consequence_threshold,
+        consequence_stall_gate=args.consequence_stall_gate,
         consequence_domain=args.consequence_domain,
         consequence_action_scale=args.consequence_action_scale,
         consequence_action_clip=args.consequence_action_clip,
