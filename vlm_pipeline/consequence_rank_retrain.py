@@ -191,6 +191,18 @@ def main():
     models: List = []
     histories = []
     for m in range(args.n_members):
+        ckpt_path = out_dir / f"consequence_model_member{m}.pt"
+        if ckpt_path.exists():
+            # Resume support: login-node runs get reaped mid-training; a
+            # member checkpoint is complete (saved only after its loop ends),
+            # so skip it and train the next one.
+            import torch
+            model = cm.ConsequenceModel()
+            model.load_state_dict(torch.load(ckpt_path, map_location="cpu")["state_dict"])
+            models.append(model)
+            histories.append(dict(seed=m, resumed=True))
+            print(f"member {m}: resumed from {ckpt_path}")
+            continue
         model, hist = train_member_ranked(
             train_samples, held_samples, norm, seed=m,
             rank_weight=args.rank_weight, rank_margin=args.rank_margin,
