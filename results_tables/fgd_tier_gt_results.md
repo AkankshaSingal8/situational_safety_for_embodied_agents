@@ -4064,3 +4064,13 @@ the REPAIR TAX, not a tracking artifact; position update frequency and view
 quality are not the bottleneck. NO-PROMOTE; static snapshot remains
 production. Remaining oah lever: stall-triggered recovery (brainstorm
 approach 2 / critic v2 stall gate).
+
+## 2026-08-09 — Affordance n-boost verdict (43211480): parity CONFIRMED at n=450
+
+Fresh +20/task: fpvlm 57.3/0 vs base 55.7/0; pooled n=450/cell: 56.9/0 vs
+56.0/0; paired McNemar 20:26 discordant, p=0.46 — statistical tie at zero
+violations, both directions. The aff cell survives the winner's-curse audit:
+the paper claim is "baseline parity at zero violations with fully general
+VLM-grounded property predicates" (and +9.6 over the hand-token ablation).
+Significance pass now covers ALL promoted cells (oa/hs by ls_nboost, aff
+here). No jobs in flight.
