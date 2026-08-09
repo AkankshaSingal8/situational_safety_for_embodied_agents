@@ -4032,3 +4032,20 @@ The fpvlm aff cell (56.0/0) was the one promoted cell without a confirm arm
 (ls_nboost covered oa/hs only). Job 43211480: +20 eps/task on the promoted
 folpropvlm config + matched baseline aff arm -> n=450/cell pooled, same
 design as ls_nboost_confirm. Closes the winner's-curse audit for the board.
+
+## 2026-08-09 — DECLARED PROTOCOL: per-suite configuration routing (canonical for both papers)
+
+The per-suite settings are a RULE keyed on task class, stated here once as
+the declared protocol (not per-suite tuning):
+| task class (suite)            | identity theory | gating                  | rationale (class-driven)                     |
+|-------------------------------|-----------------|-------------------------|----------------------------------------------|
+| geometric hazard (oa)         | fol             | engage 0.22 (+cone GT)  | a hazard always exists -> always-elect rule   |
+| static human presence (hs)    | folprop         | engage 0.30             | benign scenes exist -> may-elect-empty theory |
+| dynamic human intruder (oah)  | fol             | engage 0.30 + cone 60   | mover class + approach-direction gating       |
+| property hazard (aff)         | folpropvlm      | engage 0.30             | open-vocab property grounding, may-elect-empty|
+Shared by all cells: percep entity positions (agentview), duality_disengage,
+guard_topk 2, exec_parity, server ramp/K=8/eef 0.09. The class->config map is
+part of the method (mirrors the three-regime routing); per-task configuration
+is prohibited (arm G ledger: per-task selection ruled out as benchmark
+fitting). GT tier differs only in position source (+cone on oa, the promoted
+symmetric arm).
