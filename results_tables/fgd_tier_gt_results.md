@@ -4012,3 +4012,16 @@ session added shield p-values, pooled violation stat, oah-deficit
 disclosure p=0.005/0.03). FINAL defensible claims: (1) shields +15-20
 p<1e-15; (2) GT beats baseline oa TSR p=0.045 (n=450); (3) noGT violations
 12:1 p=0.003 at TSR parity on 3/4 suites; (4) oah TSR deficit disclosed.
+
+## 2026-08-09 — Arm F3 launched (43211469): wrist-primary mover tracking at replan frequency
+
+User-directed third re-perception variant: the filter's CBF anchor updates
+at ACTION-GENERATION frequency (every chunk boundary) from the WRIST camera
+(robot0_eye_in_hand primary; agentview refine-only via --entity_view_tau
+0.08). F (raw agentview, jitter) and F2 (EMA agentview, lag) both closed as
+detector-VIEW limits on a moving hand; F3 changes the view — at close range,
+where all oah freezes/violations occur, the wrist camera sees the hand large
+and unoccluded. Light EMA 0.6 + innovation gate 0.20. New client flag
+--percep_refresh_cameras (default empty = entity_cameras, byte-identical).
+oah L0+L1 n=10/task vs static-snapshot refs 53.6/2.8, 44.4/0. Promotion rule
+unchanged.
