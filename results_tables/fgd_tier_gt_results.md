@@ -3880,3 +3880,16 @@ Remaining live levers, both parallel-session-owned: bbox_shrink (oa t7
 systematic bias) and consequence_stall_gate (freeze-gated critic). oah
 residual remains the disclosed repair-tax story (baseline wins those cells
 only by colliding: 5.3% viol vs our 1.7%).
+
+## 2026-08-08 — CRITIC V2 GATE: PASS (clean 0.748 / noisy 0.743) — eval unblocked
+
+v2 retrain complete (2 members, epoch-ratchet through 6 reaper kills):
+clean-input progress Spearman 0.7479 (bar 0.70), NOISY-input 0.7429 (bar
+0.60) — the noise-injection training holds the ordering under percep-level
+corruption where v1 collapsed; err_ratio 0.149 / AUC 0.9988 unregressed.
+Composite-distance discounted labels + same-episode rank loss + noise
+injection: all three v2 levers verified offline. Self-gating eval 43196727
+(queued) will now pass its gate check and run oa L0-2 GT + no-GT with
+--consequence_stall_gate 0.01. The no-GT arm is the one to watch: v2 is the
+first critic trained for noisy inputs, and no-GT oa is the cell where every
+geometric lever has failed.
