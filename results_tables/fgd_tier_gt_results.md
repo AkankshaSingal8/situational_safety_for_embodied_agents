@@ -3994,3 +3994,21 @@ DISCLOSED: oah TSR significantly below baseline (nogt 13:33 p=0.0045; gt
 11:25 p=0.029) — the freeze-cell tax; baseline's oah successes carry 5.3%
 violations vs our 1.7/1.9%. hs is TSR parity (earlier +4.7 was seed noise —
 caught by the n-boost, not shipped).
+
+## 2026-08-09 — CORRECTION to previous entry: batch-key collision; TRUE n=450 board
+
+The 2026-08-09 "final board" entry pooled batches on (task, ep) keys; the
+n-boost reuses ep indices 0-9, so 150 episodes were silently OVERWRITTEN
+(not pooled). Batch-aware recomputation (verified against the parallel
+session's independent numbers, exact agreement):
+- oa GT cone n=450: 77.8/4.2/74.9 vs base 73.6/4.7/70.7 — 50:31 discordant,
+  exact p=0.045: GT SIGNIFICANTLY BEATS BASELINE TSR on obstacle avoidance.
+- hs noGT n=450: 86.9/0 vs base 85.8/0 — 41:36 p=0.65, TSR parity (stands).
+- Pooled no-GT violation McNemar, correctly paired (b1-only where no boost):
+  12:1, p=0.0034 (was misstated 17:2/0.0007 via collided base pool).
+Macros: base 71.4/2.5/70.3; GT 69.6/1.5/68.6; noGT 67.6/0.6/67.4.
+Paper Table II + prose synced (parallel session did cells/abstract; this
+session added shield p-values, pooled violation stat, oah-deficit
+disclosure p=0.005/0.03). FINAL defensible claims: (1) shields +15-20
+p<1e-15; (2) GT beats baseline oa TSR p=0.045 (n=450); (3) noGT violations
+12:1 p=0.003 at TSR parity on 3/4 suites; (4) oah TSR deficit disclosed.
