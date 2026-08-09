@@ -4025,3 +4025,10 @@ and unoccluded. Light EMA 0.6 + innovation gate 0.20. New client flag
 --percep_refresh_cameras (default empty = entity_cameras, byte-identical).
 oah L0+L1 n=10/task vs static-snapshot refs 53.6/2.8, 44.4/0. Promotion rule
 unchanged.
+
+## 2026-08-09 — Affordance n-boost launched (43211480): completes the significance pass
+
+The fpvlm aff cell (56.0/0) was the one promoted cell without a confirm arm
+(ls_nboost covered oa/hs only). Job 43211480: +20 eps/task on the promoted
+folpropvlm config + matched baseline aff arm -> n=450/cell pooled, same
+design as ls_nboost_confirm. Closes the winner's-curse audit for the board.
