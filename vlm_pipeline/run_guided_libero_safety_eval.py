@@ -500,6 +500,16 @@ def main():
                          "ident + guidance. Static snapshot: dynamic hazards "
                          "keep their settle-end estimate (documented no-GT tax)")
     ap.add_argument("--percep_z_correction", type=float, default=-0.03)
+    ap.add_argument("--percep_render_res", type=int, default=256,
+                    help="Render resolution for percep localization (depth/"
+                         "RGB fed to the detector). 512 halves pixel-"
+                         "quantization error at one extra render per object "
+                         "per episode (arm G).")
+    ap.add_argument("--percep_bbox_shrink", type=float, default=0.0,
+                    help="Shrink detector bboxes toward center by this "
+                         "fraction before depth sampling (arm G: cuts the "
+                         "systematic background-depth centroid bias; 0 = "
+                         "full rectangle).")
     ap.add_argument("--percep_refresh_alpha", type=float, default=0.0,
                     help="With --percep_refresh_movers: EMA weight for the "
                          "mover track (0 = raw replacement, the arm-F mode "
@@ -720,9 +730,12 @@ def main():
         def percep_snapshot(env, names):
             return estimate_object_positions(
                 env.sim, names, cameras=tuple(args.entity_cameras.split(",")),
+                camera_height=args.percep_render_res,
+                camera_width=args.percep_render_res,
                 region_source="detector", detector=gdino_detector,
                 z_correction=args.percep_z_correction,
-                consistency_tau=(args.entity_view_tau or None))
+                consistency_tau=(args.entity_view_tau or None),
+                bbox_shrink=args.percep_bbox_shrink)
     bm = benchmark.get_benchmark_dict()[args.suite]()
     task_ids = [i for i in range(bm.get_num_tasks())
                 if getattr(bm.get_task(i), "level", None) == args.level]

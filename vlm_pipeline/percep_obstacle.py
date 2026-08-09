@@ -128,7 +128,7 @@ def _region_estimate(depth, region_mask, K, T, depth_window=0.20):
 def estimate_obstacle_pos(sim, obstacle_name, cameras=("agentview", "birdview"),
                           camera_height=256, camera_width=256,
                           region_source="gt_seg", detector=None,
-                          consistency_tau=None):
+                          consistency_tau=None, bbox_shrink=0.0):
     """Estimate the obstacle's world position from RGB-D renders.
 
     Renders depth (+ instance segmentation for gt_seg) per camera via
@@ -178,6 +178,17 @@ def estimate_obstacle_pos(sim, obstacle_name, cameras=("agentview", "birdview"),
             est_c = None
             for bbox, _logit in sorted(cands, key=lambda c: -c[1]):
                 x0, y0, x1, y1 = [int(round(b)) for b in bbox]
+                if bbox_shrink > 0:
+                    # Bbox-core sampling (arm G, 2026-08-08): the full
+                    # detector rectangle mixes background/table depth into
+                    # the object's centroid -- a SYSTEMATIC bias (arm-D
+                    # forensics: t7's agentview miss exceeds the 6 cm
+                    # cross-view gate). Shrink each side toward the center
+                    # so depth sampling stays on the object body.
+                    dx = int((x1 - x0) * bbox_shrink / 2)
+                    dy = int((y1 - y0) * bbox_shrink / 2)
+                    x0, x1 = x0 + dx, max(x0 + dx + 1, x1 - dx)
+                    y0, y1 = y0 + dy, max(y0 + dy + 1, y1 - dy)
                 region = np.zeros(depth.shape, dtype=bool)
                 region[max(0, y0):y1, max(0, x0):x1] = True
                 e = _region_estimate(depth, region, K, T)
@@ -268,7 +279,8 @@ def estimate_obstacle_extent(sim, obstacle_name, cameras=("agentview", "birdview
 def estimate_object_positions(sim, names, cameras=("agentview",),
                               camera_height=256, camera_width=256,
                               region_source="gt_seg", detector=None,
-                              z_correction=-0.03, consistency_tau=None):
+                              z_correction=-0.03, consistency_tau=None,
+                              bbox_shrink=0.0):
     """Batch per-object localization for the full Tier-Percep entity stack.
 
     Returns {name: pos} for every object whose estimate succeeded; failures
@@ -282,7 +294,7 @@ def estimate_object_positions(sim, names, cameras=("agentview",),
             sim, name, cameras=cameras,
             camera_height=camera_height, camera_width=camera_width,
             region_source=region_source, detector=detector,
-            consistency_tau=consistency_tau)
+            consistency_tau=consistency_tau, bbox_shrink=bbox_shrink)
         if pos is not None:
             out[name] = pos + np.array([0.0, 0.0, z_correction])
     return out
