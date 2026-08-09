@@ -521,6 +521,15 @@ def main():
                          "re-detection farther than this from the current "
                          "track is treated as a detector outlier and "
                          "discarded (track kept).")
+    ap.add_argument("--percep_refresh_cameras", type=str, default="",
+                    help="Cameras for --percep_refresh_movers re-perception "
+                         "(comma-separated; empty = same as "
+                         "--entity_cameras). Arm F3: robot0_eye_in_hand "
+                         "first — at close range (where the freezes happen) "
+                         "the wrist view sees the hand large and unoccluded, "
+                         "exactly where the agentview detector is weakest; "
+                         "with --entity_view_tau the FIRST camera wins on "
+                         "cross-view disagreement.")
     ap.add_argument("--percep_refresh_movers", action="store_true",
                     help="No-GT tier: re-run percep localization for MOVER "
                          "entities at every chunk boundary, so dynamic "
@@ -899,7 +908,19 @@ def main():
                         # instead -- outlier detections (innovation beyond
                         # --percep_refresh_gate) are discarded, accepted ones
                         # blend smoothly.
-                        _fresh = percep_snapshot(env, sorted(movers))
+                        # Arm F3: --percep_refresh_cameras overrides the view
+                        # set for the refresh only (wrist-primary tracking —
+                        # close range is where agentview fails and freezes
+                        # happen); empty = entity_cameras via percep_snapshot.
+                        if args.percep_refresh_cameras:
+                            _fresh = estimate_object_positions(
+                                env.sim, sorted(movers),
+                                cameras=tuple(args.percep_refresh_cameras.split(",")),
+                                region_source="detector", detector=gdino_detector,
+                                z_correction=args.percep_z_correction,
+                                consistency_tau=(args.entity_view_tau or None))
+                        else:
+                            _fresh = percep_snapshot(env, sorted(movers))
                         _a = args.percep_refresh_alpha
                         if _a <= 0:
                             percep_pos.update(_fresh)
