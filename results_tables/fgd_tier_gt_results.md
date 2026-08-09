@@ -3893,3 +3893,19 @@ injection: all three v2 levers verified offline. Self-gating eval 43196727
 --consequence_stall_gate 0.01. The no-GT arm is the one to watch: v2 is the
 first critic trained for noisy inputs, and no-GT oa is the cell where every
 geometric lever has failed.
+
+## 2026-08-08 — Arm G verdict (43200653): NO-PROMOTE — error reshuffle, not reduction
+
+G (oa noGT eng0.22 + 512px render + bbox-shrink 0.25): 71.3/1.3/70.0 pooled,
+best noGT-oa point estimate yet, BUT paired vs incumbent 23:19 (p=0.64) —
+a per-scene error SHUFFLE. Gains where the bias diagnosis held (t7 0->4,
+t4 3->8, t3 8/10) are cancelled by new regressions where the changed
+detector input flipped previously-good scenes (t9 9->2, t12 6->4). Percep
+config changes move the systematic per-scene errors around rather than
+shrinking them; per-task config selection would be benchmark-fitting and is
+ruled out. CONCLUSION for the paper: the no-GT oa residual is a per-scene
+systematic localization bias that no single detector configuration removes;
+the surviving principled levers are (a) selection-side robustness — the
+noise-trained v2 critic (43196727, queued; noisy Spearman 0.758), and
+(b) genuinely better perception (SAM-mask regions / learned localizer) as
+future work. oa noGT cell stays 68.7/0.7 pending the v2 eval.
