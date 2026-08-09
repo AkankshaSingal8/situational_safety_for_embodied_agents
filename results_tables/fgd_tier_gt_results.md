@@ -3863,3 +3863,20 @@ E reject, F reject, F2 pending. oah cell stays F3; remaining oah hope = F2
 filtered tracking. NOTE: bbox-core sampling (bbox_shrink, "arm G") appearing
 in percep_obstacle.py from the parallel session — t7 region-quality lever in
 progress there; not duplicating.
+
+## 2026-08-08 — Per-suite rescue verdicts (43192793): D wash, E reject — rescue round closed
+
+D (oa gated 2-view @0.22, tau 0.06): 69.3/0.7/69.3 vs incumbent 68.7/0.7 —
+wash; t7 STILL 2/10. Diagnostic: gated fallback = agentview-alone, so t7's
+percep error is SYSTEMATIC agentview bias (bbox/background contamination),
+not random cross-view noise — fusion cannot cancel it. The matching lever
+(bbox_shrink core sampling, arm G) is in the parallel session's hands; not
+duplicating. NO-PROMOTE.
+E (oah cone + repulsor_eta 0.005): 46.0/3.0 vs F3-same-levels 49.0/1.4 —
+REJECT (t4 0/10 unchanged, t9 1/10, t1 +3 viol). Repulsor stacked on hard
+repair pushes further from hazard-adjacent goals; does not soften freezes.
+Round summary (D/E/F all closed): no per-suite promotion; Table 6 stands.
+Remaining live levers, both parallel-session-owned: bbox_shrink (oa t7
+systematic bias) and consequence_stall_gate (freeze-gated critic). oah
+residual remains the disclosed repair-tax story (baseline wins those cells
+only by colliding: 5.3% viol vs our 1.7%).
