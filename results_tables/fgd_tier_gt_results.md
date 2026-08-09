@@ -3923,3 +3923,37 @@ dynamic-hazard tax is bounded by per-frame open-vocab hand localization;
 tracked re-perception (raw and filtered EMA) does not recover it." oah cell
 stays F3. Remaining open: critic-v2 eval 43196727, n-boost 43199112 (both
 queued), arm G bbox-core (parallel session).
+
+## 2026-08-09 — ROUND CLOSE: TABLE 6 FINAL AT n=450 — GT-beats-baseline SIGNIFICANT (p=0.045)
+
+F2 (filtered mover track): 46.0/0 vs F3 49.0/1.4 — REJECT (violations do go
+to 0, but TSR still below snapshot; per-frame hand localization remains the
+binding constraint). oah cell stays F3.
+Critic v2 eval (43196727): GT 76.0/3.3/73.3 (< cone 79.3, < rank-v1 77.3);
+noGT 70.7/0.7/70.7 vs incumbent 68.7/0.7 — paired 14:11 p=0.69, WASH.
+Critic closes for good: v2's offline noise-robustness (0.758) did not
+convert to a coherent rollout gain; both tiers within noise of hand gates.
+Best analysis-section material; no board cells.
+
+N-BOOST pooled (n=450/cell, promoted configs + paired baselines):
+- oa GT cone 77.8/4.2/74.9 vs base-oa 73.6/4.7/70.7 — paired McNemar 50:31,
+  **p=0.045**: ours-GT SIGNIFICANTLY exceeds the unshielded baseline on
+  obstacle avoidance at equal violations. First significant beat-baseline
+  SR cell on the board.
+- hs noGT 86.9/0 vs base-hs 85.8/0 — 41:36 p=0.65: the n=150 +4.7 diluted;
+  honest claim is PARITY-to-slight-edge, not a significant win. Board hs
+  cells updated to n=450 figures.
+
+FINAL BOARD (macro TSR/viol/ssr; n=450 cells where noted):
+| base      | oa 73.6/4.7 (450) | hs 85.8/0 (450) | oah 69.3/5.3 | aff 56.7/0 | 71.4/2.5/70.3 |
+| posthoc   | 75.3/2.7 | 37.3/0 | 46.0/2.0 | 51.3/0 | 52.5/1.2/52.0 |
+| reimpl    | 70.7/0.7 | 32.7/0 | 48.0/1.3 | 48.7/0 | 50.0/0.5/49.5 |
+| ours-GT   | 77.8/4.2 (450) p=.045 | 78.7/0 | 63.2/1.9 | 58.7/0 | 69.6/1.5/68.6 |
+| ours-noGT | 68.7/0.7 | 86.9/0 (450) | 58.9/1.7 | 56.0/0 | 67.6/0.6/67.4 |
+
+Paper claims, final wording: (1) both ours arms beat both dedicated shields
+by +15-20 macro TSR, p<1e-15; (2) ours-GT significantly exceeds the
+unshielded baseline on obstacle avoidance (77.8 vs 73.6, n=450, p=0.045) at
+equal violations; (3) ours-noGT matches baseline on human-safety and
+affordance at a quarter of its overall violation rate (0.6 vs 2.5 macro),
+with the residual deficit localized to disclosed zero-slack/dynamic cells.
