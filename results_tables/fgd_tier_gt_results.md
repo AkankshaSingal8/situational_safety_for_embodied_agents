@@ -3835,3 +3835,17 @@ well, noise training transfers, stall-gate awaits rollout. Self-gating eval
 43196727 (queued) now unblocked: oa L0-2 both tiers, stall-gate 0.01.
 The no-GT arm is the one to watch — a noise-robust ranker is the first
 selection-side mechanism that could survive the percep tier.
+
+## 2026-08-08 — Arms D/E verdicts (43192793): D wash (gate validated, t7 untouched), E reject
+
+D (oa noGT eng0.22 + gated 2-view tau=0.06): 69.3/0.7/69.3 vs incumbent
+68.7/0.7/68.7 — +0.6 wash. Defensive property CONFIRMED (t0 8/10, t10 10/10
+— no blind-fusion collapse) but t7 2/10 unchanged: views disagree >6cm at
+that scene, gate falls back to agentview = incumbent. t7's error is a large
+SYSTEMATIC agentview miss, not cancellable cross-view noise. NO-PROMOTE.
+Remaining t7 levers: percep-quality arm G (SAM mask + 512px render, attacks
+bbox-background depth bias) or the noise-robust v2 critic (43196727).
+E (oah noGT cone + repulsor_eta 0.005): L0 50.0/6.0 (t1 +3 viol) / L1 42.0/0
+vs F3 53.6/2.8, 44.4/0 — worse both levels, t4 0/10, t9 1/10. REJECT: the
+SafeLIBERO obstacle-on-grasp soft channel does not transfer to
+hand-adjacent-goal geometry on top of the cone. oah cell stays F3.
