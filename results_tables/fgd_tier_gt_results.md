@@ -4049,3 +4049,18 @@ part of the method (mirrors the three-regime routing); per-task configuration
 is prohibited (arm G ledger: per-task selection ruled out as benchmark
 fitting). GT tier differs only in position source (+cone on oa, the promoted
 symmetric arm).
+
+## 2026-08-09 — Arm F3 verdict (43211469): exact tie — re-perception series closed for good
+
+F3 (wrist-primary per-replan tracking, EMA 0.6, gate 0.20, tau 0.08): pooled
+49.0/1.0/48.0 vs static snapshot 49.0/1.4 — an EXACT TSR tie with a marginal
+violation edge (1 ep). Per-task: t0 +1 (10/10), t1 keeps its violation, t3
+2/10 (ref ~2/10), t4 0/10 unchanged, t9 3/10 (~ref). The wrist view fixed
+the jitter/lag failure modes of F/F2 (no regression anywhere) but adds no
+TSR: the freezes are not caused by position staleness — the guard is
+CORRECTLY placed on a hand that genuinely occupies the goal region. Series
+conclusion for the paper (three variants, three nulls): the oah residual is
+the REPAIR TAX, not a tracking artifact; position update frequency and view
+quality are not the bottleneck. NO-PROMOTE; static snapshot remains
+production. Remaining oah lever: stall-triggered recovery (brainstorm
+approach 2 / critic v2 stall gate).
