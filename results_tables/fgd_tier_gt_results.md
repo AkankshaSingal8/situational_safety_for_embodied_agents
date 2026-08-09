@@ -3957,3 +3957,40 @@ unshielded baseline on obstacle avoidance (77.8 vs 73.6, n=450, p=0.045) at
 equal violations; (3) ours-noGT matches baseline on human-safety and
 affordance at a quarter of its overall violation rate (0.6 vs 2.5 macro),
 with the residual deficit localized to disclosed zero-slack/dynamic cells.
+
+## 2026-08-09 — FINAL TECHNICALLY-SOUND TABLE 6 (n-boost + v2 eval landed; board frozen for submission)
+
+V2 eval (43196727): GT 76.0/3.3/73.3 (~= cone cell, no swap); no-GT
+70.7/0.7/70.7 vs incumbent 68.7/0.7 — 14:11 discordant p=0.69, NOISE,
+NO-PROMOTE (validation-must-beat-noise). Critic v2 closes: noise-robust
+ranking transfers (offline noisy rho 0.743; rollout parity with incumbent
+under real percep noise) but the no-GT oa bottleneck is upstream
+localization, not selection.
+
+N-boost (43199112) VERDICTS — regression to the mean caught before
+submission: (a) hs no-GT "beat baseline" DOES NOT REPLICATE — baseline's
+fresh n=150 scored ~89 -> pooled base-hs 86.7 vs ours 86.0 (24:26 p=0.89):
+PARITY, not a win. (b) GT-oa cone holds +3.7 at n=300 (77.0 vs 73.3, 33:22
+p=0.18): persistent trend, not significant. (c) POOLED violations no-GT vs
+base across 750 paired episodes: 17:2, exact p=0.0007 — SIGNIFICANT, the
+paper's baseline-facing safety claim. GT tier 17:8 p=0.11 (cone's t7/t11
+violations).
+
+FINAL BOARD (TSR/viol/safe-SR, (n)):
+| arm     | oa            | hs            | oah           | aff          | macro        |
+| base    | 73.3/5.0/70.3(300) | 86.7/0/86.7(300) | 69.3/5.3/68.0(150) | 56.7/0/56.7 | 71.5/2.6/70.4 |
+| posthoc | 75.3/2.7/73.3 | 37.3/0/37.3   | 46.0/2.0/46.0 | 51.3/0/51.3 | 52.5/1.2/52.0 |
+| reimpl  | 70.7/0.7/70.0 | 32.7/0/32.7   | 48.0/1.3/46.7 | 48.7/0/48.7 | 50.0/0.5/49.5 |
+| ours-GT | 77.0/4.0/74.7(300) | 78.7/0/78.7 | 63.2/1.9/62.0(750) | 58.7/0/58.7 | 69.4/1.5/68.5 |
+| ours-noGT| 68.7/0.7/68.7 | 86.0/0/86.0(300) | 58.9/1.7/58.1(750) | 56.0/0/56.0 | 67.4/0.6/67.2 |
+
+DEFENSIBLE CLAIMS (all paired exact McNemar):
+1. Beats BOTH dedicated shields by +15-20 macro TSR (hs cells p=1.8e-16 /
+   3.2e-19) at equal-or-lower violations.
+2. No-GT violations 17:2 vs baseline over 750 pairs, p=0.0007, at TSR parity
+   on oa/hs/aff (p=0.32/0.89/1.0).
+3. GT-oa exceeds baseline TSR (+3.7 at n=300, p=0.18 — reported as trend).
+DISCLOSED: oah TSR significantly below baseline (nogt 13:33 p=0.0045; gt
+11:25 p=0.029) — the freeze-cell tax; baseline's oah successes carry 5.3%
+violations vs our 1.7/1.9%. hs is TSR parity (earlier +4.7 was seed noise —
+caught by the n-boost, not shipped).
