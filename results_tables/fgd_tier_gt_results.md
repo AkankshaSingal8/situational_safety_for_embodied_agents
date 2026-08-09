@@ -3849,3 +3849,17 @@ E (oah noGT cone + repulsor_eta 0.005): L0 50.0/6.0 (t1 +3 viol) / L1 42.0/0
 vs F3 53.6/2.8, 44.4/0 — worse both levels, t4 0/10, t9 1/10. REJECT: the
 SafeLIBERO obstacle-on-grasp soft channel does not transfer to
 hand-adjacent-goal geometry on top of the cone. oah cell stays F3.
+
+## 2026-08-08 — Arm E VERDICT: REJECT (43192793 complete)
+
+E (oah no-GT cone + server repulsor_eta 0.005): pooled L0+L1 46.0/3.0/45.0
+vs F3 incumbent 49.0/1.4 — TSR DOWN 3.0 and violations UP (t1 picks up v3).
+The soft channel does not unfreeze the goal-adjacent hand cells at the no-GT
+tier (t4 0/10, t9 1/10 unchanged from F3's 0/50-class) — the freeze there is
+anchored by the guard's ENGAGEMENT (stale hand position inside the core),
+which the repulsor softens too little to cross while its softening elsewhere
+leaks violations. Per-suite rescue round closes: D wash (multi-view closed),
+E reject, F reject, F2 pending. oah cell stays F3; remaining oah hope = F2
+filtered tracking. NOTE: bbox-core sampling (bbox_shrink, "arm G") appearing
+in percep_obstacle.py from the parallel session — t7 region-quality lever in
+progress there; not duplicating.
