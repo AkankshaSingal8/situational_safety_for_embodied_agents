@@ -3823,3 +3823,15 @@ depth region instead of bbox rectangle; 512px percep render) — or disclose
 t7 as the quantified no-GT geometric tax. Arm E (repulsor) partial L0:
 59.5/7.1 vs F3 53.6/2.8 — TSR +5.9 but viol +4.3, the expected soft-channel
 trade; verdict at completion vs the violation gate.
+
+## 2026-08-08 — CRITIC V2 GATE: PASS — noise-robustness essentially solved offline
+
+ls_model_v2 (2 members, epoch-ratchet trained): clean progress Spearman
+0.7631 (bar 0.70), NOISY-input Spearman 0.7583 (bar 0.60) — under injected
+percep-noise matching no-GT error stats the ranking degrades by only 0.005
+(v1 collapsed under the same inputs). err_ratio 0.1709 / AUC 0.9991 intact.
+All three v2 levers validated offline: composite discounted labels rank
+well, noise training transfers, stall-gate awaits rollout. Self-gating eval
+43196727 (queued) now unblocked: oa L0-2 both tiers, stall-gate 0.01.
+The no-GT arm is the one to watch — a noise-robust ranker is the first
+selection-side mechanism that could survive the percep tier.
