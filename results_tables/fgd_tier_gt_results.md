@@ -3909,3 +3909,17 @@ the surviving principled levers are (a) selection-side robustness — the
 noise-trained v2 critic (43196727, queued; noisy Spearman 0.758), and
 (b) genuinely better perception (SAM-mask regions / learned localizer) as
 future work. oa noGT cell stays 68.7/0.7 pending the v2 eval.
+
+## 2026-08-08 — Arm F2 VERDICT: NO-PROMOTE (43198145) — re-perception series closed
+
+F2 (gated EMA mover track, alpha 0.35 / gate 0.15): pooled L0+L1 46.0/0.0
+vs F3 static snapshot 49.0/1.4. The filter fully repaired raw refresh's
+damage (L1 34.0 -> 40.0, viol 4 -> 0) but does not beat the snapshot; t4
+0/10 and t9 3/10 unchanged. Series verdict (F raw / F2 filtered): at current
+GroundingDINO-on-256px quality, NO re-perception scheme beats settle-end
+snapshot + per-step inflation for dynamic hazards — a detector-quality
+limit, not a tracking-algorithm one. Paper limitations text: "the no-GT
+dynamic-hazard tax is bounded by per-frame open-vocab hand localization;
+tracked re-perception (raw and filtered EMA) does not recover it." oah cell
+stays F3. Remaining open: critic-v2 eval 43196727, n-boost 43199112 (both
+queued), arm G bbox-core (parallel session).
