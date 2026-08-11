@@ -4074,3 +4074,23 @@ the paper claim is "baseline parity at zero violations with fully general
 VLM-grounded property predicates" (and +9.6 over the hand-token ablation).
 Significance pass now covers ALL promoted cells (oa/hs by ls_nboost, aff
 here). No jobs in flight.
+
+## 2026-08-11 — G-Y2 yield dev smoke VERDICT (43355724): NO-GO as run — mechanism inert, root cause found
+
+Yield regime (spec 2026-08-11) oah n=10/task both tiers on promoted cone
+configs. Gate result: FAIL — but forensics show the mechanism never ran:
+yields fired 0/150 (GT) and 2/150 (noGT, both stuck in HOLD ~450 steps, 0
+resumes). The paired deltas (GT 65.3 vs ref 60.0; noGT 57.3 vs 56.0; 39
+"conversions", 8 "new violations" spread across arms where yield never
+fired) are therefore server-sampling seed noise, not treatment effect.
+ROOT CAUSE (episode-record forensics): trigger conjunct `hazard in movers`
+uses the one-shot settle-window movers set; in the dynamic-intruder suite
+the hand starts moving AFTER settle — movers empty in 100/150 (GT) and
+129/150 (noGT) episodes. Secondary suspects: r_occ=0.12 vs the 0.14m goal
+hard core; noGT snapshot positions freeze OCCUPIES during HOLD (no resume).
+REVISION ROUND (spec allows one): (1) runtime MOVING — guard-hazard
+displacement >0.01m across replan boundaries OR settle movers (static t13
+hand still excluded); (2) r_occ default 0.20; (3) per-episode
+`yield_blockers` telemetry {stall,moving,occupies} for diagnosability.
+Re-smoke after revision; if still inert or violations appear → Yield NO-GO
+for good and oah ships at cone-config numbers.
