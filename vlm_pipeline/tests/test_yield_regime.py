@@ -1,0 +1,389 @@
+"""CPU unit tests for Phase 1 Yield regime (`--yield_regime`, client-only
+certified retreat): TRIGGER -> RETREAT -> HOLD -> RESUME.
+
+Covers `YieldController`, `_yield_retreat_waypoints`, `_yield_certify_step`,
+`_segment_point_distance` in run_guided_libero_safety_eval.py — pure, no
+GPU, no env creation, no mujoco/robosuite imports. Modeled on
+test_fol_predicates.py.
+"""
+
+import pathlib
+import sys
+
+import numpy as np
+import pytest
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+
+import run_guided_libero_safety_eval as ls  # noqa: E402
+
+HARD_R = ls.ENGAGE_CONE_HARD_R
+
+
+def _mk_controller(r_occ=0.12, d_stall=0.01, w=5, standoff=0.20, m=2, y_max=2):
+    return ls.YieldController(r_occ, d_stall, w, standoff, m, y_max)
+
+
+# --- defaults-off byte-identity -------------------------------------------
+
+def test_argparse_default_is_off_and_tunables_present():
+    src = pathlib.Path(ls.__file__).read_text()
+    assert '"--yield_regime", action="store_true"' in src
+    assert '"--yield_r_occ", type=float, default=0.12' in src
+    assert '"--yield_d_stall", type=float, default=0.01' in src
+    assert '"--yield_w", type=int, default=5' in src
+    assert '"--yield_standoff", type=float, default=0.20' in src
+    assert '"--yield_m", type=int, default=2' in src
+    assert '"--yield_max", type=int, default=2' in src
+
+
+def test_defaults_off_no_controller_created_and_wiring_gated():
+    # With --yield_regime unset (argparse default False, verified above), no
+    # YieldController is instantiated -- mirrors
+    # test_defaults_off_engage_cone_none_leaves_payload_path_untouched: the
+    # wiring's `yc = YieldController(...) if args.yield_regime else None`
+    # leaves yc as None, so every Yield code path in main() (all gated on
+    # `yc is not None` / `args.yield_regime`) is skipped entirely and the
+    # existing server-query / plan / step_guard path is untouched.
+    yield_regime = False  # the argparse default, confirmed above
+    yc = _mk_controller() if yield_regime else None
+    assert yc is None
+    src = pathlib.Path(ls.__file__).read_text()
+    assert "yc = (YieldController(args.yield_r_occ" in src
+    assert "if args.yield_regime else None)" in src
+    # The trigger-detection block and the intercept branch are both gated.
+    assert "if args.yield_regime and yc.state ==" in src
+    assert 'yc is not None and yc.state != "idle"' in src
+
+
+def test_defaults_off_jsonl_fields_absent():
+    # Per-episode JSONL: yields/yield_steps/yield_resumes must be
+    # absent-safe when the flag is off (not present with 0 -- literally
+    # absent), matching the existing --stall_recovery/--ssm_margins pattern.
+    _rec = {"task": 0, "ep": 0}
+    args_yield_regime = False
+    if args_yield_regime:
+        _rec["yields"] = 0
+    assert "yields" not in _rec
+    src = pathlib.Path(ls.__file__).read_text()
+    assert 'if args.yield_regime:\n                    _rec["yields"]' in src
+
+
+# --- mutual exclusion with --stall_recovery --------------------------------
+
+def test_mutual_exclusion_assert_with_stall_recovery(monkeypatch):
+    monkeypatch.setattr(sys, "argv", [
+        "run_guided_libero_safety_eval.py",
+        "--yield_regime", "--stall_recovery",
+        "--num_trials_per_task", "1",
+    ])
+    with pytest.raises(AssertionError):
+        ls.main()
+
+
+# --- STALLED(eef): stall window --------------------------------------------
+
+def test_is_stalled_requires_full_window():
+    hist = ls.collections.deque(maxlen=5)
+    hist.append(np.array([0.0, 0.0, 1.0]))
+    # Only 1/5 positions recorded -> not enough history -> never "stalled".
+    assert ls.YieldController.is_stalled(hist, d_stall=0.01) is False
+
+
+def test_is_stalled_exactly_w_boundaries_under_threshold():
+    hist = ls.collections.deque(maxlen=5)
+    base = np.array([0.30, 0.10, 0.85])
+    for i in range(5):
+        hist.append(base + np.array([0.001 * i, 0.0, 0.0]))  # net 0.004 m < 0.01
+    assert ls.YieldController.is_stalled(hist, d_stall=0.01) is True
+
+
+def test_is_stalled_full_window_over_threshold_not_stalled():
+    hist = ls.collections.deque(maxlen=5)
+    base = np.array([0.30, 0.10, 0.85])
+    for i in range(5):
+        hist.append(base + np.array([0.02 * i, 0.0, 0.0]))  # net 0.08 m > 0.01
+    assert ls.YieldController.is_stalled(hist, d_stall=0.01) is False
+
+
+# --- OCCUPIES ----------------------------------------------------------
+
+def test_occupies_within_radius_true():
+    hazard = np.array([0.30, 0.10, 0.85])
+    target = np.array([0.32, 0.10, 0.85])  # d = 0.02 < r_occ 0.12
+    assert ls.YieldController.occupies(hazard, target, r_occ=0.12) is True
+
+
+def test_occupies_outside_radius_false():
+    hazard = np.array([0.30, 0.10, 0.85])
+    target = np.array([0.60, 0.10, 0.85])  # d = 0.30 > r_occ 0.12
+    assert ls.YieldController.occupies(hazard, target, r_occ=0.12) is False
+
+
+def test_occupies_unresolvable_position_false():
+    assert ls.YieldController.occupies(None, np.array([0, 0, 0]), 0.12) is False
+    assert ls.YieldController.occupies(np.array([0, 0, 0]), None, 0.12) is False
+
+
+# --- TRIGGER: stalled ∧ mover ∧ occupies, each conjunct independent -------
+
+def test_trigger_fires_when_all_three_conjuncts_true():
+    yc = _mk_controller()
+    assert yc.should_trigger(
+        stalled=True, hazard_name="hand_1", movers={"hand_1"},
+        occupies_flag=True) is True
+
+
+def test_trigger_false_when_not_stalled():
+    yc = _mk_controller()
+    assert yc.should_trigger(
+        stalled=False, hazard_name="hand_1", movers={"hand_1"},
+        occupies_flag=True) is False
+
+
+def test_trigger_false_when_hazard_not_a_mover_static_hand_excluded():
+    # This is the t13 exclusion: a static hand (never in `movers`) never
+    # triggers Yield even if stalled and geometrically occupying the goal.
+    yc = _mk_controller()
+    assert yc.should_trigger(
+        stalled=True, hazard_name="hand_1", movers=set(),
+        occupies_flag=True) is False
+
+
+def test_trigger_false_when_not_occupies():
+    yc = _mk_controller()
+    assert yc.should_trigger(
+        stalled=True, hazard_name="hand_1", movers={"hand_1"},
+        occupies_flag=False) is False
+
+
+def test_trigger_false_when_hazard_name_none_no_guard_engaged():
+    yc = _mk_controller()
+    assert yc.should_trigger(
+        stalled=True, hazard_name=None, movers={"hand_1"},
+        occupies_flag=True) is False
+
+
+def test_trigger_false_when_movers_metadata_unavailable():
+    yc = _mk_controller()
+    assert yc.should_trigger(
+        stalled=True, hazard_name="hand_1", movers=None,
+        occupies_flag=True) is False
+
+
+def test_trigger_false_when_not_idle():
+    yc = _mk_controller()
+    yc.state = "hold"
+    assert yc.should_trigger(
+        stalled=True, hazard_name="hand_1", movers={"hand_1"},
+        occupies_flag=True) is False
+
+
+# --- RETREAT targeting ------------------------------------------------
+
+def test_retreat_waypoints_picks_first_prefix_point_at_standoff():
+    # Trajectory moving in +x, hazard sits at the far end (near the most
+    # recent points) -- retreat should target the first (walking backward)
+    # point at distance >= standoff from the CURRENT hazard position.
+    traj = [np.array([0.0 + 0.05 * i, 0.0, 0.85]) for i in range(6)]
+    # traj[-1] = (0.25, 0, 0.85); hazard right next to it.
+    hazard = np.array([0.26, 0.0, 0.85])
+    wp = ls._yield_retreat_waypoints(traj, hazard, standoff=0.20)
+    # Distances from hazard: traj[0]=0.26, traj[1]=0.21, traj[2]=0.16, ...
+    # First (walking backward from traj[-1]) point >= 0.20 is traj[1]
+    # (d=0.21); traj[0] also qualifies but traj[1] is reached first.
+    assert wp[0] is traj[-1] or np.allclose(wp[0], traj[-1])
+    assert np.allclose(wp[-1], traj[1])
+
+
+def test_retreat_waypoints_order_is_current_to_target():
+    traj = [np.array([float(i), 0.0, 0.0]) for i in range(4)]
+    hazard = np.array([3.0, 0.0, 0.0])
+    wp = ls._yield_retreat_waypoints(traj, hazard, standoff=2.5)
+    # traj distances from hazard: [3,2,1,0]; first (from the end backward)
+    # >= 2.5 is traj[0] (d=3).
+    np.testing.assert_allclose(wp[0], traj[-1])
+    np.testing.assert_allclose(wp[-1], traj[0])
+    assert len(wp) == 4
+
+
+def test_retreat_waypoints_fallback_to_earliest_point():
+    # Hazard so close nothing in the trajectory clears standoff -> falls
+    # back to the earliest recorded point (best-effort along known path).
+    traj = [np.array([0.0, 0.0, 0.0]), np.array([0.01, 0.0, 0.0])]
+    hazard = np.array([0.005, 0.0, 0.0])
+    wp = ls._yield_retreat_waypoints(traj, hazard, standoff=5.0)
+    np.testing.assert_allclose(wp[-1], traj[0])
+
+
+def test_retreat_waypoints_short_trajectory_degenerate():
+    out = ls._yield_retreat_waypoints(
+        [np.array([0.0, 0.0, 0.0])], np.array([1, 0, 0]), 0.2)
+    assert len(out) < 2
+
+
+# Shared geometry for the retreat-delta/certification tests below: a
+# trajectory moving along +x (spacing 0.05 m/point, plausible per-replan
+# displacement); a hazard offset 0.15 m in +y from the endpoint (0.15 is
+# strictly between ENGAGE_CONE_HARD_R=0.14 and the default standoff=0.20)
+# so early segments FAIL the standoff distance check (forcing a multi-
+# waypoint retreat) while every segment on the trajectory line still stays
+# outside the hard-radius certification (min possible distance to the
+# hazard is exactly 0.15 >= 0.14).
+_TRAJ_X = [0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30]
+_RETREAT_TRAJ = [np.array([x, 0.0, 0.85]) for x in _TRAJ_X]
+_RETREAT_HAZARD = np.array([0.30, 0.15, 0.85])  # y-offset 0.15
+
+
+def test_retreat_deltas_respect_exec_parity_convention():
+    yc = _mk_controller()  # default standoff=0.20
+    yc.trigger(_RETREAT_TRAJ, _RETREAT_HAZARD)
+    assert yc.state == "retreat"
+    assert len(yc.waypoints) >= 3  # multi-waypoint retreat, not a 1-step plan
+    cur = _RETREAT_TRAJ[-1]
+    nxt = yc.waypoints[1]
+    action_default, _ = yc.next_retreat_action(
+        cur, _RETREAT_HAZARD, HARD_R, exec_parity=False, raw_actions=False)
+    delta = nxt - cur
+    expected_default = np.clip(
+        np.concatenate([delta, np.zeros(4)]) * ls.ACTION_TO_CMD, -1.0, 1.0)
+    np.testing.assert_allclose(action_default, expected_default)
+
+    yc2 = _mk_controller()
+    yc2.trigger(_RETREAT_TRAJ, _RETREAT_HAZARD)
+    action_parity, _ = yc2.next_retreat_action(
+        cur, _RETREAT_HAZARD, HARD_R, exec_parity=True, raw_actions=False)
+    expected_parity = np.concatenate([delta, np.zeros(4)])
+    np.testing.assert_allclose(action_parity, expected_parity)
+
+
+# --- retreat certification (certificate integrity invariant) --------------
+
+def test_segment_point_distance_basic():
+    a = np.array([0.0, 0.0, 0.0])
+    b = np.array([1.0, 0.0, 0.0])
+    p = np.array([0.5, 0.3, 0.0])
+    assert np.isclose(ls._segment_point_distance(a, b, p), 0.3)
+
+
+def test_certify_step_rejects_segment_within_hard_radius():
+    cur = np.array([0.0, 0.0, 0.85])
+    nxt = np.array([0.10, 0.0, 0.85])
+    hazard_moved_onto_path = np.array([0.05, 0.0, 0.85])  # dead center of segment
+    dist = ls._segment_point_distance(cur, nxt, hazard_moved_onto_path)
+    assert dist < HARD_R
+    assert ls._yield_certify_step(cur, nxt, hazard_moved_onto_path, HARD_R) is False
+
+
+def test_certify_step_accepts_segment_clear_of_hazard():
+    cur = np.array([0.0, 0.0, 0.85])
+    nxt = np.array([0.10, 0.0, 0.85])
+    hazard_far = np.array([0.05, 1.0, 0.85])
+    assert ls._yield_certify_step(cur, nxt, hazard_far, HARD_R) is True
+
+
+def test_certify_step_missing_hazard_position_conservative_certify():
+    cur = np.array([0.0, 0.0, 0.85])
+    nxt = np.array([0.10, 0.0, 0.85])
+    assert ls._yield_certify_step(cur, nxt, None, HARD_R) is True
+
+
+def test_retreat_step_rejected_by_moved_hazard_switches_to_hold():
+    # The certificate integrity test: a hazard that has MOVED onto the
+    # retreat segment since the last check must cause the step to be
+    # rejected -> HOLD, never executed uncertified.
+    yc = _mk_controller(standoff=0.03)
+    traj = [np.array([0.0, 0.0, 0.85]), np.array([0.05, 0.0, 0.85]),
+            np.array([0.10, 0.0, 0.85])]
+    # Hazard close to the current point at TRIGGER time -- forces a
+    # multi-waypoint retreat plan.
+    hazard_at_trigger = np.array([0.11, 0.0, 0.85])
+    yc.trigger(traj, hazard_at_trigger)
+    assert yc.state == "retreat"
+    cur = traj[-1]
+    # Hazard has now MOVED directly onto the next retreat segment.
+    moved_hazard = np.array([0.075, 0.0, 0.85])
+    action, new_state = yc.next_retreat_action(cur, moved_hazard, HARD_R)
+    assert action is None
+    assert new_state == "hold"
+    assert yc.state == "hold"
+
+
+def test_retreat_step_certified_and_executed_when_clear():
+    yc = _mk_controller()
+    yc.trigger(_RETREAT_TRAJ, _RETREAT_HAZARD)
+    assert yc.state == "retreat"
+    n_waypoints_before = len(yc.waypoints)
+    assert n_waypoints_before >= 3
+    cur = _RETREAT_TRAJ[-1]
+    hazard_now_clear = np.array([10.0, 10.0, 10.0])
+    action, new_state = yc.next_retreat_action(cur, hazard_now_clear, HARD_R)
+    assert action is not None
+    assert new_state == "retreat"  # more than one waypoint remained
+    assert yc.total_steps == 1
+    assert len(yc.waypoints) == n_waypoints_before - 1
+
+
+# --- RESUME hysteresis ------------------------------------------------
+
+def test_resume_requires_m_consecutive_not_occupies():
+    yc = _mk_controller(m=2)
+    yc.state = "hold"
+    assert yc.evaluate_resume(occupies_flag=False) is False  # 1/2
+    assert yc.state == "hold"
+    assert yc.evaluate_resume(occupies_flag=False) is True   # 2/2 -> resume
+    assert yc.state == "idle"
+    assert yc.total_resumes == 1
+
+
+def test_resume_one_occupied_evaluation_resets_streak():
+    yc = _mk_controller(m=2)
+    yc.state = "hold"
+    assert yc.evaluate_resume(occupies_flag=False) is False  # 1/2
+    assert yc.evaluate_resume(occupies_flag=True) is False   # reset to 0
+    assert yc.resume_streak == 0
+    assert yc.state == "hold"
+    assert yc.evaluate_resume(occupies_flag=False) is False  # 1/2 again
+    assert yc.evaluate_resume(occupies_flag=False) is True   # 2/2 -> resume
+    assert yc.state == "idle"
+
+
+# --- Y_max cap ----------------------------------------------------------
+
+def test_y_max_cap_third_trigger_does_not_arm():
+    yc = _mk_controller(y_max=2, standoff=0.03)
+    traj = [np.array([0.0, 0.0, 0.85]), np.array([0.10, 0.0, 0.85])]
+    hazard = np.array([10.0, 10.0, 10.0])
+
+    yc.trigger(traj, hazard)
+    assert yc.triggers == 1
+    yc.state = "hold"
+    yc.evaluate_resume(False)
+    yc.evaluate_resume(False)
+    assert yc.state == "idle"
+
+    yc.trigger(traj, hazard)
+    assert yc.triggers == 2
+    yc.state = "hold"
+    yc.evaluate_resume(False)
+    yc.evaluate_resume(False)
+    assert yc.state == "idle"
+
+    # Third attempt: armed() is now False (triggers == y_max) -> never arms.
+    assert yc.armed() is False
+    assert yc.should_trigger(
+        stalled=True, hazard_name="hand_1", movers={"hand_1"},
+        occupies_flag=True) is False
+    assert yc.triggers == 2
+
+
+def test_wiring_gates_trigger_on_y_max_and_state():
+    # should_trigger() itself is the single arming gate; the wiring in
+    # main() calls it only from `yc.state == "idle"`, so a triggered/held
+    # controller can never re-trigger mid-yield either.
+    yc = _mk_controller(y_max=1, standoff=0.03)
+    traj = [np.array([0.0, 0.0, 0.85]), np.array([0.10, 0.0, 0.85])]
+    hazard = np.array([10.0, 10.0, 10.0])
+    yc.trigger(traj, hazard)
+    assert yc.armed() is False  # y_max=1, already used
+    assert yc.should_trigger(True, "hand_1", {"hand_1"}, True) is False

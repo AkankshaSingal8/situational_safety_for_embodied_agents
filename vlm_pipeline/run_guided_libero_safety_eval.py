@@ -485,6 +485,178 @@ def _transition_record(task, ep, t, eef, grip, action, entities):
     }
 
 
+def _segment_point_distance(a, b, p):
+    """Closest distance from point `p` to the segment [a, b] (pure)."""
+    a = np.asarray(a, dtype=np.float64)
+    b = np.asarray(b, dtype=np.float64)
+    p = np.asarray(p, dtype=np.float64)
+    ab = b - a
+    denom = float(np.dot(ab, ab))
+    if denom <= 1e-12:
+        return float(np.linalg.norm(p - a))
+    t = max(0.0, min(1.0, float(np.dot(p - a, ab) / denom)))
+    return float(np.linalg.norm(p - (a + t * ab)))
+
+
+def _yield_certify_step(cur_pos, next_pos, hazard_pos, hard_r):
+    """Certificate integrity check (pure, unit-testable) for one Yield
+    RETREAT step: reject (return False) iff the segment [cur_pos, next_pos]
+    passes within `hard_r` of the CURRENT hazard position. `hazard_pos is
+    None` (hazard unlocatable) is the conservative fallback: certify (True)
+    -- a missing position can't fail a check that requires it."""
+    if hazard_pos is None:
+        return True
+    return _segment_point_distance(cur_pos, next_pos, hazard_pos) >= hard_r
+
+
+def _yield_retreat_waypoints(eef_traj, hazard_pos, standoff):
+    """RETREAT waypoints (pure, unit-testable): `eef_traj` is the episode's
+    own executed eef trajectory, chronological (oldest first, most recent
+    last). Walk it BACKWARDS from the most recent point; the target is the
+    first point (in that backward walk) at distance >= `standoff` from the
+    CURRENT `hazard_pos`. Returns [current, ..., target] (most-recent-first,
+    i.e. the order RETREAT consumes them in) -- empty/singleton if
+    `eef_traj` has fewer than 2 recorded points (nothing to retreat along).
+    If no recorded point clears `standoff` (hazard covers the whole
+    trajectory), falls back to the earliest recorded point (best-effort
+    retreat along the only path known)."""
+    pts = list(eef_traj)
+    if len(pts) < 2:
+        return list(pts)
+    if hazard_pos is None:
+        return [pts[-1], pts[0]]
+    hazard_pos = np.asarray(hazard_pos, dtype=np.float64)
+    target_idx = 0
+    for i in range(len(pts) - 1, -1, -1):
+        d = float(np.linalg.norm(np.asarray(pts[i], dtype=np.float64) - hazard_pos))
+        if d >= standoff:
+            target_idx = i
+            break
+    return list(reversed(pts[target_idx:]))
+
+
+class YieldController:
+    """Client-only Yield regime state machine (pure state transitions, no
+    mujoco/server dependency): TRIGGER -> certified RETREAT -> HOLD ->
+    RESUME. Hazard positions are ALWAYS supplied fresh by the caller (via
+    the existing `_guard_pos` closure) -- this class never caches a hazard
+    position across calls, so every certification/OCCUPIES check is against
+    the CURRENT hazard, per the certificate-integrity invariant.
+
+    States: "idle" (not yielding) -> "retreat" (walking eef_traj backwards,
+    certified per step) -> "hold" (zero-action, re-evaluating OCCUPIES) ->
+    back to "idle" on RESUME. `triggers` counts TRIGGER events this episode;
+    once it reaches `y_max` the controller never arms again (SAFETY: at
+    most Y_max yields/episode, never oscillate)."""
+
+    def __init__(self, r_occ, d_stall, w, standoff, m, y_max):
+        self.r_occ = r_occ
+        self.d_stall = d_stall
+        self.w = w
+        self.standoff = standoff
+        self.m = m
+        self.y_max = y_max
+        self.state = "idle"
+        self.triggers = 0
+        self.resume_streak = 0
+        self.waypoints = []
+        self.total_yields = 0
+        self.total_steps = 0
+        self.total_resumes = 0
+
+    def armed(self):
+        return self.triggers < self.y_max
+
+    @staticmethod
+    def is_stalled(replan_hist, d_stall):
+        """STALLED(eef): net displacement < d_stall over a FULL window of W
+        replan-boundary positions (replan_hist is maxlen-W; not yet full ==
+        not enough history to judge -> not stalled)."""
+        if len(replan_hist) < replan_hist.maxlen:
+            return False
+        return float(np.linalg.norm(
+            np.asarray(replan_hist[-1], dtype=np.float64)
+            - np.asarray(replan_hist[0], dtype=np.float64))) < d_stall
+
+    @staticmethod
+    def occupies(hazard_pos, target_pos, r_occ):
+        """OCCUPIES(hazard, goal_region): hazard-to-corridor-target distance
+        < r_occ. False (not occupied) if either position is unresolvable --
+        the conservative default for both TRIGGER (won't arm) and RESUME
+        (won't re-arm the occupied streak, i.e. treated as clear)."""
+        if hazard_pos is None or target_pos is None:
+            return False
+        return float(np.linalg.norm(
+            np.asarray(hazard_pos, dtype=np.float64)
+            - np.asarray(target_pos, dtype=np.float64))) < r_occ
+
+    def should_trigger(self, stalled, hazard_name, movers, occupies_flag):
+        """TRIGGER := stalled AND MOVING(hazard) (hazard_name in movers) AND
+        OCCUPIES, only from "idle" and only while still armed (< y_max)."""
+        return bool(
+            self.state == "idle" and self.armed() and stalled
+            and hazard_name is not None and movers is not None
+            and hazard_name in movers and occupies_flag)
+
+    def trigger(self, eef_traj, hazard_pos):
+        """Arm RETREAT: compute waypoints along the recorded trajectory back
+        to standoff from the CURRENT hazard position. Degenerate case (no
+        retreat needed / no trajectory to retreat along) goes straight to
+        HOLD."""
+        self.waypoints = _yield_retreat_waypoints(eef_traj, hazard_pos, self.standoff)
+        self.triggers += 1
+        self.total_yields += 1
+        self.resume_streak = 0
+        self.state = "retreat" if len(self.waypoints) >= 2 else "hold"
+        return self.state
+
+    def next_retreat_action(self, cur_pos, hazard_pos, hard_r,
+                             exec_parity=False, raw_actions=False):
+        """One certified RETREAT step. Returns (action | None, new_state).
+        Certifies the segment [cur_pos, next_waypoint] against the CURRENT
+        hazard_pos before executing; on certificate failure, does NOT
+        execute the step -- switches to HOLD and returns (None, "hold")
+        instead (never reuses the scripted +Z `in_retreat` lift)."""
+        if self.state != "retreat" or len(self.waypoints) < 2:
+            self.state = "hold"
+            return None, self.state
+        nxt = self.waypoints[1]
+        if not _yield_certify_step(cur_pos, nxt, hazard_pos, hard_r):
+            self.state = "hold"
+            return None, self.state
+        delta = np.asarray(nxt, dtype=np.float64) - np.asarray(cur_pos, dtype=np.float64)
+        raw = np.concatenate([delta, np.zeros(4)])[np.newaxis, :]
+        action = np.asarray(_plan_actions(
+            raw, exec_parity=exec_parity, raw_actions=raw_actions))[0]
+        self.waypoints.pop(0)
+        self.total_steps += 1
+        if len(self.waypoints) < 2:
+            self.state = "hold"
+        return action, self.state
+
+    def hold_step(self):
+        """Zero-action HOLD step."""
+        self.total_steps += 1
+        return np.zeros(7)
+
+    def evaluate_resume(self, occupies_flag):
+        """Call at each replan boundary while HOLDing. RESUME hysteresis: M
+        consecutive ¬OCCUPIES evaluations clear Yield state back to idle; a
+        single OCCUPIES resets the streak (no partial credit -- chatter
+        prevention). Returns True iff this call resumed."""
+        if occupies_flag:
+            self.resume_streak = 0
+            return False
+        self.resume_streak += 1
+        if self.resume_streak >= self.m:
+            self.state = "idle"
+            self.waypoints = []
+            self.resume_streak = 0
+            self.total_resumes += 1
+            return True
+        return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--suite", default="obstacle_avoidance")
@@ -693,6 +865,47 @@ def main():
     ap.add_argument("--dual_eta_max", type=float, default=0.01)
     ap.add_argument("--stall_recovery", action="store_true",
                     help="A2: stall -> HDC detour replans -> scripted lift-retreat")
+    ap.add_argument("--yield_regime", action="store_true",
+                    help="Phase 1 Yield (client-only, certified retreat): "
+                         "TRIGGER (STALLED(eef) AND MOVING(hazard) AND "
+                         "OCCUPIES(hazard, goal) within --yield_r_occ) -> "
+                         "RETREAT along the episode's own executed eef "
+                         "trajectory to --yield_standoff, each step "
+                         "re-certified against the CURRENT hazard position "
+                         "(ENGAGE_CONE_HARD_R) before executing -> HOLD "
+                         "(zero-action, re-evaluating OCCUPIES every replan) "
+                         "-> RESUME after --yield_m consecutive replans of "
+                         "¬OCCUPIES. At most --yield_max triggers per "
+                         "episode. Client-only: the guided server is "
+                         "stateless and untouched. Does NOT reuse the "
+                         "scripted +Z `in_retreat` lift; mutually exclusive "
+                         "with --stall_recovery. Default off = "
+                         "byte-identical.")
+    ap.add_argument("--yield_r_occ", type=float, default=0.12,
+                    help="OCCUPIES(hazard, goal_region) radius [m]: hazard-"
+                         "to-corridor-target distance. Its own declared "
+                         "constant -- distinct from ENGAGE_CONE_HARD_R "
+                         "(0.14, eef-to-hazard, used for retreat "
+                         "certification).")
+    ap.add_argument("--yield_d_stall", type=float, default=0.01,
+                    help="STALLED(eef): net eef displacement [m] threshold "
+                         "over the last --yield_w replan-boundary "
+                         "positions.")
+    ap.add_argument("--yield_w", type=int, default=5,
+                    help="STALLED(eef) window, in REPLANS (chunk-boundary "
+                         "queries) -- distinct from --stall_recovery's "
+                         "40-env-step window.")
+    ap.add_argument("--yield_standoff", type=float, default=0.20,
+                    help="RETREAT target distance [m] from the CURRENT "
+                         "hazard position.")
+    ap.add_argument("--yield_m", type=int, default=2,
+                    help="RESUME hysteresis: consecutive replan-boundary "
+                         "¬OCCUPIES evaluations required to exit Yield "
+                         "and return to normal guided policy.")
+    ap.add_argument("--yield_max", type=int, default=2,
+                    help="Y_max: Yield may TRIGGER at most this many times "
+                         "per episode; after the cap it never re-arms "
+                         "(reverts to current freeze behavior).")
     ap.add_argument("--ssm_margins", action="store_true",
                     help="A3: speed-and-separation margin for DYNAMIC hazards (ISO/TS "
                          "15066 shape): r = base - 0.03 + ssm_k * closing_speed, "
@@ -718,6 +931,11 @@ def main():
                          "lazily on first write, flushed per episode. Default "
                          "off = zero overhead (no record built, no file).")
     args = ap.parse_args()
+
+    assert not (args.yield_regime and args.stall_recovery), (
+        "--yield_regime and --stall_recovery are mutually exclusive: "
+        "Yield's certified retreat replaces --stall_recovery's scripted "
+        "+Z lift-retreat, it does not compose with it.")
 
     if args.exec_parity:
         # Must precede OffScreenRenderEnv creation: the wrapper snapshots the
@@ -876,9 +1094,23 @@ def main():
             ssm_prev_g0 = None                        # A3 hazard tracking
             ssm_init_g0 = None
             ssm_moved = False
+            # Phase 1 Yield regime (client-only, certified retreat): per-
+            # episode state. `eef_traj` records EVERY env step (never
+            # cleared mid-episode, unlike `eef_hist`) so RETREAT can walk
+            # the episode's own executed path; `yield_replan_hist` records
+            # only replan-boundary positions for STALLED(eef).
+            yc = (YieldController(args.yield_r_occ, args.yield_d_stall,
+                                   args.yield_w, args.yield_standoff,
+                                   args.yield_m, args.yield_max)
+                  if args.yield_regime else None)
+            eef_traj = collections.deque(maxlen=600) if args.yield_regime else None
+            yield_replan_hist = (collections.deque(maxlen=args.yield_w)
+                                  if args.yield_regime else None)
+            yield_hazard_name = None  # hazard identity captured at TRIGGER
             max_steps = args.max_steps or MAX_STEPS[args.level]
             while t < max_steps and not done:
-                if not plan:
+                _yield_active = yc is not None and yc.state != "idle"
+                if not _yield_active and not plan:
                     img = np.ascontiguousarray(obs["agentview_image"][::-1, ::-1])
                     wrist = np.ascontiguousarray(obs["robot0_eye_in_hand_image"][::-1, ::-1])
                     if args.save_videos:
@@ -965,6 +1197,30 @@ def main():
                             else 0)
                         step_guard = _holding_filter(
                             step_guard, movers, _is_holding(_width, holding_streak))
+                    if args.yield_regime and yc.state == "idle":
+                        # TRIGGER evaluation, replan boundaries only.
+                        # STALLED(eef): net displacement < d_stall over the
+                        # last --yield_w replan-boundary eef positions, AND
+                        # a guard is currently engaged (step_guard non-empty
+                        # after the gating chain above).
+                        yield_replan_hist.append(
+                            np.asarray(obs["robot0_eef_pos"], dtype=np.float64))
+                        _y_stalled = (YieldController.is_stalled(
+                            yield_replan_hist, args.yield_d_stall)
+                            and bool(step_guard))
+                        _y_candidate = step_guard[0] if step_guard else None
+                        _y_hpos = _guard_pos(_y_candidate) if _y_candidate else None
+                        _y_ctgt, _ = _corridor_anchor(desc, cands)
+                        _y_ctgt_pos = _guard_pos(_y_ctgt) if _y_ctgt else None
+                        _y_occ = YieldController.occupies(
+                            _y_hpos, _y_ctgt_pos, args.yield_r_occ)
+                        if yc.should_trigger(_y_stalled, _y_candidate, movers, _y_occ):
+                            yield_hazard_name = _y_candidate
+                            yc.trigger(list(eef_traj), _y_hpos)
+                            logging.info(
+                                f"  [yield] t={t}: TRIGGER hazard="
+                                f"{yield_hazard_name} -> {yc.state} "
+                                f"({yc.triggers}/{args.yield_max})")
                     # MOVER_LEAD(hazard): predictive barrier anchor, applied
                     # AFTER gating to whichever entries survived it (adjusts
                     # positions, not membership). `_lead_pos`/`_lead_anchor_pos`
@@ -1076,22 +1332,65 @@ def main():
                                     "  [consequence] ep %s hazards %s not found in "
                                     "entities payload %s", ep, _missing, sorted(_ent.keys()))
                             element["guidance"]["hazards"] = list(hazards)
-                    _res = client.infer(element)
-                    chunk = np.asarray(_res["actions"][:args.replan_steps])
-                    _diag = _res.get("guidance")
-                    if args.dual_eta and _diag is not None and "selected_margin" in _diag:
-                        _m = float(np.asarray(_diag["selected_margin"]).reshape(-1)[0])
-                        dual_lam = float(np.clip(
-                            dual_lam + args.dual_kappa * (args.dual_mref - _m),
-                            0.0, args.dual_eta_max))
-                    _n_exec = len(chunk)
-                    if (args.adaptive_replan and _diag is not None
-                            and float(_diag.get("min_clearance", np.inf)) < args.adaptive_clearance):
-                        _n_exec = 2
-                    plan.extend(_plan_actions(
-                        chunk[:_n_exec], exec_parity=args.exec_parity,
-                        raw_actions=args.raw_actions))
-                if in_retreat > 0:
+                    if yc is None or yc.state == "idle":
+                        # A TRIGGER just above may have flipped yc out of
+                        # "idle" this same iteration -- skip the (now moot)
+                        # server query and DON'T populate `plan`, so the
+                        # Yield branch below takes over immediately instead
+                        # of executing one stale server-planned action first.
+                        _res = client.infer(element)
+                        chunk = np.asarray(_res["actions"][:args.replan_steps])
+                        _diag = _res.get("guidance")
+                        if args.dual_eta and _diag is not None and "selected_margin" in _diag:
+                            _m = float(np.asarray(_diag["selected_margin"]).reshape(-1)[0])
+                            dual_lam = float(np.clip(
+                                dual_lam + args.dual_kappa * (args.dual_mref - _m),
+                                0.0, args.dual_eta_max))
+                        _n_exec = len(chunk)
+                        if (args.adaptive_replan and _diag is not None
+                                and float(_diag.get("min_clearance", np.inf)) < args.adaptive_clearance):
+                            _n_exec = 2
+                        plan.extend(_plan_actions(
+                            chunk[:_n_exec], exec_parity=args.exec_parity,
+                            raw_actions=args.raw_actions))
+                if _yield_active or (yc is not None and yc.state != "idle"):
+                    # Yield intercepts entirely for this env step: RETREAT
+                    # (certified per step against the CURRENT hazard) or
+                    # HOLD (zero-action, re-evaluating OCCUPIES at replan
+                    # boundaries). Never reuses the scripted +Z `in_retreat`
+                    # lift below.
+                    _y_boundary = (t % max(args.replan_steps, 1) == 0)
+                    if yc.state == "hold" and _y_boundary:
+                        _yh_pos = _guard_pos(yield_hazard_name) if yield_hazard_name else None
+                        _yh_ctgt, _ = _corridor_anchor(desc, cands)
+                        _yh_ctgt_pos = _guard_pos(_yh_ctgt) if _yh_ctgt else None
+                        _yh_occ = YieldController.occupies(
+                            _yh_pos, _yh_ctgt_pos, args.yield_r_occ)
+                        if yc.evaluate_resume(_yh_occ):
+                            plan.clear()
+                            yield_hazard_name = None
+                            logging.info(f"  [yield] t={t}: RESUME "
+                                         f"({yc.total_resumes})")
+                    if yc.state == "retreat":
+                        _yr_pos = _guard_pos(yield_hazard_name) if yield_hazard_name else None
+                        _y_act, _y_new_state = yc.next_retreat_action(
+                            obs["robot0_eef_pos"], _yr_pos, ENGAGE_CONE_HARD_R,
+                            exec_parity=args.exec_parity, raw_actions=args.raw_actions)
+                        if _y_act is None:
+                            logging.info(f"  [yield] t={t}: retreat step "
+                                         "rejected by certification -> HOLD")
+                            _a = np.zeros(7)
+                        else:
+                            _a = np.asarray(_y_act, dtype=np.float64)
+                    elif yc.state == "hold":
+                        _a = yc.hold_step()
+                    else:
+                        # Just resumed this same iteration -- `plan` is
+                        # empty (cleared above), so fall through to a
+                        # zero action for this single step; next iteration
+                        # takes the normal server-query path.
+                        _a = np.zeros(7)
+                elif in_retreat > 0:
                     _a = np.zeros(7)
                     # Scripted lift, ~2 cm/step in BOTH command conventions:
                     # stock controller 0.4 * output_max 0.05 = 0.02 m; parity
@@ -1127,6 +1426,10 @@ def main():
                         transitions_fh = open(transitions_path, "a")
                     transitions_fh.write(json.dumps(_trec) + "\n")
                 lead_steps_since_query += 1  # --mover_lead: elapsed-steps tracking
+                if args.yield_regime:
+                    # Recorded EVERY env step, NEVER cleared mid-episode
+                    # (unlike `eef_hist`) -- RETREAT walks this back.
+                    eef_traj.append(np.asarray(obs["robot0_eef_pos"], dtype=np.float64))
                 if args.stall_recovery and in_retreat == 0:
                     eef_hist.append(np.asarray(obs["robot0_eef_pos"], dtype=np.float64))
                     if (len(eef_hist) == eef_hist.maxlen
@@ -1166,6 +1469,10 @@ def main():
                     _rec["dual_lam_final"] = round(dual_lam, 5)
                 if args.ssm_margins:
                     _rec["ssm_dynamic"] = bool(ssm_moved)
+                if args.yield_regime:
+                    _rec["yields"] = yc.total_yields
+                    _rec["yield_steps"] = yc.total_steps
+                    _rec["yield_resumes"] = yc.total_resumes
                 ef.write(json.dumps(_rec) + "\n")
             if args.log_trajectories and done and not violated and ep_actions:
                 tdir = out_dir / "trajectories"
@@ -1197,6 +1504,13 @@ def main():
         "engage_cone": args.engage_cone,
         "holding_disengage": bool(args.holding_disengage),
         "mover_lead": args.mover_lead,
+        "yield_regime": bool(args.yield_regime),
+        "yield_r_occ": args.yield_r_occ,
+        "yield_d_stall": args.yield_d_stall,
+        "yield_w": args.yield_w,
+        "yield_standoff": args.yield_standoff,
+        "yield_m": args.yield_m,
+        "yield_max": args.yield_max,
         "refuse_unsafe": args.refuse_unsafe,
         "log_transitions": bool(args.log_transitions),
         "overall_TSR": float(np.mean([r["TSR"] for r in per_task])) if per_task else 0.0,
