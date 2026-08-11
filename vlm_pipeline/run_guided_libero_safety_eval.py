@@ -535,6 +535,17 @@ def _yield_retreat_waypoints(eef_traj, hazard_pos, standoff):
     return list(reversed(pts[target_idx:]))
 
 
+def _yield_intercepts(yc):
+    """True iff the Yield branch should intercept `_a` construction /
+    suppress the normal server query for this env step (pure, unit-
+    testable). Single source of truth for "is Yield active": both the
+    main() wiring and the CPU tests call this SAME function, so a test
+    exercising it with `yc=None` (the argparse-default-off case) proves
+    the actual decision, not a reimplementation of it. False whenever
+    `yc is None` (the flag is off) or the controller is idle."""
+    return yc is not None and yc.state != "idle"
+
+
 class YieldController:
     """Client-only Yield regime state machine (pure state transitions, no
     mujoco/server dependency): TRIGGER -> certified RETREAT -> HOLD ->
@@ -1109,7 +1120,7 @@ def main():
             yield_hazard_name = None  # hazard identity captured at TRIGGER
             max_steps = args.max_steps or MAX_STEPS[args.level]
             while t < max_steps and not done:
-                _yield_active = yc is not None and yc.state != "idle"
+                _yield_active = _yield_intercepts(yc)
                 if not _yield_active and not plan:
                     img = np.ascontiguousarray(obs["agentview_image"][::-1, ::-1])
                     wrist = np.ascontiguousarray(obs["robot0_eye_in_hand_image"][::-1, ::-1])
@@ -1217,6 +1228,11 @@ def main():
                         if yc.should_trigger(_y_stalled, _y_candidate, movers, _y_occ):
                             yield_hazard_name = _y_candidate
                             yc.trigger(list(eef_traj), _y_hpos)
+                            # Stall window is frozen during RETREAT/HOLD (not
+                            # appended to while yc.state != "idle") and must
+                            # not carry stale pre-yield positions into the
+                            # next idle-phase stall evaluation -- clear it.
+                            yield_replan_hist.clear()
                             logging.info(
                                 f"  [yield] t={t}: TRIGGER hazard="
                                 f"{yield_hazard_name} -> {yc.state} "
@@ -1332,7 +1348,7 @@ def main():
                                     "  [consequence] ep %s hazards %s not found in "
                                     "entities payload %s", ep, _missing, sorted(_ent.keys()))
                             element["guidance"]["hazards"] = list(hazards)
-                    if yc is None or yc.state == "idle":
+                    if not _yield_intercepts(yc):
                         # A TRIGGER just above may have flipped yc out of
                         # "idle" this same iteration -- skip the (now moot)
                         # server query and DON'T populate `plan`, so the
@@ -1353,7 +1369,12 @@ def main():
                         plan.extend(_plan_actions(
                             chunk[:_n_exec], exec_parity=args.exec_parity,
                             raw_actions=args.raw_actions))
-                if _yield_active or (yc is not None and yc.state != "idle"):
+                if _yield_intercepts(yc):
+                    # Freshly recomputed (not the loop-top `_yield_active`):
+                    # a TRIGGER earlier this same iteration only ever moves
+                    # idle -> retreat/hold, never the reverse, before this
+                    # point is reached, so this single fresh check captures
+                    # both "already yielding" and "just triggered".
                     # Yield intercepts entirely for this env step: RETREAT
                     # (certified per step against the CURRENT hazard) or
                     # HOLD (zero-action, re-evaluating OCCUPIES at replan
@@ -1369,6 +1390,12 @@ def main():
                         if yc.evaluate_resume(_yh_occ):
                             plan.clear()
                             yield_hazard_name = None
+                            # Same reasoning as at TRIGGER: the stall window
+                            # was frozen throughout RETREAT/HOLD, so the
+                            # first post-RESUME stall evaluation must start
+                            # from a clean window, not stale pre-yield
+                            # positions mixed with the first fresh sample.
+                            yield_replan_hist.clear()
                             logging.info(f"  [yield] t={t}: RESUME "
                                          f"({yc.total_resumes})")
                     if yc.state == "retreat":

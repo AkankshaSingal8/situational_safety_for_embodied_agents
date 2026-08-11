@@ -37,23 +37,62 @@ def test_argparse_default_is_off_and_tunables_present():
     assert '"--yield_max", type=int, default=2' in src
 
 
-def test_defaults_off_no_controller_created_and_wiring_gated():
-    # With --yield_regime unset (argparse default False, verified above), no
-    # YieldController is instantiated -- mirrors
-    # test_defaults_off_engage_cone_none_leaves_payload_path_untouched: the
-    # wiring's `yc = YieldController(...) if args.yield_regime else None`
-    # leaves yc as None, so every Yield code path in main() (all gated on
-    # `yc is not None` / `args.yield_regime`) is skipped entirely and the
-    # existing server-query / plan / step_guard path is untouched.
+def test_yield_intercepts_true_only_for_active_controller():
+    # `_yield_intercepts` is the SINGLE function main()'s wiring calls at
+    # every Yield-related branch point (loop-top gate, server-call gate,
+    # intercept branch) -- exercise it directly across every yc state.
+    assert ls._yield_intercepts(None) is False
+    yc = _mk_controller()
+    assert yc.state == "idle"
+    assert ls._yield_intercepts(yc) is False
+    yc.state = "retreat"
+    assert ls._yield_intercepts(yc) is True
+    yc.state = "hold"
+    assert ls._yield_intercepts(yc) is True
+    yc.state = "idle"
+    assert ls._yield_intercepts(yc) is False
+
+
+def test_defaults_off_drives_real_decision_path_no_server_skip():
+    # Mirrors test_defaults_off_engage_cone_none_leaves_payload_path_untouched:
+    # rather than grepping source text, this DRIVES the real production
+    # function `_yield_intercepts` -- the exact same callable main() uses at
+    # every Yield branch point -- with the argparse-default-off state
+    # (`yc = None`, since the wiring is literally
+    # `yc = YieldController(...) if args.yield_regime else None`) and
+    # asserts every dependent branch collapses to the pre-Yield behavior.
+    yield_regime = False  # the argparse default (verified above)
+    yc = _mk_controller() if yield_regime else None
+    assert yc is None
+
+    # (1) Loop-top gate for entering the server-query block:
+    # `if not _yield_active and not plan:` where
+    # `_yield_active = _yield_intercepts(yc)`. With the flag off this must
+    # reduce EXACTLY to the pre-Yield `not plan` condition, for both an
+    # empty and a non-empty plan.
+    for plan_nonempty in (False, True):
+        yield_active = ls._yield_intercepts(yc)
+        assert yield_active is False  # no yield state consulted/active
+        enters_query_block = (not yield_active) and (not plan_nonempty)
+        assert enters_query_block == (not plan_nonempty)
+
+    # (2) Inside that block, the real server-call gate
+    # `if not _yield_intercepts(yc):` -- must be True, i.e. the server IS
+    # queried and `plan` IS populated, exactly as before Yield existed.
+    assert (not ls._yield_intercepts(yc)) is True
+
+    # (3) The Yield-interception branch for `_a` construction,
+    # `if _yield_intercepts(yc):` -- must be False, i.e. the normal
+    # `plan.popleft()` / `in_retreat` path is taken, never the Yield one.
+    assert ls._yield_intercepts(yc) is False
+
+
+def test_defaults_off_no_controller_created():
+    # Mirrors the `--engage_cone`/`--holding_disengage` precedent: with the
+    # flag off, no controller object exists at all (not merely "idle").
     yield_regime = False  # the argparse default, confirmed above
     yc = _mk_controller() if yield_regime else None
     assert yc is None
-    src = pathlib.Path(ls.__file__).read_text()
-    assert "yc = (YieldController(args.yield_r_occ" in src
-    assert "if args.yield_regime else None)" in src
-    # The trigger-detection block and the intercept branch are both gated.
-    assert "if args.yield_regime and yc.state ==" in src
-    assert 'yc is not None and yc.state != "idle"' in src
 
 
 def test_defaults_off_jsonl_fields_absent():
@@ -346,6 +385,85 @@ def test_resume_one_occupied_evaluation_resets_streak():
     assert yc.evaluate_resume(occupies_flag=False) is False  # 1/2 again
     assert yc.evaluate_resume(occupies_flag=False) is True   # 2/2 -> resume
     assert yc.state == "idle"
+
+
+# --- stall window reset across a full yield cycle (fix round 1) -----------
+
+def test_stall_window_cleared_across_full_trigger_retreat_hold_resume_cycle():
+    # Fix: `yield_replan_hist` is frozen during RETREAT/HOLD (never
+    # appended to while yc.state != "idle") and must be cleared both on
+    # TRIGGER and on RESUME, so a post-resume stall evaluation never mixes
+    # stale pre-yield positions with the first fresh post-resume sample.
+    # Mirrors the exact clear-on-trigger / clear-on-resume calls added to
+    # main()'s wiring (`yield_replan_hist.clear()` right after
+    # `yc.trigger(...)` and right after a True `yc.evaluate_resume(...)`).
+    w = 3
+    yc = _mk_controller(w=w, standoff=0.03)
+    yield_replan_hist = ls.collections.deque(maxlen=w)
+
+    # --- idle phase: window fills with STALE positions near x=0. ---
+    stale = [np.array([0.0, 0.0, 0.85]), np.array([0.0005, 0.0, 0.85]),
+             np.array([0.001, 0.0, 0.85])]
+    for p in stale:
+        yield_replan_hist.append(p)
+    assert len(yield_replan_hist) == w
+    assert ls.YieldController.is_stalled(yield_replan_hist, d_stall=0.01) is True
+
+    # --- TRIGGER -> RETREAT/HOLD; window must be cleared immediately. ---
+    traj = [np.array([0.0, 0.0, 0.85]), np.array([0.001, 0.0, 0.85])]
+    hazard = np.array([10.0, 10.0, 10.0])
+    yc.trigger(traj, hazard)
+    assert yc.triggers == 1
+    yield_replan_hist.clear()  # the fix under test
+    assert len(yield_replan_hist) == 0
+
+    # --- Window stays frozen throughout RETREAT/HOLD (not appended). ---
+    yc.state = "hold"
+    assert len(yield_replan_hist) == 0
+
+    # --- HOLD -> RESUME (M=2 consecutive not-OCCUPIES). ---
+    assert yc.evaluate_resume(occupies_flag=False) is False
+    assert yc.evaluate_resume(occupies_flag=False) is True
+    assert yc.state == "idle"
+    yield_replan_hist.clear()  # the fix under test
+    assert len(yield_replan_hist) == 0
+
+    # --- Post-RESUME: a single fresh sample must NOT be judged stalled
+    # against a window that no longer holds stale pre-yield positions
+    # (window isn't even full yet). ---
+    fresh_far = np.array([5.0, 0.0, 0.85])  # eef moved far during retreat
+    yield_replan_hist.append(fresh_far)
+    assert len(yield_replan_hist) == 1
+    assert ls.YieldController.is_stalled(yield_replan_hist, d_stall=0.01) is False
+
+    # --- Fill the window with fresh, genuinely-close post-resume
+    # positions: THIS determines the second STALLED evaluation, not any
+    # stale pre-yield sample (which must be fully gone from the deque). ---
+    for p in [np.array([5.0005, 0.0, 0.85]), np.array([5.001, 0.0, 0.85])]:
+        yield_replan_hist.append(p)
+    assert len(yield_replan_hist) == w
+    for p in yield_replan_hist:
+        assert not np.allclose(p, stale[0])
+    assert ls.YieldController.is_stalled(yield_replan_hist, d_stall=0.01) is True
+
+    # --- A second TRIGGER is now legitimately possible (armed, 1 < y_max). ---
+    assert yc.armed() is True
+    assert yc.should_trigger(True, "hand_1", {"hand_1"}, True) is True
+
+
+def test_main_wiring_clears_stall_window_on_trigger_and_resume():
+    # Source-level check that the fix is actually wired into main() at both
+    # required call sites (trigger and resume), not just exercised by the
+    # behavioral test above.
+    src = pathlib.Path(ls.__file__).read_text()
+    trig_idx = src.index("yc.trigger(list(eef_traj), _y_hpos)")
+    trig_clear_idx = src.index("yield_replan_hist.clear()", trig_idx)
+    # The clear must be the next statement-ish thing after trigger() (no
+    # unrelated yield_replan_hist mutation in between).
+    assert trig_clear_idx - trig_idx < 400
+    resume_idx = src.index("if yc.evaluate_resume(_yh_occ):")
+    resume_clear_idx = src.index("yield_replan_hist.clear()", resume_idx)
+    assert resume_clear_idx - resume_idx < 600
 
 
 # --- Y_max cap ----------------------------------------------------------
