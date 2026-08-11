@@ -4094,3 +4094,17 @@ hand still excluded); (2) r_occ default 0.20; (3) per-episode
 `yield_blockers` telemetry {stall,moving,occupies} for diagnosability.
 Re-smoke after revision; if still inert or violations appear → Yield NO-GO
 for good and oah ships at cone-config numbers.
+
+## 2026-08-11 — G-D1 de-election dev smoke VERDICT (43356190): no signal, config mismatch found
+
+Dynamic guard de-election (NEAR_PATH re-eval per replan, release-only,
+NEAR_PATH_THRESHOLD=0.20) oa noGT n=10/task. Clean pairing exists only at
+L1 (vs ls_gapfix_dev A_oa_nogt_eng22): TSR -2pp, viol 0, McNemar p=1.0 —
+no detectable effect. L0/L2 only comparable to the frozen incumbent
+(nogt_par_full) which runs at eng 0.30 while the smoke ran 0.22
+(CONFIG MISMATCH — the declared-protocol "oa eng0.22" and the actual frozen
+noGT oa cell at eng0.30 disagree; must be reconciled before any promotion):
+flat to -4pp, 3 new violations, radius-confounded. NO-GO as run.
+ONE config-clean re-shot: de-election arm at eng0.30 (matching the
+incumbent exactly) appended to the yield round-2 smoke job. If still flat →
+Phase 2 closes NO-GO and the oa-noGT cell rides on Phase 3 only.
