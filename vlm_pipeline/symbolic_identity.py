@@ -269,6 +269,47 @@ def scored_obstacle_id(
     return ranking[0]
 
 
+# NEAR_PATH(x): 3D distance from x to the eef->target reach segment.
+# `segment_distance` is the SOLE implementation of this geometry:
+# `fol_obstacle_id` uses it (unthresholded) to RANK unmentioned candidates by
+# closeness to the path at election time; dynamic de-election
+# (`--dynamic_election`, run_guided_libero_safety_eval.py) uses it WITH
+# `NEAR_PATH_THRESHOLD` to decide, per replan, whether an already-elected
+# near-path guard still satisfies the disjunct it was elected under. One
+# formula, two call sites -- do not copy this math elsewhere.
+def segment_distance(p, a, b) -> float:
+    """3D distance from point `p` to the segment `a`->`b` (clamped
+    projection). Matches the historical inline `d_path` closure in
+    `fol_obstacle_id` exactly (no xy slicing, unlike `scored_obstacle_id`'s
+    2D `d_path`)."""
+    p, a, b = np.asarray(p), np.asarray(a), np.asarray(b)
+    ab = b - a
+    t = np.clip(np.dot(p - a, ab) / max(np.dot(ab, ab), 1e-9), 0, 1)
+    return float(np.linalg.norm(p - (a + t * ab)))
+
+
+# NEAR_PATH threshold: no hard cutoff existed at election time
+# (`fol_obstacle_id` ranks and lets `_topk_guard`'s k truncate; it never
+# gates on a distance value). Declared here, its OWN constant, for
+# dynamic de-election's per-replan NEAR_PATH re-check -- distinct from
+# ENGAGE_CONE_HARD_R (0.14, eef-to-hazard engagement) and yield_r_occ (0.12,
+# hazard-to-goal). Value follows the NEAR_PATH lineage documented in
+# `fol_vlm_critic_probe.py` (0.20 m); that probe's distance is xy-only while
+# `segment_distance` is full 3D, so this threshold is the stricter reading of
+# the same design constant.
+NEAR_PATH_THRESHOLD = 0.20
+
+
+def near_path(p, a, b, threshold: Optional[float] = None) -> bool:
+    """NEAR_PATH(x) predicate: is `p` within `threshold` of segment a->b.
+    `threshold=None` (default) reads the CURRENT module-level
+    `NEAR_PATH_THRESHOLD` at call time (not bound at def time), so callers
+    that don't pass an explicit override always see the live value."""
+    if threshold is None:
+        threshold = NEAR_PATH_THRESHOLD
+    return segment_distance(p, a, b) < threshold
+
+
 def fol_obstacle_id(task_description: str, candidates, eef_pos,
                     moving: Optional[set] = None):
     """Hard-FOL ranking (v17 lineage), no VLM priors:
@@ -282,10 +323,7 @@ def fol_obstacle_id(task_description: str, candidates, eef_pos,
     tpos = candidates.get(tgt, eef_pos)
 
     def d_path(k):
-        p, a, b = np.asarray(candidates[k]), np.asarray(eef_pos), np.asarray(tpos)
-        ab = b - a
-        t = np.clip(np.dot(p - a, ab) / max(np.dot(ab, ab), 1e-9), 0, 1)
-        return float(np.linalg.norm(p - (a + t * ab)))
+        return segment_distance(candidates[k], eef_pos, tpos)
 
     def head_mentioned(name):
         base = _re.sub(r"(__\d+)?(_\d+)?$", "", name)

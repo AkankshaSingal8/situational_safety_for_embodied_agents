@@ -290,6 +290,53 @@ def _topk_guard(id_source, desc, cands, eef, movers, hazards, k=1):
     return list(hazards)
 
 
+def _dynamic_deelect(guard, id_source, pos_of, eef, target_pos, movers):
+    """Per-replan guard de-election (pure, unit-testable): `--dynamic_election`.
+
+    Election runs once at episode start; under the `fol` theory
+        HAZARD(x) := PROTECTED(x) | MOVING(x) | (~MENTIONED(x) & NEAR_PATH(x))
+    NEAR_PATH is path-dependent and can go stale once the eef has passed a
+    hazard. This RE-EVALUATES each episode-elected `guard` entry against its
+    electing disjunct, using the CURRENT `eef` and `target_pos` (the
+    corridor-target anchor, re-read live every replan by the caller):
+    PROTECTED/MOVING entries (`_PROTECTED_CLASSES` name-token match, or
+    membership in `movers`) are always RETAINED — those predicates are not
+    path-dependent. A NEAR_PATH-only entry is RETAINED iff
+    `symbolic_identity.near_path` still holds for the current eef->target
+    segment — the SAME callable and `NEAR_PATH_THRESHOLD` election's ranking
+    geometry is built from (`segment_distance`), not a duplicated formula.
+
+    Composes BEFORE `_gate_guard`/`_cone_gate`/`_holding_filter`: this filter
+    runs on the raw episode-elected `guard`, and its output feeds those gates
+    as their input `guard` argument.
+
+    Release-only relative to `guard` (never adds names) and stateless per
+    replan (a released entry re-enters automatically once NEAR_PATH holds
+    again — this is a filter, not a latch). `id_source != "fol"` is a
+    no-op: `symbolic`/`gt`/`folprop`/`folpropvlm` hazards are not elected via
+    a NEAR_PATH disjunct, so nothing here is path-dependent for them. Fail-
+    safe toward retention: an unresolvable `target_pos` (no target anchor)
+    or an unlocatable guard position both RETAIN rather than release, since
+    NEAR_PATH cannot be certified either way."""
+    if id_source != "fol" or not guard:
+        return list(guard)
+    from symbolic_identity import _PROTECTED_CLASSES, near_path
+    if target_pos is None:
+        return list(guard)
+    eef = np.asarray(eef, dtype=np.float64)
+    target_pos = np.asarray(target_pos, dtype=np.float64)
+    kept = []
+    for name in guard:
+        if (any(w in name.lower() for w in _PROTECTED_CLASSES)
+                or (movers and name in movers)):
+            kept.append(name)
+            continue
+        p = pos_of(name)
+        if p is None or near_path(np.asarray(p, dtype=np.float64), eef, target_pos):
+            kept.append(name)
+    return kept
+
+
 def _gate_guard(guard, pos_of, eef, radius):
     """Minimum-intervention engagement gate (pure, unit-testable).
 
@@ -750,6 +797,24 @@ def main():
                          "the server accepts at most one secondary guard). "
                          "1 = historical single-guard behavior. The gt source "
                          "always guards every CheckRobotContact hazard.")
+    ap.add_argument("--dynamic_election", action="store_true",
+                    help="Phase 2 guard de-election (client-only, oa): "
+                         "per replan, re-evaluate whether each episode-"
+                         "elected guard entry still satisfies its electing "
+                         "FOL disjunct. PROTECTED/MOVING entries are always "
+                         "retained; a NEAR_PATH-only entry (fol theory: "
+                         "HAZARD(x) := PROTECTED(x) | MOVING(x) | "
+                         "(~MENTIONED(x) & NEAR_PATH(x))) is released once "
+                         "the eef->target segment no longer passes near it, "
+                         "re-entering automatically if the segment swings "
+                         "back (stateless filter, not a latch). Composes "
+                         "BEFORE --engage_radius/--engage_cone/"
+                         "--holding_disengage (applied to their input). "
+                         "RELEASE-ONLY relative to the episode election set "
+                         "-- never adds a hazard election did not pick. "
+                         "No-op unless --obstacle_id_source=fol (the only "
+                         "theory with a NEAR_PATH disjunct). Default off = "
+                         "byte-identical.")
     ap.add_argument("--engage_radius", type=float, default=0.0,
                     help="Minimum-intervention engagement gate [m]. At each "
                          "server query a guard is included in the guidance "
@@ -1188,10 +1253,24 @@ def main():
                             return percep_pos.get(name)
                         return obs.get(f"{name}_pos")
 
+                    # Dynamic guard de-election (Phase 2, oa): per replan,
+                    # re-evaluate NEAR_PATH-only episode-elected entries
+                    # against the CURRENT eef->target segment; runs BEFORE
+                    # the engagement gates below so `step_guard` seen by
+                    # cone/holding/yield logic is already the filtered list.
+                    # Default off leaves `guard` untouched (byte-identical).
+                    _elected = guard
+                    if args.dynamic_election:
+                        _elected = _dynamic_deelect(
+                            guard, args.obstacle_id_source, _guard_pos,
+                            obs["robot0_eef_pos"],
+                            _guard_pos(corridor_target) if corridor_target else None,
+                            movers)
+
                     # Engagement gate: per-query (chunk boundary) distance
                     # gating of each guard entry; R=0 returns guard unchanged.
                     step_guard = _gate_guard(
-                        guard, _guard_pos, obs["robot0_eef_pos"],
+                        _elected, _guard_pos, obs["robot0_eef_pos"],
                         args.engage_radius)
                     if args.engage_cone is not None:
                         step_guard = _cone_gate(
@@ -1527,6 +1606,7 @@ def main():
         "obstacle_id_source": args.obstacle_id_source,
         "entity_pos_source": args.entity_pos_source,
         "exec_parity": bool(args.exec_parity),
+        "dynamic_election": bool(args.dynamic_election),
         "engage_radius": args.engage_radius,
         "engage_cone": args.engage_cone,
         "holding_disengage": bool(args.holding_disengage),
