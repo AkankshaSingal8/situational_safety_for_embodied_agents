@@ -582,6 +582,25 @@ def _yield_retreat_waypoints(eef_traj, hazard_pos, standoff):
     return list(reversed(pts[target_idx:]))
 
 
+def _percep_refresh_set(movers, guard, yield_on):
+    """Percep-tier per-replan re-perception entity set (pure, unit-
+    testable). `movers`-only entities are always included -- the legacy
+    `--percep_refresh_movers` behavior, byte-identical when `yield_on` is
+    False (no-op when `movers` is empty, exactly as before). When
+    `yield_on` is True, the currently identified guard hazard names are
+    ALSO included -- fix round 3 (G-Y2 forensics): the episode-level
+    settle-window `movers` set is empty in most LIBERO-Safety dynamic-
+    intruder episodes (the hand starts moving AFTER the settle window),
+    so without this the refresh no-ops, guard positions stay frozen at
+    the settle-end snapshot, and Yield's `runtime_moving` displacement
+    can never observe percep-tier motion and OCCUPIES can never clear
+    during HOLD (no resumes)."""
+    refresh = set(movers) if movers else set()
+    if yield_on:
+        refresh |= set(guard) if guard else set()
+    return refresh
+
+
 def _yield_blocker_conjunct(stalled, moving, occupies):
     """Diagnostic-only (fix round 2, G-Y2 telemetry): if exactly one of the
     three TRIGGER conjuncts (STALLED, MOVING, OCCUPIES) is False, return
@@ -1264,8 +1283,16 @@ def main():
                         )),
                         "prompt": prompt_text,
                     }
+                    # Fix round 3 (G-Y2 forensics): the refresh set is
+                    # movers-only when Yield is off (byte-identical legacy
+                    # behavior, including the no-op-when-empty case); with
+                    # --yield_regime on, the current guard hazard names are
+                    # ALSO refreshed, since the settle-window `movers` set
+                    # misses hazards that start moving after the settle
+                    # window (see `_percep_refresh_set`).
+                    _refresh = _percep_refresh_set(movers, guard, args.yield_regime)
                     if (args.percep_refresh_movers and percep_pos is not None
-                            and movers):
+                            and _refresh):
                         # Per-replan mover re-perception (2026-08-08): refresh
                         # ONLY mover entities so the dynamic-hazard barrier
                         # anchors to the CURRENT hand position. A failed
@@ -1283,13 +1310,13 @@ def main():
                         # happen); empty = entity_cameras via percep_snapshot.
                         if args.percep_refresh_cameras:
                             _fresh = estimate_object_positions(
-                                env.sim, sorted(movers),
+                                env.sim, sorted(_refresh),
                                 cameras=tuple(args.percep_refresh_cameras.split(",")),
                                 region_source="detector", detector=gdino_detector,
                                 z_correction=args.percep_z_correction,
                                 consistency_tau=(args.entity_view_tau or None))
                         else:
-                            _fresh = percep_snapshot(env, sorted(movers))
+                            _fresh = percep_snapshot(env, sorted(_refresh))
                         _a = args.percep_refresh_alpha
                         if _a <= 0:
                             percep_pos.update(_fresh)

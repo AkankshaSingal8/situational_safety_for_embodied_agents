@@ -310,6 +310,58 @@ def test_hazard_identity_change_resets_tracked_history():
     assert ls.YieldController.runtime_moving(hist, d_move=0.01) is False
 
 
+# --- percep-tier refresh set (fix round 3: G-Y2 percep-tier blindness) ----
+
+def test_percep_refresh_set_yield_off_movers_only_legacy_behavior():
+    # Legacy behavior, byte-identical: with yield_on=False, the refresh set
+    # is exactly `movers`, regardless of `guard` -- guard hazards are never
+    # pulled in when Yield is off.
+    movers = {"hand_1"}
+    guard = ["hand_1", "obstacle_a"]
+    out = ls._percep_refresh_set(movers, guard, yield_on=False)
+    assert out == {"hand_1"}
+
+
+def test_percep_refresh_set_yield_off_empty_movers_stays_empty_noop():
+    # The no-op-when-empty case the fix must preserve exactly.
+    out = ls._percep_refresh_set(set(), ["hand_1", "obstacle_a"], yield_on=False)
+    assert out == set()
+
+
+def test_percep_refresh_set_yield_on_empty_movers_nonempty_guard():
+    # The G-Y2 fix: with yield_on=True and an empty settle-window `movers`
+    # set (the dynamic-intruder case) but a non-empty identified guard, the
+    # refresh set equals the guard set -- no longer a no-op.
+    guard = ["hand_1", "obstacle_a"]
+    out = ls._percep_refresh_set(set(), guard, yield_on=True)
+    assert out == {"hand_1", "obstacle_a"}
+
+
+def test_percep_refresh_set_yield_on_unions_movers_and_guard():
+    movers = {"hand_1"}
+    guard = ["hand_1", "obstacle_a"]
+    out = ls._percep_refresh_set(movers, guard, yield_on=True)
+    assert out == {"hand_1", "obstacle_a"}
+
+
+def test_percep_refresh_set_yield_on_empty_guard_and_movers_stays_empty():
+    out = ls._percep_refresh_set(set(), [], yield_on=True)
+    assert out == set()
+    out_none_movers = ls._percep_refresh_set(None, [], yield_on=True)
+    assert out_none_movers == set()
+
+
+def test_percep_refresh_wiring_gates_and_sorts_on_refresh_set():
+    src = pathlib.Path(ls.__file__).read_text()
+    assert "_refresh = _percep_refresh_set(movers, guard, args.yield_regime)" in src
+    assert "and _refresh):" in src
+    assert "sorted(_refresh)" in src
+    # The legacy `sorted(movers)` refresh calls must be gone -- the fix
+    # replaces them, not adds a parallel path.
+    assert "estimate_object_positions(\n                                env.sim, sorted(movers)" not in src
+    assert "percep_snapshot(env, sorted(movers))" not in src
+
+
 # --- blocker telemetry (fix round 2, diagnosability) -----------------------
 
 def test_blocker_conjunct_all_true_no_blocker():
