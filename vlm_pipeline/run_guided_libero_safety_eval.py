@@ -582,6 +582,19 @@ def _yield_retreat_waypoints(eef_traj, hazard_pos, standoff):
     return list(reversed(pts[target_idx:]))
 
 
+def _yield_blocker_conjunct(stalled, moving, occupies):
+    """Diagnostic-only (fix round 2, G-Y2 telemetry): if exactly one of the
+    three TRIGGER conjuncts (STALLED, MOVING, OCCUPIES) is False, return
+    its name ("stall"/"moving"/"occupies"); otherwise None -- either all
+    three are True (TRIGGER fires, nothing to blame) or more than one is
+    False (no SINGLE conjunct is "the" blocker). Never affects control
+    flow; feeds only the per-episode `yield_blockers` JSONL counters."""
+    false_conjuncts = [k for k, v in (
+        ("stall", stalled), ("moving", moving), ("occupies", occupies))
+        if not v]
+    return false_conjuncts[0] if len(false_conjuncts) == 1 else None
+
+
 def _yield_intercepts(yc):
     """True iff the Yield branch should intercept `_a` construction /
     suppress the normal server query for this env step (pure, unit-
@@ -648,13 +661,37 @@ class YieldController:
             np.asarray(hazard_pos, dtype=np.float64)
             - np.asarray(target_pos, dtype=np.float64))) < r_occ
 
-    def should_trigger(self, stalled, hazard_name, movers, occupies_flag):
-        """TRIGGER := stalled AND MOVING(hazard) (hazard_name in movers) AND
-        OCCUPIES, only from "idle" and only while still armed (< y_max)."""
+    @staticmethod
+    def runtime_moving(hazard_hist, d_move):
+        """RUNTIME MOVING(hazard) (fix round 2, G-Y2 forensics): the guard
+        hazard's position has displaced more than `d_move` [m] across the
+        last 2 replan-boundary readings of the SAME hazard identity.
+        `hazard_hist` is a maxlen-2 deque of (replan_idx, hazard_pos)
+        entries, reset by the caller whenever the tracked guard identity
+        changes. Complements the settle-window `movers` set, which misses
+        hazards that start moving AFTER the settle window (the LIBERO-
+        Safety dynamic-intruder suite: the hand is stationary during the
+        settle window and only starts moving once the episode is
+        underway). Fewer than 2 readings -> not (yet) judged moving; a
+        truly static hazard (t13-class) never displaces and stays
+        excluded regardless of how many readings accumulate."""
+        if len(hazard_hist) < 2:
+            return False
+        p_prev = np.asarray(hazard_hist[-2][1], dtype=np.float64)
+        p_cur = np.asarray(hazard_hist[-1][1], dtype=np.float64)
+        return float(np.linalg.norm(p_cur - p_prev)) > d_move
+
+    def should_trigger(self, stalled, hazard_name, movers, occupies_flag,
+                        runtime_moving_flag=False):
+        """TRIGGER := stalled AND MOVING(hazard) AND OCCUPIES, only from
+        "idle" and only while still armed (< y_max). MOVING(hazard) :=
+        (hazard_name in the episode's settle-window `movers` set) OR
+        `runtime_moving_flag` (fix round 2: a hazard that starts moving
+        after the settle window also counts)."""
+        moving = bool(movers is not None and hazard_name in movers) or bool(runtime_moving_flag)
         return bool(
             self.state == "idle" and self.armed() and stalled
-            and hazard_name is not None and movers is not None
-            and hazard_name in movers and occupies_flag)
+            and hazard_name is not None and moving and occupies_flag)
 
     def trigger(self, eef_traj, hazard_pos):
         """Arm RETREAT: compute waypoints along the recorded trajectory back
@@ -957,16 +994,31 @@ def main():
                          "scripted +Z `in_retreat` lift; mutually exclusive "
                          "with --stall_recovery. Default off = "
                          "byte-identical.")
-    ap.add_argument("--yield_r_occ", type=float, default=0.12,
+    ap.add_argument("--yield_r_occ", type=float, default=0.20,
                     help="OCCUPIES(hazard, goal_region) radius [m]: hazard-"
                          "to-corridor-target distance. Its own declared "
                          "constant -- distinct from ENGAGE_CONE_HARD_R "
                          "(0.14, eef-to-hazard, used for retreat "
-                         "certification).")
+                         "certification). Raised 0.12 -> 0.20 (fix round 2, "
+                         "G-Y2 forensics): the hand sits within/near a "
+                         "0.14 m hard core of the goal region and "
+                         "corridor_target is offset from where it hovers, "
+                         "so 0.12 under-covered OCCUPIES even in single-"
+                         "mover episodes.")
     ap.add_argument("--yield_d_stall", type=float, default=0.01,
                     help="STALLED(eef): net eef displacement [m] threshold "
                          "over the last --yield_w replan-boundary "
                          "positions.")
+    ap.add_argument("--yield_d_move", type=float, default=0.01,
+                    help="RUNTIME MOVING(hazard) (fix round 2, G-Y2 "
+                         "forensics): displacement [m] threshold across the "
+                         "last 2 replan-boundary readings of the tracked "
+                         "guard hazard's position. Complements the "
+                         "settle-window `movers` set -- covers hazards "
+                         "(e.g. the dynamic-intruder hand) that start "
+                         "moving AFTER the settle window, which `movers` "
+                         "alone misses. A truly static hazard never "
+                         "displaces and stays excluded.")
     ap.add_argument("--yield_w", type=int, default=5,
                     help="STALLED(eef) window, in REPLANS (chunk-boundary "
                          "queries) -- distinct from --stall_recovery's "
@@ -1183,6 +1235,15 @@ def main():
             yield_replan_hist = (collections.deque(maxlen=args.yield_w)
                                   if args.yield_regime else None)
             yield_hazard_name = None  # hazard identity captured at TRIGGER
+            # RUNTIME MOVING (fix round 2): (replan_idx, pos) history of the
+            # CURRENT candidate guard hazard, reset on identity change.
+            yield_hazard_track_name = None
+            yield_hazard_hist = collections.deque(maxlen=2) if args.yield_regime else None
+            # Blocker telemetry (fix round 2, diagnosability): counts, over
+            # replan-boundary evaluations with a guard engaged, how many
+            # times each TRIGGER conjunct was the SOLE blocker.
+            yield_blockers = ({"stall": 0, "moving": 0, "occupies": 0}
+                               if args.yield_regime else None)
             max_steps = args.max_steps or MAX_STEPS[args.level]
             while t < max_steps and not done:
                 _yield_active = _yield_intercepts(yc)
@@ -1300,11 +1361,36 @@ def main():
                             and bool(step_guard))
                         _y_candidate = step_guard[0] if step_guard else None
                         _y_hpos = _guard_pos(_y_candidate) if _y_candidate else None
+                        # RUNTIME MOVING (fix round 2): track the CURRENT
+                        # candidate hazard's position across replan
+                        # boundaries; reset the history whenever the
+                        # tracked identity changes.
+                        if _y_candidate != yield_hazard_track_name:
+                            yield_hazard_track_name = _y_candidate
+                            yield_hazard_hist.clear()
+                        if _y_candidate is not None and _y_hpos is not None:
+                            yield_hazard_hist.append((t, _y_hpos))
+                        _y_runtime_moving = YieldController.runtime_moving(
+                            yield_hazard_hist, args.yield_d_move)
                         _y_ctgt, _ = _corridor_anchor(desc, cands)
                         _y_ctgt_pos = _guard_pos(_y_ctgt) if _y_ctgt else None
                         _y_occ = YieldController.occupies(
                             _y_hpos, _y_ctgt_pos, args.yield_r_occ)
-                        if yc.should_trigger(_y_stalled, _y_candidate, movers, _y_occ):
+                        if step_guard:
+                            # Blocker telemetry (diagnostic-only, does not
+                            # affect control flow): which single conjunct
+                            # (if exactly one) blocked TRIGGER this
+                            # evaluation, via the SAME pure function tested
+                            # directly by the CPU test suite.
+                            _y_moving_flag = bool(
+                                movers is not None and _y_candidate in movers
+                            ) or _y_runtime_moving
+                            _y_blocker = _yield_blocker_conjunct(
+                                _y_stalled, _y_moving_flag, _y_occ)
+                            if _y_blocker is not None:
+                                yield_blockers[_y_blocker] += 1
+                        if yc.should_trigger(_y_stalled, _y_candidate, movers,
+                                              _y_occ, _y_runtime_moving):
                             yield_hazard_name = _y_candidate
                             yc.trigger(list(eef_traj), _y_hpos)
                             # Stall window is frozen during RETREAT/HOLD (not
@@ -1579,6 +1665,7 @@ def main():
                     _rec["yields"] = yc.total_yields
                     _rec["yield_steps"] = yc.total_steps
                     _rec["yield_resumes"] = yc.total_resumes
+                    _rec["yield_blockers"] = dict(yield_blockers)
                 ef.write(json.dumps(_rec) + "\n")
             if args.log_trajectories and done and not violated and ep_actions:
                 tdir = out_dir / "trajectories"
@@ -1614,6 +1701,7 @@ def main():
         "yield_regime": bool(args.yield_regime),
         "yield_r_occ": args.yield_r_occ,
         "yield_d_stall": args.yield_d_stall,
+        "yield_d_move": args.yield_d_move,
         "yield_w": args.yield_w,
         "yield_standoff": args.yield_standoff,
         "yield_m": args.yield_m,

@@ -20,7 +20,7 @@ import run_guided_libero_safety_eval as ls  # noqa: E402
 HARD_R = ls.ENGAGE_CONE_HARD_R
 
 
-def _mk_controller(r_occ=0.12, d_stall=0.01, w=5, standoff=0.20, m=2, y_max=2):
+def _mk_controller(r_occ=0.20, d_stall=0.01, w=5, standoff=0.20, m=2, y_max=2):
     return ls.YieldController(r_occ, d_stall, w, standoff, m, y_max)
 
 
@@ -29,8 +29,9 @@ def _mk_controller(r_occ=0.12, d_stall=0.01, w=5, standoff=0.20, m=2, y_max=2):
 def test_argparse_default_is_off_and_tunables_present():
     src = pathlib.Path(ls.__file__).read_text()
     assert '"--yield_regime", action="store_true"' in src
-    assert '"--yield_r_occ", type=float, default=0.12' in src
+    assert '"--yield_r_occ", type=float, default=0.20' in src  # fix round 2
     assert '"--yield_d_stall", type=float, default=0.01' in src
+    assert '"--yield_d_move", type=float, default=0.01' in src  # fix round 2
     assert '"--yield_w", type=int, default=5' in src
     assert '"--yield_standoff", type=float, default=0.20' in src
     assert '"--yield_m", type=int, default=2' in src
@@ -216,6 +217,154 @@ def test_trigger_false_when_not_idle():
     assert yc.should_trigger(
         stalled=True, hazard_name="hand_1", movers={"hand_1"},
         occupies_flag=True) is False
+
+
+# --- RUNTIME MOVING (fix round 2: hazard moves after the settle window) ---
+
+def test_runtime_moving_requires_two_readings():
+    hist = ls.collections.deque(maxlen=2)
+    assert ls.YieldController.runtime_moving(hist, d_move=0.01) is False
+    hist.append((0, np.array([0.3, 0.1, 0.85])))
+    assert ls.YieldController.runtime_moving(hist, d_move=0.01) is False
+
+
+def test_runtime_moving_static_hazard_never_displaces_t13_class():
+    # A truly static hand: identical position across replan boundaries ->
+    # runtime_moving stays False no matter how many readings accumulate.
+    hist = ls.collections.deque(maxlen=2)
+    p = np.array([0.3, 0.1, 0.85])
+    for i in range(5):
+        hist.append((i, p.copy()))
+        assert ls.YieldController.runtime_moving(hist, d_move=0.01) is False
+
+
+def test_runtime_moving_displacement_over_threshold_true():
+    hist = ls.collections.deque(maxlen=2)
+    hist.append((0, np.array([0.30, 0.10, 0.85])))
+    hist.append((1, np.array([0.32, 0.10, 0.85])))  # displaced 0.02 > 0.01
+    assert ls.YieldController.runtime_moving(hist, d_move=0.01) is True
+
+
+def test_runtime_moving_displacement_under_threshold_false():
+    hist = ls.collections.deque(maxlen=2)
+    hist.append((0, np.array([0.30, 0.10, 0.85])))
+    hist.append((1, np.array([0.302, 0.10, 0.85])))  # displaced 0.002 < 0.01
+    assert ls.YieldController.runtime_moving(hist, d_move=0.01) is False
+
+
+def test_static_during_settle_window_then_displaces_later_arms_trigger():
+    # The G-Y2 root cause: the hand is stationary during the settle window
+    # (absent from the episode-level `movers` set) and only starts moving
+    # once the episode is underway. Simulate a maxlen-2 tracked-hazard
+    # history across several replan boundaries: static readings first
+    # (`movers=set()` throughout, mirroring the settle-window miss), then a
+    # late displacement -- runtime_moving flips True and TRIGGER becomes
+    # reachable even though `movers` never contains the hazard.
+    hist = ls.collections.deque(maxlen=2)
+    yc = _mk_controller()
+    static_pos = np.array([0.30, 0.10, 0.85])
+    for i in range(3):
+        hist.append((i, static_pos.copy()))
+        moving = ls.YieldController.runtime_moving(hist, d_move=0.01)
+        assert moving is False
+        assert yc.should_trigger(True, "hand_1", set(), True, moving) is False
+
+    # Episode is now underway; the hand starts moving (post-settle).
+    moved_pos = np.array([0.34, 0.10, 0.85])  # displaced 0.04 > d_move 0.01
+    hist.append((3, moved_pos))
+    moving = ls.YieldController.runtime_moving(hist, d_move=0.01)
+    assert moving is True
+    # `movers` (settle-window set) still empty -- runtime_moving alone arms it.
+    assert yc.should_trigger(True, "hand_1", set(), True, moving) is True
+    # And also when movers metadata is entirely unavailable (None).
+    assert yc.should_trigger(True, "hand_1", None, True, moving) is True
+
+
+def test_runtime_moving_or_settle_window_movers_either_suffices():
+    yc = _mk_controller()
+    # settle-window movers alone (runtime_moving False) still fires.
+    assert yc.should_trigger(True, "hand_1", {"hand_1"}, True, False) is True
+    # runtime_moving alone (not in settle-window movers) still fires.
+    assert yc.should_trigger(True, "hand_1", set(), True, True) is True
+    # neither -> excluded (t13-class truly static hand).
+    assert yc.should_trigger(True, "hand_1", set(), True, False) is False
+
+
+def test_hazard_identity_change_resets_tracked_history():
+    # Mirrors the wiring: `yield_hazard_hist` is reset whenever the tracked
+    # guard identity changes, so a displacement between two DIFFERENT
+    # hazards' positions is never mistaken for one hazard moving.
+    hist = ls.collections.deque(maxlen=2)
+    track_name = None
+
+    def _update(candidate, pos):
+        nonlocal track_name, hist
+        if candidate != track_name:
+            track_name = candidate
+            hist.clear()
+        hist.append((0, pos))
+
+    _update("hand_1", np.array([0.0, 0.0, 0.85]))
+    _update("hand_2", np.array([5.0, 5.0, 0.85]))  # identity change -> reset
+    assert len(hist) == 1  # history was cleared, only the new entry present
+    assert ls.YieldController.runtime_moving(hist, d_move=0.01) is False
+
+
+# --- blocker telemetry (fix round 2, diagnosability) -----------------------
+
+def test_blocker_conjunct_all_true_no_blocker():
+    assert ls._yield_blocker_conjunct(True, True, True) is None
+
+
+def test_blocker_conjunct_sole_stall_blocker():
+    assert ls._yield_blocker_conjunct(False, True, True) == "stall"
+
+
+def test_blocker_conjunct_sole_moving_blocker():
+    assert ls._yield_blocker_conjunct(True, False, True) == "moving"
+
+
+def test_blocker_conjunct_sole_occupies_blocker():
+    assert ls._yield_blocker_conjunct(True, True, False) == "occupies"
+
+
+def test_blocker_conjunct_multiple_false_no_sole_blocker():
+    assert ls._yield_blocker_conjunct(False, False, True) is None
+    assert ls._yield_blocker_conjunct(False, False, False) is None
+
+
+def test_blocker_telemetry_g_y2_scenario_moving_is_the_blocker():
+    # Reproduces the G-Y2 forensic signature over a mini replan-boundary
+    # sequence: stalled and occupying throughout, but moving only becomes
+    # True on the last evaluation -- "moving" should accumulate as the sole
+    # blocker on every evaluation before that.
+    counts = {"stall": 0, "moving": 0, "occupies": 0}
+    conjuncts_per_replan = [
+        (True, False, True),   # moving blocks
+        (True, False, True),   # moving blocks
+        (True, True, True),    # all true -> would TRIGGER, no blocker
+    ]
+    for stalled, moving, occupies in conjuncts_per_replan:
+        blocker = ls._yield_blocker_conjunct(stalled, moving, occupies)
+        if blocker is not None:
+            counts[blocker] += 1
+    assert counts == {"stall": 0, "moving": 2, "occupies": 0}
+
+
+def test_yield_blockers_jsonl_field_absent_when_flag_off():
+    _rec = {"task": 0, "ep": 0}
+    args_yield_regime = False
+    if args_yield_regime:
+        _rec["yield_blockers"] = {"stall": 0, "moving": 0, "occupies": 0}
+    assert "yield_blockers" not in _rec
+    src = pathlib.Path(ls.__file__).read_text()
+    assert 'if args.yield_regime:\n                    _rec["yields"]' in src
+    assert '_rec["yield_blockers"] = dict(yield_blockers)' in src
+    # The addition must be inside the SAME `if args.yield_regime:` block as
+    # the other yield JSONL fields, not a separate always-on block.
+    yields_idx = src.index('_rec["yields"] = yc.total_yields')
+    blockers_idx = src.index('_rec["yield_blockers"] = dict(yield_blockers)')
+    assert 0 < blockers_idx - yields_idx < 200
 
 
 # --- RETREAT targeting ------------------------------------------------
