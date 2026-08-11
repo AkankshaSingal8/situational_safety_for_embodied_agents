@@ -1,14 +1,17 @@
 #!/bin/bash
-#SBATCH --job-name=ls_yielddev
+#SBATCH --job-name=ls_yielddev2
 #SBATCH --partition=GPU-shared
 #SBATCH --gres=gpu:h100-80:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=62000M
 #SBATCH --exclude=w002,w004,w005,w006,w007,w008,w009,w010
-#SBATCH --time=03:00:00
+#SBATCH --time=04:30:00
 #SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
 #SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
-# G-Y2 dev smoke (spec 2026-08-11-yield-regime-design.md): Yield regime on
+# G-Y2 dev smoke ROUND 2 (post-revision: runtime MOVING, r_occ 0.20,
+# blocker telemetry, guard-in-refresh-set; noGT arm carries F3 refresh flags
+# so OCCUPIES/motion see fresh hand positions).
+# Original round (spec 2026-08-11-yield-regime-design.md): Yield regime on
 # oah, both tiers, n=10/task L0-2, promoted cone configs + --yield_regime.
 # Freeze pool targets (F3 forensics): t3 ~2/10, t4 0/10, t9 ~3/10.
 # PASS iff >=3 previously-frozen episodes now succeed AND zero new
@@ -19,7 +22,7 @@ ROOT=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
 WT="$ROOT/.worktrees/flow-guidance-tier-gt"
 LS="$ROOT/LIBERO-Safety"
 LS_WEIGHTS=$(ls -d /ocean/projects/cis250185p/asingal/.hf_cache/hub/models--LIBERO-Safety--pi05_libero_safety/snapshots/*/)
-OUT="$WT/ls_yield_dev"
+OUT="$WT/ls_yield_dev2"
 PORT=8407
 N=${N:-10}
 CPP="$LS:$WT/client_deps:$WT/openpi_guided/packages/openpi-client/src:$WT/vlm_pipeline"
@@ -52,7 +55,7 @@ for LVL in 0 1 2; do
     --host 127.0.0.1 --port "$PORT" \
     --obstacle_id_source gt --duality_disengage --exec_parity \
     --engage_radius 0.22 --engage_cone 60 --yield_regime \
-    --results_output_dir "$OUT/Y_oah_gt"
+    --results_output_dir "$OUT/Y2_oah_gt"
 done
 # Y-noGT: oah noGT tier, promoted cone config + yield
 for LVL in 0 1 2; do
@@ -60,6 +63,18 @@ for LVL in 0 1 2; do
     --suite obstacle_avoidance_human --level "$LVL" --num_trials_per_task "$N" \
     --host 127.0.0.1 --port "$PORT" $NOGT \
     --engage_radius 0.30 --engage_cone 60 --yield_regime \
-    --results_output_dir "$OUT/Y_oah_nogt"
+    --percep_refresh_movers \
+    --percep_refresh_cameras robot0_eye_in_hand,agentview \
+    --entity_view_tau 0.08 \
+    --percep_refresh_alpha 0.6 --percep_refresh_gate 0.20 \
+    --results_output_dir "$OUT/Y2_oah_nogt"
+done
+# D2: de-election config-clean re-shot — oa noGT at incumbent eng 0.30
+for LVL in 0 1 2; do
+  python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
+    --suite obstacle_avoidance --level "$LVL" --num_trials_per_task "$N" \
+    --host 127.0.0.1 --port "$PORT" $NOGT \
+    --engage_radius 0.30 --dynamic_election \
+    --results_output_dir "$OUT/D2_oa_nogt_deelect_eng30"
 done
 echo "LS_YIELD_DEV_COMPLETE"
