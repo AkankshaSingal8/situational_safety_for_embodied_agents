@@ -4108,3 +4108,41 @@ flat to -4pp, 3 new violations, radius-confounded. NO-GO as run.
 ONE config-clean re-shot: de-election arm at eng0.30 (matching the
 incumbent exactly) appended to the yield round-2 smoke job. If still flat →
 Phase 2 closes NO-GO and the oa-noGT cell rides on Phase 3 only.
+
+## 2026-08-12 — G-Y2 ROUND-2 VERDICT (43375424): Yield NO-GO FOR GOOD
+
+Round-2 smoke after the revision round (runtime MOVING, r_occ 0.20, blocker
+telemetry, guard-in-percep-refresh-set). Job TIMED OUT at 4.5h: GT arm
+complete (150 eps L0-2), noGT L0 only (50 eps; per-replan GroundingDINO
+refresh ~25x slower than GT arm), D2 de-elect re-shot never ran.
+Corruption check: all 4 result sets recomputed from JSONL match
+results_*.json exactly.
+
+RESULT: yields fired 0/200 episodes (0/150 GT, 0/50 noGT). The mechanism is
+STILL INERT after revision. `yield_blockers` telemetry (sole-false-conjunct
+counts): GT {stall:0, moving:1, occupies:0} — one near-miss in 150 eps;
+noGT-L0 {stall:55, moving:26, occupies:1} across 13 eps — the AND-gate
+(STALLED ∧ MOVING ∧ OCCUPIES) gets close repeatedly but never closes.
+Gate arithmetic (GT vs F2 paired, 150/150): 18 freeze conversions BUT 3 new
+violations (t1e9, t4e8, t14e1) → FAIL on the zero-new-violations criterion;
+and since yield fired zero times, NONE of the deltas are attributable to
+the mechanism — success discordants 22/19 (McNemar p=0.755), pure server-
+sampling noise. Timeout-rate anomaly noted (42-54% eps at step cap in this
+smoke, likely shared-node slowness; does not change the inertness finding).
+
+VERDICT per pre-registered rule ("if still inert or violations appear →
+Yield NO-GO for good"): **YIELD NO-GO — CLOSED.** Both conditions tripped.
+ls_yield_promo.slurm will NOT be submitted. oah ships at the frozen
+cone-config numbers on the board (GT 63.2/1.9, noGT 58.9/1.7).
+Forensic value retained: blocker telemetry shows a looser trigger could
+engage, but two rounds is the budget and paired dev deltas at this n are
+noise-dominated — no third round.
+
+PHASE 2 (de-election) also CLOSED NO-GO: the config-clean eng0.30 re-shot
+died with the timeout; the only clean pairing (L1 eng0.22) showed -2pp
+p=1.0 (no signal). Per the ledgered contingency, the oa-noGT cell rides on
+Phase 3 (localizer) only. No further GPU spend on Phases 1-2.
+
+LIVE THREADS: Phase 3 hazard localizer (data landed 43379347; train job
+gated on Task-4 projection re-review, verify-first) and the vanilla-tier
+big-margin table (43386826 queued).
