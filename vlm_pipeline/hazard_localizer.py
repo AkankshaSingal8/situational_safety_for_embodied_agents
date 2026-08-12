@@ -117,6 +117,13 @@ FRAME_RE = re.compile(r"task(?P<task>\d+)_ep(?P<ep>\d+)_replan(?P<replan>\d+)\.n
 # empirical backstop once real frames exist (in-bounds fraction + depth-map
 # cross-check) -- run FIRST in slurm/localizer_train.slurm, hard-aborting
 # before any GPU training time is spent if this derivation is wrong.
+# NOTE: the in-bounds fraction is provably INVARIANT to a pure row-mirror
+# (a mirror maps in-bounds pixels to in-bounds pixels), so `verify` alone
+# cannot discriminate mirror-vs-no-mirror. That question was settled
+# empirically by visual QC on real collected frames (2026-08-12): GT entity
+# positions projected under THIS convention land exactly on their objects
+# in the stored images across sampled oa/oah frames at all levels; the
+# no-mirror variant scatters them into empty space.
 # ---------------------------------------------------------------------------
 
 def project_world_to_pixel(p_w, K, T, img_h):
@@ -494,8 +501,8 @@ def predict_position(heat_logits, depth_map, w_orig, h_orig, K, T, input_size,
     """heat_logits/depth_map: (Hh, Wh) single-sample arrays. `depth_map`
     holds NORMALIZED depth predictions; denormalized with `depth_mean`/
     `depth_std` before backprojection. Returns predicted 3D world
-    position, decoded in the SAME (row-mirrored, column-negated) pixel
-    convention `project_world_to_pixel`/`backproject` use."""
+    position, decoded in the SAME (row-mirrored) pixel convention
+    `project_world_to_pixel`/`backproject` use."""
     heat = np.asarray(heat_logits)
     depth = np.asarray(depth_map)
     iy, ix = _soft_argmax_2d(heat, temperature=temperature)

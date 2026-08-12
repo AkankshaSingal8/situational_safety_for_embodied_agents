@@ -419,11 +419,13 @@ class TestVerify:
 
     def test_verify_fails_on_mirrored_camera_matrices(self, tmp_path):
         img_size = 64
-        # Deliberately corrupted/mirrored intrinsics: the stored K's row
-        # convention (principal point) disagrees with the one entities were
-        # actually placed against, so re-projecting with the stored
-        # (wrong) K lands almost everything outside the image -- the
-        # empirical signature `verify` exists to catch.
+        # Gross intrinsics corruption (principal point off by a full image
+        # height): re-projecting with the stored (wrong) K lands almost
+        # everything outside the image -- the class of error `verify`'s
+        # in-bounds gate CAN catch. A pure row-mirror is provably invisible
+        # to this gate (mirrors map in-bounds pixels to in-bounds pixels;
+        # see test_in_bounds_invariant_to_row_mirror below) -- that
+        # question is settled by visual QC on real frames instead.
         K_mirrored = np.array([[80.0, 0, img_size / 2],
                                 [0, 80.0, img_size / 2 + img_size],
                                 [0, 0, 1.0]])
@@ -434,3 +436,16 @@ class TestVerify:
         with pytest.raises(SystemExit) as exc_info:
             hl.verify_main(args)
         assert exc_info.value.code == 1
+
+    def test_in_bounds_invariant_to_row_mirror(self):
+        # Documents the structural limitation of the in-bounds gate: a pure
+        # row-mirror of the pixel convention maps every in-bounds pixel to
+        # another in-bounds pixel, so in-bounds fraction alone can never
+        # discriminate mirror-vs-no-mirror. (The convention itself is
+        # confirmed by visual QC on real frames -- see the reasoning
+        # comment above project_world_to_pixel.)
+        img_h = 64
+        rng = np.random.default_rng(0)
+        rows = rng.uniform(0, img_h - 1, size=100)
+        mirrored = (img_h - 1) - rows
+        assert np.all((mirrored >= 0) & (mirrored <= img_h - 1))
