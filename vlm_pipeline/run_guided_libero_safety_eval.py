@@ -686,6 +686,63 @@ def _build_frame_record(obs_like, guard, t, cameras):
     return record, skipped
 
 
+_PERCEP_FRAME_DEPTH_KEYS = ("agentview_depth", "robot0_eye_in_hand_depth")
+
+
+def _write_percep_frame(obs_like, guard, t, cameras, path, depth_converter=None):
+    """I/O side of `--log_percep_frames`: applies REAL-depth conversion (the
+    `_build_frame_record` inputs must already be real depth, not the raw
+    z-buffer -- see `get_real_depth_map` precedent at
+    percep_obstacle.py:147/232), then builds the record and writes it.
+
+    `depth_converter` is caller-supplied (e.g. `get_real_depth_map` bound to
+    the live `sim`) so this function -- and `_build_frame_record` in turn --
+    stays sim-free/pure; the conversion itself is the CALLER's
+    responsibility, applied here to every known depth field before the
+    record is built. May raise (disk-full, permissions, a ragged obs array,
+    ...) -- callers MUST NOT call this directly from the main replan loop;
+    use `_log_percep_frame_safe` instead, which is the fail-safe entry
+    point."""
+    obs_for_record = dict(obs_like)
+    if depth_converter is not None:
+        for key in _PERCEP_FRAME_DEPTH_KEYS:
+            d = obs_for_record.get(key)
+            if d is not None:
+                obs_for_record[key] = depth_converter(d)
+    record, skipped = _build_frame_record(obs_for_record, guard, t, cameras)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(path, **record)
+    return skipped
+
+
+def _log_percep_frame_safe(obs_like, guard, t, cameras, path,
+                            depth_converter=None, manifest_skipped=None,
+                            error_stats=None):
+    """Fail-safe entry point for `--log_percep_frames`, called from the main
+    replan loop. Logging must NEVER kill an eval run: disk-full,
+    permissions, or a ragged obs array here would otherwise take down the
+    whole job. Wraps the ENTIRE record-build + mkdir + write path
+    (`_write_percep_frame`) in try/except; on success, updates
+    `manifest_skipped` (a set, mutated in place) with the per-record
+    skipped-field list; on failure, the exception is swallowed (logged as a
+    warning) and `error_stats["write_errors"]` (a dict, mutated in place) is
+    incremented. Returns True on success, False on (swallowed) failure."""
+    try:
+        skipped = _write_percep_frame(obs_like, guard, t, cameras, path,
+                                       depth_converter=depth_converter)
+        if manifest_skipped is not None:
+            manifest_skipped.update(skipped)
+        return True
+    except Exception:
+        logging.warning(
+            "  [log_percep_frames] frame write failed at %s "
+            "(disk-full/permissions/ragged-obs) -- skipping frame, "
+            "episode continues", path, exc_info=True)
+        if error_stats is not None:
+            error_stats["write_errors"] = error_stats.get("write_errors", 0) + 1
+        return False
+
+
 def _yield_intercepts(yc):
     """True iff the Yield branch should intercept `_a` construction /
     suppress the normal server query for this env step (pure, unit-
@@ -1213,8 +1270,10 @@ def main():
     # zero-overhead default-off, mirrors --log_transitions above).
     percep_frame_manifest_skipped = None
     percep_frame_manifest_path = None
+    percep_frame_error_stats = None
     if args.log_percep_frames:
         percep_frame_manifest_skipped = set()
+        percep_frame_error_stats = {"write_errors": 0}
         percep_frame_dir = (pathlib.Path(args.log_percep_frames)
                              / args.suite / f"L{args.level}")
         percep_frame_dir.mkdir(parents=True, exist_ok=True)
@@ -1647,10 +1706,13 @@ def main():
                             # observation read + file write -- does NOT touch
                             # `element`/`plan`/any control-path variable.
                             # Camera matrices reuse the SAME robosuite
-                            # camera_utils convention the percep tier uses
-                            # (percep_obstacle._camera_transform) so the
+                            # camera_utils convention the percep tier uses:
+                            # intentional cross-module reuse of
+                            # percep_obstacle's internal (underscore-
+                            # prefixed) `_camera_transform` helper, so the
                             # localizer trains on identical geometry.
                             from percep_obstacle import _camera_transform
+                            from robosuite.utils.camera_utils import get_real_depth_map
                             _frame_cams = {}
                             for _cam in ("agentview", "robot0_eye_in_hand"):
                                 try:
@@ -1659,15 +1721,27 @@ def main():
                                     _frame_cams[_cam] = {"K": _K, "T": _T}
                                 except Exception:
                                     pass
-                            _frame_rec, _frame_skipped = _build_frame_record(
-                                obs, step_guard, t, _frame_cams)
-                            percep_frame_manifest_skipped.update(_frame_skipped)
+
+                            # REAL depth, not the raw z-buffer -- same
+                            # get_real_depth_map precedent as
+                            # percep_obstacle.py:147/232. `_write_percep_frame`
+                            # applies this to every depth field before
+                            # `_build_frame_record` sees it (which stays
+                            # pure/sim-free).
+                            def _frame_depth_converter(d, _sim=env.sim):
+                                return get_real_depth_map(
+                                    _sim, d[..., None] if d.ndim == 2 else d
+                                ).squeeze()
+
                             _frame_path = _percep_frame_path(
                                 args.log_percep_frames, args.suite, args.level,
                                 task_id, ep, percep_frame_replan_idx)
-                            _frame_path.parent.mkdir(parents=True, exist_ok=True)
-                            np.savez_compressed(_frame_path, **_frame_rec)
                             percep_frame_replan_idx += 1
+                            _log_percep_frame_safe(
+                                obs, step_guard, t, _frame_cams, _frame_path,
+                                depth_converter=_frame_depth_converter,
+                                manifest_skipped=percep_frame_manifest_skipped,
+                                error_stats=percep_frame_error_stats)
                         _res = client.infer(element)
                         chunk = np.asarray(_res["actions"][:args.replan_steps])
                         _diag = _res.get("guidance")
@@ -1868,7 +1942,8 @@ def main():
     if args.log_percep_frames:
         with open(percep_frame_manifest_path, "w") as f:
             json.dump({"suite": args.suite, "level": args.level,
-                       "skipped_fields": sorted(percep_frame_manifest_skipped)},
+                       "skipped_fields": sorted(percep_frame_manifest_skipped),
+                       "write_errors": percep_frame_error_stats["write_errors"]},
                       f, indent=1)
     logging.info(json.dumps({k: results[k] for k in ("overall_TSR", "overall_violation_rate", "refused_tasks")}))
     if transitions_fh is not None:
