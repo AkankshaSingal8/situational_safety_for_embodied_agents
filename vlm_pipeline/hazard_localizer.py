@@ -21,18 +21,22 @@ hashed-token embedding table + FiLM modulation of the trunk features (no
 text encoder, no fixed entity vocabulary -- an unseen entity name still gets
 a deterministic embedding from its token hashes).
 
-At inference: argmax the heatmap -> pixel location; read the depth at that
-cell; backproject with the SAME camera-transform convention as
-`percep_obstacle._camera_transform` / `_backproject` (that function is
-reused verbatim as `backproject` below) -> 3D world position.
+At inference: soft-argmax the heatmap -> pixel location; read the depth at
+that cell; backproject with the SAME K/T (via `percep_obstacle._camera_transform`)
+and the SAME validated pixel formula as `percep_obstacle._backproject`
+(empirically confirmed at med 0.067 m on the live sim -- see the "Camera
+geometry" comment block below for the one row-flip needed to reach that
+validated orientation from our unflipped stored frames) -> 3D world
+position.
 
 Model input is RGB ONLY. Depth channels in the npz records (when present)
 are never read by this module -- data may be RGB-only (no `camera_depths`
 in the env build) and the model must work either way.
 
 CLI:
-    python vlm_pipeline/hazard_localizer.py train --data DIR --out DIR
-    python vlm_pipeline/hazard_localizer.py eval  --data DIR --model DIR
+    python vlm_pipeline/hazard_localizer.py verify --data DIR    # run FIRST on real data
+    python vlm_pipeline/hazard_localizer.py train  --data DIR --out DIR
+    python vlm_pipeline/hazard_localizer.py eval   --data DIR --model DIR
 """
 
 from __future__ import annotations
@@ -76,28 +80,43 @@ FRAME_RE = re.compile(r"task(?P<task>\d+)_ep(?P<ep>\d+)_replan(?P<replan>\d+)\.n
 # `run_guided_libero_safety_eval.py`'s frame-logging call site, which
 # literally imports `_camera_transform` from percep_obstacle).
 #
-# The PIXEL FORMULA is deliberately NOT `percep_obstacle._backproject`'s
-# naive `K @ p_cam / z`, for a documented reason: that formula was written
-# against `sim.render(...)[::-1]` (raw MuJoCo buffer, one row-flip applied),
-# while `_build_frame_record` stores `obs["agentview_image"]` UNFLIPPED
-# (`save_vlm_inputs.py`'s `save_rgb` explicitly notes "robosuite returns
-# images upside-down; flip vertically" before it is safe to treat row 0 as
-# the top row -- our stored `agentview_rgb` never gets that flip). Separately,
-# `visual_conditioning.py`'s `_project` (empirically validated against real
-# saved captures, see its "Column-mirror fix" comment) established that
-# robosuite's extrinsic convention needs the camera x-axis NEGATED relative
-# to naive `K @ p_cam` -- without it, points land at the mirrored column.
-# Blindly reusing percep_obstacle's naive formula on our unflipped image
-# would put heatmap training targets at the wrong pixel (mirrored column,
-# unflipped row) -- a global mirror/flip a small local-receptive-field CNN
-# cannot learn around.
+# PIXEL FORMULA: the exact algebraic inverse of `percep_obstacle._backproject`
+# (`p_cam = z * inv(K) @ [u, v, 1]`, naive K, NO column negation). That
+# formula is not a guess -- percep_obstacle's module docstring states it is
+# empirically validated at runtime on the LIVE sim, med 0.067 m / p90 0.152 m
+# (ledger 2026-07-16), and explicitly says "the [saved-array orientation]
+# bug lives only in the offline captures" (i.e. NOT on this live-sim path).
+# `visual_conditioning.py`'s independently-derived x-negation (calibrated on
+# saved PNG captures, a different code path with its own history of
+# orientation bugs) was a false lead for this module and has been removed --
+# stacking a second module's fix onto a formula already validated on the
+# path we care about double-corrects a problem that doesn't exist here.
 #
-# So: forward-project in the visual_conditioning-validated "row-corrected,
-# column-negated" camera-frame convention, then account for OUR stored
-# image being row-flipped relative to that convention by mirroring the row
-# index with the frame's own height (`img_h`, always known at index/predict
-# time). `backproject` is the exact algebraic inverse, which is what the
-# round-trip test checks.
+# ROW ORIENTATION: percep_obstacle's `estimate_obstacle_pos` builds its pixel
+# regions from `sim.render(...)[::-1]` (one row-flip) before calling
+# `_backproject` -- i.e. the *validated* convention pairs the naive formula
+# with a row-0-at-top array. `_build_frame_record` stores
+# `obs["agentview_image"]` UNFLIPPED. Checked directly against the robosuite
+# fork actually on PYTHONPATH at runtime -- this module's own docstring says
+# "PYTHONPATH must put LIBERO-Safety BEFORE SafeLIBERO", i.e.
+# `LIBERO-Safety/third_party/robosuite-1.4/robosuite/`, not whatever
+# robosuite happens to be pip-installed in the conda env -- its
+# `environments/robot_env.py` `camera_rgb` sensor does
+# `return img[::convention]` with `macros.IMAGE_CONVENTION = "opengl"` ->
+# `IMAGE_CONVENTION_MAPPING["opengl"] == 1` (identity slice, i.e. NO flip),
+# and no `macros_private.py` override exists anywhere under that tree. So
+# `obs["agentview_image"]` is byte-identical to raw `sim.render(...)` output
+# -- the SAME raw, row-0-at-bottom array percep_obstacle itself flips before
+# it is safe to use with K/T (also consistent with `save_vlm_inputs.py`'s
+# "robosuite returns images upside-down; flip vertically" comment on that
+# same raw obs array). So our stored `agentview_rgb` needs the identical
+# one-row-flip percep_obstacle applies to reach the validated orientation;
+# `img_h` (always known at index/predict time) parameterizes that mirror.
+# `backproject` is the exact algebraic inverse of `project_world_to_pixel`,
+# which the round-trip test checks; the `verify` CLI subcommand is the
+# empirical backstop once real frames exist (in-bounds fraction + depth-map
+# cross-check) -- run FIRST in slurm/localizer_train.slurm, hard-aborting
+# before any GPU training time is spent if this derivation is wrong.
 # ---------------------------------------------------------------------------
 
 def project_world_to_pixel(p_w, K, T, img_h):
@@ -108,19 +127,17 @@ def project_world_to_pixel(p_w, K, T, img_h):
     cam_x, cam_y, z = p_cam_h[0], p_cam_h[1], p_cam_h[2]
     if z == 0.0:
         return None
-    col = K[0, 0] * (-cam_x) / z + K[0, 2]                 # u
-    row_corrected = K[1, 1] * cam_y / z + K[1, 2]           # v, row-0-at-top
-    row_stored = (img_h - 1) - row_corrected                # our image is row-flipped
-    return float(col), float(row_stored), float(z)
+    uv1 = (K @ np.array([cam_x, cam_y, z])) / z              # percep_obstacle's validated naive formula
+    col, row_validated = float(uv1[0]), float(uv1[1])        # row-0-at-top (the validated orientation)
+    row_stored = (img_h - 1) - row_validated                  # our stored image is row-flipped relative to it
+    return col, row_stored, float(z)
 
 
 def backproject(u, v, z, K, T, img_h):
     """Pixel (u, v) in OUR STORED (unflipped) image's pixel frame + depth z
     -> world 3D. Exact algebraic inverse of `project_world_to_pixel`."""
-    row_corrected = (img_h - 1) - v
-    cam_x = -(u - K[0, 2]) * z / K[0, 0]
-    cam_y = (row_corrected - K[1, 2]) * z / K[1, 1]
-    p_cam = np.array([cam_x, cam_y, z])
+    row_validated = (img_h - 1) - v
+    p_cam = z * (np.linalg.inv(K) @ np.array([u, row_validated, 1.0]))
     p_w = T @ np.array([*p_cam, 1.0])
     return p_w[:3]
 
@@ -153,13 +170,24 @@ def index_frame_files(root):
     return out
 
 
-def index_entity_samples(frame_files, camera_name=CAMERA_NAME):
+def index_entity_samples(frame_files, camera_name=CAMERA_NAME, max_oob_frac=None):
     """For each indexed frame file, open the npz once, project every scene
     entity into the named camera, and emit one sample dict per entity whose
     projection lands inside the image and in front of the camera. Skips
     frames missing the RGB, camera K/T, or entity arrays entirely (these are
-    already recorded in the frame's `skipped` list at collection time)."""
+    already recorded in the frame's `skipped` list at collection time).
+
+    `max_oob_frac` (None = off): training-time tripwire. Among entities that
+    project in FRONT of the camera (z > 0), if more than this fraction land
+    OUTSIDE the image bounds, raise -- a high out-of-bounds rate on live
+    data is the signature of a camera/pixel-convention mismatch (row flip,
+    column order, wrong camera), not of scenes genuinely having most
+    objects off-screen. See the "Camera geometry" comment above and the
+    `verify` CLI subcommand, which runs this same check standalone before
+    a GPU training job starts."""
     samples = []
+    n_forward = 0
+    n_oob = 0
     for f in frame_files:
         try:
             with np.load(f["path"], allow_pickle=False) as z:
@@ -183,7 +211,9 @@ def index_entity_samples(frame_files, camera_name=CAMERA_NAME):
             u, v, depth = proj
             if depth <= 0.0:
                 continue
+            n_forward += 1
             if not (0.0 <= u < w_orig and 0.0 <= v < h_orig):
+                n_oob += 1
                 continue
             samples.append({
                 "path": f["path"],
@@ -199,6 +229,18 @@ def index_entity_samples(frame_files, camera_name=CAMERA_NAME):
                 "K": K.tolist(), "T": T.tolist(),
                 "is_guard": name in guard,
             })
+
+    if max_oob_frac is not None and n_forward > 0:
+        oob_frac = n_oob / n_forward
+        if oob_frac > max_oob_frac:
+            raise ValueError(
+                f"index_entity_samples: {oob_frac:.1%} ({n_oob}/{n_forward}) "
+                f"of forward-facing (z>0) projected entity targets landed "
+                f"OUTSIDE the image bounds, exceeding the {max_oob_frac:.0%} "
+                f"tripwire. This is the signature of a camera/pixel "
+                f"convention mismatch, not of scenes genuinely having most "
+                f"objects off-screen -- see the 'Camera geometry' comment "
+                f"in hazard_localizer.py and run the `verify` subcommand.")
     return samples
 
 
@@ -545,8 +587,13 @@ def train_main(args):
     set_seed(args.seed)
     device = torch.device("cpu")
 
+    max_oob_frac = getattr(args, "max_oob_frac", 0.05)
+    if max_oob_frac is not None and max_oob_frac < 0:
+        max_oob_frac = None
+
     frame_files = index_frame_files(args.data)
-    samples = index_entity_samples(frame_files, camera_name=args.camera)
+    samples = index_entity_samples(frame_files, camera_name=args.camera,
+                                    max_oob_frac=max_oob_frac)
     if not samples:
         raise SystemExit(f"No usable (frame, entity) samples found under {args.data}")
 
@@ -728,6 +775,120 @@ def eval_main(args):
 
 
 # ---------------------------------------------------------------------------
+# `verify`: standalone empirical convention check on REAL data, meant to run
+# BEFORE a GPU training job (wired as the first step in
+# slurm/localizer_train.slurm, which aborts before `train` if this fails).
+# Samples N frames, projects every GT entity with the SAME
+# `project_world_to_pixel` training/eval use, and reports the in-bounds
+# fraction (should be near 1.0 for a correct camera/pixel convention -- a
+# depressed fraction is the empirical signature of exactly the kind of
+# row/column mismatch this module's derivation is trying to avoid) plus,
+# where a per-camera depth map is present in the frame, a cross-check
+# between the depth map's value AT the projected pixel and the projected
+# camera-frame z (large disagreement on otherwise-in-bounds points also
+# indicates a convention mismatch, even when the in-bounds fraction looks
+# fine).
+# ---------------------------------------------------------------------------
+
+VERIFY_MIN_IN_BOUNDS_FRAC = 0.95
+
+
+def _discover_cameras(paths):
+    cams = set()
+    for p in paths:
+        try:
+            with np.load(p, allow_pickle=False) as z:
+                for k in z.files:
+                    if k.startswith("camera_K_"):
+                        cams.add(k[len("camera_K_"):])
+        except Exception:
+            continue
+    return sorted(cams)
+
+
+def verify_main(args):
+    frame_files = index_frame_files(args.data)
+    if not frame_files:
+        print(f"[hazard_localizer verify] HARD FAIL: no frame files found under {args.data}")
+        sys.exit(1)
+
+    rng = random.Random(args.seed)
+    sampled = frame_files if len(frame_files) <= args.n else rng.sample(frame_files, args.n)
+
+    cams = _discover_cameras([f["path"] for f in sampled]) or [args.camera]
+
+    per_cam = {}
+    for cam in cams:
+        n_entities = 0
+        n_in_bounds = 0
+        depth_diffs = []
+        for f in sampled:
+            try:
+                with np.load(f["path"], allow_pickle=False) as z:
+                    if f"camera_K_{cam}" not in z or f"camera_T_{cam}" not in z \
+                            or "entity_names" not in z or "agentview_rgb" not in z:
+                        continue
+                    rgb_shape = z["agentview_rgb"].shape
+                    K = z[f"camera_K_{cam}"]
+                    T = z[f"camera_T_{cam}"]
+                    names = [str(n) for n in z["entity_names"]]
+                    positions = z["entity_pos"]
+                    depth_key = f"{cam}_depth" if cam != "agentview" else "agentview_depth"
+                    depth_map = np.asarray(z[depth_key]) if depth_key in z else None
+            except Exception:
+                continue
+
+            if depth_map is not None and depth_map.ndim == 3:
+                depth_map = depth_map[..., 0]
+            h_orig, w_orig = rgb_shape[0], rgb_shape[1]
+            for name, pos in zip(names, positions):
+                proj = project_world_to_pixel(pos, K, T, h_orig)
+                if proj is None:
+                    continue
+                u, v, z_proj = proj
+                if z_proj <= 0.0:
+                    continue
+                n_entities += 1
+                in_bounds = (0.0 <= u < w_orig and 0.0 <= v < h_orig)
+                if in_bounds:
+                    n_in_bounds += 1
+                    if depth_map is not None:
+                        z_pixel = _bilinear_sample_2d(depth_map, u, v)
+                        depth_diffs.append(abs(float(z_pixel) - z_proj))
+
+        frac = (n_in_bounds / n_entities) if n_entities else None
+        per_cam[cam] = {
+            "n_entities": n_entities,
+            "n_in_bounds": n_in_bounds,
+            "in_bounds_fraction": frac,
+            "depth_agreement_median_m": (statistics.median(depth_diffs) if depth_diffs else None),
+            "depth_agreement_n": len(depth_diffs),
+        }
+
+    report = {
+        "n_frames_available": len(frame_files),
+        "n_frames_sampled": len(sampled),
+        "min_in_bounds_fraction_gate": VERIFY_MIN_IN_BOUNDS_FRAC,
+        "primary_camera": args.camera,
+        "cameras": per_cam,
+    }
+    print(json.dumps(report, indent=2))
+
+    primary = per_cam.get(args.camera)
+    frac = primary["in_bounds_fraction"] if primary else None
+    if frac is None or frac < VERIFY_MIN_IN_BOUNDS_FRAC:
+        print(f"[hazard_localizer verify] HARD FAIL: '{args.camera}' in-bounds "
+              f"fraction = {frac} (< {VERIFY_MIN_IN_BOUNDS_FRAC}). This is the "
+              f"signature of a camera/pixel convention mismatch -- see the "
+              f"'Camera geometry' comment in hazard_localizer.py. Aborting "
+              f"before training.")
+        sys.exit(1)
+
+    print(f"[hazard_localizer verify] OK: '{args.camera}' in-bounds fraction = {frac:.3f}")
+    return report
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -751,12 +912,23 @@ def build_argparser():
     tp.add_argument("--base_ch", type=int, default=32)
     tp.add_argument("--heatmap_sigma", type=float, default=1.0)
     tp.add_argument("--num_workers", type=int, default=4)
+    tp.add_argument("--max_oob_frac", type=float, default=0.05,
+                     help="Training-time tripwire: raise if more than this "
+                          "fraction of forward-facing projected entity "
+                          "targets land outside the image bounds. Pass a "
+                          "negative value (e.g. -1) to disable.")
 
     ep = sub.add_parser("eval")
     ep.add_argument("--data", required=True)
     ep.add_argument("--model", required=True)
     ep.add_argument("--batch_size", type=int, default=32)
     ep.add_argument("--num_workers", type=int, default=4)
+
+    vp = sub.add_parser("verify")
+    vp.add_argument("--data", required=True)
+    vp.add_argument("--camera", default=CAMERA_NAME)
+    vp.add_argument("--n", type=int, default=50)
+    vp.add_argument("--seed", type=int, default=0)
 
     return ap
 
@@ -768,6 +940,8 @@ def main(argv=None):
         train_main(args)
     elif args.cmd == "eval":
         eval_main(args)
+    elif args.cmd == "verify":
+        verify_main(args)
     else:  # pragma: no cover
         ap.print_help()
         sys.exit(1)

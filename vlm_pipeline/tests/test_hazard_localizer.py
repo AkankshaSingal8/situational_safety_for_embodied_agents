@@ -199,6 +199,29 @@ class TestEntitySampleIndexing:
         samples = hl.index_entity_samples(frame_files)
         assert samples == []
 
+    def test_max_oob_frac_tripwire_raises_when_exceeded(self, tmp_path):
+        # 1 in-bounds entity, 3 forward-facing-but-offscreen entities per
+        # frame -> 75% OOB, well above any reasonable tripwire.
+        entities = {
+            "moka_pot_obstacle": [0.0, 0.0, 1.0],
+            "off1": [50.0, 0.0, 1.0],
+            "off2": [0.0, 50.0, 1.0],
+            "off3": [-50.0, -50.0, 1.0],
+        }
+        for i in range(3):
+            _mk_npz(tmp_path / "s" / "L0" / f"task{i}_ep0_replan0.npz", entities, T=np.eye(4))
+        frame_files = hl.index_frame_files(tmp_path)
+        with pytest.raises(ValueError, match="OUTSIDE the image bounds"):
+            hl.index_entity_samples(frame_files, max_oob_frac=0.05)
+
+    def test_max_oob_frac_tripwire_silent_when_under_threshold(self, tmp_path):
+        entities = {"moka_pot_obstacle": [0.0, 0.0, 1.0], "plate": [0.01, 0.01, 1.0]}
+        for i in range(3):
+            _mk_npz(tmp_path / "s" / "L0" / f"task{i}_ep0_replan0.npz", entities, T=np.eye(4))
+        frame_files = hl.index_frame_files(tmp_path)
+        samples = hl.index_entity_samples(frame_files, max_oob_frac=0.05)  # must not raise
+        assert len(samples) == 6
+
 
 # ---------------------------------------------------------------------------
 # Split by task
@@ -350,3 +373,64 @@ class TestEval:
         assert on_disk["held_out_task_ids"] == [7]
         assert on_disk["gate_median_m"] == hl.GATE_MEDIAN_M
         assert report == on_disk
+
+
+# ---------------------------------------------------------------------------
+# `verify` -- empirical convention check on (synthetic, standing in for
+# real) data. Discriminates a correct camera/pixel convention from a
+# deliberately corrupted ("mirrored") one, the exact class of bug this
+# module's projection formula was re-derived to avoid.
+# ---------------------------------------------------------------------------
+
+class TestVerify:
+    def _entities_from_pixels(self, K, T, img_h, pixel_targets, z=1.0):
+        ents = {}
+        for i, (u, v) in enumerate(pixel_targets):
+            pos = hl.backproject(u, v, z, K, T, img_h)
+            ents[f"ent{i}"] = pos.tolist()
+        return ents
+
+    def _mk_dataset(self, tmp_path, K_stored, img_size=64, n_frames=8):
+        # Entities are placed via backproject with the CORRECT (identity-T)
+        # camera, at pixel targets well inside the image -- so under a
+        # correct stored K/T they project back in bounds; under a corrupted
+        # (mirrored) stored K they generally will not.
+        K_correct = np.array([[80.0, 0, img_size / 2], [0, 80.0, img_size / 2], [0, 0, 1.0]])
+        T = np.eye(4)
+        pixel_targets = [(16, 16), (48, 48), (16, 48), (48, 16)]
+        entities = self._entities_from_pixels(K_correct, T, img_size, pixel_targets, z=1.0)
+        for i in range(n_frames):
+            _mk_npz(tmp_path / "data" / "obstacle_avoidance" / "L0"
+                    / f"task{i}_ep0_replan0.npz", entities, img_size=img_size,
+                    K=K_stored, T=T)
+        return tmp_path / "data"
+
+    def test_verify_passes_on_correct_camera_matrices(self, tmp_path):
+        img_size = 64
+        K_correct = np.array([[80.0, 0, img_size / 2], [0, 80.0, img_size / 2], [0, 0, 1.0]])
+        data_dir = self._mk_dataset(tmp_path, K_stored=K_correct, img_size=img_size)
+
+        ap = hl.build_argparser()
+        args = ap.parse_args(["verify", "--data", str(data_dir), "--n", "50", "--seed", "0"])
+        report = hl.verify_main(args)  # must NOT raise SystemExit
+
+        frac = report["cameras"]["agentview"]["in_bounds_fraction"]
+        assert frac is not None and frac >= hl.VERIFY_MIN_IN_BOUNDS_FRAC
+
+    def test_verify_fails_on_mirrored_camera_matrices(self, tmp_path):
+        img_size = 64
+        # Deliberately corrupted/mirrored intrinsics: the stored K's row
+        # convention (principal point) disagrees with the one entities were
+        # actually placed against, so re-projecting with the stored
+        # (wrong) K lands almost everything outside the image -- the
+        # empirical signature `verify` exists to catch.
+        K_mirrored = np.array([[80.0, 0, img_size / 2],
+                                [0, 80.0, img_size / 2 + img_size],
+                                [0, 0, 1.0]])
+        data_dir = self._mk_dataset(tmp_path, K_stored=K_mirrored, img_size=img_size)
+
+        ap = hl.build_argparser()
+        args = ap.parse_args(["verify", "--data", str(data_dir), "--n", "50", "--seed", "0"])
+        with pytest.raises(SystemExit) as exc_info:
+            hl.verify_main(args)
+        assert exc_info.value.code == 1

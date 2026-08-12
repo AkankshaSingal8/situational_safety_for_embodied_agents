@@ -16,6 +16,12 @@
 # has torch 2.2.0 (checked -- same client env slurm/ls_localizer_data.slurm
 # uses to run the eval client that collects the frames); `aegis` also has
 # torch (2.7.1) but is reserved for the policy-serving side elsewhere.
+#
+# `verify` runs FIRST and aborts (nonzero exit, `set -e`) before any GPU
+# training time is spent if the camera/pixel projection convention doesn't
+# hold empirically on the real collected frames (in-bounds fraction < 0.95)
+# -- see the "Camera geometry" comment in hazard_localizer.py for why this
+# is a real (not hypothetical) risk worth a hard gate here.
 set -euo pipefail
 source /jet/home/asingal/miniconda3/etc/profile.d/conda.sh
 ROOT=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
@@ -24,6 +30,9 @@ DATA="$WT/localizer_data/frames"
 OUT="$WT/localizer_out"
 
 conda activate openvla_libero_merged
+
+python "$WT/vlm_pipeline/hazard_localizer.py" verify \
+  --data "$DATA" --n 50
 
 python "$WT/vlm_pipeline/hazard_localizer.py" train \
   --data "$DATA" --out "$OUT"
