@@ -21,20 +21,21 @@ Ablation dispatch is Task 1's `symbolic_identity.ablated_obstacle_id`
 (already merged) -- this script adds NO new identity logic, only offline
 scoring/aggregation over it.
 
-Suite -> id_source routing mirrors the frozen SLURM noGT config
-(`slurm/ls_vanilla_tier.slurm`, 2026-08-12 "VANILLA TIER" comment: "same
-class-driven routing as the frozen board noGT row (all eng 0.30; oa/oah fol
-[+cone60 oah], hs folprop, aff folpropvlm w/ cached VLM tables)") combined
-with task-2-brief.md's explicit spec (oa/oah -> fol; hs/aff -> folpropvlm,
-also folprop for aff as a secondary informational arm). Where the two
-sources disagree on human_safety's SECONDARY arm, the brief (this task's
-literal spec) wins; folprop is reported for affordance only, as instructed.
-`reasoning_safety` is not named in either source's routing table -- LS ships
-five suites but the brief's abbreviations (oa/oah/hs/aff) cover four. Since
-reasoning_safety's hazard is PROPERTY/CLASS-gated (unsafe-by-design
-instructions), not path-geometric, it is routed like human_safety
-(folpropvlm), documented here as an explicit assumption -- flagged in the
-report, not hidden in scoring logic.
+Suite -> id_source routing mirrors the frozen SLURM noGT config: PRIMARY
+incumbent per suite is `slurm/ls_vanilla_tier.slurm:71`'s actual production
+routing -- fol (oa/oah, +cone60 on oah), folprop (hs), folpropvlm (aff) --
+confirmed against the results ledger's own summary of that row ("fol
+(oa/oah, +cone60 on oah), folprop (hs), folpropvlm (aff)"). human_safety's
+`folpropvlm` was an error in an earlier draft of task-2-brief.md (corrected
+2026-08-12 fix-round-1); `folprop` is the PRIMARY incumbent for human_safety,
+with `folpropvlm` kept as a SECONDARY/informational arm (symmetric to
+affordance's `folprop` secondary). `reasoning_safety` is not named in either
+source's routing table -- LS ships five suites but the production routing
+above covers four. Since reasoning_safety's hazard is PROPERTY/CLASS-gated
+(unsafe-by-design instructions), not path-geometric, it is routed
+`folpropvlm`, documented here as an explicit assumption (informational only,
+per fix-round-1 direction) -- flagged in the report, not hidden in scoring
+logic.
 """
 
 import argparse
@@ -59,20 +60,36 @@ ABLATIONS = ["geom_only", "no_exempt", "no_class", "no_heat_gate"]
 SUITE_ROUTING = {
     "obstacle_avoidance": [("fol", False)],
     "obstacle_avoidance_human": [("fol", False)],
-    "human_safety": [("folpropvlm", False)],
+    "human_safety": [("folprop", False), ("folpropvlm", True)],
     "reasoning_safety": [("folpropvlm", False)],  # assumption, see docstring
     "affordance": [("folpropvlm", False), ("folprop", True)],
 }
 
 
 def mover_variants(candidates):
-    """[None] + one {name} per PROTECTED_CLASSES-token candidate name (the
-    brief's approximation of the runtime mover case; scenes carry no motion
-    info). Note: since every ablation/incumbent function's PROTECTED(x) test
+    """[None] + one {name} singleton per PROTECTED_CLASSES-token candidate
+    name (the brief's approximation of the runtime mover case; scenes carry
+    no motion info).
+
+    The brief phrases this as "evaluate each scene twice" (moving=None,
+    moving={name}); this function generalizes that to ONE variant per
+    matching candidate rather than a single fixed name, because a scene can
+    have zero, one, or multiple PROTECTED_CLASSES-token candidates and the
+    brief's own trigger ("for any candidate whose name contains a
+    _PROTECTED_CLASSES token") is per-candidate. For the common case of
+    exactly one such candidate this reduces to the brief's literal "twice";
+    for zero it is exactly the brief's "twice" degenerating to "once" (no
+    candidate to test); for N>1 it is N+1 variants, which is a superset of
+    "twice" and therefore equivalent-or-stronger (it can only find binding
+    that a single fixed-name run would miss, never suppress a positive).
+
+    Also note: since every ablation/incumbent function's PROTECTED(x) test
     is `name-token-match OR name in moving`, setting `moving={name}` for a
-    name that already matches a PROTECTED_CLASSES token is a structural
+    name that ALREADY matches a PROTECTED_CLASSES token is a structural
     no-op -- consistent with ls_v3_ident_arms.py's "MOVING rule inert
-    offline -- single snapshot" note. Implemented literally per spec."""
+    offline -- single snapshot" note. The variant is still generated (per
+    spec, and to keep the detail record honest about what was checked); it
+    simply never flips a binding decision on this dataset."""
     variants = [None]
     for name in candidates:
         if any(tok in name.lower() for tok in si._PROTECTED_CLASSES):
@@ -80,18 +97,25 @@ def mover_variants(candidates):
     return variants
 
 
-def eval_cell(id_source, ablation, desc, cands, eef):
+def eval_cell(id_source, ablation, desc, cands, eef, **kwargs):
     """Returns (binds: bool, detail: dict) for one (id_source, ablation,
     scene). `binds` = True if ANY mover variant's ablated guard set (as a
-    SET) differs from the incumbent guard set (moving=None, frozen)."""
+    SET) differs from the incumbent guard set (moving=None, frozen).
+
+    `**kwargs` forwards to `ablated_obstacle_id` (e.g. `properties=`,
+    `heat_sources=` for folpropvlm) -- unused for fol/folprop, and for the
+    real run left empty so folpropvlm lazy-loads the cached VLM tables from
+    disk exactly as the incumbent client does; the selftest is the only
+    caller that passes them, to inject synthetic tables with no disk I/O."""
     incumbent = si.ablated_obstacle_id(id_source, "none", desc, cands, eef,
-                                       moving=None)[:GUARD_TOPK]
+                                       moving=None, **kwargs)[:GUARD_TOPK]
     inc_set = set(incumbent)
     binds = False
     variants = []
     for moving in mover_variants(cands):
         ablated = si.ablated_obstacle_id(id_source, ablation, desc, cands,
-                                         eef, moving=moving)[:GUARD_TOPK]
+                                         eef, moving=moving,
+                                         **kwargs)[:GUARD_TOPK]
         set_diff = set(ablated) != inc_set
         ordered_diff = ablated != incumbent
         binds = binds or set_diff
@@ -165,9 +189,15 @@ def recommended_cells(cells):
 # --------------------------------------------------------------- selftest
 
 def _selftest():
-    """2 inline synthetic records, no file/disk dependency (id_source="fol"
-    only -- no VLM tables needed). Asserts one KNOWN binding cell and one
-    KNOWN non-binding cell.
+    """Inline synthetic records only, no file/disk dependency. Covers:
+      (a) id_source="fol" -- no VLM tables at all -- one KNOWN binding cell
+          and one KNOWN non-binding cell;
+      (b) id_source="folpropvlm" -- synthetic `properties`/`heat_sources`
+          tables injected via kwargs (never read from results_tables/) --
+          one KNOWN binding cell (no_heat_gate) and one KNOWN-unchanged
+          incumbent/none cell under the same injected tables;
+      (c) an end-to-end run_matrix()/print_matrix()/recommended_cells()
+          pass over 2 synthetic (fol) records.
 
     Scene: "pick up the apple and put it on the plate" with candidates
     {apple_1 (mentioned/target), plate_1 (mentioned/destination),
@@ -207,6 +237,50 @@ def _selftest():
     for v in detail_nh["variants"]:
         assert not v["set_diff"] and not v["ordered_diff"]
 
+    # --- folpropvlm table-dependent logic (fix-round-1 finding #2): inject
+    # synthetic properties/heat_sources tables via kwargs, no disk reads. ---
+    #
+    # Scene: same "pick up the apple ... plate" instruction, one extra
+    # candidate "hot_pan_1" that the injected properties table marks HOT but
+    # NOT sharp/fragile, with an EMPTY heat_sources table (no heat source
+    # anywhere in the scene, so the proximity gate can never fire True).
+    desc_vlm = "pick up the apple and put it on the plate"
+    cands_vlm = {
+        "apple_1": np.array([0.0, 0.15, 0.9]),
+        "plate_1": np.array([0.15, 0.15, 0.9]),
+        "hot_pan_1": np.array([-0.05, 0.05, 0.9]),
+    }
+    eef_vlm = np.array([-0.21, 0.0, 1.0])
+    props_vlm = {"hot pan": {"hot": True, "sharp": False, "fragile": False}}
+    heat_vlm = {}  # no heat source anywhere -> proximity gate never fires
+
+    # KNOWN incumbent/none, UNCHANGED under the injected tables: hot_pan_1 is
+    # HOT but heat-gated (no heat source nearby) -> not elected -> guard [].
+    # Computed two ways -- via ablated_obstacle_id("none", ...) (what
+    # eval_cell uses internally) and directly via folpropvlm_obstacle_id
+    # (the incumbent function itself) -- and asserted equal, to confirm the
+    # "none" delegation is truly unchanged by the injected tables, not just
+    # empty by coincidence.
+    incumbent_via_dispatch = si.ablated_obstacle_id(
+        "folpropvlm", "none", desc_vlm, cands_vlm, eef_vlm, moving=None,
+        properties=props_vlm, heat_sources=heat_vlm)[:GUARD_TOPK]
+    incumbent_direct = si.folpropvlm_obstacle_id(
+        desc_vlm, cands_vlm, eef_vlm, moving=None,
+        properties=props_vlm, heat_sources=heat_vlm)[:GUARD_TOPK]
+    assert incumbent_via_dispatch == incumbent_direct == [], (
+        incumbent_via_dispatch, incumbent_direct)
+
+    # KNOWN BINDING: no_heat_gate makes HOT(x) hazardous unconditionally
+    # (heat-source proximity gate removed) -> hot_pan_1 IS elected even
+    # though no heat source is present -> guard set {hot_pan_1} != {}.
+    binds_heat, detail_heat = eval_cell("folpropvlm", "no_heat_gate",
+                                        desc_vlm, cands_vlm, eef_vlm,
+                                        properties=props_vlm,
+                                        heat_sources=heat_vlm)
+    assert binds_heat, detail_heat
+    assert set(detail_heat["variants"][0]["ablated_set"]) == {"hot_pan_1"}
+    assert detail_heat["incumbent_set"] == []
+
     # Exercise run_matrix()/print_matrix()/recommended_cells() end-to-end on
     # the 2 synthetic records (both same scene content, 2 "tasks") without
     # touching results_tables/.
@@ -227,8 +301,10 @@ def _selftest():
     assert any(r["ablation"] == "no_class" for r in rec)
     print_matrix(cells)
 
-    print("\nSELFTEST OK: known binding (no_class) and known non-binding "
-          "(no_heat_gate, byte-identical delegation) both verified.")
+    print("\nSELFTEST OK: known binding (fol/no_class) and known "
+          "non-binding (fol/no_heat_gate, byte-identical delegation) "
+          "verified; folpropvlm table-dependent no_heat_gate binding and "
+          "none-path table-injection stability also verified.")
 
 
 # --------------------------------------------------------------- main
