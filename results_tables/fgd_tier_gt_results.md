@@ -4146,3 +4146,33 @@ Phase 3 (localizer) only. No further GPU spend on Phases 1-2.
 LIVE THREADS: Phase 3 hazard localizer (data landed 43379347; train job
 gated on Task-4 projection re-review, verify-first) and the vanilla-tier
 big-margin table (43386826 queued).
+
+## 2026-08-12 — NOVELTY SWEEP (fresh, 7 angles): mechanism claim dead standalone; FOL election is the paper's core claim
+
+KILLER: arXiv 2607.01378 (English/Zheng/Ewetz, Jul 1 2026) — training-free
+in-denoising CBF correction (SLSQP, min-norm over H=10 chunk) on FROZEN
+pi0.5, on SafeLIBERO, vs AEGIS baseline (82.8 CA / 81.6 TSR reported).
+Surviving differentiators (full paper read): they use SIMULATOR-GT obstacle
+positions + hand-specified constraints (perception named as their open
+limitation — our no-GT tier answers it); no semantic election, no FOL, no
+abstention, single-candidate correction.
+KILLER-adjacent: 2606.09749 — attention-guided training-free CBF filter on
+SafeLIBERO; no privileged state BUT guards everything non-target (no
+semantics/abstention). ADJACENT (cite+differentiate): 2602.21429
+(constricting-CBF sampling for diffusion/flow, formal), 2602.03973 (VLS:
+VLM-reward steering of frozen flow policies, task not safety), 2604.12447
+(HazardArena + semantic option layer), 2512.21220 (RoboSafe executable
+safety logic, planning level), 2608.00315 (language-conditioned latent HJ
+filters, trained), 2606.22278, 2603.05754 (thermal+CBF, overlaps heat
+gating — ours RGB-only + explicit rule), 2603.14367, 2509.24243.
+NAMING HAZARD: arXiv 2606.23686 (ECCV 2026) now owns the name
+"LIBERO-Safety" (different benchmark); the steering papers call ours
+"SafeLIBERO" — paper MUST disambiguate. Candidate-sampling steering of flow
+policies is now commodity (FM-Steer CVPR26, QPILOTS etc.) — position K-of-8
+etc. as engineering, not novelty.
+VERDICT: compound claim "first semantically-grounded, FOL-elected,
+training-free in-denoising safety steering for flow-matching VLAs with a
+perception-complete tier" DEFENSIBLE as the compound only. Reposition:
+constraint ELECTION is the contribution; 2607.01378 is the lead related
+work. CONSEQUENCE: FOL ablation campaign (plan approved 2026-08-12) is now
+the paper's central evidence. Consider head-to-head numbers vs 2607.01378.
