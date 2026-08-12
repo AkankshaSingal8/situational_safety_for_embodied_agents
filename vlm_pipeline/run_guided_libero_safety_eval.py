@@ -614,6 +614,78 @@ def _yield_blocker_conjunct(stalled, moving, occupies):
     return false_conjuncts[0] if len(false_conjuncts) == 1 else None
 
 
+def _percep_frame_path(root, suite, level, task_id, ep, replan_idx):
+    """Filename layout for `--log_percep_frames` (pure, unit-testable):
+    `DIR/<suite>/L<level>/task<T>_ep<E>_replan<K>.npz`. Mirrors the existing
+    `out_dir = results_output_dir/suite/L{level}` convention used elsewhere
+    in this client."""
+    return (pathlib.Path(root) / str(suite) / f"L{level}"
+            / f"task{task_id}_ep{ep}_replan{replan_idx}.npz")
+
+
+def _build_frame_record(obs_like, guard, t, cameras):
+    """Pure hazard-localizer training-record builder for
+    `--log_percep_frames` (no I/O, no env/mujoco). Reads a plain dict
+    resembling the env obs plus per-camera intrinsics/extrinsics computed by
+    the caller (same `robosuite.utils.camera_utils` calls the percep stack
+    uses in `percep_obstacle._camera_transform` / `estimate_object_positions`
+    -- geometry stays consistent between training data and the runtime
+    percep tier). Missing obs fields (e.g. no depth camera configured) are
+    skipped rather than raising, and reported in the returned `skipped` list
+    so the caller can persist it to a `manifest.json` sidecar.
+
+    Returns (record: dict[str, np.ndarray], skipped: list[str]).
+    """
+    record = {}
+    skipped = []
+
+    def _maybe(src_key, out_key):
+        val = obs_like.get(src_key)
+        if val is not None:
+            record[out_key] = np.asarray(val)
+        else:
+            skipped.append(out_key)
+
+    _maybe("agentview_image", "agentview_rgb")
+    _maybe("agentview_depth", "agentview_depth")
+    _maybe("robot0_eye_in_hand_image", "robot0_eye_in_hand_rgb")
+    _maybe("robot0_eye_in_hand_depth", "robot0_eye_in_hand_depth")
+
+    if obs_like.get("robot0_eef_pos") is not None:
+        record["eef_pos"] = np.asarray(obs_like["robot0_eef_pos"], dtype=np.float32)
+    else:
+        skipped.append("eef_pos")
+
+    # ALL scene entities (GT 3D positions from `{name}_pos` obs keys) --
+    # these are the free supervision targets for the localizer, not just
+    # the hazard(s).
+    entities = object_positions(obs_like)
+    if entities:
+        names = sorted(entities)
+        record["entity_names"] = np.array(names)
+        record["entity_pos"] = np.stack(
+            [np.asarray(entities[n], dtype=np.float32) for n in names])
+    else:
+        skipped.append("entities")
+
+    record["t"] = np.asarray(t)
+    record["guard"] = np.array(list(guard) if guard else [], dtype="<U128")
+
+    for cam_name, mats in (cameras or {}).items():
+        K = (mats or {}).get("K")
+        T = (mats or {}).get("T")
+        if K is not None:
+            record[f"camera_K_{cam_name}"] = np.asarray(K)
+        else:
+            skipped.append(f"camera_K_{cam_name}")
+        if T is not None:
+            record[f"camera_T_{cam_name}"] = np.asarray(T)
+        else:
+            skipped.append(f"camera_T_{cam_name}")
+
+    return record, skipped
+
+
 def _yield_intercepts(yc):
     """True iff the Yield branch should intercept `_a` construction /
     suppress the normal server query for this env step (pure, unit-
@@ -1077,6 +1149,15 @@ def main():
                          "position source — no new perception). File opened "
                          "lazily on first write, flushed per episode. Default "
                          "off = zero overhead (no record built, no file).")
+    ap.add_argument("--log_percep_frames", default=None,
+                    help="Directory to save one compressed record per replan "
+                         "boundary (RGB-D + camera K/T + ALL GT entity "
+                         "positions + eef_pos/t/guard) as training data for "
+                         "the Phase-3 learned hazard localizer -- labels are "
+                         "free (GT positions). Default None = zero overhead: "
+                         "no writer object created, no behavioral or output "
+                         "change on the control path (pure observation read "
+                         "+ file write when on).")
     args = ap.parse_args()
 
     assert not (args.yield_regime and args.stall_recovery), (
@@ -1126,6 +1207,18 @@ def main():
     transitions_fh = None
     transitions_path = (pathlib.Path(args.results_output_dir)
                          / f"transitions_{args.suite}_L{args.level}.jsonl")
+
+    # --log_percep_frames: default-off hazard-localizer training-data logger.
+    # No writer/manifest object exists at all when the flag is absent (pure
+    # zero-overhead default-off, mirrors --log_transitions above).
+    percep_frame_manifest_skipped = None
+    percep_frame_manifest_path = None
+    if args.log_percep_frames:
+        percep_frame_manifest_skipped = set()
+        percep_frame_dir = (pathlib.Path(args.log_percep_frames)
+                             / args.suite / f"L{args.level}")
+        percep_frame_dir.mkdir(parents=True, exist_ok=True)
+        percep_frame_manifest_path = percep_frame_dir / "manifest.json"
 
     if args.refuse_unsafe:
         from e4_ssr_offline import is_unsafe
@@ -1224,6 +1317,7 @@ def main():
             done = False
             violated = False
             t = 0
+            percep_frame_replan_idx = 0
             frames = []
             eef_path_len = 0.0
             prev_eef = np.asarray(obs["robot0_eef_pos"]).copy()
@@ -1546,6 +1640,34 @@ def main():
                         # server query and DON'T populate `plan`, so the
                         # Yield branch below takes over immediately instead
                         # of executing one stale server-planned action first.
+                        if args.log_percep_frames:
+                            # --log_percep_frames: hazard-localizer training
+                            # data, captured at this exact replan boundary
+                            # (right before the server query). Pure
+                            # observation read + file write -- does NOT touch
+                            # `element`/`plan`/any control-path variable.
+                            # Camera matrices reuse the SAME robosuite
+                            # camera_utils convention the percep tier uses
+                            # (percep_obstacle._camera_transform) so the
+                            # localizer trains on identical geometry.
+                            from percep_obstacle import _camera_transform
+                            _frame_cams = {}
+                            for _cam in ("agentview", "robot0_eye_in_hand"):
+                                try:
+                                    _K, _T = _camera_transform(
+                                        env.sim, _cam, args.camera_res, args.camera_res)
+                                    _frame_cams[_cam] = {"K": _K, "T": _T}
+                                except Exception:
+                                    pass
+                            _frame_rec, _frame_skipped = _build_frame_record(
+                                obs, step_guard, t, _frame_cams)
+                            percep_frame_manifest_skipped.update(_frame_skipped)
+                            _frame_path = _percep_frame_path(
+                                args.log_percep_frames, args.suite, args.level,
+                                task_id, ep, percep_frame_replan_idx)
+                            _frame_path.parent.mkdir(parents=True, exist_ok=True)
+                            np.savez_compressed(_frame_path, **_frame_rec)
+                            percep_frame_replan_idx += 1
                         _res = client.infer(element)
                         chunk = np.asarray(_res["actions"][:args.replan_steps])
                         _diag = _res.get("guidance")
@@ -1735,6 +1857,7 @@ def main():
         "yield_max": args.yield_max,
         "refuse_unsafe": args.refuse_unsafe,
         "log_transitions": bool(args.log_transitions),
+        "log_percep_frames": args.log_percep_frames,
         "overall_TSR": float(np.mean([r["TSR"] for r in per_task])) if per_task else 0.0,
         "overall_violation_rate": float(np.mean([r["violation_rate"] for r in per_task])) if per_task else 0.0,
         "refused_tasks": sum(r["refused"] for r in per_task),
@@ -1742,6 +1865,11 @@ def main():
     }
     with open(out_dir / f"results_{stamp}.json", "w") as f:
         json.dump(results, f, indent=1)
+    if args.log_percep_frames:
+        with open(percep_frame_manifest_path, "w") as f:
+            json.dump({"suite": args.suite, "level": args.level,
+                       "skipped_fields": sorted(percep_frame_manifest_skipped)},
+                      f, indent=1)
     logging.info(json.dumps({k: results[k] for k in ("overall_TSR", "overall_violation_rate", "refused_tasks")}))
     if transitions_fh is not None:
         transitions_fh.close()
