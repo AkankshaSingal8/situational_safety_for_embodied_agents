@@ -246,7 +246,7 @@ def _corridor_anchor(desc, cands):
     return target, parse_destination(desc, cands, target)
 
 
-def _topk_guard(id_source, desc, cands, eef, movers, hazards, k=1):
+def _topk_guard(id_source, desc, cands, eef, movers, hazards, k=1, fol_ablate="none"):
     """Ranked guard list from the identity source (pure, unit-testable).
 
     k=1 reproduces the historical single-guard truncation for
@@ -257,7 +257,13 @@ def _topk_guard(id_source, desc, cands, eef, movers, hazards, k=1):
     variants may return [] — property-gated, no near-path fallback). The gt
     source returns ALL
     CheckRobotContact hazards regardless of k (the payload sends at most
-    two: primary + obstacle2)."""
+    two: primary + obstacle2).
+
+    `fol_ablate` (--fol_ablate): when not "none" and `id_source` is one of
+    fol/folprop/folpropvlm, routes through
+    `symbolic_identity.ablated_obstacle_id` instead of the incumbent
+    function, with the identical args (incl. `moving=movers`), then the
+    same `ranked[:k]` truncation. No-op for symbolic/gt."""
     if id_source == "symbolic":
         from symbolic_identity import scored_obstacle_id
         picked = scored_obstacle_id(desc, cands, eef, moving=movers) \
@@ -268,6 +274,11 @@ def _topk_guard(id_source, desc, cands, eef, movers, hazards, k=1):
             extra = _guard_set(str(desc), cands, eef, k=k)
             guard += [n for n in extra if n not in guard][:k - 1]
         return guard
+    if id_source in ("fol", "folprop", "folpropvlm") and fol_ablate != "none":
+        from symbolic_identity import ablated_obstacle_id
+        ranked = ablated_obstacle_id(id_source, fol_ablate, desc, cands, eef,
+                                     moving=movers)
+        return ranked[:k]
     if id_source == "fol":
         # Hard-FOL ranking, no VLM priors (LS offline: 12/15 vs 9/15
         # top-1 on obstacle_avoidance).
@@ -909,6 +920,17 @@ def main():
     ap.add_argument("--port", type=int, default=8150)
     ap.add_argument("--disable_guidance", action="store_true")
     ap.add_argument("--obstacle_id_source", choices=["gt", "symbolic", "fol", "folprop", "folpropvlm"], default="gt")
+    ap.add_argument("--fol_ablate", choices=["none", "geom_only", "no_exempt", "no_class", "no_heat_gate"],
+                    default="none",
+                    help="Ablation variants of the FOL hazard election "
+                         "(symbolic_identity.ablated_obstacle_id), for the "
+                         "paper's ablation study. Each removes ONE conjunct "
+                         "of HAZARD(x) := PROTECTED(x) | MOVING(x) | "
+                         "(PRED(x) & ~MENTIONED(x) & ~TARGET(x)). Only "
+                         "applies when --obstacle_id_source is fol/folprop/"
+                         "folpropvlm; documented no-op for gt/symbolic. "
+                         "Default 'none' = byte-identical to the incumbent "
+                         "identity function.")
     ap.add_argument("--entity_pos_source", choices=["gt", "percep"], default="gt",
                     help="'percep' = episode-start RGB-D back-projection "
                          "(GroundingDINO regions) for ALL positions consumed by "
@@ -1283,6 +1305,7 @@ def main():
         from e4_ssr_offline import is_unsafe
 
     per_task = []
+    _warned_fol_ablate_noop = [False]  # log the --fol_ablate no-op once, not per episode
     for task_id in task_ids:
         task = bm.get_task(task_id)
         desc = str(task.language)
@@ -1345,9 +1368,18 @@ def main():
                      and WORKSPACE[1][0] < v[1] < WORKSPACE[1][1]
                      and v[2] > 0}
             eef = np.asarray(obs["robot0_eef_pos"])  # proprio: allowed in no-GT
+            if (args.fol_ablate != "none"
+                    and args.obstacle_id_source not in ("fol", "folprop", "folpropvlm")
+                    and not _warned_fol_ablate_noop[0]):
+                logging.warning(
+                    f"--fol_ablate={args.fol_ablate} is a no-op for "
+                    f"--obstacle_id_source={args.obstacle_id_source} "
+                    "(only fol/folprop/folpropvlm are affected)")
+                _warned_fol_ablate_noop[0] = True
             guard = _topk_guard(
                 args.obstacle_id_source, desc, cands, eef, movers,
-                [h for h in hazards if f"{h}_pos" in obs], k=args.guard_topk)
+                [h for h in hazards if f"{h}_pos" in obs], k=args.guard_topk,
+                fol_ablate=args.fol_ablate)
             ident_correct = (bool(guard) and guard[0] in hazards) if hazards else None
             # pi0.7-style inference-time safety instruction: append an
             # avoidance clause naming the identified hazard to the PROMPT
@@ -1914,6 +1946,7 @@ def main():
         "suite": args.suite, "level": args.level,
         "guidance": not args.disable_guidance,
         "obstacle_id_source": args.obstacle_id_source,
+        "fol_ablate": args.fol_ablate,
         "entity_pos_source": args.entity_pos_source,
         "exec_parity": bool(args.exec_parity),
         "dynamic_election": bool(args.dynamic_election),

@@ -471,6 +471,207 @@ def folpropvlm_obstacle_id(task_description: str, candidates, eef_pos,
     return sorted(protected, key=d_path) + sorted(obstacles, key=d_path)
 
 
+# --- ablation variants of the FOL hazard election --------------------------
+#
+# HAZARD(x) := PROTECTED(x) | MOVING(x) | (PRED(x) & ~MENTIONED(x) & ~TARGET(x))
+#
+# Each ablation below removes exactly ONE conjunct/disjunct of the rule
+# above, for the paper's ablation study (task-1-brief.md). These are
+# ADDITIVE: they never modify `fol_obstacle_id`/`folprop_obstacle_id`/
+# `folpropvlm_obstacle_id` and share their geometry (`segment_distance`,
+# `parse_target_heuristic`), protected-class set (`_PROTECTED_CLASSES`), and
+# property vocab (`_PROP_HOT`/`_PROP_SHARP`/`_PROP_FRAGILE`, the VLM tables)
+# by calling into the same module-level state, never by copying it.
+
+def _head_mentioned(name: str, task_description: str) -> bool:
+    base = re.sub(r"(__\d+)?(_\d+)?$", "", name)
+    return base.split("_")[-1].lower() in task_description.lower()
+
+
+def _is_protected_or_moving(name: str, moving: Optional[set]) -> bool:
+    return (any(w in name.lower() for w in _PROTECTED_CLASSES)
+            or bool(moving and name in moving))
+
+
+def _prop_effective_fn(id_source: str, kwargs: dict, heat_gate: bool = True):
+    """Returns a `k -> bool` PROP(x) predicate for `id_source` in
+    {"folprop", "folpropvlm"}, sharing the incumbent tables/tokens. When
+    `heat_gate` is False (the `no_heat_gate` ablation), HOT(x) is hazardous
+    unconditionally instead of gated by heat-source proximity."""
+    if id_source == "folprop":
+        prop_tokens = _PROP_HOT + _PROP_SHARP + _PROP_FRAGILE
+
+        def is_prop(k):
+            return any(tok in k.lower() for tok in prop_tokens)
+        return is_prop
+
+    properties = kwargs.get("properties")
+    heat_sources = kwargs.get("heat_sources")
+    if properties is None or heat_sources is None:
+        props_tab, heat_tab = _load_vlm_prop_tables()
+        if properties is None:
+            properties = props_tab
+        if heat_sources is None:
+            heat_sources = heat_tab
+
+    def prop(k, key):
+        return bool(properties.get(_vlm_base_class(k), {}).get(key, False))
+
+    def is_heat_source(k):
+        return bool(heat_sources.get(_vlm_base_class(k), False))
+
+    def is_prop(k, candidates=None):
+        if prop(k, "sharp") or prop(k, "fragile") or is_heat_source(k):
+            return True
+        if not prop(k, "hot"):
+            return False
+        if not heat_gate:
+            return True
+        if candidates is None:
+            return False
+        heat_pos = [np.asarray(candidates[s]) for s in candidates
+                    if is_heat_source(s)]
+        p = np.asarray(candidates[k])
+        return any(float(np.linalg.norm(p - hp)) < _HEAT_PROXIMITY_M
+                   for hp in heat_pos)
+    return is_prop
+
+
+def _ablate_geom_only(task_description, candidates, eef_pos):
+    tgt = parse_target_heuristic(task_description, list(candidates))
+    tpos = candidates.get(tgt, eef_pos)
+
+    def d_path(k):
+        return segment_distance(candidates[k], eef_pos, tpos)
+
+    return sorted(candidates, key=d_path)
+
+
+def _ablate_no_exempt(id_source, task_description, candidates, eef_pos,
+                      moving, kwargs):
+    tgt = parse_target_heuristic(task_description, list(candidates))
+    tpos = candidates.get(tgt, eef_pos)
+
+    def d_path(k):
+        return segment_distance(candidates[k], eef_pos, tpos)
+
+    protected = [k for k in candidates if _is_protected_or_moving(k, moving)]
+
+    if id_source == "fol":
+        obstacles = [k for k in candidates if k not in protected]
+    elif id_source in ("folprop", "folpropvlm"):
+        is_prop = _prop_effective_fn(id_source, kwargs)
+        obstacles = [k for k in candidates if k not in protected
+                     and (is_prop(k, candidates) if id_source == "folpropvlm"
+                          else is_prop(k))]
+    else:
+        raise ValueError(f"unknown id_source {id_source!r}")
+    return sorted(protected, key=d_path) + sorted(obstacles, key=d_path)
+
+
+def _ablate_no_class(id_source, task_description, candidates, eef_pos,
+                     moving, kwargs):
+    """Drops the `PROTECTED(x) | MOVING(x)` disjunct: returns exactly the
+    PRED-branch `obstacles` list each incumbent function computes internally
+    (which already excludes protected/moving-class names via `k not in
+    protected`, structurally -- so those entries are not merely un-promoted,
+    they are absent entirely), without prepending the protected/moving
+    block. `moving` is threaded through only because the incumbents'
+    `protected` set consults it; a candidate whose name already matches
+    `_PROTECTED_CLASSES` is excluded regardless of `moving`."""
+    tgt = parse_target_heuristic(task_description, list(candidates))
+    tpos = candidates.get(tgt, eef_pos)
+
+    def d_path(k):
+        return segment_distance(candidates[k], eef_pos, tpos)
+
+    protected = [k for k in candidates if _is_protected_or_moving(k, moving)]
+
+    def eligible(k):
+        return (k not in protected and k != tgt
+                and not _head_mentioned(k, task_description))
+
+    if id_source == "fol":
+        obstacles = [k for k in candidates if eligible(k)]
+    elif id_source in ("folprop", "folpropvlm"):
+        is_prop = _prop_effective_fn(id_source, kwargs)
+        obstacles = [k for k in candidates if eligible(k)
+                     and (is_prop(k, candidates) if id_source == "folpropvlm"
+                          else is_prop(k))]
+    else:
+        raise ValueError(f"unknown id_source {id_source!r}")
+    return sorted(obstacles, key=d_path)
+
+
+def _ablate_no_heat_gate(id_source, task_description, candidates, eef_pos,
+                         moving, kwargs):
+    if id_source in ("fol", "folprop"):
+        return ablated_obstacle_id(id_source, "none", task_description,
+                                   candidates, eef_pos, moving=moving, **kwargs)
+    if id_source != "folpropvlm":
+        raise ValueError(f"unknown id_source {id_source!r}")
+
+    tgt = parse_target_heuristic(task_description, list(candidates))
+    tpos = candidates.get(tgt, eef_pos)
+
+    def d_path(k):
+        return segment_distance(candidates[k], eef_pos, tpos)
+
+    protected = [k for k in candidates if _is_protected_or_moving(k, moving)]
+    is_prop = _prop_effective_fn(id_source, kwargs, heat_gate=False)
+    obstacles = [k for k in candidates if k not in protected and k != tgt
+                 and not _head_mentioned(k, task_description)
+                 and is_prop(k, candidates)]
+    return sorted(protected, key=d_path) + sorted(obstacles, key=d_path)
+
+
+def ablated_obstacle_id(id_source: str, ablation: str, task_description,
+                        candidates, eef_pos, moving: Optional[set] = None,
+                        **kwargs) -> list:
+    """Ablation-variant dispatcher for the FOL hazard election
+    (task-1-brief.md):
+        HAZARD(x) := PROTECTED(x) | MOVING(x)
+                     | (PRED(x) & ~MENTIONED(x) & ~TARGET(x))
+
+    `ablation`:
+      - "none": delegate to the exact incumbent function for `id_source`
+        (byte-identical by construction).
+      - "geom_only": drop ALL predicates; rank every candidate purely by
+        path distance (id_source irrelevant by design).
+      - "no_exempt": drop `~MENTIONED(x) & ~TARGET(x)` from the PRED
+        branch; the protected/moving block is unchanged.
+      - "no_class": drop `PROTECTED(x) | MOVING(x)`; only the PRED-branch
+        obstacles are returned.
+      - "no_heat_gate": folpropvlm only — HOT(x) is hazardous
+        unconditionally (heat-source proximity gate removed); fol/folprop
+        delegate to "none" (no heat gate exists for them).
+    Raises `ValueError` for an unrecognized `ablation` (or, within a
+    branch, an unrecognized `id_source`)."""
+    if ablation == "none":
+        if id_source == "fol":
+            return fol_obstacle_id(task_description, candidates, eef_pos,
+                                   moving=moving)
+        if id_source == "folprop":
+            return folprop_obstacle_id(task_description, candidates, eef_pos,
+                                       moving=moving)
+        if id_source == "folpropvlm":
+            return folpropvlm_obstacle_id(task_description, candidates,
+                                          eef_pos, moving=moving, **kwargs)
+        raise ValueError(f"unknown id_source {id_source!r}")
+    if ablation == "geom_only":
+        return _ablate_geom_only(task_description, candidates, eef_pos)
+    if ablation == "no_exempt":
+        return _ablate_no_exempt(id_source, task_description, candidates,
+                                 eef_pos, moving, kwargs)
+    if ablation == "no_class":
+        return _ablate_no_class(id_source, task_description, candidates,
+                                eef_pos, moving, kwargs)
+    if ablation == "no_heat_gate":
+        return _ablate_no_heat_gate(id_source, task_description, candidates,
+                                    eef_pos, moving, kwargs)
+    raise ValueError(f"unknown ablation {ablation!r}")
+
+
 def identify_obstacle(task_description: str, obs, workspace=((-0.5, 0.5), (-0.5, 0.5)),
                       moving: Optional[set] = None) -> Optional[str]:
     """Client entry point: candidates from `*_pos` obs keys (workspace-filtered,
