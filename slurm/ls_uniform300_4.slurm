@@ -11,16 +11,17 @@
 # UNIFORM n=300 rerun, script 4/6 (2026-08-13): single-protocol paper table.
 # This script: ARM 4 -- ours-GT, all 4 suites, all levels. Per-suite config
 # taken from slurm/ls_ours_parity_full.slurm's gt_par_full arm (GT id
-# source, duality_disengage, exec_parity, engage_radius 0.22), EXCEPT oah
-# which adds --engage_cone 60 per the F2 cone promotion (see
-# slurm/ls_yield_dev.slurm's non-yield GT arm and slurm/ls_cone_confirm.slurm
-# F2). CONCERN (see task-4-uniform300-report.md): ls_ours_parity_full.slurm
-# runs oa/hs/aff GT with NO cone, but slurm/ls_oa_gtcone_confirm.slurm
-# (n=50 confirm) and slurm/ls_topup_hsL0_oaGTcone.slurm both separately run
-# an oa GT+cone60 config that appears to have been under promotion review.
-# Per task instructions this script uses ls_ours_parity_full.slurm's
-# no-cone oa/hs/aff config and flags the asymmetry (oah cone60, others not)
-# for the parent to rule on rather than resolving it here.
+# source, duality_disengage, exec_parity, engage_radius 0.22), EXCEPT oa
+# and oah which add --engage_cone 60 per the frozen-board cone promotions:
+# oa per the ledgered "promoted: oa-GT cone" entry, confirmed n=50 in
+# slurm/ls_oa_gtcone_confirm.slurm (--obstacle_id_source gt
+# --duality_disengage --exec_parity --engage_radius 0.22 --engage_cone 60,
+# verbatim); oah per the F2 cone promotion (see slurm/ls_yield_dev.slurm's
+# non-yield GT arm and slurm/ls_cone_confirm.slurm F2). hs/aff GT stay
+# no-cone (ls_ours_parity_full.slurm).
+# FIX 2026-08-13: coordinator ruling on the oa cone-vs-no-cone concern
+# raised in task-4-uniform300-report.md -- oa GT is cone-promoted; updated
+# the oa loop to match ls_oa_gtcone_confirm.slurm's flags exactly.
 set -euo pipefail
 source /jet/home/asingal/miniconda3/etc/profile.d/conda.sh
 ROOT=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents
@@ -54,11 +55,11 @@ export LIBERO_CONFIG_PATH="$LS/.libero_config"
 export PYTHONPATH="$CPP"
 GT_COMMON="--obstacle_id_source gt --duality_disengage --exec_parity --engage_radius 0.22"
 
-# oa: gt, eng0.22, no cone (ls_ours_parity_full.slurm)
+# oa: gt, eng0.22, cone60 (promoted, ls_oa_gtcone_confirm.slurm)
 for LVL in 0 1 2; do
   python "$WT/vlm_pipeline/run_guided_libero_safety_eval.py" \
     --suite obstacle_avoidance --level "$LVL" --num_trials_per_task "$N" \
-    --host 127.0.0.1 --port "$PORT" $GT_COMMON \
+    --host 127.0.0.1 --port "$PORT" $GT_COMMON --engage_cone 60 \
     --results_output_dir "$OUT"
 done
 # oah: gt, eng0.22, cone60 (F2 cone promotion)
