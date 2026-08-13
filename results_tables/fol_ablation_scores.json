@@ -1,0 +1,38 @@
+[
+ {
+  "arm": "oa/geom_only",
+  "status": "PENDING"
+ },
+ {
+  "arm": "oa/no_exempt",
+  "status": "PENDING"
+ },
+ {
+  "arm": "oah/geom_only",
+  "status": "PENDING"
+ },
+ {
+  "arm": "oah/no_exempt",
+  "status": "PENDING"
+ },
+ {
+  "arm": "oah/no_class",
+  "status": "PENDING"
+ },
+ {
+  "arm": "hs/geom_only",
+  "status": "PENDING"
+ },
+ {
+  "arm": "hs/no_class",
+  "status": "PENDING"
+ },
+ {
+  "arm": "aff/geom_only",
+  "status": "PENDING"
+ },
+ {
+  "arm": "aff/no_exempt",
+  "status": "PENDING"
+ }
+]
