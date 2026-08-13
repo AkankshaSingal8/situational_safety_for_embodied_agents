@@ -4193,3 +4193,17 @@ BEAT-BASELINE CAMPAIGN STATUS: Phases 1 (Yield), 2 (de-election), 3
 (localizer) all closed NO-GO at their pre-registered gates. Remaining live
 work for the paper: vanilla-tier table (43386826 queued) + FOL ablation
 campaign (43461515/16/17 queued, code review clean).
+
+## 2026-08-13 — G-L1 hazard-localizer gate: NO-GO (closed)
+
+Job 43428382 (train + held-out eval) completed. Pre-registered gate: held-out-task
+median 3D error < 0.025 m. Result: **0.222 m median (p90 0.334, n=17278)** on
+held-out tasks {2,7,12} — ~9x over the gate. Guard-entity-only subset: 0.134 m
+median — still 5x over. Per-entity medians range 0.064–0.305 m; no entity class
+passes. Verify projection gate had PASSED (agentview in-bounds 0.969), so the
+failure is the regressor, not the projection convention.
+
+Verdict: **NO-GO. G-L2 perception-upgrade rollout arm will NOT run.** The frozen
+noGT tier (percep entity positions) remains the shipped perception-complete
+configuration. Localizer line closed; artifacts retained at localizer_out/ for
+the record. No further GPU spend on this line.
