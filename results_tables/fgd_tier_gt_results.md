@@ -4176,3 +4176,20 @@ perception-complete tier" DEFENSIBLE as the compound only. Reposition:
 constraint ELECTION is the contribution; 2607.01378 is the lead related
 work. CONSEQUENCE: FOL ablation campaign (plan approved 2026-08-12) is now
 the paper's central evidence. Consider head-to-head numbers vs 2607.01378.
+
+## 2026-08-13 — G-L1 LOCALIZER VERDICT (43428382): FAIL — Phase 3 NO-GO, beat-baseline campaign fully closed
+
+Verify gate PASSED (agentview in-bounds 0.969 ≥ 0.95; projection convention
+independently confirmed by visual QC 2026-08-12). Training completed; G-L1
+held-out eval (tasks {2,7,12}, n=17278): overall median 0.222 m, p90 0.334 m
+vs gate 0.025 m — FAIL by ~9x. Per-suite: oa 0.204, oah 0.230. Best entity
+0.064 (bottle_of_sake), worst 0.305 (moka_pot_2). A from-scratch small conv
+net on ~17k frames does not approach the incumbent detector (GroundingDINO
+percep stack, validated med 0.067 m). No revision round pre-registered →
+Phase 3 CLOSED NO-GO. The percep stack remains the no-GT tier's localizer;
+the frozen board stands unchanged.
+
+BEAT-BASELINE CAMPAIGN STATUS: Phases 1 (Yield), 2 (de-election), 3
+(localizer) all closed NO-GO at their pre-registered gates. Remaining live
+work for the paper: vanilla-tier table (43386826 queued) + FOL ablation
+campaign (43461515/16/17 queued, code review clean).
