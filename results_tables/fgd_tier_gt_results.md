@@ -4207,3 +4207,19 @@ Verdict: **NO-GO. G-L2 perception-upgrade rollout arm will NOT run.** The frozen
 noGT tier (percep entity positions) remains the shipped perception-complete
 configuration. Localizer line closed; artifacts retained at localizer_out/ for
 the record. No further GPU spend on this line.
+
+## 2026-08-13 — G-L1 LOCALIZER GATE (43428382): FAIL — Phase 3 NO-GO, improvement campaign fully closed
+
+Verify-first projection gate PASSED (row-mirror convention confirmed by
+visual QC 2026-08-12; training proceeded). G-L1 held-out eval (tasks
+{2,7,12} split, n=17,278 samples): overall median 3D error 0.222 m
+(p90 0.334) vs pre-registered gate < 0.025 m — FAIL by ~9x. Per-suite:
+oa 0.204, oah 0.230. Best entity 0.064 m (bottle_with_hand), typical
+0.15-0.31 m. The small conv net trained on ~22.6k frames does not
+approach detector-grade accuracy; no revision round was pre-registered.
+VERDICT: Phase 3 NO-GO. No localizer rollout arm. With Phases 1 (Yield),
+2 (de-election), and 3 (localizer) all NO-GO at their gates, the
+beat-baseline improvement campaign is CLOSED: the frozen board ships
+unchanged. Remaining live: vanilla-tier margin table (43386826) and the
+FOL ablation campaign (43461515-17) — both claims-strengthening, neither
+touches board cells.
