@@ -104,6 +104,23 @@ class GuidanceConfig:
     consequence_action_scale: float = 1.0
     consequence_action_clip: float = 0.0  # 0 = no clip
 
+    # Task 5 A/B steering (spec 2026-08-12), both default off (bit-exact
+    # legacy path when both are 0/False). Independent of `consequence_select`
+    # -- see `GuidedPolicy.infer`'s dispatch order.
+    # Flag A: when the request payload's `stalled` field is true AND this is
+    # > 0, draw N ADDITIONAL fresh K-candidate batches (new noise seeds) and
+    # pool all candidates before selection -- searches more of the policy's
+    # own distribution when the client detects a stall. No change to
+    # repair/certification.
+    stall_resample: int = 0
+    # Flag B: among candidates that pass certification, select argmax
+    # PROGRESS (chunk terminal eef displacement toward the request's
+    # `target_pos`) instead of the legacy lexicographic selection rule.
+    # Falls back to the legacy rule when no candidate is feasible or
+    # `target_pos` is absent/unresolved. Composes with Flag A: pooling (if
+    # any) happens first, then this selects over the pooled set.
+    progress_select: bool = False
+
 
 def make_schedule(kind: str, n: int) -> tuple[np.ndarray, np.ndarray]:
     """repair_weight[k], margin_scale[k] over denoising steps. Last entry must be 1."""
@@ -223,6 +240,59 @@ class GuidedPolicy(_policy.Policy):
                 config.consequence_select, config.consequence_n_members,
                 config.consequence_domain, config.consequence_pessimism, config.consequence_threshold,
             )
+
+        # --- Task 5 A/B steering (--stall_resample, --progress_select) ---
+        # Off by default (0 / False) -> `self._ab` stays None and `infer`
+        # never enters `_ab_infer`, so the pre-existing paths (including
+        # `consequence_select` above) are untouched -- byte-identical.
+        self._ab = None
+        if config.stall_resample > 0 or config.progress_select:
+            # `guided_sample_actions` short-circuits to a bare 2-tuple (no
+            # `acc`/candidate axis at all) when k_batch == 1, so K=1 has
+            # nothing to pool/select among and would crash `_ab_infer`'s
+            # 5-tuple unpack on the very first request.
+            if config.num_candidates <= 1:
+                raise ValueError(
+                    "--stall_resample/--progress_select require "
+                    f"--num_candidates > 1 (got {config.num_candidates}); "
+                    "there is nothing to pool/select among with a single "
+                    "candidate."
+                )
+            if config.adjoint_steps > 0 or config.renoise_attempts > 0:
+                raise ValueError(
+                    "--stall_resample/--progress_select are only supported "
+                    "with the default in-denoising best-of-K selection path "
+                    f"(adjoint_steps={config.adjoint_steps}, "
+                    f"renoise_attempts={config.renoise_attempts}; both must be 0)."
+                )
+            if config.consequence_select:
+                raise ValueError(
+                    "--stall_resample/--progress_select cannot be combined "
+                    "with --consequence_select: `infer` dispatches to "
+                    "exactly one host-level selection layer per request, so "
+                    "an A/B flag set alongside --consequence_select would be "
+                    "silently ignored rather than composed."
+                )
+            import sys as _sys
+            import pathlib as _pathlib
+
+            _repo_root = _pathlib.Path(__file__).resolve().parents[4]
+            if str(_repo_root) not in _sys.path:
+                _sys.path.insert(0, str(_repo_root))
+            from vlm_pipeline import ab_steering as _ab  # noqa: PLC0415
+
+            self._ab = _ab
+            logging.info(
+                "A/B steering enabled: stall_resample=%d progress_select=%s",
+                config.stall_resample, config.progress_select,
+            )
+
+        # One shared candidates-jit for whichever host-level selection layer
+        # (consequence_select and/or A/B steering) needs the pre-collapse
+        # K-candidate set.
+        if self._sample_actions_candidates is None and (
+            config.consequence_select or config.stall_resample > 0 or config.progress_select
+        ):
             bound_candidates = types.MethodType(guided_sample_actions, self._model)
             self._sample_actions_candidates = nnx_utils.module_jit(
                 bound_candidates,
@@ -392,6 +462,79 @@ class GuidedPolicy(_policy.Policy):
         chosen_diag["consequence_fallback"] = np.asarray([0.0], dtype=np.float32)
         return chosen_actions, chosen_diag
 
+    def _ab_infer(self, rng, observation, guidance, payload, **sample_kwargs):
+        """Task 5 host loop: Flag A (`--stall_resample`) pools N additional
+        K-candidate batches (fresh noise seeds) when the request signals
+        `stalled`; Flag B (`--progress_select`) then selects over the
+        (possibly pooled) set by PROGRESS instead of the legacy
+        lexicographic rule. All pooling/selection DECISIONS are pure numpy
+        in `vlm_pipeline.ab_steering` (`self._ab`) -- this method only drives
+        the jax candidate generation and converts to/from numpy.
+
+        PROGRESS is `acc["progress"]` (`_prefix_acceptance`, pi0_guided.py):
+        the executed-prefix net displacement projected onto the unit vector
+        toward `target_pos` -- the SAME quantity the existing
+        `progress_weight` knob already adds into the legacy score as a
+        weighted term ("A1 directed progress", spec 2026-07-27). Flag B
+        reuses it as a hard argmax-among-CERTIFIED selector instead of a
+        soft additive term; deliberately prefix-scoped (not full-chunk
+        terminal) to stay consistent with `feasible`, which is also
+        evaluated over the executed prefix only -- both describe what the
+        receding-horizon client actually commits before the next replan.
+
+        When Flag A draws no extra batches this request AND Flag B is off,
+        returns the FIRST call's `selected`/`diag` verbatim -- the exact
+        legacy `guided_sample_actions` selection output, not a numpy
+        re-derivation -- so the non-stalled A-solo path (and the B-off/
+        A-off path generally) is an exact backstop, matching
+        `_consequence_infer`'s fallback contract."""
+        cfg = self._config
+        ab = self._ab
+        selected, diag, x0_0, acc0, diag0 = self._sample_actions_candidates(
+            rng, observation, guidance=guidance,
+            num_candidates=cfg.num_candidates, return_candidates=True,
+            **sample_kwargs,
+        )
+        n_extra = ab.n_resample_batches(payload.get("stalled", False), cfg.stall_resample)
+        if n_extra == 0 and not cfg.progress_select:
+            return selected, diag
+
+        x0_batches = [np.asarray(x0_0)]
+        acc_batches = [{k: np.asarray(v) for k, v in acc0.items()}]
+        diag_batches = [{k: np.asarray(v) for k, v in diag0.items()}]
+
+        for _ in range(n_extra):
+            rng, sub = jax.random.split(rng)
+            _, _, x0_i, acc_i, diag_i = self._sample_actions_candidates(
+                sub, observation, guidance=guidance,
+                num_candidates=cfg.num_candidates, return_candidates=True,
+                **sample_kwargs,
+            )
+            x0_batches.append(np.asarray(x0_i))
+            acc_batches.append({k: np.asarray(v) for k, v in acc_i.items()})
+            diag_batches.append({k: np.asarray(v) for k, v in diag_i.items()})
+
+        x0_pool = np.concatenate(x0_batches, axis=0)
+        acc_pool = ab.pool_candidate_batches(acc_batches)
+        diag_pool = ab.pool_candidate_batches(diag_batches)
+
+        idx = ab.select_index(
+            acc_pool["feasible"], acc_pool["min_margin"], acc_pool["disp_norm"],
+            acc_pool["progress"], acc_pool["tail_margin"],
+            payload.get("target_pos"),
+            cfg.progress_weight, cfg.lookahead_weight, cfg.progress_select,
+        )
+        chosen_actions = x0_pool[idx : idx + 1]
+        chosen_diag = {k: np.asarray(v)[idx : idx + 1] for k, v in diag_pool.items()}
+        chosen_diag["selected_margin"] = np.asarray(acc_pool["min_margin"])[idx : idx + 1]
+        chosen_diag["feasible_count"] = np.asarray(
+            [float(np.sum(acc_pool["feasible"]))], dtype=np.float32)
+        chosen_diag["cand_disp"] = acc_pool["net_disp"]  # (pooled K, 3) — logged only
+        chosen_diag["cand_min_margin"] = acc_pool["min_margin"]  # (pooled K,)
+        chosen_diag["cand_best_idx"] = np.asarray([float(idx)], dtype=np.float32)
+        chosen_diag["ab_pool_size"] = np.asarray([float(x0_pool.shape[0])], dtype=np.float32)
+        return chosen_actions, chosen_diag
+
     def infer(self, obs: dict, *, noise: np.ndarray | None = None) -> dict:  # type: ignore[override]
         obs = dict(obs)
         payload = obs.get("guidance", None)
@@ -422,6 +565,11 @@ class GuidedPolicy(_policy.Policy):
             actions, diag = self._renoise_infer(sample_rng, observation, guidance)
         elif self._consequence_models is not None:
             actions, diag = self._consequence_infer(
+                sample_rng, observation, guidance, payload if isinstance(payload, dict) else {},
+                **sample_kwargs,
+            )
+        elif self._ab is not None:
+            actions, diag = self._ab_infer(
                 sample_rng, observation, guidance, payload if isinstance(payload, dict) else {},
                 **sample_kwargs,
             )

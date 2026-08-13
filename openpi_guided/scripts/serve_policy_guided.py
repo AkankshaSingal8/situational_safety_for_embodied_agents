@@ -79,6 +79,10 @@ class Args:
     consequence_domain: str = "SL"
     consequence_action_scale: float = 1.0
     consequence_action_clip: float = 0.0
+    # Task 5 A/B steering (spec 2026-08-12): both default off, byte-identical
+    # to the pre-existing selection when both are 0/False.
+    stall_resample: int = 0
+    progress_select: bool = False
 
 
 def main(args: Args) -> None:
@@ -127,6 +131,8 @@ def main(args: Args) -> None:
         consequence_domain=args.consequence_domain,
         consequence_action_scale=args.consequence_action_scale,
         consequence_action_clip=args.consequence_action_clip,
+        stall_resample=args.stall_resample,
+        progress_select=args.progress_select,
     )
     policy = make_guided_policy(base_policy, norm_stats, guidance_config)
     logging.info("Guided policy ready (gamma=%s, d_safe=%s)", args.gamma, args.d_safe)

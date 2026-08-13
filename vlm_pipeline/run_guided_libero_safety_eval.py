@@ -911,6 +911,21 @@ class YieldController:
         return False
 
 
+def _stall_signal(send_stall_signal, stall_hist, d_stall, step_guard):
+    """Task 5 flag A client-side `stalled` bit for the guidance payload.
+    Pure given the history deque (does not mutate it -- the caller appends
+    the current eef position before calling, same as the Yield-regime call
+    site above). Reuses `YieldController.is_stalled` -- the EXISTING
+    detection-only static method (net eef displacement across the replan-
+    boundary window < d_stall) -- WITHOUT any of stall_recovery's/Yield's
+    own response machinery (HDC detour, scripted lift, certified retreat).
+    False whenever the flag is off, no guard is currently engaged
+    (`step_guard` empty), or the window hasn't filled yet."""
+    if not send_stall_signal:
+        return False
+    return bool(YieldController.is_stalled(stall_hist, d_stall) and step_guard)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--suite", default="obstacle_avoidance")
@@ -1148,6 +1163,16 @@ def main():
     ap.add_argument("--dual_eta_max", type=float, default=0.01)
     ap.add_argument("--stall_recovery", action="store_true",
                     help="A2: stall -> HDC detour replans -> scripted lift-retreat")
+    ap.add_argument("--send_stall_signal", action="store_true",
+                    help="Task 5 flag A (server-side --stall_resample): add a "
+                         "boolean `stalled` field to the guidance payload, "
+                         "gated on a guard being engaged AND the reused "
+                         "YieldController.is_stalled detector (net eef "
+                         "displacement below --yield_d_stall over the last "
+                         "--yield_w replan-boundary positions) firing -- "
+                         "detection only, independent of --yield_regime/"
+                         "--stall_recovery's own responses. Default off: "
+                         "payload is byte-identical to today.")
     ap.add_argument("--yield_regime", action="store_true",
                     help="Phase 1 Yield (client-only, certified retreat): "
                          "TRIGGER (STALLED(eef) AND MOVING(hazard) AND "
@@ -1420,6 +1445,11 @@ def main():
             dual_lam = 0.0
             ep_actions = []                           # self-distillation log
             eef_hist = collections.deque(maxlen=40)   # A2 stall window
+            # Task 5 flag A (--send_stall_signal): independent replan-
+            # boundary window, reusing YieldController.is_stalled's window
+            # size (--yield_w) regardless of --yield_regime.
+            ab_stall_hist = (collections.deque(maxlen=args.yield_w)
+                              if args.send_stall_signal else None)
             stall_hdc_replans = 0
             in_retreat = 0
             ep_stalls = ep_retreats = 0
@@ -1560,6 +1590,15 @@ def main():
                             else 0)
                         step_guard = _holding_filter(
                             step_guard, movers, _is_holding(_width, holding_streak))
+                    # Task 5 flag A (--send_stall_signal): append THEN
+                    # evaluate, same order as the Yield-regime call site
+                    # below, over `step_guard` as finally gated above.
+                    if args.send_stall_signal:
+                        ab_stall_hist.append(
+                            np.asarray(obs["robot0_eef_pos"], dtype=np.float64))
+                    _ab_stalled = _stall_signal(
+                        args.send_stall_signal, ab_stall_hist,
+                        args.yield_d_stall, step_guard)
                     if args.yield_regime and yc.state == "idle":
                         # TRIGGER evaluation, replan boundaries only.
                         # STALLED(eef): net displacement < d_stall over the
@@ -1677,6 +1716,12 @@ def main():
                         }
                         if args.dual_eta:
                             element["guidance"]["repulsor_eta"] = float(dual_lam)
+                        if args.send_stall_signal:
+                            # Task 5 flag A: server-side `--stall_resample`
+                            # reads this to pool extra K-candidate batches.
+                            # Off by default -> key absent, byte-identical
+                            # payload.
+                            element["guidance"]["stalled"] = bool(_ab_stalled)
                         if stall_hdc_replans > 0:
                             element["guidance"]["hdc_scale"] = 0.01
                             stall_hdc_replans -= 1
