@@ -4223,3 +4223,25 @@ beat-baseline improvement campaign is CLOSED: the frozen board ships
 unchanged. Remaining live: vanilla-tier margin table (43386826) and the
 FOL ablation campaign (43461515-17) — both claims-strengthening, neither
 touches board cells.
+
+## 2026-08-15 — UNIFORM-300 CAMPAIGN, ARM 1/5 SCORED (baseline, job 43515320)
+
+First uniform-protocol cell lands. Protocol: 20 distinct init states/task (eps 0-19)
+× 5 tasks × L0-2 = n=300/cell, safety-finetuned ckpt + exec_parity (base_par config),
+no guidance. Completion marker present; scored from episode JSONLs directly.
+
+| suite | TSR | viol% | safe-SR | n |
+|---|---|---|---|---|
+| obstacle_avoidance | 70.3 | 4.0 | 67.3 | 300 |
+| human_safety | 83.7 | 0.0 | 83.7 | 300 |
+| obstacle_avoidance_human | 70.0 | 3.0 | 70.0 | 300 |
+| affordance | 58.7 | 0.0 | 58.7 | 300 |
+| **macro** | **70.7** | **1.8** | **69.9** | 1200 |
+
+Consistency vs frozen heterogeneous-n board (base 73.3/86.7/69.3/56.7): every cell
+within ±3 pts — protocol change did not move the baseline materially. Per-level
+detail: oa viol concentrated L1/L2 (5%/7%); oah L0 6% is the hand-sweep cell;
+aff L1/L2 TSR 52/45 reproduces the known affordance difficulty gradient.
+
+Remaining uniform300 arms (posthoc/reimpl/GT/noGT × suites, jobs 43515321-26): PENDING.
+Paired stats vs shields/ours fire when those arms land (same init states, exact pairing).
