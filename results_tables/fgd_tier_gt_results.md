@@ -4245,3 +4245,20 @@ aff L1/L2 TSR 52/45 reproduces the known affordance difficulty gradient.
 
 Remaining uniform300 arms (posthoc/reimpl/GT/noGT × suites, jobs 43515321-26): PENDING.
 Paired stats vs shields/ours fire when those arms land (same init states, exact pairing).
+
+## 2026-08-15 — UNIFORM-300 ARM 2/5 SCORED (post-hoc shield, job 43515321)
+
+Marker present; scored from episode JSONLs.
+
+| suite | TSR | viol% | safe-SR | n |
+|---|---|---|---|---|
+| obstacle_avoidance | 74.7 | 1.7 | 73.7 | 300 |
+| human_safety | 43.7 | 0.0 | 43.7 | 300 |
+| obstacle_avoidance_human | 53.0 | 1.7 | 52.0 | 300 |
+| affordance | 48.3 | 0.0 | 48.3 | 300 |
+| **macro** | **54.9** | **0.8** | **54.4** | 1200 |
+
+Consistent with frozen posthoc macro 52.5/1.2. Notable: posthoc oa TSR 74.7 ≥ base
+70.3 on this protocol (single-sample projection barely taxes oa), but hs collapses
+to 43.7 (vs base 83.7) — the freeze tax lives in hs/oah/aff, same shape as before.
+Paired stats deferred until GT/noGT arms land (same init states enable exact pairing).
