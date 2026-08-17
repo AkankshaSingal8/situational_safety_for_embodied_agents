@@ -4319,3 +4319,24 @@ block; folprop property predicates recover most hazard elections). Honest
 bound: on hs the class conjunct's marginal value at n=150 is 6.7 TSR, ns —
 report as "class predicates matter most where movers exist (oah pending)".
 Remaining: job 43461517 (oah/no_class, aff/geom_only, aff/no_exempt).
+
+## 2026-08-17 — VANILLA TIER (job 43386826) SCORED: tier is UNINFORMATIVE, dropped from paper
+
+V0 (vanilla pi0.5, no safety finetune, unfiltered) vs V1 (vanilla + ours-noGT),
+paired n=15/suite (1 ep/task x 5 tasks x L0-2):
+
+| suite | TSR V0->V1 | viol V0->V1 |
+|---|---|---|
+| obstacle_avoidance | 0.0 -> 0.0 | 6.7 -> 13.3 |
+| human_safety | 0.0 -> 6.7 | 0 -> 0 |
+| obstacle_avoidance_human | 0.0 -> 0.0 | 6.7 -> 0.0 |
+| affordance | 0.0 -> 0.0 | 0 -> 0 |
+
+VERDICT: the vanilla checkpoint is INCOMPETENT on LIBERO-Safety scenes (0% TSR
+everywhere; OOD objects/layouts vs its training mix). With no task competence to
+preserve and near-zero violation exposure (it rarely reaches hazards), the tier
+can neither demonstrate success-preservation nor violation reduction — all
+McNemar p=1. Pre-registered intent (big-margin V0-vs-V1 table) is unreachable on
+this policy; scaling n would only tighten 0-vs-0. DECISION: drop the vanilla
+tier from the paper; the safety-finetuned checkpoint remains the only policy
+tier (already the benchmark authors' protocol). No further GPU spend here.
