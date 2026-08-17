@@ -4308,3 +4308,14 @@ Honest reporting: if oah/no_class is also null, the no_class row is reported as
 
 Remaining ablation arms: oah/no_class, aff/geom_only, aff/no_exempt (job 43461517).
 fol_ablation_scores.json updated in this commit.
+
+## 2026-08-17 — FOL ABLATION: job 43461516 COMPLETE — hs arms FINAL
+
+hs/geom_only FINAL n=150: 88.7 -> 68.7 TSR (pS=5.3e-06, 37:7), viol 0->0.
+hs/no_class  FINAL n=150: 88.7 -> 82.0 TSR (pS=0.099, 20:10), viol 0->0 —
+directional but NOT significant; the predicted violation increase did not
+materialize (hs violations stay 0 with or without the PROTECTED|MOVING
+block; folprop property predicates recover most hazard elections). Honest
+bound: on hs the class conjunct's marginal value at n=150 is 6.7 TSR, ns —
+report as "class predicates matter most where movers exist (oah pending)".
+Remaining: job 43461517 (oah/no_class, aff/geom_only, aff/no_exempt).
