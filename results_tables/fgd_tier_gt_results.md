@@ -4287,3 +4287,24 @@ hazard out of the guard set. (2) no_exempt reproduces the predicted
 target-guarding paralysis (oa -28.7 TSR at flat violations). Every conjunct
 tested so far carries significant value at n=150 paired. Remaining: oah/hs
 no_class, aff arms (jobs 43461516/17).
+
+## 2026-08-17 — FOL ABLATION JOB 2/3 COMPLETE (43461516): hs cells final
+
+Scored with vlm_pipeline/score_fol_ablations.py (same pairing/selfcheck as dd74b92).
+Updates vs the interim entry:
+
+| arm | n | TSR inc->abl | viol | pS (disc) |
+|---|---|---|---|---|
+| hs/geom_only | 150 (final, was 135 interim) | 88.7 -> 68.7 | 0 -> 0 | 5.3e-06 (37:7) |
+| hs/no_class  | 150 | 88.7 -> 82.0 | 0 -> 0 | 0.0987 (20:10) |
+
+Reading: hs/geom_only final confirms the -20pt collapse. hs/no_class trends
+negative (-6.7 TSR, 20:10 discordant) but does NOT reach significance at n=150 —
+consistent with hs having zero violations to begin with: on hs the class
+predicates mostly help TSR via cleaner guard sets, not violation prevention. The
+class-predicate violation claim rides on oah/no_class (job 43461517, pending).
+Honest reporting: if oah/no_class is also null, the no_class row is reported as
+"bounds the conjunct's value" per the pre-registered plan.
+
+Remaining ablation arms: oah/no_class, aff/geom_only, aff/no_exempt (job 43461517).
+fol_ablation_scores.json updated in this commit.
