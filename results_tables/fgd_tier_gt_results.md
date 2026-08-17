@@ -4262,3 +4262,28 @@ Consistent with frozen posthoc macro 52.5/1.2. Notable: posthoc oa TSR 74.7 ≥ 
 70.3 on this protocol (single-sample projection barely taxes oa), but hs collapses
 to 43.7 (vs base 83.7) — the freeze tax lives in hs/oah/aff, same shape as before.
 Paired stats deferred until GT/noGT arms land (same init states enable exact pairing).
+
+## ★★ 2026-08-17 — FOL ABLATION INTERIM (job 43461515 COMPLETE; 43461516 mid-run): every landed arm degrades, pre-registered story CONFIRMED
+
+Scorer: vlm_pipeline/score_fol_ablations.py (selfcheck reproduces frozen board
+from raw JSONLs). Pairing 1:1 by (level, task, ep) vs frozen incumbent noGT
+cells; incumbent columns below are the PAIRED SUBSET (hence oah 56.0 not the
+n=750 pooled 58.9; hs subset 91.1 vs pooled 88.7). McNemar exact.
+
+| arm | n | TSR inc->abl | viol inc->abl | pS (disc) | pV (disc) |
+|---|---|---|---|---|---|
+| oa/geom_only  | 150 | 68.7 -> 44.0 | 0.7 -> 4.7 | 1.2e-06 (48:11) | 0.031 (0:6) |
+| oa/no_exempt  | 150 | 68.7 -> 40.0 | 0.7 -> 1.3 | 1.8e-08 (52:9) | 1 (1:2) |
+| oah/geom_only | 150 | 56.0 -> 39.3 | 1.3 -> 0.7 | 2.5e-04 (35:10) | 1 |
+| oah/no_exempt | 150 | 56.0 -> 39.3 | 1.3 -> 0.7 | 6.2e-04 (38:13) | 1 |
+| hs/geom_only  | 135* | 91.1 -> 71.1 | 0 -> 0 | 7.4e-06 (32:5) | 1 |
+
+(*hs/geom_only still accruing on 43461516 — interim, not final.)
+
+Reading: (1) geom_only collapses TSR on ALL suites AND is the only arm that
+RAISES violations (oa 0.7->4.7, one-sided 0:6 discordant p=0.031) — pure
+geometric top-k both freezes the arm on false guards and displaces the true
+hazard out of the guard set. (2) no_exempt reproduces the predicted
+target-guarding paralysis (oa -28.7 TSR at flat violations). Every conjunct
+tested so far carries significant value at n=150 paired. Remaining: oah/hs
+no_class, aff arms (jobs 43461516/17).

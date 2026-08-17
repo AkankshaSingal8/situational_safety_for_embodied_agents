@@ -1,19 +1,107 @@
 [
  {
   "arm": "oa/geom_only",
-  "status": "PENDING"
+  "status": "COMPLETE",
+  "incumbent": {
+   "n": 150,
+   "tsr": 68.66666666666667,
+   "viol": 0.6666666666666666,
+   "safe_sr": 68.66666666666667
+  },
+  "ablated": {
+   "n": 150,
+   "tsr": 44.0,
+   "viol": 4.666666666666667,
+   "safe_sr": 42.666666666666664
+  },
+  "mcnemar_success": {
+   "inc_only": 48,
+   "abl_only": 11,
+   "p": 1.2416282261784658e-06
+  },
+  "mcnemar_violation": {
+   "inc_only": 0,
+   "abl_only": 6,
+   "p": 0.03125
+  }
  },
  {
   "arm": "oa/no_exempt",
-  "status": "PENDING"
+  "status": "COMPLETE",
+  "incumbent": {
+   "n": 150,
+   "tsr": 68.66666666666667,
+   "viol": 0.6666666666666666,
+   "safe_sr": 68.66666666666667
+  },
+  "ablated": {
+   "n": 150,
+   "tsr": 40.0,
+   "viol": 1.3333333333333333,
+   "safe_sr": 40.0
+  },
+  "mcnemar_success": {
+   "inc_only": 52,
+   "abl_only": 9,
+   "p": 1.8028023783880618e-08
+  },
+  "mcnemar_violation": {
+   "inc_only": 1,
+   "abl_only": 2,
+   "p": 1.0
+  }
  },
  {
   "arm": "oah/geom_only",
-  "status": "PENDING"
+  "status": "COMPLETE",
+  "incumbent": {
+   "n": 150,
+   "tsr": 56.0,
+   "viol": 1.3333333333333333,
+   "safe_sr": 55.333333333333336
+  },
+  "ablated": {
+   "n": 150,
+   "tsr": 39.333333333333336,
+   "viol": 0.6666666666666666,
+   "safe_sr": 38.666666666666664
+  },
+  "mcnemar_success": {
+   "inc_only": 35,
+   "abl_only": 10,
+   "p": 0.00024708778460080956
+  },
+  "mcnemar_violation": {
+   "inc_only": 2,
+   "abl_only": 1,
+   "p": 1.0
+  }
  },
  {
   "arm": "oah/no_exempt",
-  "status": "PENDING"
+  "status": "COMPLETE",
+  "incumbent": {
+   "n": 150,
+   "tsr": 56.0,
+   "viol": 1.3333333333333333,
+   "safe_sr": 55.333333333333336
+  },
+  "ablated": {
+   "n": 150,
+   "tsr": 39.333333333333336,
+   "viol": 0.6666666666666666,
+   "safe_sr": 39.333333333333336
+  },
+  "mcnemar_success": {
+   "inc_only": 38,
+   "abl_only": 13,
+   "p": 0.000621043456227686
+  },
+  "mcnemar_violation": {
+   "inc_only": 2,
+   "abl_only": 1,
+   "p": 1.0
+  }
  },
  {
   "arm": "oah/no_class",
@@ -21,7 +109,29 @@
  },
  {
   "arm": "hs/geom_only",
-  "status": "PENDING"
+  "status": "COMPLETE",
+  "incumbent": {
+   "n": 135,
+   "tsr": 91.11111111111111,
+   "viol": 0.0,
+   "safe_sr": 91.11111111111111
+  },
+  "ablated": {
+   "n": 135,
+   "tsr": 71.11111111111111,
+   "viol": 0.0,
+   "safe_sr": 71.11111111111111
+  },
+  "mcnemar_success": {
+   "inc_only": 32,
+   "abl_only": 5,
+   "p": 7.427530363202114e-06
+  },
+  "mcnemar_violation": {
+   "inc_only": 0,
+   "abl_only": 0,
+   "p": 1.0
+  }
  },
  {
   "arm": "hs/no_class",
