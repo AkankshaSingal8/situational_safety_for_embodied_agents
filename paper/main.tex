@@ -35,6 +35,13 @@ When a frozen vision-language-action (VLA) flow policy must avoid a hazard its d
 \section{Introduction}
 \label{sec:intro}
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig_teaser.pdf}
+\caption{Same frozen policy, same initial state, one violates. Top: the base $\pi_{0.5}$ policy drives its gripper into the hand-attached bottle (clearance $-0.022$\,m at $t{=}573$) and times out. Bottom: with our training-free, no-ground-truth filter the same policy takes a different approach path, keeps clearance positive throughout, and completes the task in 510 steps. LIBERO-Safety, paired initial states; the clearance traces are Fig.~\ref{fig:filmstrip}.}
+\label{fig:teaser}
+\end{figure*}
+
 Flow-matching VLA policies such as $\pi_{0.5}$ decode an action chunk by integrating a learned velocity field from Gaussian noise. They imitate expert demonstrations superbly and unsafely: on SafeLIBERO --- LIBERO tasks with a hazardous distractor placed near the reach path --- the frozen policy collides in up to 86--88\% of episodes, and on LIBERO-Safety it drives its gripper through the benchmark's contact predicates in up to 5.3\% of timestep-scored episodes while a human hand shares the workspace. The prevailing fix is \emph{repair}: intercept the policy's action (after generation, or at intermediate denoising steps) and project it onto a control-barrier-function (CBF) safe set. Repair is attractive because it is training-free and certificate-friendly. This paper argues, with paired evidence, that it is also the wrong intervention point.
 
 \textbf{Pillar 1: the repair tax.} We run five enforcement mechanisms head-to-head on identical seeds, identical hazard identity, and an identical safety certificate, so that the enforcement operator is the \emph{only} difference (Sec.~\ref{sec:pilots}). On obstacle-near-path dev cells, in-denoising CBF projection --- our own strongest tuned variant of the state-of-the-art recipe \cite{sota2607} --- achieves 32.5\% task success. Merely \emph{deleting the repair} and keeping best-of-$K$ noise-seed selection lifts success to 55.0\%; first-order noise-space search reaches 67.5\% (paired exact McNemar $p=0.0066$) with collisions statistically unchanged. The projection's off-manifold corrections are the success killer: they produce action sequences the policy never learned to continue.
@@ -278,6 +285,13 @@ Ours (no-GT) & 68.7/\textbf{0.7} & \textbf{86.9}/0 & \textbf{58.9}/\textbf{1.7} 
 \textbf{Headline: both dedicated shields lose $15$--$20$ macro TSR to us at equal-or-lower violations.} Table~\ref{tab:lsboard} and Fig.~\ref{fig:lsboard}: macro TSR 67.6 (no-GT) and 69.6 (GT) vs.\ 52.5 (post-hoc) and 50.0 (in-denoising), at macro violations 0.6/1.5 vs.\ 1.2/0.5. The separator is the human-safety suite: both shields \emph{halve} success (37.3/32.7 vs.\ baseline 85.8; paired McNemar vs.\ ours $p=1.8\times10^{-16}$ and $3.2\times10^{-19}$) because an always-on keep-out around a hand freezes the arm out of its workspace, while duality routing plus abstention keeps the filter disengaged on benign hand scenes --- safety by freezing versus safety while moving. On the static-obstacle suite the shields are competitive; the architecture gap is entirely where hazards are human or absent.
 
 \textbf{Against the unfiltered baseline: violations cut 12:1 at TSR parity.} Pooled over 750 correctly-paired no-GT episodes, violation discordants are 12:1 in our favor (exact $p=0.0034$) at TSR parity on oa/hs/aff ($p=0.32/0.89/1.0$; aff parity re-confirmed at $n{=}450$, $p=0.46$, surviving its winner's-curse audit). The GT tier goes further on obstacle avoidance: 77.8 vs.\ 73.6 baseline TSR at $n{=}450$ ($p=0.045$) --- the filter \emph{helps} task success while filtering.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/fig_filmstrip.pdf}
+\caption{The certificate at work over one episode (the pair of Fig.~\ref{fig:teaser}). Clearance $h(t)$ to the hand-attached hazard: the unfiltered base policy (gray) crosses $h{=}0$ at $t{=}136$ and spends 215 of 600 steps in violation; ours (blue) dips to $+0.021$\,m at its closest approach and never crosses, completing the task at $t{=}510$.}
+\label{fig:filmstrip}
+\end{figure}
 
 \textbf{Honest disclosure: the oah freeze tax.} On the dynamic-intruder suite our TSR is significantly below baseline (58.9 vs.\ 69.3 no-GT, $p=0.0045$; 63.2 GT, $p=0.029$): close-range approach gating around a moving hand still over-triggers. The baseline's higher oah success is partly bought with violations (5.3\% of its episodes vs.\ our 1.7--1.9\%). We report this as the price of the guard rather than tune it away; liveness refinements are under pre-registered evaluation.
 
