@@ -17,7 +17,7 @@
   "mcnemar_success": {
    "inc_only": 48,
    "abl_only": 11,
-   "p": 1.2416282261784658e-06
+   "p": 1.2416282261784656e-06
   },
   "mcnemar_violation": {
    "inc_only": 0,
@@ -105,7 +105,29 @@
  },
  {
   "arm": "oah/no_class",
-  "status": "PENDING"
+  "status": "COMPLETE",
+  "incumbent": {
+   "n": 150,
+   "tsr": 56.0,
+   "viol": 1.3333333333333333,
+   "safe_sr": 55.333333333333336
+  },
+  "ablated": {
+   "n": 150,
+   "tsr": 58.666666666666664,
+   "viol": 6.0,
+   "safe_sr": 55.333333333333336
+  },
+  "mcnemar_success": {
+   "inc_only": 24,
+   "abl_only": 28,
+   "p": 0.6778086391424751
+  },
+  "mcnemar_violation": {
+   "inc_only": 1,
+   "abl_only": 8,
+   "p": 0.03906249999999996
+  }
  },
  {
   "arm": "hs/geom_only",
@@ -161,10 +183,54 @@
  },
  {
   "arm": "aff/geom_only",
-  "status": "PENDING"
+  "status": "COMPLETE",
+  "incumbent": {
+   "n": 150,
+   "tsr": 58.0,
+   "viol": 0.0,
+   "safe_sr": 58.0
+  },
+  "ablated": {
+   "n": 150,
+   "tsr": 32.0,
+   "viol": 0.0,
+   "safe_sr": 32.0
+  },
+  "mcnemar_success": {
+   "inc_only": 46,
+   "abl_only": 7,
+   "p": 4.0031961745512027e-08
+  },
+  "mcnemar_violation": {
+   "inc_only": 0,
+   "abl_only": 0,
+   "p": 1.0
+  }
  },
  {
   "arm": "aff/no_exempt",
-  "status": "PENDING"
+  "status": "COMPLETE",
+  "incumbent": {
+   "n": 150,
+   "tsr": 58.0,
+   "viol": 0.0,
+   "safe_sr": 58.0
+  },
+  "ablated": {
+   "n": 150,
+   "tsr": 40.0,
+   "viol": 0.0,
+   "safe_sr": 40.0
+  },
+  "mcnemar_success": {
+   "inc_only": 38,
+   "abl_only": 11,
+   "p": 0.00014197068519905732
+  },
+  "mcnemar_violation": {
+   "inc_only": 0,
+   "abl_only": 0,
+   "p": 1.0
+  }
  }
 ]

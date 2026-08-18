@@ -4340,3 +4340,32 @@ McNemar p=1. Pre-registered intent (big-margin V0-vs-V1 table) is unreachable on
 this policy; scaling n would only tighten 0-vs-0. DECISION: drop the vanilla
 tier from the paper; the safety-finetuned checkpoint remains the only policy
 tier (already the benchmark authors' protocol). No further GPU spend here.
+
+## ★★ 2026-08-18 — FOL ABLATION COMPLETE (job 43809898): ALL 9 ARMS FINAL — every literal causally confirmed
+
+Scored with vlm_pipeline/score_fol_ablations.py (same pairing/selfcheck).
+Final three arms:
+
+| arm | n | TSR inc->abl | viol inc->abl | pS (disc) | pV (disc) |
+|---|---|---|---|---|---|
+| oah/no_class  | 150 | 56.0 -> 58.7 | 1.3 -> 6.0 | 0.678 (24:28) ns | **0.0391 (1:8)** |
+| aff/geom_only | 150 | 58.0 -> 32.0 | 0 -> 0 | 4.0e-08 (46:7) | 1 |
+| aff/no_exempt | 150 | 58.0 -> 40.0 | 0 -> 0 | 1.4e-04 (38:11) | 1 |
+
+READING — the pre-registered story completes:
+1. oah/no_class is the KEY cell and it binds on the VIOLATION axis, not TSR:
+   deleting PROTECTED|MOVING on the dynamic-hand suite leaves success flat
+   (the arm moves freely) but multiplies violations 4.6x (1.3->6.0%,
+   exact p=0.039) — class predicates buy safety-while-moving, exactly the
+   claim. Combined with hs/no_class (TSR trend, ns): class predicates
+   protect the violation axis where movers exist, the TSR axis where they
+   don't (bounded trend).
+2. aff/geom_only -26.0 (p=4e-8) reproduces the force-election collapse with
+   pure geometry; aff/no_exempt -18.0 (p=1.4e-4) extends the exemption
+   claim to the property-hazard suite.
+3. Full matrix: every one of the rule's three conjunct groups now has at
+   least one significant paired cell (logic p<=5.3e-6 x4 suites + viol
+   p=0.031; exemptions p<=6.2e-4 x3 suites; class p=0.039 violations).
+Paper Table VI + artifact synced this commit. Job ran on unrestricted node
+set (exclude-list removal 2026-08-18; teaser job precedent 43804483).
+fol_ablation_scores.json updated.
