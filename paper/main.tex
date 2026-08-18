@@ -189,6 +189,13 @@ Repulsor ($\eta{=}0.01$) & 37.5/42.5 & 50.0 & no-col.\ 12v2, $p=0.013$ \\
 \section{Experiments II: Identification}
 \label{sec:e3}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/fig_vlm_id_accuracy.pdf}
+\caption{Hazard-identification accuracy on the 19-scene SafeLIBERO benchmark as a function of how much authority the VLM is given. Whole-scene VLM identification tops out at 84\% even at API strength (local models: 18--64\%); letting a VLM \emph{compose} the rule at runtime is worse than the fixed rule; grounding Eq.~\eqref{eq:fol}'s predicates with cached VLM priors reaches 84\% top-1 and \textbf{100\% top-2 guard-set recall} --- the deployed configuration --- matching the hand-coded predicate table it replaces.}
+\label{fig:vlmacc}
+\end{figure}
+
 \begin{table}[t]
 \centering
 \caption{E3 identification swap: enforcement fixed (ramp, $K{=}8$, $r{=}0.09$, corridor), \emph{only} the identity source varies. Spatial, $n{=}40$/arm/level, same seeds. Paired McNemar GT vs.\ FOL: L1 TSR 4/7 discordant, $p=0.55$; L1 CAR 0/2, $p=0.50$; L2 TSR 2/7, $p=0.18$; L2 CAR 4/4, $p=1.0$.}
@@ -204,7 +211,7 @@ FOL rule (no priors) & 62.5/32.5 & 90.0/40.0 \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:e3}: GT-free identity is statistically indistinguishable from ground-truth identity with enforcement held fixed (all $p\ge0.18$), and every trend favors the FOL rule (pooled discordant episodes 12:6 in its favor). The no-GT identity tier carries no measurable cost; the residual no-GT tax is \emph{geometric} (localization error), not semantic. Offline, the same rule wins on LIBERO-Safety (obstacle 12/13 top-1/top-2 vs.\ 9/11 for the VLM-prior scorer, human 12/12), because VLM hazard priors pull semantically-hazardous \emph{names} (ketchup, tomato sauce) above the benchmark's designated obstacle --- geometry-plus-mention logic matches the benchmark label. And the FOL-VLM predicate-grounded arm reproduces the FOL arm \emph{exactly} on every scene, establishing generality at zero accuracy cost. A deliberate-corruption study shows the fail direction: forcing the second-best identity pick costs CAR (70$\to$25), not TSR --- identification errors fail \emph{unsafe}, which motivates the documented top-2 guard-set mode (19/19 recall under every prior corruption, at $-12.5$ TSR when engaged unnecessarily). These identity-swap results are scoped to the Spatial cells reported; the causal role of each rule clause is established separately, at scale, by the paired ablations of Sec.~\ref{sec:ablation}.
+Table~\ref{tab:e3}: GT-free identity is statistically indistinguishable from ground-truth identity with enforcement held fixed (all $p\ge0.18$), and every trend favors the FOL rule (pooled discordant episodes 12:6 in its favor). The no-GT identity tier carries no measurable cost; the residual no-GT tax is \emph{geometric} (localization error), not semantic. Offline, the same rule wins on LIBERO-Safety (obstacle 12/13 top-1/top-2 vs.\ 9/11 for the VLM-prior scorer, human 12/12), because VLM hazard priors pull semantically-hazardous \emph{names} (ketchup, tomato sauce) above the benchmark's designated obstacle --- geometry-plus-mention logic matches the benchmark label. And the FOL-VLM predicate-grounded arm reproduces the FOL arm \emph{exactly} on every scene, establishing generality at zero accuracy cost; Fig.~\ref{fig:vlmacc} places the same VLMs on an authority ladder --- deciding the scene, composing the rule, or grounding predicates --- and only the last reaches full guard-set recall. A deliberate-corruption study shows the fail direction: forcing the second-best identity pick costs CAR (70$\to$25), not TSR --- identification errors fail \emph{unsafe}, which motivates the documented top-2 guard-set mode (19/19 recall under every prior corruption, at $-12.5$ TSR when engaged unnecessarily). These identity-swap results are scoped to the Spatial cells reported; the causal role of each rule clause is established separately, at scale, by the paired ablations of Sec.~\ref{sec:ablation}.
 
 \section{Experiments III: SafeLIBERO Board}
 \label{sec:board}
