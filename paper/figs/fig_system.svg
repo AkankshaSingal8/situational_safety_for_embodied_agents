@@ -1,0 +1,207 @@
+<svg width="1500" height="640" viewBox="0 0 1500 640" xmlns="http://www.w3.org/2000/svg" style="display: block">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#1C232E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+    </marker>
+    <marker id="arrmut" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#8A93A0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+    </marker>
+    <marker id="arrteal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#0E7C66" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1500" height="640" fill="#FFFFFF"></rect>
+
+  <!-- ================= PANEL FRAMES ================= -->
+  <!-- (a) Identification -->
+  <rect x="196" y="46" width="400" height="470" rx="10" fill="#FAFBFC" stroke="#C9CFD6" stroke-width="1.5"></rect>
+  <text x="216" y="80" font-size="23" font-weight="700" fill="#1C232E">(a)&#8194;Hazard identification</text>
+  <text x="216" y="104" font-size="16.5" fill="#5A6472">once per episode &#183; no simulator state</text>
+
+  <!-- (b) Routing -->
+  <rect x="626" y="46" width="204" height="470" rx="10" fill="#FAFBFC" stroke="#C9CFD6" stroke-width="1.5"></rect>
+  <text x="644" y="80" font-size="23" font-weight="700" fill="#1C232E">(b)&#8194;Routing</text>
+  <text x="644" y="104" font-size="16.5" fill="#5A6472">three regimes</text>
+
+  <!-- (c) Enforcement -->
+  <rect x="858" y="46" width="398" height="470" rx="10" fill="#FAFBFC" stroke="#C9CFD6" stroke-width="1.5"></rect>
+  <text x="878" y="80" font-size="23" font-weight="700" fill="#1C232E">(c)&#8194;Noise-space enforcement</text>
+  <text x="878" y="104" font-size="16.5" fill="#5A6472">every replan &#183; frozen policy &#183; API-free</text>
+
+  <!-- (d) Certificate -->
+  <rect x="1286" y="46" width="200" height="470" rx="10" fill="#F4FAF8" stroke="#0E7C66" stroke-width="1.6"></rect>
+  <text x="1302" y="80" font-size="22" font-weight="700" fill="#0E7C66">(d)&#8194;Certificate</text>
+  <text x="1302" y="104" font-size="16.5" fill="#5A6472">checked on output</text>
+
+  <!-- ================= INPUT COLUMN ================= -->
+  <g>
+    <rect x="22" y="130" width="146" height="64" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+    <text x="95" y="157" font-size="18" font-weight="600" fill="#1C232E" text-anchor="middle">Instruction &#8467;</text>
+    <text x="95" y="180" font-size="15.5" fill="#5A6472" text-anchor="middle">&#8220;put the mug &#8230;&#8221;</text>
+
+    <rect x="22" y="216" width="146" height="64" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+    <text x="95" y="243" font-size="18" font-weight="600" fill="#1C232E" text-anchor="middle">RGB-D views</text>
+    <text x="95" y="266" font-size="15.5" fill="#5A6472" text-anchor="middle">+ proprioception</text>
+
+    <rect x="22" y="302" width="146" height="64" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+    <text x="95" y="329" font-size="18" font-weight="600" fill="#1C232E" text-anchor="middle">Object names</text>
+    <text x="95" y="352" font-size="15.5" fill="#5A6472" text-anchor="middle">symbolic list only</text>
+
+    <path d="M 168 162 L 192 162" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+    <path d="M 168 248 L 192 248" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+    <path d="M 168 334 L 192 334" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+  </g>
+
+  <!-- ================= (a) IDENTIFICATION INTERNALS ================= -->
+  <rect x="216" y="126" width="180" height="132" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+  <text x="306" y="150" font-size="16.5" font-weight="700" fill="#1C232E" text-anchor="middle">VLM predicates</text>
+  <text x="306" y="174" font-size="15.5" fill="#1C232E" text-anchor="middle" font-style="italic">Referenced(x)</text>
+  <text x="306" y="195" font-size="15.5" fill="#1C232E" text-anchor="middle" font-style="italic">Protected(x)</text>
+  <text x="306" y="216" font-size="15.5" fill="#1C232E" text-anchor="middle" font-style="italic">Hot(x)&#8194;Sharp(x)</text>
+  <text x="306" y="242" font-size="13.5" fill="#5A6472" text-anchor="middle">3 votes &#183; cached &#183; API-free</text>
+
+  <rect x="408" y="126" width="172" height="132" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+  <text x="494" y="150" font-size="16.5" font-weight="700" fill="#1C232E" text-anchor="middle">Geometric</text>
+  <text x="494" y="174" font-size="15.5" fill="#1C232E" text-anchor="middle" font-style="italic">NearestToPath(x)</text>
+  <text x="494" y="195" font-size="15.5" fill="#1C232E" text-anchor="middle" font-style="italic">Moving(x)</text>
+  <text x="494" y="221" font-size="14" fill="#5A6472" text-anchor="middle">open-vocab detection</text>
+  <text x="494" y="240" font-size="14" fill="#5A6472" text-anchor="middle">+ depth back-projection</text>
+
+  <!-- arrows into FOL box -->
+  <path d="M 306 258 L 306 286 L 382 286" stroke="#1C232E" stroke-width="1.6" fill="none"></path>
+  <path d="M 494 258 L 494 286 L 414 286" stroke="#1C232E" stroke-width="1.6" fill="none"></path>
+  <path d="M 398 286 L 398 302" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+
+  <!-- FOL rule box (the highlight) -->
+  <rect x="216" y="306" width="364" height="118" rx="8" fill="#FFF6EF" stroke="#C2410C" stroke-width="2"></rect>
+  <text x="398" y="335" font-size="18" font-weight="700" fill="#C2410C" text-anchor="middle">Three-literal election rule</text>
+  <text x="398" y="364" font-size="17.5" fill="#1C232E" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif">Hazard(x) := Protected(x) &#8744; Moving(x) &#8744;</text>
+  <text x="398" y="388" font-size="17.5" fill="#1C232E" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif">(Pred(x) &#8743; &#172;Mentioned(x) &#8743; &#172;Target(x))</text>
+  <text x="398" y="413" font-size="14.5" fill="#5A6472" text-anchor="middle">abstains when no object is elected</text>
+
+  <!-- guard set output -->
+  <path d="M 398 424 L 398 440" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+  <rect x="256" y="444" width="284" height="56" rx="7" fill="#FFFFFF" stroke="#1C232E" stroke-width="1.5"></rect>
+  <text x="398" y="468" font-size="17.5" font-weight="600" fill="#1C232E" text-anchor="middle">Guard set</text>
+  <text x="398" y="490" font-size="15" fill="#5A6472" text-anchor="middle">position &#183; extent &#183; corridor anchors</text>
+
+  <!-- arrow (a) -> (b) -->
+  <path d="M 540 472 L 604 472 L 604 281 L 622 281" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+
+  <!-- ================= (b) ROUTING INTERNALS ================= -->
+  <rect x="644" y="140" width="168" height="90" rx="7" fill="#FFFFFF" stroke="#1C232E" stroke-width="1.6"></rect>
+  <text x="728" y="168" font-size="18" font-weight="700" fill="#1C232E" text-anchor="middle">Avoid</text>
+  <text x="728" y="192" font-size="14.5" fill="#5A6472" text-anchor="middle">geometric hazard</text>
+  <text x="728" y="212" font-size="14.5" fill="#5A6472" text-anchor="middle">off the task path</text>
+
+  <rect x="644" y="250" width="168" height="90" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+  <text x="728" y="278" font-size="18" font-weight="700" fill="#1C232E" text-anchor="middle">Disengage</text>
+  <text x="728" y="302" font-size="14.5" fill="#5A6472" text-anchor="middle" font-style="italic">Protected &#8743; Referenced</text>
+  <text x="728" y="322" font-size="14.5" fill="#5A6472" text-anchor="middle">handover: keep-out off</text>
+
+  <rect x="644" y="360" width="168" height="90" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+  <text x="728" y="388" font-size="18" font-weight="700" fill="#1C232E" text-anchor="middle">Refuse</text>
+  <text x="728" y="412" font-size="14.5" fill="#5A6472" text-anchor="middle">the instruction is the</text>
+  <text x="728" y="432" font-size="14.5" fill="#5A6472" text-anchor="middle">hazard &#8594; no execution</text>
+
+  <text x="728" y="486" font-size="14.5" fill="#5A6472" text-anchor="middle">one predicate layer,</text>
+  <text x="728" y="505" font-size="14.5" fill="#5A6472" text-anchor="middle">three altitudes</text>
+
+  <!-- arrow (b) Avoid -> (c) -->
+  <path d="M 812 185 L 854 185" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+
+  <!-- ================= (c) ENFORCEMENT INTERNALS ================= -->
+  <!-- noise seeds row -->
+  <g fill="#1C232E" font-family="Georgia, 'Times New Roman', serif" font-style="italic">
+    <text x="962" y="150" font-size="17">z</text>
+    <text x="971" y="155" font-size="12">1</text>
+    <text x="982" y="150" font-size="17">&#8230;</text>
+    <text x="1002" y="150" font-size="17">z</text>
+    <text x="1011" y="155" font-size="12">K</text>
+    <text x="1026" y="150" font-size="17">~ N(0, I)</text>
+  </g>
+  <text x="1042" y="172" font-size="14.5" fill="#5A6472" text-anchor="middle">K = 8 seeds</text>
+  <circle cx="1180" cy="141" r="4.5" fill="#8A93A0"></circle>
+  <circle cx="1198" cy="149" r="4.5" fill="#8A93A0"></circle>
+  <circle cx="1184" cy="159" r="4.5" fill="#8A93A0"></circle>
+  <circle cx="1202" cy="133" r="4.5" fill="#8A93A0"></circle>
+  <path d="M 1057 178 L 1057 196" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+
+  <!-- frozen flow map -->
+  <rect x="878" y="200" width="358" height="74" rx="7" fill="#EEF1F5" stroke="#1C232E" stroke-width="1.6"></rect>
+  <g fill="#1C232E" font-weight="700">
+    <text x="900" y="229" font-size="18.5">Frozen &#960;</text>
+    <text x="991" y="234" font-size="13">0.5</text>
+    <text x="1020" y="229" font-size="18.5">flow map&#8194;F(z, obs)</text>
+  </g>
+  <text x="1057" y="254" font-size="14.5" fill="#5A6472" text-anchor="middle">10 Euler steps &#183; shared vision&#8211;language KV cache</text>
+  <rect x="1156" y="188" width="68" height="25" rx="12.5" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.3"></rect>
+  <text x="1190" y="205.5" font-size="13" font-weight="600" fill="#5A6472" text-anchor="middle" letter-spacing="0.5">FROZEN</text>
+
+  <!-- operators row -->
+  <path d="M 1057 274 L 1057 292" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+  <rect x="878" y="296" width="112" height="66" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+  <text x="934" y="323" font-size="16.5" font-weight="700" fill="#1C232E" text-anchor="middle">Select</text>
+  <text x="934" y="346" font-size="13.5" fill="#5A6472" text-anchor="middle">best-of-K</text>
+  <rect x="1002" y="296" width="112" height="66" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+  <text x="1058" y="323" font-size="16.5" font-weight="700" fill="#1C232E" text-anchor="middle">Tilt</text>
+  <text x="1058" y="346" font-size="13.5" fill="#5A6472" text-anchor="middle">FK reweighting</text>
+  <rect x="1126" y="296" width="112" height="66" rx="7" fill="#FFFFFF" stroke="#8A93A0" stroke-width="1.4"></rect>
+  <text x="1182" y="323" font-size="16.5" font-weight="700" fill="#1C232E" text-anchor="middle">Ascend</text>
+  <g fill="#5A6472">
+    <text x="1124" y="346" font-size="13.5">&#8711;</text>
+    <text x="1135" y="349" font-size="10.5" font-style="italic">z</text>
+    <text x="1144" y="346" font-size="13.5">prefix margin</text>
+  </g>
+
+  <text x="1057" y="390" font-size="15.5" fill="#1C232E" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-style="italic">search over the safe preimage&#8194;S = { z : M(F(z)) &#8805; 0 }</text>
+  <text x="1057" y="412" font-size="14" fill="#5A6472" text-anchor="middle">+ soft repulsor on the velocity target (obstacle-on-grasp)</text>
+
+  <!-- mini trajectory sketch -->
+  <g>
+    <rect x="898" y="424" width="318" height="78" rx="7" fill="#FFFFFF" stroke="#C9CFD6" stroke-width="1.2"></rect>
+    <circle cx="1092" cy="465" r="15" fill="#F6E3D7" stroke="#C2410C" stroke-width="1.6"></circle>
+    <circle cx="1092" cy="465" r="27" fill="none" stroke="#C2410C" stroke-width="1" stroke-dasharray="4 4"></circle>
+    <path d="M 916 486 C 972 478, 1024 490, 1084 494 S 1160 490, 1198 476" stroke="#B9C0C9" stroke-width="2" fill="none"></path>
+    <path d="M 916 476 C 972 460, 1036 468, 1092 465" stroke="#D9776B" stroke-width="2" fill="none"></path>
+    <path d="M 916 466 C 972 436, 1060 428, 1130 438 S 1180 452, 1198 458" stroke="#0E7C66" stroke-width="2.6" fill="none" marker-end="url(#arrteal)"></path>
+    <text x="1092" y="470" font-size="12.5" fill="#C2410C" text-anchor="middle">hazard</text>
+  </g>
+
+  <!-- arrow (c) -> (d) -->
+  <path d="M 1238 329 L 1282 329" stroke="#1C232E" stroke-width="1.6" fill="none" marker-end="url(#arr)"></path>
+
+  <!-- ================= (d) CERTIFICATE INTERNALS ================= -->
+  <rect x="1300" y="132" width="172" height="152" rx="7" fill="#FFFFFF" stroke="#0E7C66" stroke-width="1.6"></rect>
+  <text x="1386" y="160" font-size="17" font-weight="700" fill="#0E7C66" text-anchor="middle">DCBF chain</text>
+  <g fill="#1C232E" font-family="Georgia, 'Times New Roman', serif" font-style="italic">
+    <text x="1318" y="190" font-size="17">B</text>
+    <text x="1330" y="195" font-size="12">j</text>
+    <text x="1341" y="190" font-size="17">&#8805; (1&#8722;&#947;) B</text>
+    <text x="1418" y="195" font-size="12">j&#8722;1</text>
+  </g>
+  <text x="1386" y="218" font-size="14.5" fill="#5A6472" text-anchor="middle">re-checked on the</text>
+  <text x="1386" y="237" font-size="14.5" fill="#5A6472" text-anchor="middle">executed 5-step prefix</text>
+  <text x="1386" y="256" font-size="14.5" fill="#5A6472" text-anchor="middle">of the decoded chunk</text>
+  <text x="1386" y="276" font-size="14" font-style="italic" fill="#0E7C66" text-anchor="middle">mechanism-independent</text>
+
+  <path d="M 1386 284 L 1386 302" stroke="#0E7C66" stroke-width="1.8" fill="none" marker-end="url(#arrteal)"></path>
+
+  <rect x="1300" y="306" width="172" height="82" rx="7" fill="#0E7C66" stroke="#0E7C66" stroke-width="1.5"></rect>
+  <text x="1386" y="338" font-size="16.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Execute certified</text>
+  <text x="1386" y="362" font-size="16.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">prefix (5 actions)</text>
+
+  <text x="1386" y="420" font-size="14" fill="#5A6472" text-anchor="middle">all K infeasible &#8594;</text>
+  <text x="1386" y="439" font-size="14" fill="#5A6472" text-anchor="middle">argmax margin runs,</text>
+  <text x="1386" y="458" font-size="14" fill="#5A6472" text-anchor="middle">true margin reported</text>
+  <text x="1386" y="477" font-size="14" font-style="italic" fill="#5A6472" text-anchor="middle">(fail-visible)</text>
+
+  <!-- ================= REPLAN LOOP ================= -->
+  <path d="M 1472 347 L 1490 347 L 1490 576 L 95 576 L 95 370" stroke="#8A93A0" stroke-width="1.6" fill="none" stroke-dasharray="6 5" marker-end="url(#arrmut)"></path>
+  <text x="790" y="568" font-size="15.5" fill="#5A6472" text-anchor="middle">replan every 5 control steps &#183; fresh observation &#183; Moving(x) re-read &#183; guard set persists</text>
+
+  <!-- ================= FOOTER NOTES ================= -->
+  <text x="396" y="540" font-size="14.5" fill="#8A93A0" text-anchor="middle">&#9656; VLM answers local predicates; the logic decides</text>
+  <text x="1057" y="540" font-size="14.5" fill="#8A93A0" text-anchor="middle">&#9656; actions are always F(z*): exactly on the policy manifold</text>
+</svg>
