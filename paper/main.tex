@@ -223,6 +223,13 @@ Table~\ref{tab:e3}: GT-free identity is statistically indistinguishable from gro
 \section{Experiments III: SafeLIBERO Board}
 \label{sec:board}
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig_sl_board.pdf}
+\caption{The SafeLIBERO five-arm board (Table~\ref{tab:board}) as task success (top) over collision avoidance (bottom), eight cells. The no-GT column beats both the baseline and the SOTA reimplementation on both axes in 4/8 cells; every shield architecture collapses Long-horizon success.}
+\label{fig:slboard}
+\end{figure*}
+
 \begin{table*}[t]
 \centering
 \caption{Five-row architecture board: TSR/CAR (\%), $n{=}200$ per cell, one collision criterion ($>$1\,mm GT-hazard displacement), enforcement = composed in-denoising configuration (per-cell best config). \textbf{Bold}: beats \emph{both} the baseline and the SOTA reimplementation on that axis. $^\dagger$nominal (Fisher n.s., $p=0.64/0.69$). $^\ddagger$table-prior ablation 44.0/79.5; the VLM guards spillable food where the benchmark designates a book/mug (benchmark-definition divergence, Sec.~\ref{sec:limitations}).}
