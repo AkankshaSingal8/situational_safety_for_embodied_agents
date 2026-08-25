@@ -1,0 +1,27 @@
+=== CAVF OpenVLA smoke ===
+job_id=42157857 host=v010.ib.bridges2.psc.edu started=2026-07-12T14:58:10-04:00
+worktree=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/cavf-smoke-poc-20260712
+cavf-smoke-poc-20260712
+2efd40f
+python=/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/bin/python
+Python 3.10.20
+2026-07-12 14:59:09.366263: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-07-12 14:59:10.449832: I external/local_tsl/tsl/cuda/cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+2026-07-12 14:59:13.599081: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-07-12 14:59:13.615957: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-07-12 14:59:14.134024: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-07-12 14:59:15.410550: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+/ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/google/api_core/_python_version_support.py:273: FutureWarning: You are using a Python version (3.10.20) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
+  warnings.warn(message, FutureWarning)
+2026-07-12 14:59:40.543285: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /ocean/projects/cis250185p/asingal/envs/openvla_libero_merged/lib/python3.10/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+
+=== CAVF OpenVLA smoke exit status: 0 ===
+Driver log: /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/cavf-smoke-poc-20260712/cavf_static_smoke/logs/driver_42157857.log
+Results directory: /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/cavf-smoke-poc-20260712/cavf_static_smoke/openvla/results

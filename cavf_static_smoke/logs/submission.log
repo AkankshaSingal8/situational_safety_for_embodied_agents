@@ -1,0 +1,6 @@
+submitted_at=2026-07-12T14:54:48-04:00
+worktree=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/cavf-smoke-poc-20260712
+branch=cavf-smoke-poc-20260712
+commit=2efd40f
+script=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/cavf-smoke-poc-20260712/vlm_pipeline/slurm_cavf_openvla_smoke.sh
+slurm_response=42157857
