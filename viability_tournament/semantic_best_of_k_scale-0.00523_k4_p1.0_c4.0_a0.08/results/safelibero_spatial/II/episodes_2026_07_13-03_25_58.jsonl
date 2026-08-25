@@ -1,0 +1,8 @@
+{"task": 0, "ep": 0, "success": true, "collision": false, "steps": 103}
+{"task": 0, "ep": 1, "success": true, "collision": true, "steps": 197}
+{"task": 1, "ep": 0, "success": false, "collision": false, "steps": 300}
+{"task": 1, "ep": 1, "success": false, "collision": true, "steps": 300}
+{"task": 2, "ep": 0, "success": true, "collision": true, "steps": 173}
+{"task": 2, "ep": 1, "success": true, "collision": true, "steps": 153}
+{"task": 3, "ep": 0, "success": false, "collision": true, "steps": 300}
+{"task": 3, "ep": 1, "success": true, "collision": true, "steps": 188}
