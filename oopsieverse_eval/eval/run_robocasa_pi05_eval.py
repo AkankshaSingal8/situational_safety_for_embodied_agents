@@ -134,8 +134,23 @@ def build_observation(obs: dict, instruction: str) -> dict:
     wrist_img = image_tools.convert_to_uint8(
         image_tools.resize_with_pad(obs["wrist_image"], RESIZE_SIZE, RESIZE_SIZE)
     )
+    # BUG FIX (same root cause as GR00T's -- see run_robocasa_groot_eval.py's
+    # "BUG FIX" comment): obs["eef_pos"]/obs["eef_quat"] come from
+    # RoboCasaAdapter, which sets them from raw `robot0_eef_pos`/
+    # `robot0_eef_quat` -- the WORLD-frame eef pose. For PandaOmron (mobile
+    # base placed far from world origin in RoboCasa's large kitchen layouts),
+    # this was observed at ~[-2.33, -3.57, 1.30] on some layouts, off by
+    # several METERS from the small, arm-workspace-scale eef positions
+    # pi05_libero saw during LIBERO training (fixed-base robot, near origin).
+    # `robot0_base_to_eef_pos`/`robot0_base_to_eef_quat` (robosuite's own
+    # base-relative observables, available in `obs["raw"]`) match LIBERO's
+    # state distribution instead and must be used here.
     state = np.concatenate(
-        (obs["eef_pos"], quat2axisangle(obs["eef_quat"]), obs["gripper_qpos"])
+        (
+            np.asarray(obs["raw"]["robot0_base_to_eef_pos"], dtype=np.float32),
+            quat2axisangle(np.asarray(obs["raw"]["robot0_base_to_eef_quat"], dtype=np.float32)),
+            obs["gripper_qpos"],
+        )
     )
     return {
         "observation/image": img,
