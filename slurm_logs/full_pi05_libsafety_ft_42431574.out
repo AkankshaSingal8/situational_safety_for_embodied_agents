@@ -1,0 +1,46 @@
+=== [job 42431574] checkpoint=pi05_libero_safety suite=human_safety trials=3 (all_tasks) ===
+=== Starting server (pi05_libero_safety) in background, log=/tmp/libsafety_full_ft_server_42431574.log, pid=45672 ===
+=== Waiting for server to report listening ===
+ERROR: server process died during startup
+INFO:root:Loading model...
+INFO:2026-07-20 01:35:45,113:jax._src.xla_bridge:925: Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+INFO:jax._src.xla_bridge:Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+INFO:2026-07-20 01:35:45,114:jax._src.xla_bridge:925: Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+INFO:jax._src.xla_bridge:Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+INFO:absl:orbax-checkpoint version: 0.11.13
+INFO:absl:Created BasePyTreeCheckpointHandler: use_ocdbt=True, use_zarr3=False, pytree_metadata_options=PyTreeMetadataOptions(support_rich_types=False), array_metadata_store=<orbax.checkpoint._src.metadata.array_metadata_store.Store object at 0x153a8118e110>
+INFO:absl:Restoring checkpoint from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi05_libero_safety/params.
+INFO:absl:[thread=MainThread] Failed to get flag value for EXPERIMENTAL_ORBAX_USE_DISTRIBUTED_PROCESS_ID.
+INFO:absl:[process=0] /jax/checkpoint/read/bytes_per_sec: 1.3 GiB/s (total bytes: 6.2 GiB) (time elapsed: 4 seconds) (per-host)
+INFO:absl:Finished restoring checkpoint in 4.87 seconds from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi05_libero_safety/params.
+INFO:root:Norm stats not found in /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/assets/pi05_libero/physical-intelligence/libero, skipping.
+INFO:root:Loaded norm stats from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi05_libero_safety/assets/physical-intelligence/libero
+INFO:root:Creating server (host: w006.ib.bridges2.psc.edu, ip: 10.8.3.93)
+Traceback (most recent call last):
+  File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlsa-aegis/openpi/scripts/serve_policy.py", line 122, in <module>
+    main(tyro.cli(Args))
+  File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlsa-aegis/openpi/scripts/serve_policy.py", line 117, in main
+    server.serve_forever()
+  File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlsa-aegis/openpi/src/openpi/serving/websocket_policy_server.py", line 35, in serve_forever
+    asyncio.run(self.run())
+  File "/ocean/projects/cis250185p/asingal/envs/libsafety_openpi/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/ocean/projects/cis250185p/asingal/envs/libsafety_openpi/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/ocean/projects/cis250185p/asingal/envs/libsafety_openpi/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlsa-aegis/openpi/src/openpi/serving/websocket_policy_server.py", line 38, in run
+    async with _server.serve(
+  File "/ocean/projects/cis250185p/asingal/envs/libsafety_openpi/lib/python3.11/site-packages/websockets/asyncio/server.py", line 813, in __aenter__
+    return await self
+           ^^^^^^^^^^
+  File "/ocean/projects/cis250185p/asingal/envs/libsafety_openpi/lib/python3.11/site-packages/websockets/asyncio/server.py", line 831, in __await_impl__
+    server = await self.create_server
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/ocean/projects/cis250185p/asingal/envs/libsafety_openpi/lib/python3.11/asyncio/base_events.py", line 1536, in create_server
+    raise OSError(err.errno, msg) from None
+OSError: [Errno 98] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+=== Stopping server (pid=45672) ===

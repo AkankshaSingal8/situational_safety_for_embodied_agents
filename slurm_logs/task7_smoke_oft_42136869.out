@@ -1,0 +1,11 @@
+=== STEP: OpenVLA-OFT smoke test (human_safety) ===
+Using LIBERO constants:
+  NUM_ACTIONS_CHUNK = 8
+  ACTION_DIM = 7
+  PROPRIO_DIM = 8
+  ACTION_PROPRIO_NORMALIZATION_TYPE = bounds_q99
+If needed, manually set the correct constants in `prismatic/vla/constants.py`!
+Instantiating pretrained VLA policy...
+Loaded model: <class 'transformers_modules.moojink.openvla-7b-oft-finetuned-libero-spatial-object-goal-10.638918f3d1c2e43a39a8a20772bdb8b91835e4b7.modeling_prismatic.OpenVLAForActionPrediction'>
+oft openvla exit code: 1
+DONE oft_exit=1

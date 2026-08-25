@@ -75,6 +75,15 @@ class Args:
     # across all of them. --task_index is ignored when this is set.
     all_tasks: bool = False
     num_trials_per_task: int = 1  # trials (episodes) per task
+    # Index of the first episode's initial state to use (initial_states[episode_offset:episode_offset+num_trials_per_task]).
+    # Added to allow one-episode-per-subprocess invocation: on some suites
+    # (confirmed: obstacle_avoidance, affordance), reusing one env across
+    # multiple env.reset()/set_init_state() calls in the same process
+    # reliably SIGABRTs on the *second* episode (100% reproducible, always
+    # right after the first episode's video saves) -- a fresh env per
+    # episode (fresh subprocess + episode_offset) avoids it. Default 0
+    # preserves the original all-episodes-in-one-process behavior exactly.
+    episode_offset: int = 0
     num_steps_wait: int = 10  # no-op warmup steps before handing control to the policy
     max_steps: int = 300  # episode horizon
     checkpoint_name: str = ""  # e.g. "pi05_libero" or "pi0_libero" (for results-json bookkeeping only)
@@ -148,18 +157,22 @@ def eval_one_task(args: Args, task_suite, task_index: int, client, video_dir: pa
     logger.info(f"Task description: {task_description}")
 
     episode_results = []
-    for episode_idx in tqdm.tqdm(range(args.num_trials_per_task)):
+    for episode_idx in tqdm.tqdm(range(args.episode_offset, args.episode_offset + args.num_trials_per_task)):
         env.reset()
         action_plan = collections.deque()
         obs = env.set_init_state(initial_states[episode_idx])
 
         t, done, success = 0, False, False
+        collide_flag = False
         replay_images = []
 
         try:
             while t < args.max_steps + args.num_steps_wait:
                 if t < args.num_steps_wait:
-                    obs, _, done, _ = env.step(LIBERO_DUMMY_ACTION)
+                    obs, _, done, info = env.step(LIBERO_DUMMY_ACTION)
+                    cost = info.get("cost", {}) if info else {}
+                    if any(v for v in cost.values()):
+                        collide_flag = True
                     t += 1
                     continue
 
@@ -195,7 +208,10 @@ def eval_one_task(args: Args, task_suite, task_index: int, client, video_dir: pa
                     action_plan.extend(action_chunk[: args.replan_steps])
 
                 action = action_plan.popleft()
-                obs, _, done, _ = env.step(np.asarray(action).tolist())
+                obs, _, done, info = env.step(np.asarray(action).tolist())
+                cost = info.get("cost", {}) if info else {}
+                if any(v for v in cost.values()):
+                    collide_flag = True
                 if done:
                     success = True
                     break
@@ -213,15 +229,20 @@ def eval_one_task(args: Args, task_suite, task_index: int, client, video_dir: pa
                 "task_index": task_index,
                 "episode": episode_idx,
                 "success": success,
+                "collision": bool(collide_flag),
                 "num_steps": t,
                 "video": mp4_path,
                 "checkpoint": args.checkpoint_name,
             }
         )
-        logger.info(f"Episode {episode_idx}: success={success}, steps={t}")
+        logger.info(f"Episode {episode_idx}: success={success}, collision={collide_flag}, steps={t}")
 
     suffix = f"_{args.checkpoint_name}" if args.checkpoint_name else ""
-    out_path = results_dir / f"{args.task_suite_name}_task{task_index}{suffix}.json"
+    # Only append an episode-range tag when episode_offset is used (>0) --
+    # keeps the filename identical to the original convention for every
+    # existing call site (all default to episode_offset=0).
+    ep_tag = f"_ep{args.episode_offset}" if args.episode_offset > 0 else ""
+    out_path = results_dir / f"{args.task_suite_name}_task{task_index}{ep_tag}{suffix}.json"
     with open(out_path, "w") as f:
         json.dump(episode_results, f, indent=2)
     logger.info(f"Wrote results to {out_path}")

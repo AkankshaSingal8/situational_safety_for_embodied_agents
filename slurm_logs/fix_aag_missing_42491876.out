@@ -1,0 +1,7 @@
+=== Server ready after 15s ===
+=== task=10 episode=2 attempt=1 ===
+=== task=11 episode=2 attempt=1 ===
+=== task=13 episode=1 attempt=1 ===
+=== task=13 episode=2 attempt=1 ===
+=== Merging fixed episodes into the main affordance results file ===
+Final: 45 episodes in /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/results/affordance_all_tasks_pi05_libero_safety.json

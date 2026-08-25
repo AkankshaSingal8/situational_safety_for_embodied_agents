@@ -1,0 +1,7 @@
+=== [job 42431879] smoke test: AEGIS (ground-truth obstacle) on pi05_libero, suite=obstacle_avoidance task=0 ===
+=== Starting server (pi05_libero, off-the-shelf) in background, log=/tmp/libsafety_aegis_smoke_server_42431879.log, pid=62240 ===
+=== Waiting for server to report listening ===
+=== Server reported listening after 15s ===
+=== Running AEGIS client (task 0 only, 1 trial) ===
+=== Client exited with code 0 ===
+=== Stopping server (pid=62240) ===

@@ -1,0 +1,14 @@
+=== [job 42137054] checkpoint=pi05_libero suite=human_safety trials=3 ===
+=== Starting server (pi05_libero) in background, log=/tmp/libsafety_full_server_42137054.log ===
+=== Waiting for server to report listening (server_log=/tmp/libsafety_full_server_42137054.log) ===
+=== Server process died before reporting listening; dumping log ===
+INFO:root:Loading model...
+INFO:2026-07-11 08:34:03,451:jax._src.xla_bridge:925: Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+INFO:jax._src.xla_bridge:Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+INFO:2026-07-11 08:34:03,452:jax._src.xla_bridge:925: Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+INFO:jax._src.xla_bridge:Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+INFO:absl:orbax-checkpoint version: 0.11.13
+INFO:absl:Created BasePyTreeCheckpointHandler: use_ocdbt=True, use_zarr3=False, pytree_metadata_options=PyTreeMetadataOptions(support_rich_types=False), array_metadata_store=<orbax.checkpoint._src.metadata.array_metadata_store.Store object at 0x1536ff8b0850>
+INFO:absl:Restoring checkpoint from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi05_libero/params.
+INFO:absl:[thread=MainThread] Failed to get flag value for EXPERIMENTAL_ORBAX_USE_DISTRIBUTED_PROCESS_ID.
+libsafety_serve_openpi.sh: line 32:  9081 Killed                  python "${MAIN_REPO}/vlsa-aegis/openpi/scripts/serve_policy.py" --port="${PORT}" policy:checkpoint --policy.config="${POLICY_CONFIG}" --policy.dir="${LIBSAFETY_DIR}/checkpoints/${POLICY_CONFIG}"

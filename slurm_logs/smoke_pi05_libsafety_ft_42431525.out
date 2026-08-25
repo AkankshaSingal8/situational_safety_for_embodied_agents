@@ -1,0 +1,6 @@
+=== [job 42431525] smoke test: pi05_libero_safety (fine-tuned), suite=human_safety task=0 ===
+=== Starting server (pi05_libero_safety) in background, log=/tmp/libsafety_ft_smoke_server_42431525.log, pid=35344 ===
+=== Waiting for server to report listening ===
+ERROR: server process died during startup
+/var/spool/slurm/d/job42431525/slurm_script: line 46: python: command not found
+=== Stopping server (pid=35344) ===

@@ -1,0 +1,25 @@
+=== Starting server (pi05_libero) in background ===
+=== Waiting for server to report listening (server_log=/tmp/task8_server_42136843.log) ===
+=== Server reported listening after 131s ===
+=== Running client ===
+=== Client exited with code 0 ===
+=== Full server log follows ===
+INFO:root:Loading model...
+INFO:2026-07-11 07:27:57,527:jax._src.xla_bridge:925: Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+INFO:jax._src.xla_bridge:Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+INFO:2026-07-11 07:27:57,755:jax._src.xla_bridge:925: Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+INFO:jax._src.xla_bridge:Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+INFO:absl:orbax-checkpoint version: 0.11.13
+INFO:absl:Created BasePyTreeCheckpointHandler: use_ocdbt=True, use_zarr3=False, pytree_metadata_options=PyTreeMetadataOptions(support_rich_types=False), array_metadata_store=<orbax.checkpoint._src.metadata.array_metadata_store.Store object at 0x14a158cb1050>
+INFO:absl:Restoring checkpoint from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi05_libero/params.
+INFO:absl:[thread=MainThread] Failed to get flag value for EXPERIMENTAL_ORBAX_USE_DISTRIBUTED_PROCESS_ID.
+INFO:absl:[process=0] /jax/checkpoint/read/bytes_per_sec: 652.6 MiB/s (total bytes: 6.2 GiB) (time elapsed: 9 seconds) (per-host)
+INFO:absl:Finished restoring checkpoint in 9.80 seconds from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi05_libero/params.
+INFO:root:Norm stats not found in /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/assets/pi05_libero/physical-intelligence/libero, skipping.
+INFO:root:Loaded norm stats from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi05_libero/assets/physical-intelligence/libero
+INFO:root:Creating server (host: w007.ib.bridges2.psc.edu, ip: 10.8.3.94)
+INFO:websockets.server:server listening on 0.0.0.0:8000
+INFO:websockets.server:connection open
+INFO:openpi.serving.websocket_policy_server:Connection from ('127.0.0.1', 36942) opened
+INFO:openpi.serving.websocket_policy_server:Connection from ('127.0.0.1', 36942) closed
+=== Stopping server (pid=6676) ===

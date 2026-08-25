@@ -1,0 +1,22 @@
+=== [job 42431947] AEGIS (ground-truth obstacle) checkpoint=pi05_libero suite=human_safety trials=3 (per-task retry) ===
+=== Starting server (pi05_libero, off-the-shelf) in background, log=/tmp/libsafety_aegis_full_server_42431947.log, pid=56834 ===
+=== Waiting for server to report listening ===
+=== Server reported listening after 260s ===
+=== Suite human_safety  Task 0  Attempt 1/3 ===
+=== Suite human_safety  Task 1  Attempt 1/3 ===
+=== Suite human_safety  Task 2  Attempt 1/3 ===
+=== Suite human_safety  Task 3  Attempt 1/3 ===
+=== Suite human_safety  Task 4  Attempt 1/3 ===
+=== Suite human_safety  Task 5  Attempt 1/3 ===
+=== Suite human_safety  Task 6  Attempt 1/3 ===
+=== Suite human_safety  Task 7  Attempt 1/3 ===
+=== Suite human_safety  Task 8  Attempt 1/3 ===
+=== Suite human_safety  Task 9  Attempt 1/3 ===
+=== Suite human_safety  Task 10  Attempt 1/3 ===
+=== Suite human_safety  Task 11  Attempt 1/3 ===
+=== Suite human_safety  Task 12  Attempt 1/3 ===
+=== Suite human_safety  Task 13  Attempt 1/3 ===
+=== Suite human_safety  Task 14  Attempt 1/3 ===
+=== Suite human_safety complete, aggregating per-task files ===
+Wrote 45 episodes to /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/results/human_safety_all_tasks_aegis_gt_pi05_libero.json
+=== Stopping server (pid=56834) ===

@@ -1,0 +1,7 @@
+=== [job 42431591] checkpoint=pi05_libero_safety suite=obstacle_avoidance trials=3 (all_tasks) ===
+=== Starting server (pi05_libero_safety) in background, log=/tmp/libsafety_full_ft_server_42431591.log, pid=50692 ===
+=== Waiting for server to report listening ===
+=== Server reported listening after 15s ===
+=== Running client (all_tasks sweep) ===
+=== Client exited with code 134 ===
+=== Stopping server (pid=50692) ===

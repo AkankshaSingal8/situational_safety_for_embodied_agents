@@ -1,0 +1,38 @@
+=== STEP: base OpenVLA smoke test (human_safety) ===
+Using LIBERO constants:
+  NUM_ACTIONS_CHUNK = 8
+  ACTION_DIM = 7
+  PROPRIO_DIM = 8
+  ACTION_PROPRIO_NORMALIZATION_TYPE = bounds_q99
+If needed, manually set the correct constants in `prismatic/vla/constants.py`!
+Instantiating pretrained VLA policy...
+07/11 [06:35:47] WARNING  | >> vision_backbone  run_libsafety_eval_openvla.py:97
+                          has no                                                
+                          set_num_images_in_inp                                 
+                          ut() (base OpenVLA                                    
+                          modeling code) —                                      
+                          ignoring request to                                   
+                          set                                                   
+                          num_images_in_input=1                                 
+                          . This is                                             
+                          expected/harmless for                                 
+                          num_images_in_input=1                                 
+                          (base OpenVLA); if                                    
+                          you need >1 images                                    
+                          with a checkpoint                                     
+                          whose bundled                                         
+                          modeling code lacks                                   
+                          this method, this                                     
+                          shim will silently                                    
+                          no-op instead of                                      
+                          configuring it.                                       
+Loaded model: <class 'transformers_modules.openvla.openvla-7b.47a0ec7fc4ec123775a391911046cf33cf9ed83f.modeling_prismatic.OpenVLAForActionPrediction'>
+07/11 [06:38:16] INFO     | >> Auto-selected   run_libsafety_eval_openvla.py:164
+                          unnorm_key='libero_s                                  
+                          patial' (only key in                                  
+                          model.norm_stats)                                     
+                 INFO     | >> Using           run_libsafety_eval_openvla.py:231
+                          unnorm_key='libero_s                                  
+                          patial'                                               
+base openvla exit code: 1
+DONE base_exit=1

@@ -1,0 +1,5 @@
+RESULT max_abs_diff=0.001953125
+RESULT value_scale=0.9997613430023193 rel_diff=0.001953591236265551
+RESULT traced_shape=(1, 10, 32) eager_shape=(1, 10, 32)
+RESULT bf16_ulp_estimate=0.00781063549220562 threshold=0.01562127098441124
+RESULT PASS

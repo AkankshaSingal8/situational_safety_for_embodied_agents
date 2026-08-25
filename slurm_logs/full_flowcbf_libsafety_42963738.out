@@ -1,0 +1,18 @@
+=== [job 42963738] flow-CBF baseline suite=affordance (per-task retry) ===
+=== Suite affordance  Task 0  Attempt 1/3 ===
+=== Suite affordance  Task 1  Attempt 1/3 ===
+=== Suite affordance  Task 2  Attempt 1/3 ===
+=== Suite affordance  Task 3  Attempt 1/3 ===
+=== Suite affordance  Task 4  Attempt 1/3 ===
+=== Suite affordance  Task 5  Attempt 1/3 ===
+=== Suite affordance  Task 6  Attempt 1/3 ===
+=== Suite affordance  Task 7  Attempt 1/3 ===
+=== Suite affordance  Task 8  Attempt 1/3 ===
+=== Suite affordance  Task 9  Attempt 1/3 ===
+=== Suite affordance  Task 10  Attempt 1/3 ===
+=== Suite affordance  Task 11  Attempt 1/3 ===
+=== Suite affordance  Task 12  Attempt 1/3 ===
+=== Suite affordance  Task 13  Attempt 1/3 ===
+=== Suite affordance  Task 14  Attempt 1/3 ===
+=== Suite affordance complete, aggregating ===
+Wrote 45 episodes to /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/results/affordance_all_tasks_flowcbf_pi05_libero_safety.json

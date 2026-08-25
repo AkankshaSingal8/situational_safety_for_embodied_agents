@@ -1,0 +1,26 @@
+=== Starting server (pi0_libero) in background ===
+=== Waiting for server to report listening (server_log=/tmp/task8_server_42136892.log) ===
+=== Server reported listening after 66s ===
+=== Running client ===
+=== Client exited with code 0 ===
+=== Full server log follows ===
+INFO:root:Loading model...
+INFO:2026-07-11 07:33:56,767:jax._src.xla_bridge:925: Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+INFO:jax._src.xla_bridge:Unable to initialize backend 'rocm': module 'jaxlib.xla_extension' has no attribute 'GpuAllocatorConfig'
+INFO:2026-07-11 07:33:56,768:jax._src.xla_bridge:925: Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+INFO:jax._src.xla_bridge:Unable to initialize backend 'tpu': INTERNAL: Failed to open libtpu.so: libtpu.so: cannot open shared object file: No such file or directory
+INFO:absl:orbax-checkpoint version: 0.11.13
+INFO:absl:Created BasePyTreeCheckpointHandler: use_ocdbt=True, use_zarr3=False, pytree_metadata_options=PyTreeMetadataOptions(support_rich_types=False), array_metadata_store=<orbax.checkpoint._src.metadata.array_metadata_store.Store object at 0x152391d8cd10>
+INFO:absl:Restoring checkpoint from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi0_libero/params.
+INFO:absl:[thread=MainThread] Failed to get flag value for EXPERIMENTAL_ORBAX_USE_DISTRIBUTED_PROCESS_ID.
+INFO:absl:[process=0][thread=MainThread] No metadata found for any process_index, checkpoint_dir=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi0_libero/params. time elapsed=0.0008068084716796875 seconds. If the checkpoint does not contain jax.Array then it is expected. If checkpoint contains jax.Array then it should lead to an error eventually; if no error is raised then it is a bug.
+INFO:absl:[process=0] /jax/checkpoint/read/bytes_per_sec: 325.6 MiB/s (total bytes: 6.0 GiB) (time elapsed: 18 seconds) (per-host)
+INFO:absl:Finished restoring checkpoint in 18.97 seconds from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi0_libero/params.
+INFO:root:Norm stats not found in /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/assets/pi0_libero/physical-intelligence/libero, skipping.
+INFO:root:Loaded norm stats from /ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety/checkpoints/pi0_libero/assets/physical-intelligence/libero
+INFO:root:Creating server (host: w007.ib.bridges2.psc.edu, ip: 10.8.3.94)
+INFO:websockets.server:server listening on 0.0.0.0:8000
+INFO:websockets.server:connection open
+INFO:openpi.serving.websocket_policy_server:Connection from ('127.0.0.1', 54298) opened
+INFO:openpi.serving.websocket_policy_server:Connection from ('127.0.0.1', 54298) closed
+=== Stopping server (pid=23652) ===

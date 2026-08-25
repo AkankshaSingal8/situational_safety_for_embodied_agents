@@ -1,0 +1,8 @@
+=== Starting server (pi05_libero) in background ===
+=== Waiting for server to report listening (server_log=/tmp/task8_server_42136578.log) ===
+=== Server process died early; dumping log ===
+╭─ Unrecognized options ────────────────────────╮
+│ Unrecognized options: --port=8000             │
+│ ───────────────────────────────────────────── │
+│ For full helptext, run serve_policy.py --help │
+╰───────────────────────────────────────────────╯

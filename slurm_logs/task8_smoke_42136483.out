@@ -1,0 +1,19 @@
+=== Starting server (pi05_libero) in background ===
+=== Waiting for server to report listening (server_log=/tmp/task8_server_42136483.log) ===
+=== Server process died early; dumping log ===
+Traceback (most recent call last):
+  File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlsa-aegis/openpi/scripts/serve_policy.py", line 9, in <module>
+    from openpi.policies import policy_config as _policy_config
+  File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlsa-aegis/openpi/src/openpi/policies/policy_config.py", line 11, in <module>
+    from openpi.training import checkpoints as _checkpoints
+  File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlsa-aegis/openpi/src/openpi/training/checkpoints.py", line 16, in <module>
+    import openpi.training.data_loader as _data_loader
+  File "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlsa-aegis/openpi/src/openpi/training/data_loader.py", line 10, in <module>
+    import lerobot.common.datasets.lerobot_dataset as lerobot_dataset
+  File "/ocean/projects/cis250185p/asingal/envs/libsafety_openpi/lib/python3.11/site-packages/lerobot/common/datasets/lerobot_dataset.py", line 34, in <module>
+    from lerobot.common.datasets.compute_stats import aggregate_stats, compute_episode_stats
+  File "/ocean/projects/cis250185p/asingal/envs/libsafety_openpi/lib/python3.11/site-packages/lerobot/common/datasets/compute_stats.py", line 18, in <module>
+    from lerobot.common.datasets.utils import load_image_as_numpy
+  File "/ocean/projects/cis250185p/asingal/envs/libsafety_openpi/lib/python3.11/site-packages/lerobot/common/datasets/utils.py", line 28, in <module>
+    import jsonlines
+ModuleNotFoundError: No module named 'jsonlines'

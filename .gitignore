@@ -22,3 +22,7 @@ checkpoints/
 openvla_benchmark_smoke/
 pi05_benchmark_smoke/
 .worktrees/
+
+# SLURM stderr logs and rollout videos (large, regenerable)
+slurm_logs/*.err
+*_video_libsafety*/
