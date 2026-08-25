@@ -1,0 +1,497 @@
+2026-07-10 07:12:40,839 [INFO] Loading Qwen/Qwen2.5-VL-3B-Instruct onto available GPUs (4bit=False) ...
+2026-07-10 07:12:40,980 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-07-10 07:12:40,980 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-07-10 07:12:41,019 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:41,024 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:41,049 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:41,076 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:41,083 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:41,116 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:41,140 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:41,169 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/chat_template.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:41,174 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/chat_template.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:41,200 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:41,223 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/audio_tokenizer_config.json "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:41,268 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:41,348 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:41,354 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:41,462 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:41,487 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:41,497 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:41,519 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:41,526 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:41,586 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:41,596 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:41,628 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:41,658 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-07-10 07:12:42,291 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct "HTTP/1.1 200 OK"
+2026-07-10 07:12:42,319 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:42,345 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:42,373 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:42,379 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:42,410 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:42,453 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:42,480 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:42,486 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:42,756 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:42,763 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:42,796 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
+2026-07-10 07:12:42,821 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/model.safetensors.index.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:42,826 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/model.safetensors.index.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:42,860 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct/revision/main "HTTP/1.1 200 OK"
+Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]Fetching 2 files: 100%|██████████| 2/2 [00:00<00:00, 24385.49it/s]
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   0%|          | 1/824 [00:00<02:51,  4.79it/s]Loading weights:   0%|          | 4/824 [00:00<01:17, 10.59it/s]Loading weights:   3%|▎         | 21/824 [00:00<00:14, 56.15it/s]Loading weights:   5%|▍         | 39/824 [00:00<00:08, 90.78it/s]Loading weights:   6%|▋         | 52/824 [00:00<00:07, 101.15it/s]Loading weights:   8%|▊         | 65/824 [00:00<00:07, 107.91it/s]Loading weights:  11%|█         | 87/824 [00:00<00:05, 135.09it/s]Loading weights:  12%|█▏        | 102/824 [00:01<00:05, 128.79it/s]Loading weights:  15%|█▍        | 123/824 [00:01<00:04, 146.74it/s]Loading weights:  17%|█▋        | 139/824 [00:01<00:04, 140.94it/s]Loading weights:  19%|█▊        | 154/824 [00:01<00:04, 139.56it/s]Loading weights:  21%|██        | 169/824 [00:01<00:06, 94.10it/s] Loading weights:  22%|██▏       | 184/824 [00:01<00:06, 101.04it/s]Loading weights:  24%|██▍       | 197/824 [00:01<00:05, 106.41it/s]Loading weights:  26%|██▋       | 218/824 [00:02<00:04, 126.77it/s]Loading weights:  28%|██▊       | 232/824 [00:02<00:04, 128.33it/s]Loading weights:  30%|██▉       | 246/824 [00:02<00:04, 131.00it/s]Loading weights:  32%|███▏      | 267/824 [00:02<00:03, 148.68it/s]Loading weights:  34%|███▍      | 283/824 [00:02<00:03, 140.59it/s]Loading weights:  37%|███▋      | 302/824 [00:02<00:03, 148.89it/s]Loading weights:  39%|███▊      | 318/824 [00:02<00:03, 141.66it/s]Loading weights:  41%|████      | 339/824 [00:02<00:03, 152.39it/s]Loading weights:  43%|████▎     | 355/824 [00:02<00:03, 140.00it/s]Loading weights:  46%|████▌     | 375/824 [00:03<00:02, 150.08it/s]Loading weights:  47%|████▋     | 391/824 [00:03<00:03, 142.92it/s]Loading weights:  50%|████▉     | 409/824 [00:03<00:02, 147.31it/s]Loading weights:  51%|█████▏    | 424/824 [00:03<00:02, 146.66it/s]Loading weights:  57%|█████▋    | 466/824 [00:03<00:01, 219.80it/s]Loading weights:  63%|██████▎   | 522/824 [00:03<00:00, 314.19it/s]Loading weights:  70%|██████▉   | 576/824 [00:03<00:00, 374.03it/s]Loading weights:  77%|███████▋  | 634/824 [00:03<00:00, 429.87it/s]Loading weights:  84%|████████▍ | 692/824 [00:03<00:00, 468.15it/s]Loading weights:  91%|█████████ | 750/824 [00:04<00:00, 496.80it/s]Loading weights:  98%|█████████▊| 804/824 [00:04<00:00, 508.28it/s]Loading weights: 100%|██████████| 824/824 [00:04<00:00, 195.37it/s]
+2026-07-10 07:12:47,932 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-10 07:12:47,940 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/generation_config.json "HTTP/1.1 200 OK"
+2026-07-10 07:12:47,944 [INFO] Model ready: Qwen/Qwen2.5-VL-3B-Instruct
+ * Serving Flask app 'qwen_vlm_server'
+ * Debug mode: off
+2026-07-10 07:12:47,947 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5034
+ * Running on http://10.8.11.2:5034
+2026-07-10 07:12:47,948 [INFO] [33mPress CTRL+C to quit[0m
+2026-07-10 07:12:51,889 [INFO] 127.0.0.1 - - [10/Jul/2026 07:12:51] "GET /health HTTP/1.1" 200 -
+2026-07-10 07:14:13,134 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 397 chars in 12.1s
+2026-07-10 07:14:13,135 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:13] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:24,527 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 397 chars in 11.0s
+2026-07-10 07:14:24,529 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:24] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:34,795 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 342 chars in 9.9s
+2026-07-10 07:14:34,796 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:34] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:36,998 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 66 chars in 2.1s
+2026-07-10 07:14:36,998 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:36] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:39,371 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 75 chars in 2.3s
+2026-07-10 07:14:39,371 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:39] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:41,315 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 69 chars in 1.9s
+2026-07-10 07:14:41,316 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:41] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:43,191 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 65 chars in 1.8s
+2026-07-10 07:14:43,192 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:43] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:45,515 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.2s
+2026-07-10 07:14:45,516 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:45] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:45,825 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 8 chars in 0.3s
+2026-07-10 07:14:45,825 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:45] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:46,098 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 6 chars in 0.3s
+2026-07-10 07:14:46,098 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:46] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:46,408 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 4 chars in 0.3s
+2026-07-10 07:14:46,408 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:46] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:51,094 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 64 chars in 1.7s
+2026-07-10 07:14:51,094 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:51] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:54,993 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 70 chars in 1.7s
+2026-07-10 07:14:54,994 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:54] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:14:58,987 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 69 chars in 1.8s
+2026-07-10 07:14:58,988 [INFO] 127.0.0.1 - - [10/Jul/2026 07:14:58] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:16:47,171 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 575 chars in 14.9s
+2026-07-10 07:16:47,173 [INFO] 127.0.0.1 - - [10/Jul/2026 07:16:47] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:16:57,427 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 337 chars in 9.9s
+2026-07-10 07:16:57,428 [INFO] 127.0.0.1 - - [10/Jul/2026 07:16:57] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:17:12,255 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 575 chars in 14.5s
+2026-07-10 07:17:12,256 [INFO] 127.0.0.1 - - [10/Jul/2026 07:17:12] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:17:14,181 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 71 chars in 1.9s
+2026-07-10 07:17:14,182 [INFO] 127.0.0.1 - - [10/Jul/2026 07:17:14] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:17:16,643 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 75 chars in 2.4s
+2026-07-10 07:17:16,644 [INFO] 127.0.0.1 - - [10/Jul/2026 07:17:16] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:17:19,013 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 75 chars in 2.3s
+2026-07-10 07:17:19,014 [INFO] 127.0.0.1 - - [10/Jul/2026 07:17:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:17:19,323 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 4 chars in 0.3s
+2026-07-10 07:17:19,324 [INFO] 127.0.0.1 - - [10/Jul/2026 07:17:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:17:19,605 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 7 chars in 0.3s
+2026-07-10 07:17:19,605 [INFO] 127.0.0.1 - - [10/Jul/2026 07:17:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:17:19,918 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 4 chars in 0.3s
+2026-07-10 07:17:19,918 [INFO] 127.0.0.1 - - [10/Jul/2026 07:17:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:17:20,472 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 11 chars in 0.5s
+2026-07-10 07:17:20,473 [INFO] 127.0.0.1 - - [10/Jul/2026 07:17:20] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:08,487 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 339 chars in 10.2s
+2026-07-10 07:19:08,488 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:08] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:18,712 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 342 chars in 9.9s
+2026-07-10 07:19:18,713 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:18] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:29,509 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 342 chars in 10.4s
+2026-07-10 07:19:29,510 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:29] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:33,313 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 140 chars in 3.7s
+2026-07-10 07:19:33,313 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:33] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:35,438 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 95 chars in 2.1s
+2026-07-10 07:19:35,439 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:35] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:37,329 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 74 chars in 1.9s
+2026-07-10 07:19:37,330 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:37] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:39,148 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.8s
+2026-07-10 07:19:39,149 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:39] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:40,915 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.7s
+2026-07-10 07:19:40,916 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:40] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:43,239 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.2s
+2026-07-10 07:19:43,239 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:43] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:43,516 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 6 chars in 0.3s
+2026-07-10 07:19:43,516 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:43] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:43,830 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 5 chars in 0.3s
+2026-07-10 07:19:43,830 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:43] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:19:47,790 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.8s
+2026-07-10 07:19:47,791 [INFO] 127.0.0.1 - - [10/Jul/2026 07:19:47] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:21:32,825 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 330 chars in 9.8s
+2026-07-10 07:21:32,825 [INFO] 127.0.0.1 - - [10/Jul/2026 07:21:32] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:21:44,950 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 391 chars in 11.7s
+2026-07-10 07:21:44,951 [INFO] 127.0.0.1 - - [10/Jul/2026 07:21:44] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:21:56,662 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 389 chars in 11.3s
+2026-07-10 07:21:56,663 [INFO] 127.0.0.1 - - [10/Jul/2026 07:21:56] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:21:58,544 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 1.8s
+2026-07-10 07:21:58,545 [INFO] 127.0.0.1 - - [10/Jul/2026 07:21:58] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:22:00,906 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 69 chars in 2.2s
+2026-07-10 07:22:00,906 [INFO] 127.0.0.1 - - [10/Jul/2026 07:22:00] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:22:02,726 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 71 chars in 1.8s
+2026-07-10 07:22:02,727 [INFO] 127.0.0.1 - - [10/Jul/2026 07:22:02] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:22:05,346 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.5s
+2026-07-10 07:22:05,346 [INFO] 127.0.0.1 - - [10/Jul/2026 07:22:05] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:22:07,197 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 87 chars in 1.8s
+2026-07-10 07:22:07,197 [INFO] 127.0.0.1 - - [10/Jul/2026 07:22:07] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:22:07,568 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 3 chars in 0.4s
+2026-07-10 07:22:07,569 [INFO] 127.0.0.1 - - [10/Jul/2026 07:22:07] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:22:07,962 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 9 chars in 0.4s
+2026-07-10 07:22:07,962 [INFO] 127.0.0.1 - - [10/Jul/2026 07:22:07] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:22:12,024 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 70 chars in 1.8s
+2026-07-10 07:22:12,025 [INFO] 127.0.0.1 - - [10/Jul/2026 07:22:12] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:22:15,968 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 64 chars in 1.7s
+2026-07-10 07:22:15,968 [INFO] 127.0.0.1 - - [10/Jul/2026 07:22:15] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:22:19,836 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 1.7s
+2026-07-10 07:22:19,836 [INFO] 127.0.0.1 - - [10/Jul/2026 07:22:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:24:00,480 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 278 chars in 9.0s
+2026-07-10 07:24:00,481 [INFO] 127.0.0.1 - - [10/Jul/2026 07:24:00] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:24:09,387 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 278 chars in 8.5s
+2026-07-10 07:24:09,388 [INFO] 127.0.0.1 - - [10/Jul/2026 07:24:09] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:24:18,622 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 278 chars in 8.9s
+2026-07-10 07:24:18,623 [INFO] 127.0.0.1 - - [10/Jul/2026 07:24:18] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:24:20,661 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 65 chars in 2.0s
+2026-07-10 07:24:20,662 [INFO] 127.0.0.1 - - [10/Jul/2026 07:24:20] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:24:21,353 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 15 chars in 0.7s
+2026-07-10 07:24:21,353 [INFO] 127.0.0.1 - - [10/Jul/2026 07:24:21] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:24:21,638 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 6 chars in 0.3s
+2026-07-10 07:24:21,639 [INFO] 127.0.0.1 - - [10/Jul/2026 07:24:21] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:26:08,729 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 234 chars in 7.6s
+2026-07-10 07:26:08,729 [INFO] 127.0.0.1 - - [10/Jul/2026 07:26:08] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:26:16,589 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 234 chars in 7.5s
+2026-07-10 07:26:16,589 [INFO] 127.0.0.1 - - [10/Jul/2026 07:26:16] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:26:24,594 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 234 chars in 7.6s
+2026-07-10 07:26:24,595 [INFO] 127.0.0.1 - - [10/Jul/2026 07:26:24] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:26:26,650 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 64 chars in 2.0s
+2026-07-10 07:26:26,651 [INFO] 127.0.0.1 - - [10/Jul/2026 07:26:26] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:26:28,901 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.2s
+2026-07-10 07:26:28,902 [INFO] 127.0.0.1 - - [10/Jul/2026 07:26:28] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:26:31,430 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 78 chars in 2.4s
+2026-07-10 07:26:31,431 [INFO] 127.0.0.1 - - [10/Jul/2026 07:26:31] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:26:31,949 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 10 chars in 0.5s
+2026-07-10 07:26:31,949 [INFO] 127.0.0.1 - - [10/Jul/2026 07:26:31] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:26:36,327 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 94 chars in 2.2s
+2026-07-10 07:26:36,327 [INFO] 127.0.0.1 - - [10/Jul/2026 07:26:36] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:26:40,354 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 63 chars in 1.7s
+2026-07-10 07:26:40,355 [INFO] 127.0.0.1 - - [10/Jul/2026 07:26:40] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:28:28,608 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 418 chars in 11.2s
+2026-07-10 07:28:28,608 [INFO] 127.0.0.1 - - [10/Jul/2026 07:28:28] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:28:39,958 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 418 chars in 11.0s
+2026-07-10 07:28:39,959 [INFO] 127.0.0.1 - - [10/Jul/2026 07:28:39] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:28:51,634 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 422 chars in 11.3s
+2026-07-10 07:28:51,635 [INFO] 127.0.0.1 - - [10/Jul/2026 07:28:51] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:28:52,390 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 15 chars in 0.7s
+2026-07-10 07:28:52,390 [INFO] 127.0.0.1 - - [10/Jul/2026 07:28:52] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:28:54,818 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 77 chars in 2.3s
+2026-07-10 07:28:54,818 [INFO] 127.0.0.1 - - [10/Jul/2026 07:28:54] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:28:55,439 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 15 chars in 0.6s
+2026-07-10 07:28:55,440 [INFO] 127.0.0.1 - - [10/Jul/2026 07:28:55] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:28:58,045 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 67 chars in 2.5s
+2026-07-10 07:28:58,046 [INFO] 127.0.0.1 - - [10/Jul/2026 07:28:58] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:28:58,576 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 11 chars in 0.5s
+2026-07-10 07:28:58,577 [INFO] 127.0.0.1 - - [10/Jul/2026 07:28:58] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:29:02,457 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 70 chars in 1.7s
+2026-07-10 07:29:02,458 [INFO] 127.0.0.1 - - [10/Jul/2026 07:29:02] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:29:51,902 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 285 chars in 8.6s
+2026-07-10 07:29:51,903 [INFO] 127.0.0.1 - - [10/Jul/2026 07:29:51] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:01,139 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 285 chars in 8.9s
+2026-07-10 07:30:01,140 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:01] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:10,671 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 289 chars in 9.1s
+2026-07-10 07:30:10,673 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:10] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:12,682 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.0s
+2026-07-10 07:30:12,682 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:12] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:15,056 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 77 chars in 2.3s
+2026-07-10 07:30:15,057 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:15] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:17,292 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 76 chars in 2.2s
+2026-07-10 07:30:17,293 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:17] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:19,968 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.6s
+2026-07-10 07:30:19,969 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:22,599 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 70 chars in 2.5s
+2026-07-10 07:30:22,599 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:22] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:23,039 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 14 chars in 0.4s
+2026-07-10 07:30:23,039 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:23] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:23,431 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 7 chars in 0.4s
+2026-07-10 07:30:23,431 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:23] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:30:27,595 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 65 chars in 1.9s
+2026-07-10 07:30:27,596 [INFO] 127.0.0.1 - - [10/Jul/2026 07:30:27] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:10,930 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 309 chars in 9.0s
+2026-07-10 07:31:10,931 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:10] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:19,997 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 301 chars in 8.7s
+2026-07-10 07:31:19,997 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:29,298 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 301 chars in 8.9s
+2026-07-10 07:31:29,299 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:29] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:33,284 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 126 chars in 3.8s
+2026-07-10 07:31:33,286 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:33] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:35,582 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 2.2s
+2026-07-10 07:31:35,582 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:35] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:37,713 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 64 chars in 2.0s
+2026-07-10 07:31:37,713 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:37] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:39,565 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 66 chars in 1.8s
+2026-07-10 07:31:39,566 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:39] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:41,472 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 1.9s
+2026-07-10 07:31:41,473 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:41] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:41,848 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 3 chars in 0.4s
+2026-07-10 07:31:41,849 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:41] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:31:45,837 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 1.8s
+2026-07-10 07:31:45,838 [INFO] 127.0.0.1 - - [10/Jul/2026 07:31:45] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:33:33,831 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 295 chars in 8.7s
+2026-07-10 07:33:33,831 [INFO] 127.0.0.1 - - [10/Jul/2026 07:33:33] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:33:43,036 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 295 chars in 8.8s
+2026-07-10 07:33:43,037 [INFO] 127.0.0.1 - - [10/Jul/2026 07:33:43] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:33:51,972 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 295 chars in 8.6s
+2026-07-10 07:33:51,973 [INFO] 127.0.0.1 - - [10/Jul/2026 07:33:51] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:33:53,939 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.9s
+2026-07-10 07:33:53,940 [INFO] 127.0.0.1 - - [10/Jul/2026 07:33:53] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:33:56,296 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 77 chars in 2.3s
+2026-07-10 07:33:56,297 [INFO] 127.0.0.1 - - [10/Jul/2026 07:33:56] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:33:58,664 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 76 chars in 2.3s
+2026-07-10 07:33:58,665 [INFO] 127.0.0.1 - - [10/Jul/2026 07:33:58] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:34:01,097 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.3s
+2026-07-10 07:34:01,098 [INFO] 127.0.0.1 - - [10/Jul/2026 07:34:01] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:34:02,835 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.7s
+2026-07-10 07:34:02,836 [INFO] 127.0.0.1 - - [10/Jul/2026 07:34:02] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:34:03,239 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 9 chars in 0.4s
+2026-07-10 07:34:03,240 [INFO] 127.0.0.1 - - [10/Jul/2026 07:34:03] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:34:07,283 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.8s
+2026-07-10 07:34:07,284 [INFO] 127.0.0.1 - - [10/Jul/2026 07:34:07] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:34:11,291 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.8s
+2026-07-10 07:34:11,292 [INFO] 127.0.0.1 - - [10/Jul/2026 07:34:11] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:34:15,202 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 64 chars in 1.7s
+2026-07-10 07:34:15,202 [INFO] 127.0.0.1 - - [10/Jul/2026 07:34:15] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:35:58,630 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 295 chars in 9.0s
+2026-07-10 07:35:58,630 [INFO] 127.0.0.1 - - [10/Jul/2026 07:35:58] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:36:07,624 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 295 chars in 8.6s
+2026-07-10 07:36:07,625 [INFO] 127.0.0.1 - - [10/Jul/2026 07:36:07] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:36:16,645 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 295 chars in 8.6s
+2026-07-10 07:36:16,645 [INFO] 127.0.0.1 - - [10/Jul/2026 07:36:16] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:36:18,509 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 74 chars in 1.8s
+2026-07-10 07:36:18,509 [INFO] 127.0.0.1 - - [10/Jul/2026 07:36:18] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:36:20,295 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 71 chars in 1.7s
+2026-07-10 07:36:20,296 [INFO] 127.0.0.1 - - [10/Jul/2026 07:36:20] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:36:20,568 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 6 chars in 0.3s
+2026-07-10 07:36:20,568 [INFO] 127.0.0.1 - - [10/Jul/2026 07:36:20] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:36:24,592 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 71 chars in 1.8s
+2026-07-10 07:36:24,592 [INFO] 127.0.0.1 - - [10/Jul/2026 07:36:24] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:36:28,530 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 63 chars in 1.7s
+2026-07-10 07:36:28,531 [INFO] 127.0.0.1 - - [10/Jul/2026 07:36:28] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:36:32,559 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.8s
+2026-07-10 07:36:32,559 [INFO] 127.0.0.1 - - [10/Jul/2026 07:36:32] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:37:19,020 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 358 chars in 9.9s
+2026-07-10 07:37:19,021 [INFO] 127.0.0.1 - - [10/Jul/2026 07:37:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:37:29,278 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 358 chars in 9.9s
+2026-07-10 07:37:29,279 [INFO] 127.0.0.1 - - [10/Jul/2026 07:37:29] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:37:39,254 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 358 chars in 9.6s
+2026-07-10 07:37:39,255 [INFO] 127.0.0.1 - - [10/Jul/2026 07:37:39] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:37:41,094 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 79 chars in 1.8s
+2026-07-10 07:37:41,095 [INFO] 127.0.0.1 - - [10/Jul/2026 07:37:41] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:37:41,764 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 15 chars in 0.6s
+2026-07-10 07:37:41,765 [INFO] 127.0.0.1 - - [10/Jul/2026 07:37:41] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:37:42,046 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 6 chars in 0.3s
+2026-07-10 07:37:42,046 [INFO] 127.0.0.1 - - [10/Jul/2026 07:37:42] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:37:42,468 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 6 chars in 0.4s
+2026-07-10 07:37:42,469 [INFO] 127.0.0.1 - - [10/Jul/2026 07:37:42] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:39:34,667 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 287 chars in 8.8s
+2026-07-10 07:39:34,668 [INFO] 127.0.0.1 - - [10/Jul/2026 07:39:34] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:39:44,092 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 287 chars in 9.1s
+2026-07-10 07:39:44,093 [INFO] 127.0.0.1 - - [10/Jul/2026 07:39:44] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:39:53,173 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 287 chars in 8.7s
+2026-07-10 07:39:53,173 [INFO] 127.0.0.1 - - [10/Jul/2026 07:39:53] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:39:55,067 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.8s
+2026-07-10 07:39:55,067 [INFO] 127.0.0.1 - - [10/Jul/2026 07:39:55] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:39:57,363 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.2s
+2026-07-10 07:39:57,363 [INFO] 127.0.0.1 - - [10/Jul/2026 07:39:57] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:39:59,782 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.3s
+2026-07-10 07:39:59,783 [INFO] 127.0.0.1 - - [10/Jul/2026 07:39:59] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:40:01,849 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 75 chars in 2.0s
+2026-07-10 07:40:01,850 [INFO] 127.0.0.1 - - [10/Jul/2026 07:40:01] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:40:02,239 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 11 chars in 0.4s
+2026-07-10 07:40:02,240 [INFO] 127.0.0.1 - - [10/Jul/2026 07:40:02] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:40:02,681 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 14 chars in 0.4s
+2026-07-10 07:40:02,681 [INFO] 127.0.0.1 - - [10/Jul/2026 07:40:02] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:40:06,816 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.9s
+2026-07-10 07:40:06,816 [INFO] 127.0.0.1 - - [10/Jul/2026 07:40:06] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:40:10,997 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.9s
+2026-07-10 07:40:10,997 [INFO] 127.0.0.1 - - [10/Jul/2026 07:40:10] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:40:15,083 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.8s
+2026-07-10 07:40:15,084 [INFO] 127.0.0.1 - - [10/Jul/2026 07:40:15] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:41:25,584 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 337 chars in 10.3s
+2026-07-10 07:41:25,584 [INFO] 127.0.0.1 - - [10/Jul/2026 07:41:25] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:41:35,680 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 337 chars in 9.7s
+2026-07-10 07:41:35,681 [INFO] 127.0.0.1 - - [10/Jul/2026 07:41:35] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:41:46,038 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 337 chars in 10.0s
+2026-07-10 07:41:46,038 [INFO] 127.0.0.1 - - [10/Jul/2026 07:41:46] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:41:47,944 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 1.8s
+2026-07-10 07:41:47,945 [INFO] 127.0.0.1 - - [10/Jul/2026 07:41:47] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:41:50,067 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.0s
+2026-07-10 07:41:50,067 [INFO] 127.0.0.1 - - [10/Jul/2026 07:41:50] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:41:52,628 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 2.4s
+2026-07-10 07:41:52,629 [INFO] 127.0.0.1 - - [10/Jul/2026 07:41:52] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:41:56,230 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 130 chars in 3.5s
+2026-07-10 07:41:56,231 [INFO] 127.0.0.1 - - [10/Jul/2026 07:41:56] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:41:58,006 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 1.7s
+2026-07-10 07:41:58,007 [INFO] 127.0.0.1 - - [10/Jul/2026 07:41:58] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:41:59,797 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 69 chars in 1.7s
+2026-07-10 07:41:59,803 [INFO] 127.0.0.1 - - [10/Jul/2026 07:41:59] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:42:00,113 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 4 chars in 0.3s
+2026-07-10 07:42:00,114 [INFO] 127.0.0.1 - - [10/Jul/2026 07:42:00] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:42:00,485 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 3 chars in 0.3s
+2026-07-10 07:42:00,485 [INFO] 127.0.0.1 - - [10/Jul/2026 07:42:00] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:42:04,409 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 66 chars in 1.8s
+2026-07-10 07:42:04,410 [INFO] 127.0.0.1 - - [10/Jul/2026 07:42:04] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:42:08,322 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.7s
+2026-07-10 07:42:08,322 [INFO] 127.0.0.1 - - [10/Jul/2026 07:42:08] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:42:55,961 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 292 chars in 8.9s
+2026-07-10 07:42:55,962 [INFO] 127.0.0.1 - - [10/Jul/2026 07:42:55] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:05,438 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 291 chars in 9.1s
+2026-07-10 07:43:05,439 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:05] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:14,795 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 291 chars in 9.0s
+2026-07-10 07:43:14,796 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:14] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:16,707 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.9s
+2026-07-10 07:43:16,708 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:16] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:19,007 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.2s
+2026-07-10 07:43:19,008 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:21,542 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.4s
+2026-07-10 07:43:21,542 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:21] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:23,523 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 75 chars in 1.9s
+2026-07-10 07:43:23,523 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:23] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:23,838 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 4 chars in 0.3s
+2026-07-10 07:43:23,838 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:23] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:24,115 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 6 chars in 0.3s
+2026-07-10 07:43:24,116 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:24] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:28,214 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.9s
+2026-07-10 07:43:28,215 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:28] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:32,188 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 72 chars in 1.7s
+2026-07-10 07:43:32,189 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:32] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:43:36,163 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 72 chars in 1.7s
+2026-07-10 07:43:36,163 [INFO] 127.0.0.1 - - [10/Jul/2026 07:43:36] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:23,142 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 290 chars in 9.0s
+2026-07-10 07:44:23,142 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:23] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:32,078 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 290 chars in 8.5s
+2026-07-10 07:44:32,078 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:32] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:41,242 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 290 chars in 8.8s
+2026-07-10 07:44:41,243 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:41] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:43,152 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 64 chars in 1.8s
+2026-07-10 07:44:43,153 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:43] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:45,956 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 76 chars in 2.7s
+2026-07-10 07:44:45,956 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:45] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:48,303 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 72 chars in 2.2s
+2026-07-10 07:44:48,303 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:48] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:50,179 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 71 chars in 1.8s
+2026-07-10 07:44:50,180 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:50] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:50,544 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 3 chars in 0.3s
+2026-07-10 07:44:50,545 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:50] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:54,472 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 65 chars in 1.8s
+2026-07-10 07:44:54,472 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:54] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:44:58,378 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 72 chars in 1.8s
+2026-07-10 07:44:58,378 [INFO] 127.0.0.1 - - [10/Jul/2026 07:44:58] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:45:02,241 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 69 chars in 1.7s
+2026-07-10 07:45:02,242 [INFO] 127.0.0.1 - - [10/Jul/2026 07:45:02] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:46:45,881 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 280 chars in 8.7s
+2026-07-10 07:46:45,881 [INFO] 127.0.0.1 - - [10/Jul/2026 07:46:45] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:46:56,221 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 337 chars in 10.0s
+2026-07-10 07:46:56,222 [INFO] 127.0.0.1 - - [10/Jul/2026 07:46:56] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:06,850 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 337 chars in 10.2s
+2026-07-10 07:47:06,851 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:06] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:08,805 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 72 chars in 1.9s
+2026-07-10 07:47:08,805 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:08] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:10,548 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 71 chars in 1.7s
+2026-07-10 07:47:10,548 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:10] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:12,669 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.0s
+2026-07-10 07:47:12,670 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:12] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:15,479 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 78 chars in 2.7s
+2026-07-10 07:47:15,480 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:15] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:19,453 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 127 chars in 3.8s
+2026-07-10 07:47:19,454 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:19,733 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 7 chars in 0.3s
+2026-07-10 07:47:19,733 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:19] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:20,075 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 7 chars in 0.3s
+2026-07-10 07:47:20,076 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:20] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:24,154 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.8s
+2026-07-10 07:47:24,154 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:24] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:28,241 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 64 chars in 1.8s
+2026-07-10 07:47:28,242 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:28] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:47:32,405 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.9s
+2026-07-10 07:47:32,406 [INFO] 127.0.0.1 - - [10/Jul/2026 07:47:32] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:14,818 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 391 chars in 11.1s
+2026-07-10 07:49:14,819 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:14] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:25,096 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 335 chars in 9.9s
+2026-07-10 07:49:25,096 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:25] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:35,377 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 335 chars in 9.9s
+2026-07-10 07:49:35,378 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:35] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:37,312 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.9s
+2026-07-10 07:49:37,312 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:37] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:39,199 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.9s
+2026-07-10 07:49:39,199 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:39] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:41,418 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.1s
+2026-07-10 07:49:41,419 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:41] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:41,886 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 15 chars in 0.5s
+2026-07-10 07:49:41,886 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:41] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:44,853 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 15 chars in 0.7s
+2026-07-10 07:49:44,854 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:44] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:48,938 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 76 chars in 1.9s
+2026-07-10 07:49:48,938 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:48] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:49:52,898 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 83 chars in 1.8s
+2026-07-10 07:49:52,898 [INFO] 127.0.0.1 - - [10/Jul/2026 07:49:52] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:50:37,205 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 336 chars in 10.5s
+2026-07-10 07:50:37,205 [INFO] 127.0.0.1 - - [10/Jul/2026 07:50:37] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:50:47,367 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 336 chars in 9.8s
+2026-07-10 07:50:47,367 [INFO] 127.0.0.1 - - [10/Jul/2026 07:50:47] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:50:57,873 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 336 chars in 10.1s
+2026-07-10 07:50:57,874 [INFO] 127.0.0.1 - - [10/Jul/2026 07:50:57] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:50:59,825 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 1.9s
+2026-07-10 07:50:59,826 [INFO] 127.0.0.1 - - [10/Jul/2026 07:50:59] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:02,130 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 2.2s
+2026-07-10 07:51:02,131 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:02] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:04,623 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 62 chars in 2.4s
+2026-07-10 07:51:04,624 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:04] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:08,469 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 142 chars in 3.7s
+2026-07-10 07:51:08,470 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:08] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:11,180 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 74 chars in 2.6s
+2026-07-10 07:51:11,180 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:11] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:11,554 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 7 chars in 0.4s
+2026-07-10 07:51:11,554 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:11] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:11,950 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 7 chars in 0.4s
+2026-07-10 07:51:11,950 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:11] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:12,326 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 7 chars in 0.4s
+2026-07-10 07:51:12,326 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:12] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:12,636 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 10 chars in 0.3s
+2026-07-10 07:51:12,637 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:12] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:16,728 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 68 chars in 1.9s
+2026-07-10 07:51:16,728 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:16] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:20,823 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 71 chars in 1.9s
+2026-07-10 07:51:20,824 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:20] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:51:24,953 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 71 chars in 1.9s
+2026-07-10 07:51:24,953 [INFO] 127.0.0.1 - - [10/Jul/2026 07:51:24] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:08,240 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 360 chars in 9.7s
+2026-07-10 07:52:08,241 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:08] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:18,502 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 351 chars in 9.9s
+2026-07-10 07:52:18,503 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:18] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:28,717 [INFO] [infer_v6] 1 imgs, prompt=283 chars → 351 chars in 9.8s
+2026-07-10 07:52:28,717 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:28] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:30,676 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.9s
+2026-07-10 07:52:30,677 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:30] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:32,437 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 1.7s
+2026-07-10 07:52:32,438 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:32] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:34,257 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 71 chars in 1.8s
+2026-07-10 07:52:34,258 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:34] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:36,479 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 73 chars in 2.1s
+2026-07-10 07:52:36,480 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:36] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:38,962 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 63 chars in 2.4s
+2026-07-10 07:52:38,962 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:38] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:39,371 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 9 chars in 0.4s
+2026-07-10 07:52:39,371 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:39] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:39,682 [INFO] [infer_v6] 1 imgs, prompt=73 chars → 4 chars in 0.3s
+2026-07-10 07:52:39,683 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:39] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:43,601 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 72 chars in 1.8s
+2026-07-10 07:52:43,601 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:43] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:46,366 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 15 chars in 0.6s
+2026-07-10 07:52:46,366 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:46] "POST /infer_v6 HTTP/1.1" 200 -
+2026-07-10 07:52:49,141 [INFO] [infer_v6] 1 imgs, prompt=149 chars → 15 chars in 0.6s
+2026-07-10 07:52:49,142 [INFO] 127.0.0.1 - - [10/Jul/2026 07:52:49] "POST /infer_v6 HTTP/1.1" 200 -

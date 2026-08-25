@@ -1,0 +1,466 @@
+2026-06-24 14:42:23,107 [INFO] Loading Qwen/Qwen2.5-VL-7B-Instruct onto available GPUs (4bit=True) ...
+2026-06-24 14:42:23,772 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:23,804 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-06-24 14:42:23,805 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-06-24 14:42:23,811 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:23,840 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:23,864 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:23,870 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:23,948 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-7B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:23,986 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:24,066 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/chat_template.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:24,074 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/chat_template.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:24,102 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:24,129 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/audio_tokenizer_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:24,179 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:24,203 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:24,209 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:24,378 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:24,404 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:24,411 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:24,436 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:24,442 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/config.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:24,509 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:24,517 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:24,671 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-7B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:24,697 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-7B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-24 14:42:25,719 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-7B-Instruct "HTTP/1.1 200 OK"
+2026-06-24 14:42:25,761 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:25,789 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:25,815 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:25,821 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:25,879 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:25,910 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:25,935 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:25,940 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:27,543 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:27,553 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/config.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:43,090 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
+2026-06-24 14:42:43,160 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/model.safetensors.index.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:42:43,166 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/model.safetensors.index.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:43,668 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/model.safetensors.index.json "HTTP/1.1 200 OK"
+2026-06-24 14:42:43,713 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-7B-Instruct/revision/main "HTTP/1.1 200 OK"
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]2026-06-24 14:42:43,745 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/cc594898137f460bfe9f0759e9844b3ce807cfb5/model-00001-of-00005.safetensors "HTTP/1.1 302 Found"
+2026-06-24 14:42:43,763 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/cc594898137f460bfe9f0759e9844b3ce807cfb5/model-00005-of-00005.safetensors "HTTP/1.1 302 Found"
+2026-06-24 14:42:43,765 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/cc594898137f460bfe9f0759e9844b3ce807cfb5/model-00004-of-00005.safetensors "HTTP/1.1 302 Found"
+2026-06-24 14:42:43,766 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/cc594898137f460bfe9f0759e9844b3ce807cfb5/model-00002-of-00005.safetensors "HTTP/1.1 302 Found"
+2026-06-24 14:42:43,774 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/cc594898137f460bfe9f0759e9844b3ce807cfb5/model-00003-of-00005.safetensors "HTTP/1.1 302 Found"
+2026-06-24 14:42:44,286 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-7B-Instruct/xet-read-token/cc594898137f460bfe9f0759e9844b3ce807cfb5 "HTTP/1.1 200 OK"
+2026-06-24 14:42:44,299 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-7B-Instruct/xet-read-token/cc594898137f460bfe9f0759e9844b3ce807cfb5 "HTTP/1.1 200 OK"
+2026-06-24 14:42:44,300 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-7B-Instruct/xet-read-token/cc594898137f460bfe9f0759e9844b3ce807cfb5 "HTTP/1.1 200 OK"
+2026-06-24 14:42:44,300 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-7B-Instruct/xet-read-token/cc594898137f460bfe9f0759e9844b3ce807cfb5 "HTTP/1.1 200 OK"
+Fetching 5 files:  20%|██        | 1/5 [00:17<01:08, 17.07s/it]Fetching 5 files:  40%|████      | 2/5 [00:20<00:27,  9.14s/it]Fetching 5 files: 100%|██████████| 5/5 [00:20<00:00,  4.13s/it]
+Loading weights:   0%|          | 0/729 [00:00<?, ?it/s]Loading weights:   0%|          | 1/729 [00:00<10:17,  1.18it/s]Loading weights:   0%|          | 2/729 [00:01<08:11,  1.48it/s]Loading weights:   1%|          | 4/729 [00:02<07:41,  1.57it/s]Loading weights:   1%|          | 6/729 [00:02<04:27,  2.70it/s]Loading weights:   2%|▏         | 16/729 [00:02<01:05, 10.83it/s]Loading weights:   3%|▎         | 20/729 [00:03<00:52, 13.40it/s]Loading weights:   4%|▍         | 28/729 [00:03<00:32, 21.86it/s]Loading weights:   5%|▍         | 34/729 [00:03<00:27, 25.64it/s]Loading weights:   6%|▌         | 41/729 [00:03<00:22, 30.08it/s]Loading weights:   7%|▋         | 48/729 [00:03<00:18, 37.10it/s]Loading weights:   7%|▋         | 54/729 [00:03<00:20, 33.55it/s]Loading weights:   9%|▉         | 64/729 [00:03<00:14, 45.64it/s]Loading weights:  10%|▉         | 70/729 [00:04<00:15, 43.66it/s]Loading weights:  11%|█         | 77/729 [00:04<00:14, 44.08it/s]Loading weights:  12%|█▏        | 86/729 [00:04<00:11, 53.68it/s]Loading weights:  13%|█▎        | 93/729 [00:04<00:13, 45.82it/s]Loading weights:  14%|█▍        | 101/729 [00:04<00:13, 46.29it/s]Loading weights:  15%|█▌        | 110/729 [00:04<00:11, 55.14it/s]Loading weights:  16%|█▌        | 117/729 [00:04<00:13, 46.68it/s]Loading weights:  17%|█▋        | 124/729 [00:05<00:11, 50.82it/s]Loading weights:  18%|█▊        | 130/729 [00:05<00:13, 45.94it/s]Loading weights:  19%|█▉        | 137/729 [00:05<00:13, 44.38it/s]Loading weights:  20%|█▉        | 144/729 [00:05<00:11, 49.24it/s]Loading weights:  21%|██        | 150/729 [00:05<00:14, 40.45it/s]Loading weights:  22%|██▏       | 160/729 [00:05<00:10, 52.38it/s]Loading weights:  23%|██▎       | 167/729 [00:05<00:11, 49.14it/s]Loading weights:  24%|██▎       | 173/729 [00:06<00:12, 45.21it/s]Loading weights:  25%|██▍       | 180/729 [00:06<00:11, 49.83it/s]Loading weights:  26%|██▌       | 186/729 [00:06<00:13, 41.44it/s]Loading weights:  27%|██▋       | 196/729 [00:06<00:09, 53.36it/s]Loading weights:  28%|██▊       | 203/729 [00:06<00:10, 50.71it/s]Loading weights:  29%|██▊       | 209/729 [00:06<00:11, 47.02it/s]Loading weights:  30%|██▉       | 216/729 [00:06<00:09, 51.57it/s]Loading weights:  30%|███       | 222/729 [00:07<00:12, 41.37it/s]Loading weights:  32%|███▏      | 232/729 [00:07<00:09, 53.17it/s]Loading weights:  33%|███▎      | 239/729 [00:07<00:09, 50.72it/s]Loading weights:  34%|███▎      | 245/729 [00:07<00:10, 46.84it/s]Loading weights:  35%|███▍      | 252/729 [00:07<00:09, 51.78it/s]Loading weights:  35%|███▌      | 258/729 [00:07<00:11, 42.47it/s]Loading weights:  37%|███▋      | 268/729 [00:08<00:08, 54.51it/s]Loading weights:  38%|███▊      | 275/729 [00:08<00:08, 51.48it/s]Loading weights:  39%|███▊      | 281/729 [00:08<00:09, 47.53it/s]Loading weights:  40%|███▉      | 288/729 [00:08<00:08, 52.12it/s]Loading weights:  40%|████      | 294/729 [00:08<00:10, 42.32it/s]Loading weights:  42%|████▏     | 304/729 [00:08<00:07, 54.13it/s]Loading weights:  43%|████▎     | 311/729 [00:08<00:08, 51.09it/s]Loading weights:  43%|████▎     | 317/729 [00:09<00:08, 46.94it/s]Loading weights:  45%|████▍     | 326/729 [00:09<00:07, 56.26it/s]Loading weights:  46%|████▌     | 333/729 [00:09<00:08, 47.07it/s]Loading weights:  51%|█████     | 373/729 [00:09<00:02, 121.37it/s]Loading weights:  58%|█████▊    | 425/729 [00:09<00:01, 213.40it/s]Loading weights:  65%|██████▌   | 475/729 [00:09<00:00, 281.37it/s]Loading weights:  72%|███████▏  | 525/729 [00:09<00:00, 333.59it/s]Loading weights:  79%|███████▊  | 573/729 [00:09<00:00, 371.80it/s]Loading weights:  85%|████████▌ | 623/729 [00:10<00:00, 402.19it/s]Loading weights:  92%|█████████▏| 673/729 [00:10<00:00, 424.52it/s]Loading weights: 100%|█████████▉| 726/729 [00:10<00:00, 422.90it/s]Loading weights: 100%|██████████| 729/729 [00:10<00:00, 70.90it/s] 
+2026-06-24 14:43:16,984 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/resolve/main/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 14:43:16,994 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/generation_config.json "HTTP/1.1 200 OK"
+2026-06-24 14:43:17,140 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-7B-Instruct/cc594898137f460bfe9f0759e9844b3ce807cfb5/generation_config.json "HTTP/1.1 200 OK"
+2026-06-24 14:43:17,149 [INFO] Model ready: Qwen/Qwen2.5-VL-7B-Instruct
+ * Serving Flask app 'qwen_vlm_server'
+ * Debug mode: off
+2026-06-24 14:43:17,153 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://10.8.11.3:5001
+2026-06-24 14:43:17,153 [INFO] [33mPress CTRL+C to quit[0m
+2026-06-24 14:43:22,128 [INFO] 127.0.0.1 - - [24/Jun/2026 14:43:22] "GET /health HTTP/1.1" 200 -
+2026-06-24 14:53:27,297 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 61.3s
+2026-06-24 14:53:27,298 [INFO] 127.0.0.1 - - [24/Jun/2026 14:53:27] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 14:56:20,376 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.2s
+2026-06-24 14:56:20,377 [INFO] 127.0.0.1 - - [24/Jun/2026 14:56:20] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 14:58:47,899 [INFO] [infer_fol] obstacle='plate' props=['IS_FRAGILE'] conf=1.00 in 47.8s
+2026-06-24 14:58:47,917 [INFO] 127.0.0.1 - - [24/Jun/2026 14:58:47] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:01:12,729 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.5s
+2026-06-24 15:01:12,730 [INFO] 127.0.0.1 - - [24/Jun/2026 15:01:12] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:03:38,227 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.2s
+2026-06-24 15:03:38,228 [INFO] 127.0.0.1 - - [24/Jun/2026 15:03:38] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:06:05,816 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.6s
+2026-06-24 15:06:05,817 [INFO] 127.0.0.1 - - [24/Jun/2026 15:06:05] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:08:32,472 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.5s
+2026-06-24 15:08:32,473 [INFO] 127.0.0.1 - - [24/Jun/2026 15:08:32] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:11:00,393 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.3s
+2026-06-24 15:11:00,394 [INFO] 127.0.0.1 - - [24/Jun/2026 15:11:00] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:13:26,711 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.1s
+2026-06-24 15:13:26,712 [INFO] 127.0.0.1 - - [24/Jun/2026 15:13:26] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:15:52,871 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.5s
+2026-06-24 15:15:52,872 [INFO] 127.0.0.1 - - [24/Jun/2026 15:15:52] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:18:21,402 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.6s
+2026-06-24 15:18:21,403 [INFO] 127.0.0.1 - - [24/Jun/2026 15:18:21] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:20:49,436 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.3s
+2026-06-24 15:20:49,436 [INFO] 127.0.0.1 - - [24/Jun/2026 15:20:49] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:23:18,508 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 15:23:18,509 [INFO] 127.0.0.1 - - [24/Jun/2026 15:23:18] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:25:45,986 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.5s
+2026-06-24 15:25:45,987 [INFO] 127.0.0.1 - - [24/Jun/2026 15:25:45] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:28:13,877 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 15:28:13,878 [INFO] 127.0.0.1 - - [24/Jun/2026 15:28:13] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:30:38,456 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.3s
+2026-06-24 15:30:38,456 [INFO] 127.0.0.1 - - [24/Jun/2026 15:30:38] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:33:03,506 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.3s
+2026-06-24 15:33:03,507 [INFO] 127.0.0.1 - - [24/Jun/2026 15:33:03] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:35:28,716 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.4s
+2026-06-24 15:35:28,719 [INFO] 127.0.0.1 - - [24/Jun/2026 15:35:28] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:37:54,511 [INFO] [infer_fol] obstacle='plate' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 15:37:54,512 [INFO] 127.0.0.1 - - [24/Jun/2026 15:37:54] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:40:19,778 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.4s
+2026-06-24 15:40:19,779 [INFO] 127.0.0.1 - - [24/Jun/2026 15:40:19] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:42:44,785 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 45.7s
+2026-06-24 15:42:44,788 [INFO] 127.0.0.1 - - [24/Jun/2026 15:42:44] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:45:10,211 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.6s
+2026-06-24 15:45:10,212 [INFO] 127.0.0.1 - - [24/Jun/2026 15:45:10] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:47:38,118 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.2s
+2026-06-24 15:47:38,119 [INFO] 127.0.0.1 - - [24/Jun/2026 15:47:38] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:50:06,966 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 46.1s
+2026-06-24 15:50:06,967 [INFO] 127.0.0.1 - - [24/Jun/2026 15:50:06] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:52:36,851 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.6s
+2026-06-24 15:52:36,853 [INFO] 127.0.0.1 - - [24/Jun/2026 15:52:36] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:55:06,260 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.6s
+2026-06-24 15:55:06,261 [INFO] 127.0.0.1 - - [24/Jun/2026 15:55:06] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 15:57:42,087 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 53.3s
+2026-06-24 15:57:42,089 [INFO] 127.0.0.1 - - [24/Jun/2026 15:57:42] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:00:28,420 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.2s
+2026-06-24 16:00:28,427 [INFO] 127.0.0.1 - - [24/Jun/2026 16:00:28] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:02:56,912 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.9s
+2026-06-24 16:02:56,913 [INFO] 127.0.0.1 - - [24/Jun/2026 16:02:56] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:05:18,439 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 44.9s
+2026-06-24 16:05:18,440 [INFO] 127.0.0.1 - - [24/Jun/2026 16:05:18] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:07:40,339 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 45.6s
+2026-06-24 16:07:40,340 [INFO] 127.0.0.1 - - [24/Jun/2026 16:07:40] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:10:04,375 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 16:10:04,376 [INFO] 127.0.0.1 - - [24/Jun/2026 16:10:04] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:12:34,909 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 46.8s
+2026-06-24 16:12:34,910 [INFO] 127.0.0.1 - - [24/Jun/2026 16:12:34] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:15:06,303 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 16:15:06,304 [INFO] 127.0.0.1 - - [24/Jun/2026 16:15:06] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:18:04,627 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 60.9s
+2026-06-24 16:18:04,672 [INFO] 127.0.0.1 - - [24/Jun/2026 16:18:04] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:20:33,960 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.4s
+2026-06-24 16:20:33,961 [INFO] 127.0.0.1 - - [24/Jun/2026 16:20:33] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:23:04,075 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.3s
+2026-06-24 16:23:04,077 [INFO] 127.0.0.1 - - [24/Jun/2026 16:23:04] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:25:34,786 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 46.0s
+2026-06-24 16:25:34,787 [INFO] 127.0.0.1 - - [24/Jun/2026 16:25:34] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:28:06,715 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.6s
+2026-06-24 16:28:06,716 [INFO] 127.0.0.1 - - [24/Jun/2026 16:28:06] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:30:41,026 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 16:30:41,028 [INFO] 127.0.0.1 - - [24/Jun/2026 16:30:41] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:33:13,442 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 16:33:13,477 [INFO] 127.0.0.1 - - [24/Jun/2026 16:33:13] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:35:47,863 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.8s
+2026-06-24 16:35:47,865 [INFO] 127.0.0.1 - - [24/Jun/2026 16:35:47] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:38:22,224 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 46.2s
+2026-06-24 16:38:22,225 [INFO] 127.0.0.1 - - [24/Jun/2026 16:38:22] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:40:53,737 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.7s
+2026-06-24 16:40:53,738 [INFO] 127.0.0.1 - - [24/Jun/2026 16:40:53] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:43:25,660 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.6s
+2026-06-24 16:43:25,661 [INFO] 127.0.0.1 - - [24/Jun/2026 16:43:25] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:45:58,117 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 16:45:58,118 [INFO] 127.0.0.1 - - [24/Jun/2026 16:45:58] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:48:29,876 [INFO] [infer_fol] obstacle='glazed rim porcelain ramekin' props=['IS_FRAGILE'] conf=1.00 in 46.5s
+2026-06-24 16:48:29,877 [INFO] 127.0.0.1 - - [24/Jun/2026 16:48:29] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:50:59,518 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.4s
+2026-06-24 16:50:59,520 [INFO] 127.0.0.1 - - [24/Jun/2026 16:50:59] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:52:19,799 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 16:52:19,800 [INFO] 127.0.0.1 - - [24/Jun/2026 16:52:19] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:54:49,054 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.6s
+2026-06-24 16:54:49,055 [INFO] 127.0.0.1 - - [24/Jun/2026 16:54:49] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 16:57:26,603 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.7s
+2026-06-24 16:57:26,604 [INFO] 127.0.0.1 - - [24/Jun/2026 16:57:26] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:00:02,223 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.5s
+2026-06-24 17:00:02,225 [INFO] 127.0.0.1 - - [24/Jun/2026 17:00:02] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:01:19,782 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.3s
+2026-06-24 17:01:19,782 [INFO] 127.0.0.1 - - [24/Jun/2026 17:01:19] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:02:36,663 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 17:02:36,664 [INFO] 127.0.0.1 - - [24/Jun/2026 17:02:36] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:03:58,827 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 17:03:58,828 [INFO] 127.0.0.1 - - [24/Jun/2026 17:03:58] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:06:32,556 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 17:06:32,557 [INFO] 127.0.0.1 - - [24/Jun/2026 17:06:32] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:07:50,298 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 17:07:50,299 [INFO] 127.0.0.1 - - [24/Jun/2026 17:07:50] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:10:22,922 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.9s
+2026-06-24 17:10:22,924 [INFO] 127.0.0.1 - - [24/Jun/2026 17:10:22] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:11:40,928 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.5s
+2026-06-24 17:11:40,929 [INFO] 127.0.0.1 - - [24/Jun/2026 17:11:40] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:14:20,457 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 51.7s
+2026-06-24 17:14:20,504 [INFO] 127.0.0.1 - - [24/Jun/2026 17:14:20] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:15:55,056 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 51.6s
+2026-06-24 17:15:55,058 [INFO] 127.0.0.1 - - [24/Jun/2026 17:15:55] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:18:34,739 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 49.4s
+2026-06-24 17:18:34,762 [INFO] 127.0.0.1 - - [24/Jun/2026 17:18:34] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:19:50,870 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 17:19:50,871 [INFO] 127.0.0.1 - - [24/Jun/2026 17:19:50] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:22:25,673 [INFO] [infer_fol] obstacle='white storage box' props=['IS_FRAGILE'] conf=1.00 in 46.9s
+2026-06-24 17:22:25,675 [INFO] 127.0.0.1 - - [24/Jun/2026 17:22:25] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:24:59,778 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 46.7s
+2026-06-24 17:24:59,780 [INFO] 127.0.0.1 - - [24/Jun/2026 17:24:59] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:27:33,914 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 17:27:33,916 [INFO] 127.0.0.1 - - [24/Jun/2026 17:27:33] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:28:51,405 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 17:28:51,407 [INFO] 127.0.0.1 - - [24/Jun/2026 17:28:51] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:31:25,584 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 17:31:25,585 [INFO] 127.0.0.1 - - [24/Jun/2026 17:31:25] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:32:40,134 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 17:32:40,135 [INFO] 127.0.0.1 - - [24/Jun/2026 17:32:40] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:33:55,167 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.6s
+2026-06-24 17:33:55,169 [INFO] 127.0.0.1 - - [24/Jun/2026 17:33:55] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:36:25,107 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.3s
+2026-06-24 17:36:25,108 [INFO] 127.0.0.1 - - [24/Jun/2026 17:36:25] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:38:55,833 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 17:38:55,834 [INFO] 127.0.0.1 - - [24/Jun/2026 17:38:55] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:40:13,388 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 17:40:13,390 [INFO] 127.0.0.1 - - [24/Jun/2026 17:40:13] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:42:45,174 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 46.2s
+2026-06-24 17:42:45,175 [INFO] 127.0.0.1 - - [24/Jun/2026 17:42:45] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:44:03,433 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.4s
+2026-06-24 17:44:03,434 [INFO] 127.0.0.1 - - [24/Jun/2026 17:44:03] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:46:36,263 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 17:46:36,264 [INFO] 127.0.0.1 - - [24/Jun/2026 17:46:36] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:47:52,138 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.7s
+2026-06-24 17:47:52,138 [INFO] 127.0.0.1 - - [24/Jun/2026 17:47:52] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:50:26,092 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 17:50:26,093 [INFO] 127.0.0.1 - - [24/Jun/2026 17:50:26] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:53:00,129 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 17:53:00,130 [INFO] 127.0.0.1 - - [24/Jun/2026 17:53:00] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:55:33,850 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 17:55:33,851 [INFO] 127.0.0.1 - - [24/Jun/2026 17:55:33] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 17:58:04,413 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.7s
+2026-06-24 17:58:04,414 [INFO] 127.0.0.1 - - [24/Jun/2026 17:58:04] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:00:33,960 [INFO] [infer_fol] obstacle='white storage box' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 18:00:33,961 [INFO] 127.0.0.1 - - [24/Jun/2026 18:00:33] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:03:03,336 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.3s
+2026-06-24 18:03:03,372 [INFO] 127.0.0.1 - - [24/Jun/2026 18:03:03] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:05:35,071 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 18:05:35,071 [INFO] 127.0.0.1 - - [24/Jun/2026 18:05:35] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:06:55,444 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 18:06:55,445 [INFO] 127.0.0.1 - - [24/Jun/2026 18:06:55] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:09:29,388 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 46.2s
+2026-06-24 18:09:29,389 [INFO] 127.0.0.1 - - [24/Jun/2026 18:09:29] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:10:46,411 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 18:10:46,413 [INFO] 127.0.0.1 - - [24/Jun/2026 18:10:46] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:13:18,924 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.7s
+2026-06-24 18:13:18,925 [INFO] 127.0.0.1 - - [24/Jun/2026 18:13:18] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:14:35,850 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.5s
+2026-06-24 18:14:35,851 [INFO] 127.0.0.1 - - [24/Jun/2026 18:14:35] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:17:25,955 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 54.3s
+2026-06-24 18:17:26,007 [INFO] 127.0.0.1 - - [24/Jun/2026 18:17:26] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:19:10,309 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 18:19:10,310 [INFO] 127.0.0.1 - - [24/Jun/2026 18:19:10] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:21:50,553 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 18:21:50,554 [INFO] 127.0.0.1 - - [24/Jun/2026 18:21:50] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:23:09,301 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.4s
+2026-06-24 18:23:09,323 [INFO] 127.0.0.1 - - [24/Jun/2026 18:23:09] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:25:47,634 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 50.7s
+2026-06-24 18:25:47,636 [INFO] 127.0.0.1 - - [24/Jun/2026 18:25:47] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:27:07,749 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 18:27:07,751 [INFO] 127.0.0.1 - - [24/Jun/2026 18:27:07] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:29:39,078 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.7s
+2026-06-24 18:29:39,079 [INFO] 127.0.0.1 - - [24/Jun/2026 18:29:39] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:31:02,808 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 47.3s
+2026-06-24 18:31:02,810 [INFO] 127.0.0.1 - - [24/Jun/2026 18:31:02] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:33:32,623 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 18:33:32,625 [INFO] 127.0.0.1 - - [24/Jun/2026 18:33:32] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:36:03,266 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 18:36:03,267 [INFO] 127.0.0.1 - - [24/Jun/2026 18:36:03] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:37:21,598 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 18:37:21,599 [INFO] 127.0.0.1 - - [24/Jun/2026 18:37:21] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:38:43,027 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.4s
+2026-06-24 18:38:43,027 [INFO] 127.0.0.1 - - [24/Jun/2026 18:38:43] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:40:13,598 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.3s
+2026-06-24 18:40:13,599 [INFO] 127.0.0.1 - - [24/Jun/2026 18:40:13] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:41:51,287 [INFO] [infer_fol] obstacle='milk' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 18:41:51,288 [INFO] 127.0.0.1 - - [24/Jun/2026 18:41:51] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:43:23,081 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 18:43:23,082 [INFO] 127.0.0.1 - - [24/Jun/2026 18:43:23] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:44:53,626 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 18:44:53,627 [INFO] 127.0.0.1 - - [24/Jun/2026 18:44:53] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:46:22,101 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.5s
+2026-06-24 18:46:22,101 [INFO] 127.0.0.1 - - [24/Jun/2026 18:46:22] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:47:52,890 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.7s
+2026-06-24 18:47:52,891 [INFO] 127.0.0.1 - - [24/Jun/2026 18:47:52] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:49:17,705 [INFO] [infer_fol] obstacle='white storage box' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 18:49:17,706 [INFO] 127.0.0.1 - - [24/Jun/2026 18:49:17] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:50:47,021 [INFO] [infer_fol] obstacle='milk' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 18:50:47,022 [INFO] 127.0.0.1 - - [24/Jun/2026 18:50:47] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:52:19,072 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 18:52:19,073 [INFO] 127.0.0.1 - - [24/Jun/2026 18:52:19] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:53:53,897 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE', 'IS_HOT'] conf=1.00 in 46.3s
+2026-06-24 18:53:53,898 [INFO] 127.0.0.1 - - [24/Jun/2026 18:53:53] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:56:25,749 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.7s
+2026-06-24 18:56:25,750 [INFO] 127.0.0.1 - - [24/Jun/2026 18:56:25] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:57:59,761 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 18:57:59,762 [INFO] 127.0.0.1 - - [24/Jun/2026 18:57:59] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 18:59:29,469 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.7s
+2026-06-24 18:59:29,469 [INFO] 127.0.0.1 - - [24/Jun/2026 18:59:29] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:00:57,602 [INFO] [infer_fol] obstacle='milk' props=['IS_FRAGILE'] conf=1.00 in 46.2s
+2026-06-24 19:00:57,603 [INFO] 127.0.0.1 - - [24/Jun/2026 19:00:57] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:02:29,982 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 19:02:29,984 [INFO] 127.0.0.1 - - [24/Jun/2026 19:02:29] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:04:00,187 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.2s
+2026-06-24 19:04:00,215 [INFO] 127.0.0.1 - - [24/Jun/2026 19:04:00] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:05:30,649 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 46.6s
+2026-06-24 19:05:30,650 [INFO] 127.0.0.1 - - [24/Jun/2026 19:05:30] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:07:14,704 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 19:07:14,705 [INFO] 127.0.0.1 - - [24/Jun/2026 19:07:14] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:08:43,153 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 19:08:43,154 [INFO] 127.0.0.1 - - [24/Jun/2026 19:08:43] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:10:10,064 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.7s
+2026-06-24 19:10:10,065 [INFO] 127.0.0.1 - - [24/Jun/2026 19:10:10] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:11:39,687 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 19:11:39,689 [INFO] 127.0.0.1 - - [24/Jun/2026 19:11:39] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:13:09,666 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 19:13:09,667 [INFO] 127.0.0.1 - - [24/Jun/2026 19:13:09] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:14:37,440 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 19:14:37,441 [INFO] 127.0.0.1 - - [24/Jun/2026 19:14:37] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:16:05,494 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 45.6s
+2026-06-24 19:16:05,495 [INFO] 127.0.0.1 - - [24/Jun/2026 19:16:05] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:17:35,883 [INFO] [infer_fol] obstacle='white storage box' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 19:17:35,884 [INFO] 127.0.0.1 - - [24/Jun/2026 19:17:35] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:19:01,551 [INFO] [infer_fol] obstacle='milk' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 19:19:01,552 [INFO] 127.0.0.1 - - [24/Jun/2026 19:19:01] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:20:32,290 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.6s
+2026-06-24 19:20:32,291 [INFO] 127.0.0.1 - - [24/Jun/2026 19:20:32] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:22:17,663 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 52.3s
+2026-06-24 19:22:17,665 [INFO] 127.0.0.1 - - [24/Jun/2026 19:22:17] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:23:45,545 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 19:23:45,546 [INFO] 127.0.0.1 - - [24/Jun/2026 19:23:45] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:25:13,491 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.5s
+2026-06-24 19:25:13,502 [INFO] 127.0.0.1 - - [24/Jun/2026 19:25:13] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:26:40,008 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 45.6s
+2026-06-24 19:26:40,009 [INFO] 127.0.0.1 - - [24/Jun/2026 19:26:40] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:29:16,187 [INFO] [infer_fol] obstacle='milk' props=['IS_FRAGILE'] conf=1.00 in 51.7s
+2026-06-24 19:29:16,188 [INFO] 127.0.0.1 - - [24/Jun/2026 19:29:16] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:30:41,114 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 19:30:41,115 [INFO] 127.0.0.1 - - [24/Jun/2026 19:30:41] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:32:09,531 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 19:32:09,531 [INFO] 127.0.0.1 - - [24/Jun/2026 19:32:09] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:33:42,678 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 19:33:42,679 [INFO] 127.0.0.1 - - [24/Jun/2026 19:33:42] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:35:31,197 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 19:35:31,198 [INFO] 127.0.0.1 - - [24/Jun/2026 19:35:31] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:37:01,561 [INFO] [infer_fol] obstacle='white storage box' props=[] conf=1.00 in 45.9s
+2026-06-24 19:37:01,562 [INFO] 127.0.0.1 - - [24/Jun/2026 19:37:01] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:38:36,349 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 47.3s
+2026-06-24 19:38:36,350 [INFO] 127.0.0.1 - - [24/Jun/2026 19:38:36] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:40:04,083 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.3s
+2026-06-24 19:40:04,084 [INFO] 127.0.0.1 - - [24/Jun/2026 19:40:04] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:41:56,153 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE', 'IS_HOT'] conf=1.00 in 46.6s
+2026-06-24 19:41:56,155 [INFO] 127.0.0.1 - - [24/Jun/2026 19:41:56] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:43:30,754 [INFO] [infer_fol] obstacle='cookies' props=['IS_FRAGILE'] conf=1.00 in 50.7s
+2026-06-24 19:43:30,755 [INFO] 127.0.0.1 - - [24/Jun/2026 19:43:30] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:45:02,250 [INFO] [infer_fol] obstacle='cookies' props=[] conf=1.00 in 46.6s
+2026-06-24 19:45:02,251 [INFO] 127.0.0.1 - - [24/Jun/2026 19:45:02] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:47:37,279 [INFO] [infer_fol] obstacle='white storage box' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 19:47:37,281 [INFO] 127.0.0.1 - - [24/Jun/2026 19:47:37] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:49:04,492 [INFO] [infer_fol] obstacle='milk' props=['IS_FRAGILE'] conf=1.00 in 46.4s
+2026-06-24 19:49:04,494 [INFO] 127.0.0.1 - - [24/Jun/2026 19:49:04] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:50:42,703 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.2s
+2026-06-24 19:50:42,704 [INFO] 127.0.0.1 - - [24/Jun/2026 19:50:42] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:52:11,974 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 19:52:11,977 [INFO] 127.0.0.1 - - [24/Jun/2026 19:52:11] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:53:43,028 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 45.7s
+2026-06-24 19:53:43,029 [INFO] 127.0.0.1 - - [24/Jun/2026 19:53:43] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:56:12,733 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 19:56:12,734 [INFO] 127.0.0.1 - - [24/Jun/2026 19:56:12] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 19:57:45,704 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.2s
+2026-06-24 19:57:45,705 [INFO] 127.0.0.1 - - [24/Jun/2026 19:57:45] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:00:20,559 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.7s
+2026-06-24 20:00:20,560 [INFO] 127.0.0.1 - - [24/Jun/2026 20:00:20] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:02:56,731 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 20:02:56,732 [INFO] 127.0.0.1 - - [24/Jun/2026 20:02:56] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:04:48,836 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 45.7s
+2026-06-24 20:04:48,861 [INFO] 127.0.0.1 - - [24/Jun/2026 20:04:48] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:07:19,400 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.6s
+2026-06-24 20:07:19,401 [INFO] 127.0.0.1 - - [24/Jun/2026 20:07:19] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:09:49,385 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 20:09:49,386 [INFO] 127.0.0.1 - - [24/Jun/2026 20:09:49] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:11:39,094 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 45.5s
+2026-06-24 20:11:39,095 [INFO] 127.0.0.1 - - [24/Jun/2026 20:11:39] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:13:21,204 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 20:13:21,205 [INFO] 127.0.0.1 - - [24/Jun/2026 20:13:21] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:15:51,463 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 20:15:51,464 [INFO] 127.0.0.1 - - [24/Jun/2026 20:15:51] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:18:23,783 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.5s
+2026-06-24 20:18:23,784 [INFO] 127.0.0.1 - - [24/Jun/2026 20:18:23] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:20:04,052 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 20:20:04,053 [INFO] 127.0.0.1 - - [24/Jun/2026 20:20:04] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:22:39,007 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.6s
+2026-06-24 20:22:39,008 [INFO] 127.0.0.1 - - [24/Jun/2026 20:22:39] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:25:12,480 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.6s
+2026-06-24 20:25:12,481 [INFO] 127.0.0.1 - - [24/Jun/2026 20:25:12] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:27:56,287 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 51.1s
+2026-06-24 20:27:56,288 [INFO] 127.0.0.1 - - [24/Jun/2026 20:27:56] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:29:38,073 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.2s
+2026-06-24 20:29:38,074 [INFO] 127.0.0.1 - - [24/Jun/2026 20:29:38] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:31:21,416 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 46.2s
+2026-06-24 20:31:21,531 [INFO] 127.0.0.1 - - [24/Jun/2026 20:31:21] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:33:53,547 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 20:33:53,569 [INFO] 127.0.0.1 - - [24/Jun/2026 20:33:53] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:35:32,257 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 20:35:32,258 [INFO] 127.0.0.1 - - [24/Jun/2026 20:35:32] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:37:13,581 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.3s
+2026-06-24 20:37:13,582 [INFO] 127.0.0.1 - - [24/Jun/2026 20:37:13] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:39:45,047 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE', 'IS_HOT'] conf=1.00 in 46.1s
+2026-06-24 20:39:45,048 [INFO] 127.0.0.1 - - [24/Jun/2026 20:39:45] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:41:19,339 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 20:41:19,339 [INFO] 127.0.0.1 - - [24/Jun/2026 20:41:19] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:43:18,164 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.9s
+2026-06-24 20:43:18,165 [INFO] 127.0.0.1 - - [24/Jun/2026 20:43:18] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:45:47,504 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.6s
+2026-06-24 20:45:47,506 [INFO] 127.0.0.1 - - [24/Jun/2026 20:45:47] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:48:18,317 [INFO] [infer_fol] obstacle='red coffee mug' props=[] conf=1.00 in 46.6s
+2026-06-24 20:48:18,318 [INFO] 127.0.0.1 - - [24/Jun/2026 20:48:18] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:49:47,332 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 46.1s
+2026-06-24 20:49:47,333 [INFO] 127.0.0.1 - - [24/Jun/2026 20:49:47] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:52:00,864 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 20:52:00,865 [INFO] 127.0.0.1 - - [24/Jun/2026 20:52:00] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:54:31,134 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 20:54:31,135 [INFO] 127.0.0.1 - - [24/Jun/2026 20:54:31] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:56:45,712 [INFO] [infer_fol] obstacle='yellow book' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 20:56:45,713 [INFO] 127.0.0.1 - - [24/Jun/2026 20:56:45] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 20:58:29,089 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 20:58:29,090 [INFO] 127.0.0.1 - - [24/Jun/2026 20:58:29] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:00:25,577 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 21:00:25,578 [INFO] 127.0.0.1 - - [24/Jun/2026 21:00:25] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:02:24,256 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.5s
+2026-06-24 21:02:24,257 [INFO] 127.0.0.1 - - [24/Jun/2026 21:02:24] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:04:04,443 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 21:04:04,444 [INFO] 127.0.0.1 - - [24/Jun/2026 21:04:04] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:06:43,276 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 48.0s
+2026-06-24 21:06:43,310 [INFO] 127.0.0.1 - - [24/Jun/2026 21:06:43] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:08:38,894 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 50.1s
+2026-06-24 21:08:38,895 [INFO] 127.0.0.1 - - [24/Jun/2026 21:08:38] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:11:09,934 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.7s
+2026-06-24 21:11:09,935 [INFO] 127.0.0.1 - - [24/Jun/2026 21:11:09] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:13:41,507 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.0s
+2026-06-24 21:13:41,508 [INFO] 127.0.0.1 - - [24/Jun/2026 21:13:41] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:16:12,957 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.3s
+2026-06-24 21:16:12,958 [INFO] 127.0.0.1 - - [24/Jun/2026 21:16:12] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:18:45,916 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.6s
+2026-06-24 21:18:45,917 [INFO] 127.0.0.1 - - [24/Jun/2026 21:18:45] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:21:15,858 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 21:21:15,859 [INFO] 127.0.0.1 - - [24/Jun/2026 21:21:15] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:22:52,340 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.2s
+2026-06-24 21:22:52,341 [INFO] 127.0.0.1 - - [24/Jun/2026 21:22:52] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:24:49,733 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.6s
+2026-06-24 21:24:49,734 [INFO] 127.0.0.1 - - [24/Jun/2026 21:24:49] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:27:19,799 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 21:27:19,801 [INFO] 127.0.0.1 - - [24/Jun/2026 21:27:19] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:29:48,984 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.2s
+2026-06-24 21:29:48,985 [INFO] 127.0.0.1 - - [24/Jun/2026 21:29:48] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:32:32,504 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 51.4s
+2026-06-24 21:32:32,505 [INFO] 127.0.0.1 - - [24/Jun/2026 21:32:32] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:35:07,093 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.2s
+2026-06-24 21:35:07,094 [INFO] 127.0.0.1 - - [24/Jun/2026 21:35:07] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:37:14,756 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 46.2s
+2026-06-24 21:37:14,806 [INFO] 127.0.0.1 - - [24/Jun/2026 21:37:14] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:38:43,098 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 45.9s
+2026-06-24 21:38:43,099 [INFO] 127.0.0.1 - - [24/Jun/2026 21:38:43] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:40:23,730 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 21:40:23,731 [INFO] 127.0.0.1 - - [24/Jun/2026 21:40:23] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:42:56,025 [INFO] [infer_fol] obstacle='yellow book' props=[] conf=1.00 in 45.5s
+2026-06-24 21:42:56,026 [INFO] 127.0.0.1 - - [24/Jun/2026 21:42:56] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:45:28,658 [INFO] [infer_fol] obstacle='wine bottle' props=['IS_FRAGILE'] conf=1.00 in 46.1s
+2026-06-24 21:45:28,659 [INFO] 127.0.0.1 - - [24/Jun/2026 21:45:28] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 21:48:00,598 [INFO] [infer_fol] obstacle='red coffee mug' props=['IS_FRAGILE'] conf=1.00 in 45.8s
+2026-06-24 21:48:00,599 [INFO] 127.0.0.1 - - [24/Jun/2026 21:48:00] "POST /infer_fol HTTP/1.1" 200 -

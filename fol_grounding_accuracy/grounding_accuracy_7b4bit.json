@@ -1,0 +1,1035 @@
+{
+ "model": "7b4bit",
+ "n_votes": 3,
+ "variants": {
+  "a0_current": {
+   "accuracy": 0.0,
+   "abstain_rate": 0.0,
+   "vote_parse_fail_rate": 0.0,
+   "episodes": [
+    {
+     "episode": "level_I/task_0/episode_00",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_01",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_02",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_03",
+     "gt": "wine_bottle_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_04",
+     "gt": "red_coffee_mug_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_05",
+     "gt": "yellow_book_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_06",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_07",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_08",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_09",
+     "gt": "wine_bottle_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_10",
+     "gt": "red_coffee_mug_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_11",
+     "gt": "yellow_book_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_12",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_13",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_14",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_15",
+     "gt": "wine_bottle_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_16",
+     "gt": "red_coffee_mug_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_17",
+     "gt": "yellow_book_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_18",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_19",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_20",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    }
+   ]
+  },
+  "a1_choice": {
+   "accuracy": 0.0,
+   "abstain_rate": 0.2857142857142857,
+   "vote_parse_fail_rate": 0.2857142857142857,
+   "episodes": [
+    {
+     "episode": "level_I/task_0/episode_00",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_01",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_02",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_03",
+     "gt": "wine_bottle_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_04",
+     "gt": "red_coffee_mug_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_05",
+     "gt": "yellow_book_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_06",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_07",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": null,
+     "votes": [
+      null,
+      null,
+      null
+     ],
+     "parse": [
+      "none",
+      "none",
+      "none"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_08",
+     "gt": "milk_obstacle_1",
+     "picked": null,
+     "votes": [
+      null,
+      null,
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "none",
+      "none",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_09",
+     "gt": "wine_bottle_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_10",
+     "gt": "red_coffee_mug_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_11",
+     "gt": "yellow_book_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      null,
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "none",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_12",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_13",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": null,
+     "votes": [
+      null,
+      null,
+      null
+     ],
+     "parse": [
+      "none",
+      "none",
+      "none"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_14",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_15",
+     "gt": "wine_bottle_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_16",
+     "gt": "red_coffee_mug_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_17",
+     "gt": "yellow_book_obstacle_1",
+     "picked": null,
+     "votes": [
+      null,
+      null,
+      null
+     ],
+     "parse": [
+      "none",
+      "none",
+      "none"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_18",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_19",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": null,
+     "votes": [
+      null,
+      null,
+      null
+     ],
+     "parse": [
+      "none",
+      "none",
+      "none"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_20",
+     "gt": "milk_obstacle_1",
+     "picked": null,
+     "votes": [
+      null,
+      null,
+      null
+     ],
+     "parse": [
+      "none",
+      "none",
+      "none"
+     ],
+     "correct": false
+    }
+   ]
+  },
+  "a2_unmentioned": {
+   "accuracy": 0.0,
+   "abstain_rate": 0.0,
+   "vote_parse_fail_rate": 0.0,
+   "episodes": [
+    {
+     "episode": "level_I/task_0/episode_00",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_01",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_02",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_03",
+     "gt": "wine_bottle_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_04",
+     "gt": "red_coffee_mug_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_05",
+     "gt": "yellow_book_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_06",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_07",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_08",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_09",
+     "gt": "wine_bottle_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_10",
+     "gt": "red_coffee_mug_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_11",
+     "gt": "yellow_book_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_12",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_13",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_14",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_15",
+     "gt": "wine_bottle_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_16",
+     "gt": "red_coffee_mug_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_17",
+     "gt": "yellow_book_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_18",
+     "gt": "moka_pot_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_19",
+     "gt": "white_storage_box_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    },
+    {
+     "episode": "level_I/task_0/episode_20",
+     "gt": "milk_obstacle_1",
+     "picked": "akita_black_bowl_1",
+     "votes": [
+      "akita_black_bowl_1",
+      "akita_black_bowl_1",
+      "akita_black_bowl_1"
+     ],
+     "parse": [
+      "json",
+      "json",
+      "json"
+     ],
+     "correct": false
+    }
+   ]
+  }
+ }
+}

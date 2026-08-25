@@ -1,0 +1,71 @@
+2026-06-24 13:55:42,129 [INFO] Loading Qwen/Qwen2.5-VL-3B-Instruct onto available GPUs (4bit=False) ...
+2026-06-24 13:55:42,240 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:42,263 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-06-24 13:55:42,264 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-06-24 13:55:42,269 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:42,311 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:42,338 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:42,346 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:42,380 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:42,407 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:42,433 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/chat_template.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:42,442 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/chat_template.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:42,470 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:42,499 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/audio_tokenizer_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:42,528 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:42,555 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:42,561 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:42,605 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:42,633 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:42,643 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:42,672 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:42,678 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:42,740 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:42,747 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:42,779 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:42,818 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-24 13:55:43,199 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct "HTTP/1.1 200 OK"
+2026-06-24 13:55:43,228 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:43,260 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:43,285 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:43,295 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:43,322 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:43,351 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:43,379 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:43,385 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:43,665 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:43,672 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:43,717 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
+2026-06-24 13:55:43,757 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/model.safetensors.index.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:43,763 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/model.safetensors.index.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:43,798 [INFO] HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-VL-3B-Instruct/revision/main "HTTP/1.1 200 OK"
+Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]Fetching 2 files: 100%|██████████| 2/2 [00:00<00:00, 8388.61it/s]
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   0%|          | 1/824 [00:00<02:50,  4.82it/s]Loading weights:   2%|▏         | 15/824 [00:00<00:15, 51.44it/s]Loading weights:   5%|▍         | 39/824 [00:00<00:07, 111.56it/s]Loading weights:   6%|▋         | 53/824 [00:00<00:06, 114.05it/s]Loading weights:   9%|▉         | 75/824 [00:00<00:05, 143.49it/s]Loading weights:  11%|█         | 91/824 [00:00<00:05, 140.70it/s]Loading weights:  13%|█▎        | 111/824 [00:00<00:04, 155.08it/s]Loading weights:  16%|█▌        | 128/824 [00:01<00:04, 151.28it/s]Loading weights:  18%|█▊        | 147/824 [00:01<00:04, 159.78it/s]Loading weights:  20%|█▉        | 164/824 [00:01<00:04, 154.28it/s]Loading weights:  22%|██▏       | 183/824 [00:01<00:03, 161.61it/s]Loading weights:  24%|██▍       | 200/824 [00:01<00:04, 155.85it/s]Loading weights:  26%|██▋       | 218/824 [00:01<00:03, 160.04it/s]Loading weights:  29%|██▊       | 235/824 [00:01<00:03, 154.74it/s]Loading weights:  31%|███       | 255/824 [00:01<00:03, 164.56it/s]Loading weights:  33%|███▎      | 272/824 [00:01<00:03, 158.00it/s]Loading weights:  35%|███▌      | 291/824 [00:02<00:03, 147.11it/s]Loading weights:  38%|███▊      | 315/824 [00:02<00:03, 168.43it/s]Loading weights:  40%|████      | 333/824 [00:02<00:03, 160.30it/s]Loading weights:  43%|████▎     | 352/824 [00:02<00:02, 160.32it/s]Loading weights:  45%|████▍     | 369/824 [00:02<00:02, 162.52it/s]Loading weights:  47%|████▋     | 387/824 [00:02<00:02, 167.04it/s]Loading weights:  49%|████▉     | 404/824 [00:02<00:02, 159.58it/s]Loading weights:  51%|█████     | 422/824 [00:02<00:02, 162.68it/s]Loading weights:  56%|█████▌    | 462/824 [00:02<00:01, 228.45it/s]Loading weights:  64%|██████▎   | 524/824 [00:03<00:00, 336.14it/s]Loading weights:  71%|███████   | 584/824 [00:03<00:00, 411.17it/s]Loading weights:  78%|███████▊  | 645/824 [00:03<00:00, 468.79it/s]Loading weights:  85%|████████▌ | 704/824 [00:03<00:00, 503.81it/s]Loading weights:  93%|█████████▎| 765/824 [00:03<00:00, 535.00it/s]Loading weights: 100%|█████████▉| 820/824 [00:03<00:00, 518.93it/s]Loading weights: 100%|██████████| 824/824 [00:03<00:00, 230.53it/s]
+2026-06-24 13:55:48,043 [INFO] HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct/resolve/main/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-24 13:55:48,050 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-VL-3B-Instruct/66285546d2b821cf421d4f5eb2576359d3770cd3/generation_config.json "HTTP/1.1 200 OK"
+2026-06-24 13:55:48,054 [INFO] Model ready: Qwen/Qwen2.5-VL-3B-Instruct
+ * Serving Flask app 'qwen_vlm_server'
+ * Debug mode: off
+2026-06-24 13:55:48,058 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://10.8.10.251:5001
+2026-06-24 13:55:48,058 [INFO] [33mPress CTRL+C to quit[0m
+2026-06-24 13:55:50,649 [INFO] 127.0.0.1 - - [24/Jun/2026 13:55:50] "GET /health HTTP/1.1" 200 -
+2026-06-24 13:56:59,238 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 31.7s
+2026-06-24 13:56:59,239 [INFO] 127.0.0.1 - - [24/Jun/2026 13:56:59] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 13:59:06,285 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 31.6s
+2026-06-24 13:59:06,286 [INFO] 127.0.0.1 - - [24/Jun/2026 13:59:06] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 14:01:12,364 [INFO] [infer_fol] obstacle='plate' props=['IS_FRAGILE'] conf=1.00 in 31.2s
+2026-06-24 14:01:12,365 [INFO] 127.0.0.1 - - [24/Jun/2026 14:01:12] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 14:02:12,549 [INFO] [infer_fol] obstacle='plate' props=['IS_FRAGILE'] conf=1.00 in 31.3s
+2026-06-24 14:02:12,550 [INFO] 127.0.0.1 - - [24/Jun/2026 14:02:12] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 14:04:19,646 [INFO] [infer_fol] obstacle='akita black bowl' props=['IS_FRAGILE'] conf=1.00 in 31.5s
+2026-06-24 14:04:19,647 [INFO] 127.0.0.1 - - [24/Jun/2026 14:04:19] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 14:06:27,918 [INFO] [infer_fol] obstacle='cream cheese' props=['IS_FRAGILE'] conf=1.00 in 33.3s
+2026-06-24 14:06:27,919 [INFO] 127.0.0.1 - - [24/Jun/2026 14:06:27] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 14:08:34,508 [INFO] [infer_fol] obstacle='plate' props=['IS_FRAGILE'] conf=1.00 in 31.2s
+2026-06-24 14:08:34,509 [INFO] 127.0.0.1 - - [24/Jun/2026 14:08:34] "POST /infer_fol HTTP/1.1" 200 -
+2026-06-24 14:10:41,603 [INFO] [infer_fol] obstacle='plate' props=['IS_FRAGILE'] conf=1.00 in 31.3s
+2026-06-24 14:10:41,603 [INFO] 127.0.0.1 - - [24/Jun/2026 14:10:41] "POST /infer_fol HTTP/1.1" 200 -
