@@ -1,0 +1,10 @@
+{"task": 1, "ep": 0, "success": false, "collision": true, "steps": 300, "k_disp_mean": 0.18341, "k_disp_max": 0.51668, "margin_spread_mean": 0.02467}
+{"task": 1, "ep": 1, "success": false, "collision": true, "steps": 300, "k_disp_mean": 0.12221, "k_disp_max": 0.6217, "margin_spread_mean": 0.02876}
+{"task": 1, "ep": 2, "success": false, "collision": true, "steps": 300, "k_disp_mean": 0.12319, "k_disp_max": 0.39269, "margin_spread_mean": 0.00718}
+{"task": 1, "ep": 3, "success": true, "collision": true, "steps": 200, "k_disp_mean": 0.07541, "k_disp_max": 0.20268, "margin_spread_mean": 0.01677}
+{"task": 1, "ep": 4, "success": false, "collision": true, "steps": 300, "k_disp_mean": 0.10972, "k_disp_max": 0.46693, "margin_spread_mean": 0.02345}
+{"task": 1, "ep": 5, "success": false, "collision": true, "steps": 300, "k_disp_mean": 0.15979, "k_disp_max": 0.44215, "margin_spread_mean": 0.025}
+{"task": 1, "ep": 6, "success": true, "collision": true, "steps": 198, "k_disp_mean": 0.07814, "k_disp_max": 0.20955, "margin_spread_mean": 0.01441}
+{"task": 1, "ep": 7, "success": false, "collision": true, "steps": 300, "k_disp_mean": 0.12704, "k_disp_max": 0.30057, "margin_spread_mean": 0.01025}
+{"task": 1, "ep": 8, "success": true, "collision": true, "steps": 273, "k_disp_mean": 0.09606, "k_disp_max": 0.28704, "margin_spread_mean": 0.02718}
+{"task": 1, "ep": 9, "success": false, "collision": true, "steps": 300, "k_disp_mean": 0.10605, "k_disp_max": 0.28288, "margin_spread_mean": 0.01605}

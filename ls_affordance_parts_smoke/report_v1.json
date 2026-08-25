@@ -1,0 +1,180 @@
+{
+ "summary": {
+  "unsafe_part_discriminates": "2/5",
+  "gate": ">=4/5",
+  "verdict": "FAIL"
+ },
+ "tasks": [
+  {
+   "task": "grab_the_knife_and_cut_the_lemon_on_the_cutting_board",
+   "object": "knife_1",
+   "class": "knife",
+   "n_allowed_geoms": 24,
+   "n_unsafe_geoms": 8,
+   "gt_grasp": [
+    -0.2691,
+    -0.1675,
+    0.9108
+   ],
+   "gt_unsafe": [
+    -0.1295,
+    -0.1718,
+    0.9102
+   ],
+   "unsafe_part": {
+    "prompt": "knife blade",
+    "n_views": 1,
+    "pos": [
+     -0.2284,
+     -0.1721,
+     0.9081
+    ],
+    "err_m": 0.0989,
+    "discriminates": false
+   },
+   "grasp_part": {
+    "prompt": "knife handle",
+    "n_views": 1,
+    "pos": [
+     -0.2271,
+     -0.172,
+     0.9068
+    ],
+    "err_m": 0.0424,
+    "discriminates": true
+   }
+  },
+  {
+   "task": "pass_me_the_hammer",
+   "object": "hammer_1",
+   "class": "hammer",
+   "n_allowed_geoms": 1,
+   "n_unsafe_geoms": 31,
+   "gt_grasp": [
+    -0.0481,
+    -0.2762,
+    0.4623
+   ],
+   "gt_unsafe": [
+    -0.0481,
+    -0.2745,
+    0.4652
+   ],
+   "unsafe_part": {
+    "prompt": "hammer head",
+    "n_views": 0,
+    "pos": null
+   },
+   "grasp_part": {
+    "prompt": "hammer handle",
+    "n_views": 0,
+    "pos": null
+   }
+  },
+  {
+   "task": "pick_up_the_fork_and_place_it_on_the_right_of_the_plate",
+   "object": "fork_1",
+   "class": "fork",
+   "n_allowed_geoms": 14,
+   "n_unsafe_geoms": 18,
+   "gt_grasp": [
+    -0.1283,
+    0.2684,
+    0.9083
+   ],
+   "gt_unsafe": [
+    -0.0192,
+    0.2697,
+    0.9122
+   ],
+   "unsafe_part": {
+    "prompt": "fork tines",
+    "n_views": 1,
+    "pos": [
+     -0.0733,
+     0.2682,
+     0.9078
+    ],
+    "err_m": 0.0543,
+    "discriminates": true
+   },
+   "grasp_part": {
+    "prompt": "fork handle",
+    "n_views": 1,
+    "pos": [
+     -0.0733,
+     0.2682,
+     0.9078
+    ],
+    "err_m": 0.055,
+    "discriminates": false
+   }
+  },
+  {
+   "task": "pour_the_water_in_the_classic_blue_mug_to_the_bowl",
+   "object": "classic_blue_mug_1",
+   "class": "classic blue mug",
+   "n_allowed_geoms": 3,
+   "n_unsafe_geoms": 29,
+   "gt_grasp": [
+    -0.1554,
+    -0.1254,
+    0.4957
+   ],
+   "gt_unsafe": [
+    -0.1111,
+    -0.141,
+    0.4793
+   ],
+   "unsafe_part": {
+    "prompt": "classic blue mug rim",
+    "n_views": 0,
+    "pos": null
+   },
+   "grasp_part": {
+    "prompt": "classic blue mug handle",
+    "n_views": 0,
+    "pos": null
+   }
+  },
+  {
+   "task": "put_the_frypan_on_the_stove",
+   "object": "frypan_1",
+   "class": "frypan",
+   "n_allowed_geoms": 3,
+   "n_unsafe_geoms": 29,
+   "gt_grasp": [
+    -0.0727,
+    -0.1483,
+    0.9355
+   ],
+   "gt_unsafe": [
+    -0.0727,
+    -0.3,
+    0.9173
+   ],
+   "unsafe_part": {
+    "prompt": "frypan cooking surface",
+    "n_views": 1,
+    "pos": [
+     -0.0794,
+     -0.2352,
+     0.9177
+    ],
+    "err_m": 0.0652,
+    "discriminates": true
+   },
+   "grasp_part": {
+    "prompt": "frypan handle",
+    "n_views": 1,
+    "pos": [
+     -0.0794,
+     -0.2352,
+     0.9177
+    ],
+    "err_m": 0.089,
+    "discriminates": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,186 @@
+{
+ "summary": {
+  "unsafe_part_discriminates": "1/5",
+  "gate": ">=4/5",
+  "verdict": "FAIL"
+ },
+ "tasks": [
+  {
+   "task": "grab_the_knife_and_cut_the_lemon_on_the_cutting_board",
+   "object": "knife_1",
+   "class": "knife",
+   "n_allowed_geoms": 24,
+   "n_unsafe_geoms": 8,
+   "gt_grasp": [
+    -0.2809,
+    -0.159,
+    0.9108
+   ],
+   "gt_unsafe": [
+    -0.1413,
+    -0.1632,
+    0.9102
+   ],
+   "unsafe_part": {
+    "prompt": "knife blade",
+    "n_views": 2,
+    "pos": [
+     -0.2379,
+     -0.1614,
+     0.9088
+    ],
+    "err_m": 0.0967,
+    "discriminates": false
+   },
+   "grasp_part": {
+    "prompt": "knife handle",
+    "n_views": 2,
+    "pos": [
+     -0.2379,
+     -0.1614,
+     0.9088
+    ],
+    "err_m": 0.0431,
+    "discriminates": true
+   }
+  },
+  {
+   "task": "pass_me_the_hammer",
+   "object": "hammer_1",
+   "class": "hammer",
+   "n_allowed_geoms": 1,
+   "n_unsafe_geoms": 31,
+   "gt_grasp": [
+    -0.0604,
+    -0.269,
+    0.4623
+   ],
+   "gt_unsafe": [
+    -0.0604,
+    -0.2673,
+    0.4652
+   ],
+   "unsafe_part": {
+    "prompt": "hammer head",
+    "n_views": 1,
+    "pos": [
+     -0.0376,
+     -0.0009,
+     0.7758
+    ],
+    "err_m": 0.4099,
+    "discriminates": true
+   },
+   "grasp_part": {
+    "prompt": "handle",
+    "n_views": 0,
+    "pos": null
+   }
+  },
+  {
+   "task": "pick_up_the_fork_and_place_it_on_the_right_of_the_plate",
+   "object": "fork_1",
+   "class": "fork",
+   "n_allowed_geoms": 14,
+   "n_unsafe_geoms": 18,
+   "gt_grasp": [
+    -0.1289,
+    0.268,
+    0.9083
+   ],
+   "gt_unsafe": [
+    -0.0198,
+    0.2693,
+    0.9122
+   ],
+   "unsafe_part": {
+    "prompt": "fork tines",
+    "n_views": 2,
+    "pos": [
+     -0.0792,
+     0.2671,
+     0.9102
+    ],
+    "err_m": 0.0594,
+    "discriminates": false
+   },
+   "grasp_part": {
+    "prompt": "fork handle",
+    "n_views": 2,
+    "pos": [
+     -0.0789,
+     0.2685,
+     0.9057
+    ],
+    "err_m": 0.0501,
+    "discriminates": true
+   }
+  },
+  {
+   "task": "pour_the_water_in_the_classic_blue_mug_to_the_bowl",
+   "object": "classic_blue_mug_1",
+   "class": "classic blue mug",
+   "n_allowed_geoms": 3,
+   "n_unsafe_geoms": 29,
+   "gt_grasp": [
+    -0.153,
+    -0.118,
+    0.4964
+   ],
+   "gt_unsafe": [
+    -0.1088,
+    -0.1328,
+    0.4791
+   ],
+   "unsafe_part": {
+    "prompt": "rim",
+    "n_views": 0,
+    "pos": null
+   },
+   "grasp_part": {
+    "prompt": "handle",
+    "n_views": 0,
+    "pos": null
+   }
+  },
+  {
+   "task": "put_the_frypan_on_the_stove",
+   "object": "frypan_1",
+   "class": "frypan",
+   "n_allowed_geoms": 3,
+   "n_unsafe_geoms": 29,
+   "gt_grasp": [
+    -0.082,
+    -0.1871,
+    0.9355
+   ],
+   "gt_unsafe": [
+    -0.082,
+    -0.3388,
+    0.9173
+   ],
+   "unsafe_part": {
+    "prompt": "frypan cooking surface",
+    "n_views": 2,
+    "pos": [
+     -0.2201,
+     -0.198,
+     0.9072
+    ],
+    "err_m": 0.1975,
+    "discriminates": false
+   },
+   "grasp_part": {
+    "prompt": "frypan handle",
+    "n_views": 2,
+    "pos": [
+     -0.2191,
+     -0.198,
+     0.9072
+    ],
+    "err_m": 0.1404,
+    "discriminates": true
+   }
+  }
+ ]
+}

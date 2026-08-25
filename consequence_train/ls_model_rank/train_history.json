@@ -1,0 +1,17 @@
+[
+  {
+    "seed": 0,
+    "epochs_run": 40,
+    "best_held_loss": 0.3966982662677765
+  },
+  {
+    "seed": 1,
+    "epochs_run": 56,
+    "best_held_loss": 0.38686493039131165
+  },
+  {
+    "seed": 2,
+    "epochs_run": 56,
+    "best_held_loss": 0.3770320415496826
+  }
+]

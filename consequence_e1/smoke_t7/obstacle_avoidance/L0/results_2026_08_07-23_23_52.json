@@ -1,0 +1,18 @@
+{
+ "suite": "obstacle_avoidance",
+ "level": 0,
+ "guidance": true,
+ "obstacle_id_source": "gt",
+ "entity_pos_source": "gt",
+ "exec_parity": true,
+ "engage_radius": 0.22,
+ "engage_cone": null,
+ "holding_disengage": false,
+ "mover_lead": null,
+ "refuse_unsafe": false,
+ "log_transitions": false,
+ "overall_TSR": 0.0,
+ "overall_violation_rate": 0.0,
+ "refused_tasks": 0,
+ "per_task": []
+}

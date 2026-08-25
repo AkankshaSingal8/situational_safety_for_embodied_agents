@@ -1,0 +1,121 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{sota2607}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}}
+\newlabel{sec:intro}{{I}{1}{Introduction}{section.1}{}}
+\citation{coast}
+\citation{yourmodel}
+\citation{sota2607}
+\citation{omniguide}
+\citation{vls}
+\citation{sota2607}
+\citation{agrawal2017dcbf}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Same frozen policy, same initial state, one violates. Top: the base $\pi _{0.5}$ policy drives its gripper into the hand-attached bottle (clearance $-0.022$\tmspace  +\thinmuskip {.1667em}m at $t{=}573$) and times out. Bottom: with our training-free, no-ground-truth filter the same policy takes a different approach path, keeps clearance positive throughout, and completes the task in 510 steps. LIBERO-Safety, paired initial states; the clearance traces are Fig.\nobreakspace  {}\ref  {fig:filmstrip}.}}{2}{figure.1}}
+\newlabel{fig:teaser}{{1}{2}{Same frozen policy, same initial state, one violates. Top: the base $\pi _{0.5}$ policy drives its gripper into the hand-attached bottle (clearance $-0.022$\,m at $t{=}573$) and times out. Bottom: with our training-free, no-ground-truth filter the same policy takes a different approach path, keeps clearance positive throughout, and completes the task in 510 steps. LIBERO-Safety, paired initial states; the clearance traces are Fig.~\ref {fig:filmstrip}}{figure.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{section.2}}
+\newlabel{sec:related}{{II}{2}{Related Work}{section.2}{}}
+\citation{cbf2602}
+\citation{safediffuser}
+\citation{aegis}
+\citation{ames2019cbf,brunke2025semantic}
+\citation{pacs}
+\citation{sota2607}
+\citation{liberosafety}
+\citation{brunke2025semantic}
+\citation{pi05}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The mechanism on one LIBERO-Safety episode (``put the white yellow mug in the microwave and close it''). (a)\nobreakspace  {}Observation. (b)\nobreakspace  {}The three-literal hazard election (Eq.\nobreakspace  {}\textup  {\hbox {\mathsurround \z@ \normalfont  (\ignorespaces \ref  {eq:fol}\unskip \@@italiccorr )}}) evaluated by the deployed code on this scene: the task-referenced mug is exempt; the hand-attached bottle is elected via \textsc  {Protected}. (c)\nobreakspace  {}The elected guard set projected into the camera frame. (d)\nobreakspace  {}Noise-space enforcement (schematic): $K$ noise samples decode to candidate chunks; the checked prefix certificate (Sec.\nobreakspace  {}\ref  {sec:theory}) accepts or rejects each on the executed prefix, and the best certified candidate executes.}}{3}{figure.2}}
+\newlabel{fig:mechanism}{{2}{3}{The mechanism on one LIBERO-Safety episode (``put the white yellow mug in the microwave and close it''). (a)~Observation. (b)~The three-literal hazard election (Eq.~\eqref {eq:fol}) evaluated by the deployed code on this scene: the task-referenced mug is exempt; the hand-attached bottle is elected via \textsc {Protected}. (c)~The elected guard set projected into the camera frame. (d)~Noise-space enforcement (schematic): $K$ noise samples decode to candidate chunks; the checked prefix certificate (Sec.~\ref {sec:theory}) accepts or rejects each on the executed prefix, and the best certified candidate executes}{figure.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Problem Setup}{3}{section.3}}
+\newlabel{sec:setup}{{III}{3}{Problem Setup}{section.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Method}{3}{section.4}}
+\newlabel{sec:method}{{IV}{3}{Method}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-A}}Identification: a first-order rule over VLM-grounded predicates}{3}{subsection.4.1}}
+\newlabel{sec:ident}{{\unhbox \voidb@x \hbox {IV-A}}{3}{Identification: a first-order rule over VLM-grounded predicates}{subsection.4.1}{}}
+\newlabel{eq:fol}{{1}{3}{Identification: a first-order rule over VLM-grounded predicates}{equation.4.1}{}}
+\citation{gdino}
+\citation{sota2607}
+\citation{agrawal2017dcbf}
+\citation{sota2607}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-B}}Enforcement: noise-space operators over a frozen flow map}{4}{subsection.4.2}}
+\newlabel{sec:operators}{{\unhbox \voidb@x \hbox {IV-B}}{4}{Enforcement: noise-space operators over a frozen flow map}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-C}}Certificate}{4}{subsection.4.3}}
+\newlabel{sec:theory}{{\unhbox \voidb@x \hbox {IV-C}}{4}{Certificate}{subsection.4.3}{}}
+\newlabel{thm:feas}{{1}{4}{Feasibility under actuation limits}{theorem.1}{}}
+\newlabel{prop:cert}{{1}{4}{Checked prefix certificate}{proposition.1}{}}
+\newlabel{prop:select}{{2}{4}{Selection soundness}{proposition.2}{}}
+\newlabel{cor:mech}{{1}{4}{Mechanism independence}{corollary.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Round 1: five enforcement arms, dev cells, $n{=}20$/task, paired seeds. Spatial figures are TSR/CAR (\%); Object t1 is TSR. $p$-values: exact McNemar vs.\ the repair control.}}{5}{table.1}}
+\newlabel{tab:round1}{{I}{5}{Round 1: five enforcement arms, dev cells, $n{=}20$/task, paired seeds. Spatial figures are TSR/CAR (\%); Object t1 is TSR. $p$-values: exact McNemar vs.\ the repair control}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-D}}Three-regime routing}{5}{subsection.4.4}}
+\newlabel{sec:routing}{{\unhbox \voidb@x \hbox {IV-D}}{5}{Three-regime routing}{subsection.4.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Experiments I: Paired Enforcement Comparison}{5}{section.5}}
+\newlabel{sec:pilots}{{V}{5}{Experiments I: Paired Enforcement Comparison}{section.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Experiments II: Identification}{5}{section.6}}
+\newlabel{sec:e3}{{VI}{5}{Experiments II: Identification}{section.6}{}}
+\citation{sota2607}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Hazard-identification accuracy on the 19-scene SafeLIBERO benchmark as a function of how much authority the VLM is given. Whole-scene VLM identification tops out at 84\% even at API strength (local models: 18--64\%); letting a VLM \emph  {compose} the rule at runtime is worse than the fixed rule; grounding Eq.\nobreakspace  {}\textup  {\hbox {\mathsurround \z@ \normalfont  (\ignorespaces \ref  {eq:fol}\unskip \@@italiccorr )}}'s predicates with cached VLM priors reaches 84\% top-1 and \textbf  {100\% top-2 guard-set recall} --- the deployed configuration --- matching the hand-coded predicate table it replaces.}}{6}{figure.3}}
+\newlabel{fig:vlmacc}{{3}{6}{Hazard-identification accuracy on the 19-scene SafeLIBERO benchmark as a function of how much authority the VLM is given. Whole-scene VLM identification tops out at 84\% even at API strength (local models: 18--64\%); letting a VLM \emph {compose} the rule at runtime is worse than the fixed rule; grounding Eq.~\eqref {eq:fol}'s predicates with cached VLM priors reaches 84\% top-1 and \textbf {100\% top-2 guard-set recall} --- the deployed configuration --- matching the hand-coded predicate table it replaces}{figure.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces E3 identification swap: enforcement fixed (ramp, $K{=}8$, $r{=}0.09$, corridor), \emph  {only} the identity source varies. Spatial, $n{=}40$/arm/level, same seeds. Paired McNemar GT vs.\ FOL: L1 TSR 4/7 discordant, $p=0.55$; L1 CAR 0/2, $p=0.50$; L2 TSR 2/7, $p=0.18$; L2 CAR 4/4, $p=1.0$.}}{6}{table.2}}
+\newlabel{tab:e3}{{II}{6}{E3 identification swap: enforcement fixed (ramp, $K{=}8$, $r{=}0.09$, corridor), \emph {only} the identity source varies. Spatial, $n{=}40$/arm/level, same seeds. Paired McNemar GT vs.\ FOL: L1 TSR 4/7 discordant, $p=0.55$; L1 CAR 0/2, $p=0.50$; L2 TSR 2/7, $p=0.18$; L2 CAR 4/4, $p=1.0$}{table.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Experiments III: SafeLIBERO Board}{6}{section.7}}
+\newlabel{sec:board}{{VII}{6}{Experiments III: SafeLIBERO Board}{section.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Experiments IV: LIBERO-Safety Board}{6}{section.8}}
+\newlabel{sec:ls}{{VIII}{6}{Experiments IV: LIBERO-Safety Board}{section.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces The SafeLIBERO five-arm board (Table\nobreakspace  {}\ref  {tab:board}) as task success (top) over collision avoidance (bottom), eight cells. The no-GT column beats both the baseline and the SOTA reimplementation on both axes in 4/8 cells; every shield architecture collapses Long-horizon success.}}{7}{figure.4}}
+\newlabel{fig:slboard}{{4}{7}{The SafeLIBERO five-arm board (Table~\ref {tab:board}) as task success (top) over collision avoidance (bottom), eight cells. The no-GT column beats both the baseline and the SOTA reimplementation on both axes in 4/8 cells; every shield architecture collapses Long-horizon success}{figure.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Five-row architecture board: TSR/CAR (\%), $n{=}200$ per cell, one collision criterion ($>$1\tmspace  +\thinmuskip {.1667em}mm GT-hazard displacement), enforcement = composed in-denoising configuration (per-cell best config). \textbf  {Bold}: beats \emph  {both} the baseline and the SOTA reimplementation on that axis. $^\dagger $nominal (Fisher n.s., $p=0.64/0.69$). $^\ddagger $table-prior ablation 44.0/79.5; the VLM guards spillable food where the benchmark designates a book/mug (benchmark-definition divergence, Sec.\nobreakspace  {}\ref  {sec:limitations}).}}{7}{table.3}}
+\newlabel{tab:board}{{III}{7}{Five-row architecture board: TSR/CAR (\%), $n{=}200$ per cell, one collision criterion ($>$1\,mm GT-hazard displacement), enforcement = composed in-denoising configuration (per-cell best config). \textbf {Bold}: beats \emph {both} the baseline and the SOTA reimplementation on that axis. $^\dagger $nominal (Fisher n.s., $p=0.64/0.69$). $^\ddagger $table-prior ablation 44.0/79.5; the VLM guards spillable food where the benchmark designates a book/mug (benchmark-definition divergence, Sec.~\ref {sec:limitations})}{table.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces The LIBERO-Safety five-arm board (Table\nobreakspace  {}\ref  {tab:lsboard}) as task success (top) over benchmark violation rate (bottom). Both dedicated shields collapse the human-safety suite (37.3/32.7 vs.\ baseline 85.8) while our no-GT stack holds it at baseline --- safety by freezing versus safety while moving --- and cuts violations to 0.6\% macro vs.\ the baseline's 2.5\%.}}{8}{figure.5}}
+\newlabel{fig:lsboard}{{5}{8}{The LIBERO-Safety five-arm board (Table~\ref {tab:lsboard}) as task success (top) over benchmark violation rate (bottom). Both dedicated shields collapse the human-safety suite (37.3/32.7 vs.\ baseline 85.8) while our no-GT stack holds it at baseline --- safety by freezing versus safety while moving --- and cuts violations to 0.6\% macro vs.\ the baseline's 2.5\%}{figure.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces LIBERO-Safety five-arm board, safety-finetuned $\pi _{0.5}$ checkpoint, per-suite TSR\tmspace  +\thinmuskip {.1667em}/\tmspace  +\thinmuskip {.1667em}violation\% (benchmark contact predicates; suites: obstacle avoidance, human safety, obstacle$+$hands, affordance). Cells are $n{=}150$; baseline and ours cells feeding significance claims pool $n{=}450$--$750$ (batch-aware pairing); macros follow the pooled recomputation.}}{8}{table.4}}
+\newlabel{tab:lsboard}{{IV}{8}{LIBERO-Safety five-arm board, safety-finetuned $\pi _{0.5}$ checkpoint, per-suite TSR\,/\,violation\% (benchmark contact predicates; suites: obstacle avoidance, human safety, obstacle$+$hands, affordance). Cells are $n{=}150$; baseline and ours cells feeding significance claims pool $n{=}450$--$750$ (batch-aware pairing); macros follow the pooled recomputation}{table.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces The certificate at work over one episode (the pair of Fig.\nobreakspace  {}\ref  {fig:teaser}). Clearance $h(t)$ to the hand-attached hazard: the unfiltered base policy (gray) crosses $h{=}0$ at $t{=}136$ and spends 215 of 600 steps in violation; ours (blue) dips to $+0.021$\tmspace  +\thinmuskip {.1667em}m at its closest approach and never crosses, completing the task at $t{=}510$.}}{8}{figure.6}}
+\newlabel{fig:filmstrip}{{6}{8}{The certificate at work over one episode (the pair of Fig.~\ref {fig:teaser}). Clearance $h(t)$ to the hand-attached hazard: the unfiltered base policy (gray) crosses $h{=}0$ at $t{=}136$ and spends 215 of 600 steps in violation; ours (blue) dips to $+0.021$\,m at its closest approach and never crosses, completing the task at $t{=}510$}{figure.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IX}Experiments V: Which Literal Does the Work? Paired FOL Ablations}{8}{section.9}}
+\newlabel{sec:ablation}{{IX}{8}{Experiments V: Which Literal Does the Work? Paired FOL Ablations}{section.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces What each conjunct of Eq.\nobreakspace  {}\textup  {\hbox {\mathsurround \z@ \normalfont  (\ignorespaces \ref  {eq:fol}\unskip \@@italiccorr )}} buys, on one human-safety scene, computed by the deployed election code. (a)\nobreakspace  {}Full rule: the hand is guarded, the task's bowls are exempt. (b)\nobreakspace  {}Delete all logic (geometric top-$k$): the task's own bowl is guarded and the hand is missed. (c)\nobreakspace  {}Delete the language exemptions: a task-mentioned bowl is guarded --- self-paralysis. (d)\nobreakspace  {}Delete the class predicates: the human hand is left unguarded.}}{9}{figure.7}}
+\newlabel{fig:ablation}{{7}{9}{What each conjunct of Eq.~\eqref {eq:fol} buys, on one human-safety scene, computed by the deployed election code. (a)~Full rule: the hand is guarded, the task's bowls are exempt. (b)~Delete all logic (geometric top-$k$): the task's own bowl is guarded and the hand is missed. (c)~Delete the language exemptions: a task-mentioned bowl is guarded --- self-paralysis. (d)~Delete the class predicates: the human hand is left unguarded}{figure.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Safety-reasoning (refusal) track: \% of unsafe instructions refused, by level. The judge is the rule-based semantic layer of Sec.\nobreakspace  {}\ref  {sec:routing}; the unguided policy \emph  {executes} the same instructions.}}{9}{table.5}}
+\newlabel{tab:refusal}{{V}{9}{Safety-reasoning (refusal) track: \% of unsafe instructions refused, by level. The judge is the rule-based semantic layer of Sec.~\ref {sec:routing}; the unguided policy \emph {executes} the same instructions}{table.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Paired single-clause deletions, no-GT tier, $n{=}150$/cell, exact McNemar (discordant counts in parentheses). Full-method column = paired subset of the incumbent. $^{\P  }$TSR flat ($p=0.68$) but violations $\times $4.6, exact $p=0.039$ (1:8) --- the class-predicate cell binds on the safety axis.}}{9}{table.6}}
+\newlabel{tab:ablation}{{VI}{9}{Paired single-clause deletions, no-GT tier, $n{=}150$/cell, exact McNemar (discordant counts in parentheses). Full-method column = paired subset of the incumbent. $^{\P }$TSR flat ($p=0.68$) but violations $\times $4.6, exact $p=0.039$ (1:8) --- the class-predicate cell binds on the safety axis}{table.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {X}Negative Results}{9}{section.10}}
+\newlabel{sec:negative}{{X}{9}{Negative Results}{section.10}{}}
+\citation{pacs}
+\@writefile{toc}{\contentsline {section}{\numberline {XI}Limitations and Discussion}{10}{section.11}}
+\newlabel{sec:limitations}{{XI}{10}{Limitations and Discussion}{section.11}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XII}Conclusion}{10}{section.12}}
+\@writefile{toc}{\contentsline {section}{Appendix}{10}{section*.1}}
+\bibstyle{IEEEtran}
+\bibcite{sota2607}{1}
+\bibcite{agrawal2017dcbf}{2}
+\bibcite{pacs}{3}
+\bibcite{vls}{4}
+\bibcite{omniguide}{5}
+\bibcite{cbf2602}{6}
+\bibcite{yourmodel}{7}
+\bibcite{safediffuser}{8}
+\bibcite{aegis}{9}
+\bibcite{coast}{10}
+\bibcite{liberosafety}{11}
+\bibcite{ames2019cbf}{12}
+\bibcite{brunke2025semantic}{13}
+\bibcite{pi05}{14}
+\bibcite{gdino}{15}
+\@writefile{toc}{\contentsline {section}{References}{11}{section*.4}}

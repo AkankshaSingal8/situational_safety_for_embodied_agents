@@ -1,0 +1,14 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Related Work}{}% 2
+\BOOKMARK [1][-]{section.3}{Method}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Identification: a first-order rule over grounded predicates}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{Three-regime routing}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.3}{Enforcement and certificate \(summary\)}{section.3}% 6
+\BOOKMARK [1][-]{section.4}{Experiments}{}% 7
+\BOOKMARK [2][-]{subsection.4.1}{SafeLIBERO: the symbolic rule matches ground truth}{section.4}% 8
+\BOOKMARK [2][-]{subsection.4.2}{VLM predicate grounding: same decisions, more competence}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.3}{More neural authority fails unsafe}{section.4}% 10
+\BOOKMARK [2][-]{subsection.4.4}{System-level results on LIBERO-Safety}{section.4}% 11
+\BOOKMARK [1][-]{section.5}{Discussion}{}% 12
+\BOOKMARK [1][-]{section.6}{Conclusion}{}% 13
+\BOOKMARK [1][-]{section*.1}{References}{}% 14

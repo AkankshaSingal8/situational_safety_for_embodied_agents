@@ -1,0 +1,3 @@
+{"task": 1, "ep": 0, "success": false, "collision": true, "steps": 550, "k_disp_mean": 0.08143, "k_disp_max": 0.28695, "margin_spread_mean": 0.01093, "percep_fallback": false, "entity_percep_n": 7, "ident_correct": true}
+{"task": 1, "ep": 1, "success": true, "collision": false, "steps": 474, "k_disp_mean": 0.08232, "k_disp_max": 0.35355, "margin_spread_mean": 0.02284, "percep_fallback": false, "entity_percep_n": 7, "ident_correct": true}
+{"task": 1, "ep": 2, "success": false, "collision": true, "steps": 550, "k_disp_mean": 0.10483, "k_disp_max": 0.30642, "margin_spread_mean": 0.02112, "percep_fallback": false, "entity_percep_n": 7, "ident_correct": true}

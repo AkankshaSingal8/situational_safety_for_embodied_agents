@@ -28,3 +28,9 @@ fgd_video/
 fgd_benchmark/
 fgd_video/
 fgd_n50/
+
+# Regenerable training datasets (too large for git)
+localizer_data/
+consequence_data/
+consequence_train/ls_data/
+consequence_train/sl_data/

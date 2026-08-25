@@ -1,0 +1,18 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Related Work}{}% 2
+\BOOKMARK [1][-]{section.3}{Problem Setup}{}% 3
+\BOOKMARK [1][-]{section.4}{Method}{}% 4
+\BOOKMARK [2][-]{subsection.4.1}{Identification: a first-order rule over VLM-grounded predicates}{section.4}% 5
+\BOOKMARK [2][-]{subsection.4.2}{Enforcement: noise-space operators over a frozen flow map}{section.4}% 6
+\BOOKMARK [2][-]{subsection.4.3}{Certificate}{section.4}% 7
+\BOOKMARK [2][-]{subsection.4.4}{Three-regime routing}{section.4}% 8
+\BOOKMARK [1][-]{section.5}{Experiments I: Paired Enforcement Comparison}{}% 9
+\BOOKMARK [1][-]{section.6}{Experiments II: Identification}{}% 10
+\BOOKMARK [1][-]{section.7}{Experiments III: SafeLIBERO Board}{}% 11
+\BOOKMARK [1][-]{section.8}{Experiments IV: LIBERO-Safety Board}{}% 12
+\BOOKMARK [1][-]{section.9}{Experiments V: Which Literal Does the Work? Paired FOL Ablations}{}% 13
+\BOOKMARK [1][-]{section.10}{Negative Results}{}% 14
+\BOOKMARK [1][-]{section.11}{Limitations and Discussion}{}% 15
+\BOOKMARK [1][-]{section.12}{Conclusion}{}% 16
+\BOOKMARK [1][-]{section*.1}{Appendix}{}% 17
+\BOOKMARK [1][-]{section*.4}{References}{}% 18

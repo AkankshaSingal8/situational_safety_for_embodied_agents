@@ -1,0 +1,10 @@
+{"task": 1, "ep": 0, "success": false, "collision": true, "steps": 300, "dual_lam_final": 0.0}
+{"task": 1, "ep": 1, "success": false, "collision": true, "steps": 300, "dual_lam_final": 0.0}
+{"task": 1, "ep": 2, "success": false, "collision": true, "steps": 300, "dual_lam_final": 0.0}
+{"task": 1, "ep": 3, "success": false, "collision": true, "steps": 300, "dual_lam_final": 0.01}
+{"task": 1, "ep": 4, "success": false, "collision": true, "steps": 300, "dual_lam_final": 0.0}
+{"task": 1, "ep": 5, "success": false, "collision": true, "steps": 300, "dual_lam_final": 0.00211}
+{"task": 1, "ep": 6, "success": true, "collision": true, "steps": 295, "dual_lam_final": 0.0}
+{"task": 1, "ep": 7, "success": false, "collision": true, "steps": 300, "dual_lam_final": 0.0}
+{"task": 1, "ep": 8, "success": false, "collision": true, "steps": 300, "dual_lam_final": 0.0}
+{"task": 1, "ep": 9, "success": false, "collision": true, "steps": 300, "dual_lam_final": 0.0}

@@ -1,0 +1,38 @@
+{
+  "policy": "Pi0.5 (pi05_libero) + in-denoising DCBF guidance (Tier-GT)",
+  "task_suite": "safelibero_object",
+  "safety_level": "I",
+  "guidance_enabled": true,
+  "total_episodes": 50,
+  "total_successes": 9,
+  "total_collisions": 50,
+  "overall_TSR": 0.18,
+  "overall_CAR": 0.0,
+  "overall_ETS_mean": 288.82,
+  "overall_ETS_median": 300.0,
+  "context_source": "libero_observation_object_pose_tier_gt",
+  "guidance": {
+    "chunks": 2894,
+    "active_chunks": 1084,
+    "activation_rate": 0.37456807187284036,
+    "mean_correction_norm": 0.1468685643915264,
+    "min_clearance_seen": -0.0747465193271637,
+    "max_residual_seen": 0.06983640789985657,
+    "dbnr_active_chunks": 1084,
+    "dbnr_tau_mean": 0.006025335956976602,
+    "dbnr_headroom_mean": 0.7745871456250604
+  },
+  "per_task": [
+    {
+      "task_id": 1,
+      "task_description": "pick up the chocolate pudding and place it in the basket",
+      "episodes": 50,
+      "successes": 9,
+      "collisions": 50,
+      "TSR": 0.18,
+      "CAR": 0.0,
+      "ETS_mean": 288.82,
+      "ETS_median": 300.0
+    }
+  ]
+}

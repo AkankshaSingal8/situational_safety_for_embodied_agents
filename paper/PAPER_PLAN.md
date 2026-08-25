@@ -133,6 +133,7 @@ The causal-necessity evidence for every literal of Eq. (1). This is the novelty 
 - **Para 11.1 — Honesty items.** Self-run reimplementation caveat; checkpoint provenance; refusal lexicon in-domain; pixel-only naming future work. **Update**: cell sizes now n=300 uniform (or state the heterogeneity if the rerun doesn't finish ⏳); remove the stale "n=50 single-seed" sentence.
 - **Para 11.2 — Structural limitations, including part grounding.** Obstacle-on-grasp ceiling; oah freeze tax (quantified, disclosed in board); identity errors fail unsafe at k=1; rotation uncertified; benchmark-definition divergence (Long L2). **Add — part grounding**: VLM part semantics (blade/handle) are extracted but perception fails the side-discrimination gate (2/5 vs ≥4/5), so barriers are object-level; the semantic layer is ahead of what perception can ground; GT-part bracket (sim geoms) is the proposed test of the headroom.
 - **Para 11.3 — Real-robot transfer discussion.** Close the TODO: sensing error floors vs our tuned margins (3.6–6.7 cm medians), OSC tracking for A1′, Tilt/Ascend latency at control rate, A2 mover bound (≤8 cm/s) vs natural hand speeds.
+- **Future direction (one sentence, future work only — no results exist): task-knowledge-shaped search.** Today task knowledge only *relaxes the constraint* (corridor margins) and *ranks candidates* (selection); a stronger variant would shape the optimization's search space itself — task-biased candidate sampling or correction directions — trading the no-attractor purity for potentially better liveness on freeze-prone cells. Must be framed strictly as future work (only DBNR exists in code, default-off, never promoted).
 
 ## 12. Conclusion (1 paragraph — keep draft, add one clause)
 
@@ -158,5 +159,6 @@ Draft conclusion stands; add the ablation clause: "…and every literal of the i
 | 5 | SafeLIBERO K-sweep | Sec. 5 compute paragraph | sl_ksweep_1–4 | Report K=8 only |
 | 6 | E1 n=200 enforcement finalization verdict | Sec. 5 Para 5.3 TODO | 42640949 (check ledger for verdict) | State composed repair remains production |
 | 7 | GT-part bracket (proposed, cheap) | Sec. 11 Para 11.2 | not yet queued | Limitation stated qualitatively |
+| 8 | Task-aware search-space variant (design only, future work) | Sec. 11 future-work line | not queued | One-sentence mention |
 
 **Write order recommendation**: Sec. 9 (new, all-but-3-cells frozen) → Sec. 8 rewrite (frozen board now, swap numbers when uniform-300 lands) → close Sec. 5/6 TODOs from ledger → Limitations refresh → abstract/intro number pass last, after all tables freeze.

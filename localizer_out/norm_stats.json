@@ -1,0 +1,11 @@
+{
+  "depth_mean_m": 0.9730020847421356,
+  "depth_std_m": 0.14653790199494615,
+  "image_normalization": "none (raw [0,1] RGB, no pretrained mean/std)",
+  "entity_dim": 32,
+  "num_buckets": 4096,
+  "base_ch": 32,
+  "input_size": 256,
+  "stride": 8,
+  "camera": "agentview"
+}

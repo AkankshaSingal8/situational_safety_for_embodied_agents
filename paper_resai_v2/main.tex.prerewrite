@@ -1,0 +1,403 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+% ReS AI @ IROS 2026 --- Workshop on Embodied Neuro-Symbolic AI for Reliable
+% and Safe Robotics.  8+N format, double-blind, non-archival.
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\providecommand{\coloneqq}{\mathrel{:=}}
+\newcommand{\pifive}{$\pi_{0.5}$}
+
+\title{\LARGE \bf Knowing Is Not Avoiding:\\
+Neuro-Symbolic Hazard Election for Frozen\\Vision-Language-Action Policies}
+
+% Double-blind: no author information.
+\author{Anonymous submission to the IROS 2026 Workshop on Embodied\\
+Neuro-Symbolic AI for Reliable and Safe Robotics (ReS AI)}
+
+\graphicspath{{figs/}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A safety filter is conventionally factored into a certificate, a fallback policy, a monitor, and an intervention scheme. All four presuppose that the hazard has already been named. For vision-language-action policies, naming it is the hard part --- and we show it is neither elicitable from the policy nor installable by prompting. On LIBERO-Safety, a safety-finetuned \pifive{} policy linearly encodes the hazard at the exact residual-stream position its action head consumes (AUC 0.998 on the suite whose safe/unsafe instructions are byte-identical, so the signal is purely visual), yet answers 0\% on ten pre-registered \emph{perception} controls, and still drives into it. Across 115 cells of instruction-level intervention --- seven rewriter models on one benchmark and four on the other, two evaluation stacks --- not one cell reduces hazard contact. We therefore place the safety decision outside the policy, in a fixed three-literal first-order rule whose literals a VLM grounds by answering only local per-object questions, and whose output drives training-free noise-space steering of the frozen flow policy under a discrete-CBF chain re-verified on the executed actions. Every part of the division of labor is measured: symbolic election matches privileged ground-truth identity (all $p\ge0.18$); deleting any single literal costs 17--29 task-success points or \emph{raises} violations; and both ways of granting the VLM more authority fail, and fail unsafe. The stack beats two shield architectures by $+15$--$20$ macro task success at equal-or-lower violations. Finally, we report a defect our own numbers led us to: LIBERO-Safety's \texttt{CheckRobotContact} predicate compares geom \emph{indices} against geom \emph{names} and so returns false unconditionally --- the benchmark's robot--hazard metric has never fired. We give an executable proof, a one-line fix, and an honest account of which of our claims it retracts.
+\end{abstract}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_teaser.pdf}
+\caption{\textbf{Knowing is not avoiding.} One LIBERO-Safety episode, same instruction, same initial state. \textbf{Top:} the frozen $\pi_{0.5}$ policy --- which encodes this hazard at AUC 0.998 at its own action interface (Table~\ref{tab:probe}) --- closes on the mug, contacts the human hand at $t{=}573$, and fails the task. \textbf{Bottom:} the same frozen weights with symbolic hazard election driving noise-space steering: the hand is elected by the $\textsc{Protected}$ literal, a barrier compiles around it, and the policy routes around the hand to complete the task at $t{=}509$. No retraining and no privileged simulator state.}
+\label{fig:teaser}
+\end{figure*}
+
+\section{Introduction}
+\label{sec:intro}
+
+Vision-Language-Action (VLA) models are emerging as a foundation for general-purpose robotic control, with a single policy performing diverse manipulation across household, industrial, and other unstructured environments. The recipe is now standard: a pretrained vision-language backbone supplies semantic grounding, and an action head --- increasingly a diffusion or flow-matching head, as in $\pi_{0.5}$~\cite{pi05} --- decodes continuous motor commands. The resulting artifacts are enormous, trained on data no one has audited, and largely uninterpretable: billions of parameters mapping pixels and a sentence to a chunk of end-effector deltas, with no intermediate representation a human can read and no place to attach a guarantee. As these policies move from benchmarks toward deployment, task completion stops being an adequate criterion for correct behavior. The robot must also finish without injuring a person, damaging its surroundings, contaminating what it touches, or destabilizing what it carries.
+
+What counts as unsafe, however, is not a property of the motion. A welding cell can be given a fixed keep-out volume; a robot that accepts arbitrary instructions in arbitrary kitchens needs something closer to the commonsense a person brings to an unfamiliar room. Consider moving a filled mug across a counter: the same straight-line transport is benign over bare countertop, hazardous over an open laptop, and a different risk again when a person's hand enters along the path. Our benchmarks contain a sharper version. In one task a human hand holding a banana rests near the reach path and any contact is a violation; in another the instruction is \emph{``pick up the banana and put it on the plate in my hand,''} where the same object, held the same way, is now the destination, and a keep-out volume around it makes the task impossible. No geometric predicate separates these cases, and no amount of collision-avoidance training separates them either, because the motions are the same. The only distinguishing signal is whether the instruction \emph{refers} to the object --- a semantic fact resolved at runtime, per episode, and revisable mid-episode when a person reaches in. Safety here demands runtime \emph{understanding} of what the scene contains and what role each entity plays, then runtime \emph{enforcement} against a specification that did not exist until the instruction arrived.
+
+In principle this is what safety filters are for. Hamilton--Jacobi reachability computes the states from which failure can be avoided under known dynamics~\cite{mitchell2005hj}; control barrier functions enforce forward invariance of a predefined safe set~\cite{ames2017cbf,ames2019cbf}; model-predictive shielding replaces actions predicted over a horizon to lead to failure~\cite{bastani2021shielding}. The unified view factors any such filter into a certificate, a fallback policy, a monitor, and an intervention scheme~\cite{hsu2024safetyfilter}. All four modules take the failure set as \emph{given}, and that is what open-world manipulation withholds. The state is high-dimensional and partially observed, with object identities and extents recovered from pixels rather than read from a simulator; dynamics for manipulated objects are usually unavailable and hopeless for deformables; and the constraint itself resists analytic specification. One actual safety condition from our benchmark is \emph{grasp the knife by the handle, not the blade}: written formally, a predicate over a hand-enumerated list of twenty-four mesh geometry indices on a single knife asset, which does not transfer to the next knife and cannot be authored by anyone without the mesh in front of them. Recent latent safety filters relax the fixed-constraint assumption, synthesizing certificates inside a learned world model and even parameterizing the constraint at runtime~\cite{nakamura2025latent,anysafe} --- but a human still supplies what to avoid. Hand-authoring failure sets for every object a household robot meets is not an engineering-effort problem; it is the wrong shape of solution.
+
+Since a VLA already consumes language, the cheapest imaginable fix is to write a safer instruction --- name the hazard, forbid contact, and let the model's own semantic competence do the rest. This deserves an answer rather than a dismissal, because if it worked none of the machinery below would be needed. We ran it exhaustively: 115 cells of instruction rewriting across eleven rewriter models (seven on one benchmark, four on the other), three prompt variants, four suites, and two evaluation stacks. Not one cell reduces hazard contact (Sec.~\ref{sec:gap}). The same holds for pushing safety into the weights: the benchmark we evaluate on ships a $\pi_{0.5}$ policy fine-tuned on 19.6k safety demonstrations, and it still contacts the hazard in 4.7--5.3\% of episodes on the suites where the violation metric functions. The mechanism behind the null is stronger than the null itself. On these weights the hazard is linearly decodable at AUC 0.998 at the exact residual-stream position the action head reads, while the policy answers 0\% on ten pre-registered perception controls. The information is present, unspeakable, and unenacted: knowing is not avoiding (Fig.~\ref{fig:teaser}).
+
+Existing responses fall into three families, and they share a defect that is easy to miss. \emph{Analytic filters} give real guarantees but must be handed a failure set. \emph{Learned safety critics} sidestep specification by labelling rollouts safe or unsafe and training a value function or classifier to drive the same constrained optimization~\cite{safediffuser,pacs}. \emph{VLM-based reasoning} supplies the open-vocabulary commonsense the first two lack, but its output is textual and descriptive, and the gap between a paragraph about what looks dangerous and a corrected motor command is where these systems fail~\cite{brunke2025semantic,aegis}. What all three share downstream is that they \emph{repair}: a violating action is projected, corrected, or replaced, whether after decoding or inside it. Repair moves the action off the manifold the policy was trained on, and the cost is liveness --- on our long-horizon suites every barrier-class shield stalls, dropping task success from 58.0 to 27.5 while the step cap does not help (Table~\ref{tab:board}), a degradation reached independently by~\cite{pacs}. Notably, moving the repair from after decoding to inside the denoising loop does not fix this; the intervention point is not the axis that matters.
+
+We keep the VLM and close the grounding gap with an \emph{intermediate symbolic representation}, then replace repair with search. The key observation is an asymmetry in what a VLM is good for: asked \emph{``what in this scene is dangerous?''} an API-strength model is right 47--84\% of the time, while asked \emph{``is this object referred to by the instruction?''} it is right essentially always (Fig.~\ref{fig:vlmauth}). So we never ask it what is dangerous. It answers only local, checkable, per-object questions, and a fixed three-literal first-order rule composes those answers into a hazard election. First-order logic is what makes that composition auditable rather than merely structured: the rule reads in one line, every clause is separately falsifiable, and deleting any single literal costs 17--29 task-success points or \emph{raises} violations (Sec.~\ref{sec:ablation}) --- a claim no prompt-shaped output schema can even state, and one that matters because letting a VLM compose the rule instead fails \emph{open}, firing on nothing (Sec.~\ref{sec:negative}). Because the rule's output is a named entity with a position and an extent, it is exactly the object a classical filter always assumed it was given, and everything downstream is textbook discrete-CBF machinery. Enforcement then searches the frozen policy's noise preimage rather than correcting its output, so every emitted action stays on the policy manifold, and a certificate re-checked on the executed prefix makes soundness a property of the actions rather than of the search that produced them.
+
+\textbf{Contributions.}
+\begin{enumerate}
+\item \emph{A representation--action gap, within one checkpoint} (Sec.~\ref{sec:gap}): 0.998 decodability at the action interface, 0\% verbalization, and a 115-cell null on language-level intervention.
+\item \emph{A neuro-symbolic hazard-election layer} (Sec.~\ref{sec:method}): a fixed three-literal rule over VLM-grounded predicates, statistically indistinguishable from privileged ground-truth identity in paired rollouts (all $p\ge0.18$), with two interchangeable grounding backends agreeing on all 59 scenes tested.
+\item \emph{Causal necessity of every literal} (Sec.~\ref{sec:ablation}): single-clause deletion costs 17--29 task-success points or \emph{raises} violations; geometry alone is not merely weaker but less safe.
+\item \emph{Search rather than repair} (Sec.~\ref{sec:enforce}): noise-space steering under a checked prefix certificate, recovering $+15$--$19$ task success on long-horizon suites, where every barrier-class shield stalls.
+\item \emph{A benchmark reliability finding} (Sec.~\ref{sec:defect}): LIBERO-Safety's \texttt{CheckRobotContact} predicate cannot fire. Executable proof, one-line fix, and an honest account of which of our own claims it retracts.
+\end{enumerate}
+
+\section{Related Work}
+\label{sec:related}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.86\textwidth]{fig_scenes.pdf}
+\caption{\textbf{What the literals have to resolve.} (a) A distractor adjacent to the target: separable only by $\textsc{Mentioned}$, since geometry alone cannot tell a hazard from the goal. (b) A human hand entering mid-episode --- the case $\textsc{Moving}$ exists for, grounded from displacement rather than a runtime model call. (c) A SafeLIBERO scene where the hazard sits on the reach path, engaging $\textsc{NearPath}$. (d) A certified rollout: task complete, zero hazard contact.}
+\label{fig:scenes}
+\end{figure*}
+
+We organize prior work along the two axes the introduction separates: where the failure set comes from, and how enforcement acts on the policy.
+
+\textbf{Safety filters and where the safe set comes from.} Beyond the classical filters of Sec.~\ref{sec:intro}, a recent line lifts them to high-dimensional observations by synthesizing the certificate inside a learned world model: latent safety filters~\cite{nakamura2025latent} perform reachability in a generative model's latent space, with epistemic uncertainty conformally calibrated to catch out-of-distribution hazards, and follow-up work learns smooth latent CBFs under hard-to-model constraints~\cite{nakamura2025latentcbf}. AnySafe~\cite{anysafe} parameterizes the constraint itself, conditioning the filter on an encoding of a constraint \emph{image} so that it adapts at runtime. That line and ours make opposite bets: they place the intelligence in a \emph{learned} safe set and leave identification implicit, whereas we keep the barrier deliberately textbook and place the intelligence in an \emph{inspectable symbolic} election rule. The distinction we care about most is the one that motivates this paper: even AnySafe adapts \emph{which} human-supplied constraint is active, while we \emph{derive} the constraint from the instruction and the scene with no human in the loop at deployment.
+
+\textbf{Learning the safety model instead of specifying it.} The second family of Sec.~\ref{sec:intro} replaces specification with supervision --- labelling rollouts safe or unsafe and fitting a value function, classifier, or learned barrier that then drives the same constrained optimization~\cite{nakamura2025latentcbf,safediffuser}. The appeal is that it inherits open-world coverage from data rather than from an author. We report our own instance as a negative result (Sec.~\ref{sec:negative}): a consequence critic that predicts hazard contact at AUC 0.93--0.999 offline yields no rollout gain over the ten-line geometric gate it was built to replace. Our reading is not that learned safety models are the wrong idea, but that at this data scale prediction quality was never the binding constraint --- which is the empirical case for spending the modelling budget on identification instead.
+
+\textbf{Semantic constraints from vision-language models.} The third family supplies the open-vocabulary commonsense the first two lack. Closest in spirit is work that compiles semantic scene understanding into motion safeguards~\cite{brunke2025semantic}; related systems steer frozen policies with VLM reward signals~\cite{vls}. The recurring difficulty is that VLM output is textual and descriptive, and the distance between a paragraph about what looks dangerous and a corrected motor command is where these systems fail. Our departure is to narrow what the VLM is asked for: only local per-object predicates, never a scene-level hazard judgment --- a restriction Sec.~\ref{sec:negative} shows is load-bearing rather than conservative.
+
+\textbf{Neuro-symbolic safety for VLA policies.} Our closest predecessor is also explicitly neuro-symbolic and also evaluates on SafeLIBERO: English et al.~\cite{sota2607} interleave symbolic constraint satisfaction with neural trajectory generation, imposing a min-norm discrete-CBF correction \emph{inside} \pifive{}'s flow-matching denoising and reporting 82.8\% collision avoidance at 81.6\% task success. We reimplement it as a board row (Table~\ref{tab:board}). The disagreement is precisely about \emph{where the symbols belong}: their symbolic content is the projection operator, with hazard identity supplied by the simulator; ours is the election rule, with enforcement kept textbook.
+
+\textbf{Identification without a certificate.} ``Your Model Already Knows''~\cite{yourmodel} reads a small set of VLA attention heads to localize the object the policy intends to approach, feeding a CBF without extra training. It is the direct competitor to our identification layer --- neural read-out versus symbolic election --- and it raises an objection we take seriously: VLM-based obstacle identification is too slow for the control loop and can only be invoked at episode initialization, leaving the filter blind to moving obstacles. Our answer is architectural rather than computational. The VLM is queried once per task and cached; the literal that handles dynamics, $\textsc{Moving}$, is grounded from proprioceptive displacement and re-evaluated at every replan, so intruder tracking costs nothing at runtime (Fig.~\ref{fig:scenes}b).
+
+\textbf{Repair versus search.} On the enforcement axis, most safety mechanisms \emph{repair}: a violating action is projected, corrected, or replaced, either after decoding~\cite{aegis} or during it~\cite{safediffuser,sota2607}. PACS~\cite{pacs} observes that such mechanisms ``alter actions in ways unseen during training, causing unpredictable behavior and performance degradation,'' and responds with path-consistent filtering for diffusion policies; that is the Sec.~\ref{sec:enforce} finding reached from the opposite direction, and we regard the convergence as corroboration rather than competition. Steering a frozen flow policy through its initial noise is meanwhile an active area, but for \emph{performance}: flow-reversal steering maps suboptimal actions back to latent noise and onto nearby generalist modes~\cite{frs}, and VLS injects VLM reward gradients with Feynman--Kac resampling into frozen \pifive{} denoising~\cite{vls}. We use that family of operators for safety, under a certificate --- which is what lets us keep every emitted action on the policy manifold rather than paying the repair tax.
+
+\textbf{Benchmarks.} We evaluate on SafeLIBERO~\cite{sota2607} and LIBERO-Safety~\cite{liberosafety} (Fig.~\ref{fig:scenes}). A recent survey of VLA safety names benchmark development that ``has not kept pace with model capability advances'' as an open problem~\cite{vlasurvey}; Sec.~\ref{sec:defect} is a concrete instance.
+
+\section{The Representation--Action Gap}
+\label{sec:gap}
+
+All measurements in this section are on one checkpoint, \pifive{} fine-tuned on LIBERO-Safety, over that benchmark's seed-matched SAFE/UNSAFE twins (15 twins $\times$ 10 initial states $=$ 150 rollouts per cell).
+
+\textbf{The hazard is there, at the action interface.} We fit layerwise linear probes at three token positions and report the \emph{pre-action} position --- the residual-stream slot that \texttt{action\_out\_proj} consumes --- under twin-grouped 5-fold cross-validation. Table~\ref{tab:probe} gives the peak AUC with both controls computed for every cell. Read the obstacle suites first: their SAFE and UNSAFE instructions are byte-identical, so length-only AUC is exactly $0.500$ and no textual shortcut exists, yet the hazard decodes at $0.940$ and $0.998$ from pixels alone. The affordance suite is excluded from this claim and we say why in the table: there the label is 94\% predictable from instruction token count, an artifact of how the twins were authored that binds anyone probing this benchmark.
+
+\begin{table}[t]
+\centering
+\caption{Linear decodability of hazard presence at the position the action head consumes (\pifive{}-LIBERO-Safety, $n{=}150$/suite, twin-grouped 5-fold CV). Both controls were computed for every cell and are reported unconditionally.}
+\label{tab:probe}
+\setlength{\tabcolsep}{4pt}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccc}
+\toprule
+Suite & Pre-action AUC & Depth & Shuffled & Length-only \\
+\midrule
+Obstacle avoid.\      & \textbf{0.940} & 61\% & 0.626 & 0.500 \\
+Obstacle+hand         & \textbf{0.998} & 22\% & 0.527 & 0.500 \\
+Human safety          & 0.988 & 44\% & 0.516 & 0.478 \\
+Affordance            & 1.000 & 22\% & 0.582 & 0.944$^\ast$ \\
+Reasoning safety      & 0.766 & 22\% & 0.552 & 0.578 \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+\parbox{\columnwidth}{\footnotesize $^\ast$Excluded from the decodability claim: on this suite the twin construction appends a hazard-specifying clause to the unsafe instruction, so the label is recoverable from token count alone. Bold rows are the load-bearing ones --- byte-identical instructions, so all signal is visual.}
+\end{table}
+
+\textbf{The policy cannot say it.} The same checkpoint scores 0\% (95\% CI $[0.0,3.7]$, $n{=}100$) on ten pre-registered perception questions --- ``is there a robot arm in this image?'', not safety questions. Its text readout has drifted off the vocabulary manifold entirely (mean ASCII fraction $0.00$), because \pifive{} applies no text loss during action fine-tuning. Neither the base nor the LIBERO-only nor the safety-finetuned variant recovers the channel. This is not a limitation we work around; it is the reason no verbalization-based monitor, self-critique loop, or chain-of-thought safety check is available on these weights at all.
+
+\textbf{Language does not install the behavior either.} We climbed the cheapest rung of the intervention ladder exhaustively: rewriting the instruction to name the hazard and forbid contact, across 7 rewriter models $\times$ 3 prompt variants $\times$ 4 suites at $n{=}150$/cell on LIBERO-Safety (84 cells), then replicating on SafeLIBERO with a different checkpoint, a different evaluation stack and a different metric family at $n{=}200$/cell (31 cells). \emph{No cell reduces hazard contact}: obstacle avoidance 1.3\% baseline vs.\ 0.7--4.0\% rewritten; obstacle+hand 16.0\% vs.\ 16.0--19.3\%; human safety 32.0\% vs.\ 24.0--38.7\%; affordance 57.5\% vs.\ 53.3--65.0\%. Every interval overlaps its baseline, and 0 of 31 replication cells separate in either direction. Task success moves in \emph{opposite} directions on different suites, which is itself the reason to make no directional claim about rewriting.\footnote{Discipline note: at $n{=}150$ the Wilson half-width is $\approx\pm7$ points, so we make no head-to-head ranking of rewriter models anywhere and never name a best rewriter. Cells withheld for exhausted API credits are labelled as such, never rendered as zeros.}
+
+\textbf{What this licenses.} One thing, and it is the premise of the rest of the paper: the safety decision must be made \emph{outside} the policy and enforced \emph{on} it. It cannot be elicited from the policy's language channel, because there isn't one, and it cannot be installed by conditioning. That is a strong argument for an explicit symbolic layer, and a strong argument against the architecture in which a large neural model is trusted to notice the hazard on its own.
+
+\section{Method}
+\label{sec:method}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.98\textwidth]{fig_pipeline.pdf}
+\caption{\textbf{The division of labor.} A LIBERO-Safety scene (left) is processed by \emph{neural} components (blue) that answer only local, checkable questions --- per-object predicates and open-vocabulary localization --- while a fixed \emph{symbolic} layer (amber) makes every safety-critical decision: hazard election by Eq.~\eqref{eq:fol} and routing into avoid / disengage / refuse regimes. Enforcement searches the frozen flow policy's noise space over $K{=}8$ candidate chunks, and a discrete-CBF chain re-checked on the executed prefix (green) certifies the emitted actions independently of which neural search produced them.}
+\label{fig:pipeline}
+\end{figure*}
+
+Fig.~\ref{fig:pipeline} shows the assembled system. We describe the four layers in the order the runtime executes them.
+
+\subsection{Hazard election: a three-literal first-order rule}
+\label{sec:ident}
+
+The scene-level decision is made by a fixed rule, not by a model:
+\begin{equation}
+\begin{aligned}
+\textsc{Hazard}(x) \coloneqq{}& \textsc{Protected}(x)\ \vee\ \textsc{Moving}(x)\ \vee \\
+&\big(\lnot\textsc{Mentioned}(x)\wedge\textsc{NearPath}(x)\big),
+\end{aligned}
+\label{eq:fol}
+\end{equation}
+ranked protected-first, then by distance to the sanctioned reach path. $\textsc{Protected}$ covers a semantic class --- body parts and objects attached to a person --- that is never excluded by mention and is always floored onto the guard set. $\textsc{Moving}$ is grounded online by displacement across a settle window ($>$1\,cm) and re-read at every replan; this single literal is what handles dynamic human-hand intruders without any runtime model call. $\textsc{Mentioned}$ uses content-token overlap under a head-noun rule, and $\textsc{NearPath}$ measures distance to the sanctioned reach segments (end-effector $\rightarrow$ target $\rightarrow$ destination).
+
+The rule is deliberately small enough to read, and every literal is separately falsifiable --- which is what makes the ablation of Sec.~\ref{sec:ablation} possible at all. Note what it is \emph{not}: it is not synthesized per scene, not retrieved, and not conditioned on a benchmark-specific table. On the affordance suite the danger literal is instantiated as a VLM-answered property predicate ($\textsc{Hot}$, $\textsc{Sharp}$) rather than $\textsc{NearPath}$; the routing is declared per suite in advance, not selected per episode.
+
+\textbf{Two interchangeable grounding backends.} The literals can be grounded either (a) by hand heuristics plus one-shot cached VLM hazard-property priors with a fail-safe floor --- semantics may raise concern but never delete protection --- or (b) by \emph{VLM predicate grounding}, in which a small VLM (3 votes, cached per task, no runtime API call) answers only local per-object questions: $\textsc{Referenced}(x)$ and $\textsc{Protected}(x)$. On all 59 scenes of the two benchmarks the two backends produce the \emph{identical} election. The VLM backend additionally resolves references no string heuristic can: ``deliver it to me'' makes the hand $\textsc{Protected}$, and a plate held by a hand is correctly both $\textsc{Referenced}$ and $\textsc{Protected}$. This is the design finding in one sentence: \emph{the VLM answers local predicates; the logic makes the decision.}
+
+\textbf{Geometric grounding.} At the perception tier, positions and extents come from open-vocabulary detection~\cite{gdino} back-projected through depth, with percentile-box extents (median localization error 0.067\,m on SafeLIBERO, 0.036--0.038\,m on LIBERO-Safety). Localization failures fall back conservatively and are logged per episode.
+
+\subsection{Three-regime routing}
+\label{sec:routing}
+
+Not every hazard is a keep-out, and treating it as one is a failure mode we measured. The same predicate layer routes each episode:
+(1) \textbf{Avoid} --- a geometric hazard off the task path; enforce as below.
+(2) \textbf{Disengage} --- the hazard \emph{is} the destination ($\textsc{Protected}(x)\wedge\textsc{Referenced}(x)$, or the guard overlaps the parsed destination by $<$0.15\,m); the geometric keep-out is disengaged for the episode and safety comes from routing. This regime was forced on us by the human-handover suites, where any keep-out destroys the task (Sec.~\ref{sec:ls}).
+(3) \textbf{Refuse} --- the \emph{instruction} is the hazard; a rule-based semantic judge over (verb, patient, hazard-property) triples refuses execution (offline F1 0.968, precision 0.938, recall 1.000; in-domain, see Sec.~\ref{sec:limitations}).
+Routing and identification read the same predicates. This is one rule system, not three.
+
+\subsection{Enforcement and certificate}
+\label{sec:enforce}
+
+Let $F(z,\mathrm{obs})$ be the frozen 10-step Euler denoise map and $M(a_{1:L})$ the minimum barrier-chain margin of the executed $L$-step prefix. All operators search the noise preimage $S=\{z: M(F(z))\ge0\}$, so every emitted action is $F(z^\star)$ --- exactly on the policy manifold. \textsc{Select} samples $K{=}8$ seeds sharing one vision-language KV cache and scores candidates lexicographically (feasibility $\succ$ margin $\succ$ progress); \textsc{Tilt} reweights and resamples the particle population at mid-denoising steps under soft margin potentials, at essentially no cost; \textsc{Ascend} takes reverse-mode gradient steps of the prefix margin through all ten Euler steps with respect to $z$ (57\,ms per step, backbone untouched). A soft annealed repulsor field on the velocity target is the natural soft complement, and is the only mechanism we found that navigates obstacle-on-grasp geometry, where every hard projection locks up.
+
+The barrier is $B_j(p)=\min_{m,q}\lVert p+q-o_m\rVert-r_m(j)$ over obstacles $m$ and companion offsets $q$ (wrist, fingertip), inflated by $\lambda j$ to bound obstacle motion within a chunk; safety of a prefix is the discrete-CBF chain $B_j\ge(1-\gamma)B_{j-1}$, $\gamma=0.9$, whose geometric decay is textbook~\cite{agrawal2017dcbf} and for which we claim no novelty. What matters here is the acceptance semantics:
+
+\begin{proposition}[Checked prefix certificate]\label{prop:cert}
+The acceptance stage re-evaluates the chain on the executed prefix of the \emph{final decoded chunk} by explicit rollout of the actuation model. If the check passes, the prefix satisfies the chain regardless of how the chunk was produced. If all $K$ candidates fail, the argmax-margin candidate executes with its true margin reported --- fail-visible, not fail-silent.
+\end{proposition}
+
+Because soundness is a predicate of the emitted actions rather than of the search that produced them, the certificate covers \textsc{Select}, \textsc{Tilt}, \textsc{Ascend} and the repulsor identically. Correction-based arguments (``the repair enforces the chain'') cannot do this, and in fact prior in-denoising work does not re-verify its intermediate corrections on the final chunk at all. \emph{Stated non-claims}: rotation channels are uncertified; tracking error is absorbed into the safety margin rather than proved; we claim no formal perception-robustness radius, and quantify it empirically instead (Sec.~\ref{sec:e3}).
+
+\section{Experiments}
+\label{sec:exp}
+
+\emph{Privilege tiers.} Every claim is stated at a declared tier. \textbf{Tier-GT} reads hazard identity and object positions from the simulator --- the tier at which prior in-denoising work reports. \textbf{Tier-Percep} reads only the instruction, images, depth, proprioception and the symbolic object \emph{name} list; identity, positions, extents and corridor anchors are perception- or VLM-derived. Collision scoring is always ground-truth-anchored in both tiers. On SafeLIBERO a collision is $>$1\,mm ground-truth hazard displacement at any timestep; on LIBERO-Safety we use the benchmark's own \texttt{:constraints} predicates, with the important caveat of Sec.~\ref{sec:defect}.
+
+\subsection{Identification: symbolic election matches ground truth}
+\label{sec:e3}
+
+Table~\ref{tab:e3} holds enforcement completely fixed and varies \emph{only} the identity source. Ground-truth-free election is statistically indistinguishable from privileged identity on every axis (paired exact McNemar, all $p\ge0.18$), and every trend favors the rule (pooled discordant episodes 12:6 in its favor). The no-GT identity tier therefore carries no measurable cost; what residual cost the perception tier does carry is \emph{geometric}, not semantic. Offline, the same rule wins on LIBERO-Safety --- 12/13 top-1 on the obstacle suite and 12/12 on the human suite, against 9/11 for a VLM-prior scorer, which pulls semantically alarming \emph{names} (ketchup, tomato sauce) above the benchmark's designated obstacle.
+
+\begin{table}[t]
+\centering
+\caption{Identity-source swap on SafeLIBERO Spatial. Enforcement, seeds and initial states are identical across rows; only \emph{who names the hazard} changes. $n{=}40$/arm/level. Paired McNemar, GT vs.\ FOL: L1 TSR $p=0.55$, L1 CAR $p=0.50$, L2 TSR $p=0.18$, L2 CAR $p=1.0$.}
+\label{tab:e3}
+\begin{tabular}{lcc}
+\toprule
+Identity source & L1 TSR/CAR & L2 TSR/CAR \\
+\midrule
+Ground truth (privileged) & 55.0 / 27.5 & 77.5 / 40.0 \\
+VLM-prior scorer          & 60.0 / 27.5 & 77.5 / 37.5 \\
+FOL rule (ours, no priors)& \textbf{62.5} / \textbf{32.5} & \textbf{90.0} / 40.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Which direction do identification errors fail?} A deliberate-corruption study answers this and it is the uncomfortable answer: forcing the second-best identity pick costs collision avoidance ($70\rightarrow25$), not task success. Identification errors fail \emph{unsafe}. That is what motivates the documented top-2 guard-set mode, which recovers 19/19 recall under every corruption we injected, at $-12.5$ task-success points when engaged unnecessarily. We report the cost rather than defaulting the mode on.
+
+\subsection{SafeLIBERO: five architectures, one criterion}
+\label{sec:board}
+
+\begin{table*}[t]
+\centering
+\caption{SafeLIBERO five-row architecture board. TSR/CAR (\%), $n{=}200$ per cell, identical policy, seeds protocol and collision criterion ($>$1\,mm ground-truth hazard displacement). \textbf{Bold} = beats \emph{both} the unguided baseline and the SOTA reimplementation on that axis. $^\dagger$nominal (Fisher n.s.). $^\ddagger$benchmark-definition divergence: the VLM guards spillable food where the benchmark designates a book (Sec.~\ref{sec:limitations}).}
+\label{tab:board}
+\begin{tabular}{lccccc}
+\toprule
+Cell & \pifive{} baseline & Post-hoc shield & SOTA-reimpl.\ (in-denoise) & Ours (Tier-GT) & Ours (Tier-Percep) \\
+\midrule
+Spatial L1 & 67.0 / 14.0 & 71.5 / 28.5 & 62.0 / 28.5 & 71.0 / 23.5 & \textbf{70.0} / \textbf{46.5} \\
+Spatial L2 & 55.5 / 12.0 & 66.5 / 21.0 & 71.5 / 25.5 & \textbf{85.0} / \textbf{76.5} & \textbf{80.5} / \textbf{57.5} \\
+Goal L1    & 51.0 / 23.0 & 72.0 / 19.0 & 71.0 / 27.5 & \textbf{77.5} / \textbf{51.0} & \textbf{73.5} / \textbf{60.5} \\
+Goal L2    & 66.5 / 35.0 & 69.5 / 48.5 & 75.0 / 49.5 & \textbf{76.0} / \textbf{60.0} & \textbf{77.5}$^\dagger$ / \textbf{52.0}$^\dagger$ \\
+Object L1  & 40.5 / 14.0 & 63.5 / 16.0 & 53.0 / 15.5 & \textbf{53.5} / \textbf{28.0} & 41.5 / \textbf{54.0} \\
+Object L2  & 74.0 / 25.0 & 79.0 / 34.5 & 76.0 / 33.5 & \textbf{83.0} / \textbf{74.5} & 75.5 / \textbf{74.5} \\
+Long L1    & 58.0 / 15.0 & 27.5 / 32.5 & 30.5 / 35.5 & 42.5 / \textbf{71.0} & 47.5 / \textbf{56.5} \\
+Long L2    & 51.0 / 16.5 & 46.5 / 52.0 & 43.0 / 59.5 & 47.0 / \textbf{77.0} & 29.0 / 18.5$^\ddagger$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.80\textwidth]{fig_safelibero.pdf}
+\caption{\textbf{From elected hazard to compiled barrier} on one SafeLIBERO scene. (a) The unguided policy drives through the hazard and topples the moka pot. (b) The same frozen weights under barrier-guided noise-space search complete the task with the hazard untouched. (c) The compiled constraint: the elected guard's barrier surface ($h{=}0$) and the sanctioned target (green). Nothing here is authored per scene --- the surface is compiled from the entity Eq.~\eqref{eq:fol} elects.}
+\label{fig:sl}
+\end{figure*}
+
+Fig.~\ref{fig:sl} shows the mechanism on one scene, from elected hazard to compiled barrier. Table~\ref{tab:board} places five architectures on identical footing. The post-hoc row is unguided denoising plus one exact projection of the final chunk; the reimplementation row is our faithful re-run of~\cite{sota2607}'s method class ($K{=}1$, uniform schedule, privileged state, translational correction) scored under our criterion.\footnote{Referee note, stated plainly: the reimplementation's task-success uplift over baseline reproduces (up to $+17$pp at Spatial L2), but its published collision-avoidance figure does not reproduce at any swept obstacle radius under a $>$1\,mm criterion (best L2 CAR 70.5, at the cost of collapsing L1 TSR to 49.0). Their evaluation scores collisions ``by the terminal position of objects'' with no disclosed threshold; ours flags $>$1\,mm displacement at any timestep. We conclude the published number rests on a looser or terminal-only criterion, and present the honest comparison as ours-versus-our-own-reimplementation.}
+
+Three findings. \emph{First}, post-hoc shielding is within $\pm$5--10 TSR and $\sim$7 CAR of in-denoising repair on every cell: moving the repair inside the denoising loop is not, by itself, the win. The axis that matters is repair versus search (Sec.~\ref{sec:intro}), not where the repair happens. \emph{Second}, the Long-horizon liveness stall afflicts every barrier-class shield (post-hoc 27.5 vs.\ baseline 58.0) and raising the step cap does not help; ours recovers $+15$--$19$ TSR while doubling CAR. \emph{Third}, the headline for this workshop is the last column: with \emph{no privileged state at all}, symbolic election plus perception dominates both shield architectures on both axes in 4/8 cells, and achieves task-success parity with 2--5$\times$ the collision avoidance in two more.
+
+\subsection{LIBERO-Safety: porting the rule without tuning it}
+\label{sec:ls}
+
+\begin{table}[t]
+\centering
+\caption{LIBERO-Safety, safety-finetuned \pifive{}, TSR/violation\%, paired seeds, $n{=}300$--750 per cell. Violations use the benchmark's own \texttt{:constraints} predicates. Two of the four violation columns carry no information and are marked rather than printed as zeros: human safety (\texttt{--}) because its sole predicate cannot fire (Sec.~\ref{sec:defect}), and affordance (\texttt{n/a}) because those task files declare \emph{no} \texttt{:constraints} block --- that suite expresses safety through its \emph{goal} predicate (grasp the handle, not the blade), so there is nothing to violate by construction. The two obstacle columns are live but measure only the object--hazard half of their conjunction. Macro TSR is unaffected throughout, since task success is scored by the goal predicate.}
+\label{tab:ls}
+\setlength{\tabcolsep}{2pt}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Arm & Obst. & Human & Obst+hand & Afford. & Macro TSR \\
+\midrule
+Baseline        & 73.6/4.7 & 85.8/-- & 69.3/5.3 & 56.7/n/a & 71.4 \\
+Post-hoc shield & 75.3/2.7 & 37.3/-- & 46.0/2.0 & 51.3/n/a & 52.5 \\
+SOTA-reimpl.    & 70.7/0.7 & 32.7/-- & 48.0/1.3 & 48.7/n/a & 50.0 \\
+Ours (Tier-GT)  & \textbf{77.8}/4.2 & 78.7/-- & 63.2/1.9 & \textbf{58.7}/n/a & 69.6 \\
+Ours (Percep)   & 68.7/\textbf{0.7} & \textbf{86.9}/-- & 58.9/1.7 & 56.0/n/a & 67.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The election rule transfers to a second benchmark with no tuning beyond the two class literals already in Eq.~\eqref{eq:fol}. Table~\ref{tab:ls} reports the five-arm board.
+
+\textbf{We beat both dedicated shields by $+15$--$20$ macro task success} --- on the human suite alone they give up 48--54 task-success points ($p=1.8\times10^{-16}$ and $3.2\times10^{-19}$) --- \textbf{while matching or undercutting their violation rate on the two suites where that metric functions}. We state the halves separately on purpose: the human-suite $p$-values are task-success comparisons, and that suite's violation column is vacuous (Sec.~\ref{sec:defect}), so no safety claim rests on it. The per-suite story is the interesting one: both shields survive the static-obstacle suites and then \emph{halve} human-safety success (37.3 and 32.7 against our 86.9). That is safety-by-freezing versus safety-while-moving, and it is exactly what the disengage regime buys. Against the unfiltered baseline, our perception-tier violations run 12:1 over 750 paired episodes ($p=0.003$) at task-success parity on three of four suites, and the Tier-GT arm significantly exceeds baseline task success on obstacle avoidance (77.8 vs.\ 73.6, $n{=}450$, $p=0.045$).
+
+\textbf{Disclosed against ourselves.} On obstacle+hand our task success is significantly \emph{below} baseline ($p=0.005$ and $0.03$ by tier) --- a freeze tax on cells where the intruder crosses the only viable approach. The baseline's successes on that suite carry a 5.3\% violation rate against our 1.7--1.9\%, which is the trade we are making, but it is a trade and not a win.
+
+\textbf{The refusal track.} On the safety-reasoning suite the symbolic judge refuses 100/100/80\% of unsafe instructions with zero violations, against 80/72/36\% for the best published model, while the unguided policy \emph{executes} the same instructions at 94/60/100\%. That asymmetry --- fluent compliance, no judgment --- is the representation--action gap of Sec.~\ref{sec:gap} showing up at the level of whole tasks.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_fol_ablation.pdf}
+\caption{\textbf{What each literal does, on one scene.} Guard sets produced by Eq.~\eqref{eq:fol} under single-clause deletion, for \emph{``pick the akita black bowl next to the cookies box and bring it for me.''} (a) The full rule guards the human hand and exempts the task bowls. (b) Without the logic, distance ranking guards the task bowl and \emph{misses the hand}. (c) Without the mention exemptions, the system guards the object it was told to pick up and paralyzes itself. (d) Without the class predicates the hand is left unguarded. Two of the three failures leave the true hazard unprotected; Table~\ref{tab:ablation} gives the rollout cost.}
+\label{fig:ablation}
+\end{figure*}
+
+\subsection{Every literal earns its place}
+\label{sec:ablation}
+
+\begin{table}[t]
+\centering
+\caption{Single-clause deletion from Eq.~\eqref{eq:fol}. Each arm deletes exactly one clause with everything else paired 1:1 on identical initial states, $n{=}150$/cell; exact McNemar. TSR (\%), with violation~\% shown only where it moves. The incumbent column is recomputed on the paired subset, so it differs slightly from Table~\ref{tab:ls}.}
+\label{tab:ablation}
+\setlength{\tabcolsep}{3pt}
+\footnotesize
+\begin{tabular}{@{}llccl@{}}
+\toprule
+Deleted clause & Suite & Full & Ablated & $p$ \\
+\midrule
+all logic          & Obst.     & 68.7\,{\scriptsize(0.7)} & 44.0\,{\scriptsize(\textbf{4.7})} & 1.2e--6 \\
+\;\;(guard nearest-$k$) & Obst+hand & 56.0 & 39.3 & 2.5e--4 \\
+                   & Human     & 88.7 & 68.7 & 5.3e--6 \\
+\midrule
+$\lnot\textsc{Mentioned}$   & Obst.     & 68.7 & 40.0 & 1.8e--8 \\
+\;\;exemptions     & Obst+hand & 56.0 & 39.3 & 6.2e--4 \\
+\midrule
+$\textsc{Prot}\vee\textsc{Mov}$ & Human & 88.7 & 82.0 & 0.10 \\
+abstention         & Afford.   & 56.0 & 42.7 & --- \\
+VLM property gnd.  & Afford.   & 56.0 & 47.3 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This is the defense against the natural objection that the barrier machinery does all the work and the logic is decoration. Fig.~\ref{fig:ablation} shows what each clause is holding up on a single scene; Table~\ref{tab:ablation} deletes one clause at a time and measures the rollout cost. Every significant arm confirms its pre-registered prediction, and one result deserves emphasis: \emph{geometry alone is not merely weaker, it is less safe}. Guarding the top-$k$ nearest-to-path objects with no logic at all raises violations from 0.7\% to 4.7\% ($p=1.2\times10^{-6}$) --- the only arm in the paper that moves violations the wrong way --- because distance ranking evicts the true hazard from the guard set in favor of a closer irrelevant object. The mention exemptions are worth $\approx$29 task-success points, since without them the system paralyzes itself against its own target. Abstention is worth $\approx$13: when the property predicate elects nothing, guarding nothing beats force-electing. And replacing VLM-grounded property tokens with hand-coded ones costs 8.7 points on the affordance suite --- the one place where the neural component's open vocabulary is doing measurable work.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_vlm_id_accuracy.pdf}
+\caption{\textbf{How much authority should the neural component have?} Hazard-identification accuracy on the same 19 SafeLIBERO scenes, grouped by what the VLM is asked to do. Letting it \emph{decide the scene} (grey) or \emph{compose the rule} (orange) is worse than restricting it to \emph{grounding predicates} that a fixed rule composes (blue). Light extensions are the deployed top-2 guard set. The ordering, not any single bar, is the finding.}
+\label{fig:vlmauth}
+\end{figure}
+
+\subsection{More neural authority fails, and fails unsafe}
+\label{sec:negative}
+
+We implemented, pre-registered and killed both natural escalations of VLM authority. Reporting them is not throat-clearing; they are what makes the division of labor a finding rather than a preference.
+
+\textbf{Learned safety critics: prediction was never the bottleneck.} We trained a consequence critic to predict, from the current observation and a candidate action chunk, whether that chunk leads to hazard contact --- family (ii) of Sec.~\ref{sec:intro}. Offline it is good: contact AUC 0.93--0.999, and end-effector path prediction 8--25$\times$ more accurate than the single-integrator model our barrier assumes. Converting that into constrained selection over the $K$ decoded candidates nonetheless produces no rollout gain. On SafeLIBERO Spatial L1 ($n{=}200$, privileged tier) critic selection scores 64.5/28.5 TSR/CAR against 67.5/33.8 for the geometric method it was meant to replace and 67.0/14.0 unguided --- below both references on both axes. On LIBERO-Safety obstacle avoidance the composed critic scores 67.3 against 79.3 for a ten-line geometric engagement gate targeting the identical failure mode. The diagnosis is instructive: in 74.5\% of replans the feasible set is empty and the certified fallback carries the safety anyway, so selection pressure is too weak to matter, and with marginal ranking quality (Spearman 0.597) always-ranking is net negative. A critic that predicts consequences accurately still needs something to select \emph{among}, and at this data scale the symbolic gate supplies more decision value than the learned one.
+
+\textbf{Whole-scene VLM identification.} Fig.~\ref{fig:vlmauth} places all three levels of neural authority on one axis, over the same 19 SafeLIBERO scenes. Handing the whole scene \emph{and its images} to an API-strength VLM and asking it to name the hazard scores 84.2\% (GPT-5.5), 57.9\% (Claude Sonnet) and 47.4\% (Gemini-2.5-Flash), against 100\% for the decomposed rule. This is the configuration most favourable to the baseline --- images provided, strongest available models --- and the decomposition claim survives it.
+
+\textbf{Runtime VLM rule composition.} Letting a VLM \emph{compose} the rule from a predicate library is strictly worse than the fixed rule with real critics from two vendors (top-1/top-2 of 19 scenes: 13/16 for Haiku, 11/13 for Gemini, against 16/19 and 19/19 for the fixed rule over VLM-grounded predicates), and even with \emph{oracle} grounding the entire compositional apparatus gains at most one scene and loses one to selection brittleness. The characteristic failure is the dangerous one: over-restrictive conjunctions that fire on \emph{nothing} (2 and 10 empty-rule scenes respectively), leaving the true hazard unguarded. A composition system that fails closed would merely be conservative; this one fails open.
+
+\textbf{Scene graphs: no-go, three times.} Graph-structured identification exactly ties the flat scorer wherever hazards are objects (19/19 agreement on SafeLIBERO) and collapses identically on the relational human suite (0/2), where the actual fix was a ten-line $\textsc{Protected}$ class rule (12/12). Structure was not the missing ingredient; a class predicate was.
+
+\section{A Benchmark Reliability Finding}
+\label{sec:defect}
+
+We close with a defect we did not go looking for. It surfaced because two of our own measurements on the same checkpoint and the same scenes disagreed: an independent geom-level scorer found 32.0\% robot--hand contact on the human-safety suite, while the benchmark's own violation metric reported 0\% for every arm, ours and baselines alike.
+
+The cause is in \texttt{check\_robot\_contact}, which collects the robot's geoms as integer \emph{indices},
+\begin{center}\small\texttt{g\_group.append(geom\_i)}\end{center}
+and passes them to \texttt{\_check\_contact}, which tests membership by \emph{name}:
+\begin{center}\small\texttt{c1\_in\_g1 = geom\_1\_name in geoms\_1}\end{center}
+A string is never a member of a list of integers, and both disjuncts of the acceptance test require a term drawn from that list, so the function returns \texttt{False} unconditionally. \texttt{CheckRobotContact} has never fired, in any suite, for any method evaluated on this benchmark. We supply a standalone executable proof that needs no simulator: a fake contact buffer in which a group-0 gripper geom and the hazard geom touch in both orderings returns \texttt{False} as shipped and \texttt{True} when indices are replaced by names. The fix is that one substitution. The defect is isolated --- the object--object \texttt{CheckContact} path and the gripper-part predicates pass names and are correct --- and it is specific to this benchmark, which introduced the predicate.
+
+\textbf{What it costs us, stated plainly.} Our LIBERO-Safety violation numbers measure object--hazard contact only. The human-safety suite's sole constraint is \texttt{CheckRobotContact}, so its violation rate is identically zero \emph{by construction}, which is why that column is struck through in Table~\ref{tab:ls}. Any reading of the form ``the baseline never touches the hand, so the trained behavior is already safe'' --- a reading we ourselves held --- is an artifact and is retracted here. The disengage regime remains motivated, but by the real task-success collapse under keep-out (2--26\% against a 54/56/26 baseline), not by a zero-violation baseline. Our macro violation rates average in a structurally-zero column and are diluted accordingly; the 12:1 paired violation result is carried by the remaining three suites. SafeLIBERO is unaffected, since its criterion is ground-truth hazard displacement computed independently of these predicates. Re-scoring our stored rollouts under the corrected predicate requires per-step contact traces we did not log, and is the first thing we will run.
+
+\textbf{Why this belongs in this workshop.} This is the third independent defect we have found in one safety benchmark, alongside a 25\,cm obstacle-spawn shift between twin variants that moves the dependent variable, and an unparseable goal predicate that silently zeroes three tasks. Each is a small piece of unchecked imperative code sitting where a safety-critical decision is made. The argument for putting such decisions in a small, inspectable, individually-testable symbolic form is not aesthetic. A three-literal rule whose every clause we could delete and measure is a rule whose failure modes we found; a predicate buried in a benchmark's contact-checking utility is one nobody found for as long as it has existed.
+
+\section{Limitations}
+\label{sec:limitations}
+
+\textbf{Honesty items.} All SafeLIBERO comparisons against the state-of-the-art method are against our own faithful reimplementation under one criterion, because the published collision figure does not reproduce under ours at any swept radius. All LIBERO-Safety claims are paired against our self-run baseline on the released checkpoint: that checkpoint reproduces the benchmark's protocol mechanics in our harness but scores well below the published obstacle-avoidance numbers, the release carries no model card, and we could not resolve provenance from our side. The refusal judge's lexicon was written against this suite's vocabulary, so its F1 is an in-domain upper bound. The perception tier consumes the symbolic object \emph{name} list; dropping it costs identification (top-2 recall $19\rightarrow12$ of 19) and pixel-only naming is future work.
+
+\textbf{Structural limitations.} Obstacle-on-grasp geometry resists every hard mechanism we tried, with the soft repulsor's 50\% the current ceiling. Identity errors fail unsafe at $k{=}1$, mitigated but not removed by the guard-set mode. Rotation is uncertified. We extract part-level semantics (blade versus handle) but ground barriers at object level, because part perception fails our pre-registered side-discrimination gate --- the semantic layer is ahead of what perception can ground, which we consider the most interesting thing blocking the next version. Benchmark-definition divergence is real and shows in Table~\ref{tab:board}: a semantically correct hazard model can disagree with a benchmark's designated label.
+
+\textbf{Toward hardware.} Our margins are tuned to simulation-grade localization (3.6--6.7\,cm median error); the obstacle-motion assumption bounds movers at $\le$8\,cm/s at 20\,Hz, which is below natural hand speeds; and tracking error is absorbed into the safety margin rather than proved for a specific controller. None of these is an obstacle in principle, and all three are unproved here.
+
+\section{Conclusion}
+
+The safety filter's four modules all presuppose that someone has named the hazard. For frozen VLA policies, naming it is the hard part, and it is neither elicitable from the policy nor installable by prompting: the hazard is linearly decodable at the action interface at AUC 0.998 in a policy that cannot answer whether there is a table in front of it and that 115 cells of instruction rewriting cannot redirect. Our answer is a division of labor in which neural components ground local, checkable predicates and a fixed three-literal rule makes every safety-critical decision --- a division we defend by deleting each literal and measuring what breaks, and by showing that both ways of granting the neural component more authority fail unsafe. That the same paper had to retract one of its own claims because a benchmark's central safety predicate silently returns false is not an aside. It is the argument.
+
+\section*{Reproducibility}
+The standalone proof of the \texttt{CheckRobotContact} defect runs in isolation with no simulator, GPU, or benchmark installation, and is included with the submission.
+
+\begin{thebibliography}{20}
+
+\bibitem{hsu2024safetyfilter} K.-C.~Hsu, H.~Hu, and J.~F.~Fisac, ``The safety filter: A unified view of safety-critical control in autonomous systems,'' \emph{Annual Review of Control, Robotics, and Autonomous Systems}, 2024.
+
+\bibitem{ames2019cbf} A.~D.~Ames et al., ``Control barrier functions: Theory and applications,'' in \emph{European Control Conference (ECC)}, 2019.
+
+\bibitem{mitchell2005hj} I.~M.~Mitchell, A.~M.~Bayen, and C.~J.~Tomlin, ``A time-dependent Hamilton-Jacobi formulation of reachable sets for continuous dynamic games,'' \emph{IEEE Transactions on Automatic Control}, vol.~50, no.~7, 2005.
+
+\bibitem{ames2017cbf} A.~D.~Ames, X.~Xu, J.~W.~Grizzle, and P.~Tabuada, ``Control barrier function based quadratic programs for safety critical systems,'' \emph{IEEE Transactions on Automatic Control}, vol.~62, no.~8, 2017.
+
+\bibitem{bastani2021shielding} O.~Bastani, ``Safe reinforcement learning with nonlinear dynamics via model predictive shielding,'' in \emph{American Control Conference (ACC)}, 2021.
+
+\bibitem{agrawal2017dcbf} A.~Agrawal and K.~Sreenath, ``Discrete control barrier functions for safety-critical control of discrete systems with application to bipedal robot navigation,'' in \emph{Robotics: Science and Systems (RSS)}, 2017.
+
+\bibitem{nakamura2025latent} K.~Nakamura, J.~Seo, and A.~Bajcsy, ``Uncertainty-aware latent safety filters for avoiding out-of-distribution failures,'' arXiv:2505.00779, 2025.
+
+\bibitem{anysafe} S.~Agrawal, J.~Seo, K.~Nakamura, R.~Tian, and A.~Bajcsy, ``AnySafe: Adapting latent safety filters at runtime via safety constraint parameterization in the latent space,'' arXiv:2509.19555, 2025.
+
+\bibitem{nakamura2025latentcbf} K.~Nakamura and A.~Bajcsy, ``How to train your latent control barrier function: Smooth safety filtering under hard-to-model constraints,'' arXiv preprint, 2025.
+
+\bibitem{sota2607} W.~English, H.~Zheng, and R.~Ewetz, ``Neuro-symbolic safety guidance for vision-language-action models via constrained flow matching,'' arXiv:2607.01378, 2026.
+
+\bibitem{liberosafety} Anonymous, ``LIBERO-Safety: Benchmarking safety-aware manipulation for vision-language-action models,'' arXiv:2606.23686, 2026.
+
+\bibitem{yourmodel} Anonymous, ``Your model already knows: Attention-guided safety filter for vision-language-action models,'' arXiv:2606.09749, 2026.
+
+\bibitem{pacs} Anonymous, ``From demonstrations to safe deployment: Path-consistent safety filtering for diffusion policies,'' arXiv:2511.06385, 2025.
+
+\bibitem{vls} Anonymous, ``VLS: Steering pretrained robot policies via vision-language models,'' arXiv:2602.03973, 2026.
+
+\bibitem{frs} Anonymous, ``Improving robotic generalist policies via flow reversal steering,'' arXiv:2606.13675, 2026.
+
+\bibitem{safediffuser} W.~Xiao et al., ``SafeDiffuser: Safe planning with diffusion probabilistic models,'' arXiv:2306.00148, 2023.
+
+\bibitem{aegis} Anonymous, ``AEGIS: A geometric safety shield for vision-language-action policies,'' arXiv:2512.11891, 2025.
+
+\bibitem{brunke2025semantic} L.~Brunke et al., ``Semantically safe robot manipulation: From semantic scene understanding to motion safeguards,'' \emph{IEEE Robotics and Automation Letters}, 2025.
+
+\bibitem{vlasurvey} Anonymous, ``Vision-language-action safety: Threats, challenges, evaluations, and mechanisms,'' arXiv:2604.23775, 2026.
+
+\bibitem{gdino} S.~Liu et al., ``Grounding DINO: Marrying DINO with grounded pre-training for open-set object detection,'' in \emph{ECCV}, 2024.
+
+\bibitem{pi05} Physical Intelligence, ``$\pi_{0.5}$: A vision-language-action model with open-world generalization,'' arXiv:2504.16054, 2025.
+
+\end{thebibliography}
+
+\end{document}

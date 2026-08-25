@@ -1,0 +1,127 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{pi05}
+\citation{mitchell2005hj}
+\citation{ames2017cbf,ames2019cbf}
+\citation{bastani2021shielding}
+\citation{hsu2024safetyfilter}
+\citation{nakamura2025latent,anysafe}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}}
+\newlabel{sec:intro}{{I}{1}{Introduction}{section.1}{}}
+\citation{safediffuser,pacs}
+\citation{brunke2025semantic,aegis}
+\citation{pacs}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textbf  {Knowing is not avoiding.} A single LIBERO-Safety episode, with the same instruction and the same initial state. \textbf  {Top:} the frozen $\pi _{0.5}$ policy, which encodes this hazard at AUC 0.998 at its own action interface (Sec.\nobreakspace  {}\ref  {sec:gap}), closes on the mug, contacts the human hand at $t{=}573$, and fails the task. \textbf  {Bottom:} the same frozen weights under symbolic hazard election driving noise-space steering. The hand is elected by the $\textsc  {Protected}$ literal, a barrier is compiled around it, and the policy routes around the hand to complete the task at $t{=}509$. Neither retraining nor privileged simulator state is used.}}{2}{figure.1}}
+\newlabel{fig:teaser}{{1}{2}{\textbf {Knowing is not avoiding.} A single LIBERO-Safety episode, with the same instruction and the same initial state. \textbf {Top:} the frozen $\pi _{0.5}$ policy, which encodes this hazard at AUC 0.998 at its own action interface (Sec.~\ref {sec:gap}), closes on the mug, contacts the human hand at $t{=}573$, and fails the task. \textbf {Bottom:} the same frozen weights under symbolic hazard election driving noise-space steering. The hand is elected by the $\textsc {Protected}$ literal, a barrier is compiled around it, and the policy routes around the hand to complete the task at $t{=}509$. Neither retraining nor privileged simulator state is used}{figure.1}{}}
+\citation{nakamura2025latent}
+\citation{nakamura2025latentcbf}
+\citation{anysafe}
+\citation{nakamura2025latentcbf,safediffuser}
+\citation{brunke2025semantic}
+\citation{vls}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{3}{section.2}}
+\newlabel{sec:related}{{II}{3}{Related Work}{section.2}{}}
+\citation{sota2607}
+\citation{yourmodel}
+\citation{aegis}
+\citation{safediffuser,sota2607}
+\citation{pacs}
+\citation{frs}
+\citation{vls}
+\citation{sota2607}
+\citation{liberosafety}
+\citation{vlasurvey}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces \textbf  {What the literals must resolve.} (a) A distractor adjacent to the target, separable only by $\textsc  {Mentioned}$, since geometry alone cannot distinguish a hazard from the goal. (b) A human hand entering mid-episode, which is the case that $\textsc  {Moving}$ exists to handle, grounded from displacement rather than from a runtime model call. (c) A SafeLIBERO scene in which the hazard lies on the reach path, engaging $\textsc  {NearPath}$. (d) A certified rollout, with the task completed and no hazard contact.}}{4}{figure.2}}
+\newlabel{fig:scenes}{{2}{4}{\textbf {What the literals must resolve.} (a) A distractor adjacent to the target, separable only by $\textsc {Mentioned}$, since geometry alone cannot distinguish a hazard from the goal. (b) A human hand entering mid-episode, which is the case that $\textsc {Moving}$ exists to handle, grounded from displacement rather than from a runtime model call. (c) A SafeLIBERO scene in which the hazard lies on the reach path, engaging $\textsc {NearPath}$. (d) A certified rollout, with the task completed and no hazard contact}{figure.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Prompting Does Not Install Safe Behavior}{4}{section.3}}
+\newlabel{sec:gap}{{III}{4}{Prompting Does Not Install Safe Behavior}{section.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces \textbf  {LIBERO-Safety: violation rate by rewriter and prompt variant.} Hazard contact (\%, lower is better) for every complete cell, against the unmodified benchmark instruction in the first row. $n{=}150$ per cell, except affordance, where the three fork twins are excluded ($n{=}120$) because they resolve against a different scene file and bank successes the other cells cannot score. Prompt variants: \textit  {v1} states the task plainly, \textit  {v2} adds a hazard-reasoning step with a worked example, \textit  {v3} additionally constrains the rewrite to the phrasing distribution the policy was fine-tuned on. None of the 60 cells separates from its baseline under a Fisher exact test; the most favorable of the 60, and therefore the one selected to favor rewriting, is $p=0.16$.}}{5}{table.1}}
+\newlabel{tab:rewrite}{{I}{5}{\textbf {LIBERO-Safety: violation rate by rewriter and prompt variant.} Hazard contact (\%, lower is better) for every complete cell, against the unmodified benchmark instruction in the first row. $n{=}150$ per cell, except affordance, where the three fork twins are excluded ($n{=}120$) because they resolve against a different scene file and bank successes the other cells cannot score. Prompt variants: \textit {v1} states the task plainly, \textit {v2} adds a hazard-reasoning step with a worked example, \textit {v3} additionally constrains the rewrite to the phrasing distribution the policy was fine-tuned on. None of the 60 cells separates from its baseline under a Fisher exact test; the most favorable of the 60, and therefore the one selected to favor rewriting, is $p=0.16$}{table.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces \textbf  {SafeLIBERO: violation rate by rewriter.} Collision rate (\%, lower is better, the complement of collision avoidance) for the same five rewriters against a different checkpoint from the arm above (\texttt  {pi05\_libero\_finetuned} rather than the safety-finetuned $\pi _{0.5}${}), a different evaluation stack, and a different metric family. Prompt variant \textit  {v2} only, $n{=}200$ per cell, 38 complete cells; \texttt  {--} marks two cells that did not finish. The floor is high, since the unguided policy already collides in 82--98\% of episodes, so this arm is reported as benchmark and checkpoint independence rather than as an equal-weight replication. Three Object\nobreakspace  {}L2 cells fall by 9.5--10.5 points, the largest movement anywhere in the arm, and none survives correction for the 38 comparisons that produced it.}}{5}{table.2}}
+\newlabel{tab:rewrite-sl}{{II}{5}{\textbf {SafeLIBERO: violation rate by rewriter.} Collision rate (\%, lower is better, the complement of collision avoidance) for the same five rewriters against a different checkpoint from the arm above (\texttt {pi05\_libero\_finetuned} rather than the safety-finetuned \pifive {}), a different evaluation stack, and a different metric family. Prompt variant \textit {v2} only, $n{=}200$ per cell, 38 complete cells; \texttt {--} marks two cells that did not finish. The floor is high, since the unguided policy already collides in 82--98\% of episodes, so this arm is reported as benchmark and checkpoint independence rather than as an equal-weight replication. Three Object~L2 cells fall by 9.5--10.5 points, the largest movement anywhere in the arm, and none survives correction for the 38 comparisons that produced it}{table.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textbf  {Instruction rewriting is invariant in hazard contact and ambiguous in task success.} Each panel holds one LIBERO-Safety suite. The dashed line is the unmodified benchmark instruction and the shaded band is its 95\% Wilson interval; three points per rewriter give the three prompt variants. \emph  {Top:} hazard contact. No cell separates from its baseline under a Fisher exact test, and the most favorable of the 60 comparisons, which is therefore selected to favor rewriting, is $p{=}0.16$. \emph  {Bottom:} safe success. Here the points do move, but not in one direction, rising on affordance and falling on human safety, which is why we make no directional claim about what rewriting does to the task. The figure is deliberately not a ranking. No rewriter is best, because none of them separates from doing nothing.}}{6}{figure.3}}
+\newlabel{fig:rewrite}{{3}{6}{\textbf {Instruction rewriting is invariant in hazard contact and ambiguous in task success.} Each panel holds one LIBERO-Safety suite. The dashed line is the unmodified benchmark instruction and the shaded band is its 95\% Wilson interval; three points per rewriter give the three prompt variants. \emph {Top:} hazard contact. No cell separates from its baseline under a Fisher exact test, and the most favorable of the 60 comparisons, which is therefore selected to favor rewriting, is $p{=}0.16$. \emph {Bottom:} safe success. Here the points do move, but not in one direction, rising on affordance and falling on human safety, which is why we make no directional claim about what rewriting does to the task. The figure is deliberately not a ranking. No rewriter is best, because none of them separates from doing nothing}{figure.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Method}{6}{section.4}}
+\newlabel{sec:method}{{IV}{6}{Method}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-A}}Hazard election: a three-literal first-order rule}{6}{subsection.4.1}}
+\newlabel{sec:ident}{{\unhbox \voidb@x \hbox {IV-A}}{6}{Hazard election: a three-literal first-order rule}{subsection.4.1}{}}
+\newlabel{eq:fol}{{1}{6}{Hazard election: a three-literal first-order rule}{equation.4.1}{}}
+\citation{gdino}
+\citation{agrawal2017dcbf}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textbf  {The division of labor.} A LIBERO-Safety scene (left) is processed by neural components (blue) that answer only local, checkable questions, namely per-object predicates and open-vocabulary localization. A fixed symbolic layer (amber) then makes every safety-critical decision, electing the hazard by Eq.\nobreakspace  {}\textup  {\hbox {\mathsurround \z@ \normalfont  (\ignorespaces \ref  {eq:fol}\unskip \@@italiccorr )}} and routing the episode into the avoid, disengage, or refuse regime. Enforcement searches the frozen flow policy's noise space over $K{=}8$ candidate chunks, and a discrete control barrier function chain re-checked on the executed prefix (green) certifies the emitted actions independently of which neural search produced them.}}{7}{figure.4}}
+\newlabel{fig:pipeline}{{4}{7}{\textbf {The division of labor.} A LIBERO-Safety scene (left) is processed by neural components (blue) that answer only local, checkable questions, namely per-object predicates and open-vocabulary localization. A fixed symbolic layer (amber) then makes every safety-critical decision, electing the hazard by Eq.~\eqref {eq:fol} and routing the episode into the avoid, disengage, or refuse regime. Enforcement searches the frozen flow policy's noise space over $K{=}8$ candidate chunks, and a discrete control barrier function chain re-checked on the executed prefix (green) certifies the emitted actions independently of which neural search produced them}{figure.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-B}}Three-regime routing}{7}{subsection.4.2}}
+\newlabel{sec:routing}{{\unhbox \voidb@x \hbox {IV-B}}{7}{Three-regime routing}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-C}}Enforcement and certificate}{7}{subsection.4.3}}
+\newlabel{sec:enforce}{{\unhbox \voidb@x \hbox {IV-C}}{7}{Enforcement and certificate}{subsection.4.3}{}}
+\newlabel{prop:cert}{{1}{7}{Checked prefix certificate}{proposition.1}{}}
+\citation{sota2607}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Identity-source swap on SafeLIBERO Spatial. Enforcement, seeds, and initial states are identical across rows, and only the source that names the hazard changes. $n{=}40$ per arm per level. Paired McNemar tests comparing ground truth against the first-order rule give L1 TSR $p=0.55$, L1 CAR $p=0.50$, L2 TSR $p=0.18$, and L2 CAR $p=1.0$.}}{8}{table.3}}
+\newlabel{tab:e3}{{III}{8}{Identity-source swap on SafeLIBERO Spatial. Enforcement, seeds, and initial states are identical across rows, and only the source that names the hazard changes. $n{=}40$ per arm per level. Paired McNemar tests comparing ground truth against the first-order rule give L1 TSR $p=0.55$, L1 CAR $p=0.50$, L2 TSR $p=0.18$, and L2 CAR $p=1.0$}{table.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Experiments}{8}{section.5}}
+\newlabel{sec:exp}{{V}{8}{Experiments}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {V-A}}Identification: symbolic election matches ground truth}{8}{subsection.5.1}}
+\newlabel{sec:e3}{{\unhbox \voidb@x \hbox {V-A}}{8}{Identification: symbolic election matches ground truth}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {V-B}}SafeLIBERO: five architectures, one criterion}{8}{subsection.5.2}}
+\newlabel{sec:board}{{\unhbox \voidb@x \hbox {V-B}}{8}{SafeLIBERO: five architectures, one criterion}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {V-C}}LIBERO-Safety: porting the rule without tuning it}{8}{subsection.5.3}}
+\newlabel{sec:ls}{{\unhbox \voidb@x \hbox {V-C}}{8}{LIBERO-Safety: porting the rule without tuning it}{subsection.5.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces SafeLIBERO five-row architecture board. TSR/CAR (\%), $n{=}200$ per cell, identical policy, seeds protocol and collision criterion ($>$1\tmspace  +\thinmuskip {.1667em}mm ground-truth hazard displacement). \textbf  {Bold} = beats \emph  {both} the unguided baseline and the SOTA reimplementation on that axis. $^\dagger $nominal (Fisher n.s.). $^\ddagger $benchmark-definition divergence: the VLM guards spillable food where the benchmark designates a book (Sec.\nobreakspace  {}\ref  {sec:limitations}).}}{9}{table.4}}
+\newlabel{tab:board}{{IV}{9}{SafeLIBERO five-row architecture board. TSR/CAR (\%), $n{=}200$ per cell, identical policy, seeds protocol and collision criterion ($>$1\,mm ground-truth hazard displacement). \textbf {Bold} = beats \emph {both} the unguided baseline and the SOTA reimplementation on that axis. $^\dagger $nominal (Fisher n.s.). $^\ddagger $benchmark-definition divergence: the VLM guards spillable food where the benchmark designates a book (Sec.~\ref {sec:limitations})}{table.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textbf  {From elected hazard to compiled barrier} on a single SafeLIBERO scene. (a) The unguided policy drives through the hazard and topples the moka pot. (b) The same frozen weights under barrier-guided noise-space search complete the task with the hazard untouched. (c) The compiled constraint, showing the elected guard's barrier surface ($h{=}0$) together with the sanctioned target in green. Nothing in this figure is authored per scene; the surface is compiled from the entity that Eq.\nobreakspace  {}\textup  {\hbox {\mathsurround \z@ \normalfont  (\ignorespaces \ref  {eq:fol}\unskip \@@italiccorr )}} elects.}}{9}{figure.5}}
+\newlabel{fig:sl}{{5}{9}{\textbf {From elected hazard to compiled barrier} on a single SafeLIBERO scene. (a) The unguided policy drives through the hazard and topples the moka pot. (b) The same frozen weights under barrier-guided noise-space search complete the task with the hazard untouched. (c) The compiled constraint, showing the elected guard's barrier surface ($h{=}0$) together with the sanctioned target in green. Nothing in this figure is authored per scene; the surface is compiled from the entity that Eq.~\eqref {eq:fol} elects}{figure.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces LIBERO-Safety, safety-finetuned $\pi _{0.5}${}, TSR/violation\%, paired seeds, $n{=}300$--750 per cell. Violations use the benchmark's own \texttt  {:constraints} predicates. Two of the four violation columns carry no information and are marked rather than printed as zeros. The human-safety column is marked \texttt  {--} because its sole predicate cannot fire (Sec.\nobreakspace  {}\ref  {sec:defect}), and the affordance column is marked \texttt  {n/a} because those task files declare no \texttt  {:constraints} block at all. That suite expresses safety through its goal predicate, requiring the robot to grasp the handle rather than the blade, so there is nothing to violate by construction. The two obstacle columns are live but measure only the object--hazard half of their conjunction. Macro TSR is unaffected throughout, since task success is scored by the goal predicate.}}{9}{table.5}}
+\newlabel{tab:ls}{{V}{9}{LIBERO-Safety, safety-finetuned \pifive {}, TSR/violation\%, paired seeds, $n{=}300$--750 per cell. Violations use the benchmark's own \texttt {:constraints} predicates. Two of the four violation columns carry no information and are marked rather than printed as zeros. The human-safety column is marked \texttt {--} because its sole predicate cannot fire (Sec.~\ref {sec:defect}), and the affordance column is marked \texttt {n/a} because those task files declare no \texttt {:constraints} block at all. That suite expresses safety through its goal predicate, requiring the robot to grasp the handle rather than the blade, so there is nothing to violate by construction. The two obstacle columns are live but measure only the object--hazard half of their conjunction. Macro TSR is unaffected throughout, since task success is scored by the goal predicate}{table.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {V-D}}Every literal earns its place}{9}{subsection.5.4}}
+\newlabel{sec:ablation}{{\unhbox \voidb@x \hbox {V-D}}{9}{Every literal earns its place}{subsection.5.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \textbf  {The contribution of each literal, on a single scene.} Guard sets produced by Eq.\nobreakspace  {}\textup  {\hbox {\mathsurround \z@ \normalfont  (\ignorespaces \ref  {eq:fol}\unskip \@@italiccorr )}} under single-clause deletion, for the instruction \textit  {``pick the akita black bowl next to the cookies box and bring it for me.''} (a) The full rule guards the human hand and exempts the task bowls. (b) Without the logic, distance ranking guards the task bowl and misses the hand. (c) Without the mention exemptions, the system guards the object it was instructed to pick up and thereby paralyzes itself. (d) Without the class predicates, the hand is left unguarded. Two of the three failures leave the true hazard unprotected, and Table\nobreakspace  {}\ref  {tab:ablation} reports the corresponding rollout cost.}}{10}{figure.6}}
+\newlabel{fig:ablation}{{6}{10}{\textbf {The contribution of each literal, on a single scene.} Guard sets produced by Eq.~\eqref {eq:fol} under single-clause deletion, for the instruction \textit {``pick the akita black bowl next to the cookies box and bring it for me.''} (a) The full rule guards the human hand and exempts the task bowls. (b) Without the logic, distance ranking guards the task bowl and misses the hand. (c) Without the mention exemptions, the system guards the object it was instructed to pick up and thereby paralyzes itself. (d) Without the class predicates, the hand is left unguarded. Two of the three failures leave the true hazard unprotected, and Table~\ref {tab:ablation} reports the corresponding rollout cost}{figure.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Single-clause deletion from Eq.\nobreakspace  {}\textup  {\hbox {\mathsurround \z@ \normalfont  (\ignorespaces \ref  {eq:fol}\unskip \@@italiccorr )}}. Each arm deletes exactly one clause with everything else paired 1:1 on identical initial states, $n{=}150$/cell; exact McNemar. TSR (\%), with violation\nobreakspace  {}\% shown only where it moves. The incumbent column is recomputed on the paired subset, so it differs slightly from Table\nobreakspace  {}\ref  {tab:ls}.}}{10}{table.6}}
+\newlabel{tab:ablation}{{VI}{10}{Single-clause deletion from Eq.~\eqref {eq:fol}. Each arm deletes exactly one clause with everything else paired 1:1 on identical initial states, $n{=}150$/cell; exact McNemar. TSR (\%), with violation~\% shown only where it moves. The incumbent column is recomputed on the paired subset, so it differs slightly from Table~\ref {tab:ls}}{table.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {V-E}}More neural authority fails, and fails unsafe}{10}{subsection.5.5}}
+\newlabel{sec:negative}{{\unhbox \voidb@x \hbox {V-E}}{10}{More neural authority fails, and fails unsafe}{subsection.5.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces \textbf  {How much authority should the neural component have?} Hazard-identification accuracy on the same 19 SafeLIBERO scenes, grouped by what the VLM is asked to do. Letting it \emph  {decide the scene} (grey) or \emph  {compose the rule} (orange) is worse than restricting it to \emph  {grounding predicates} that a fixed rule composes (blue). Light extensions are the deployed top-2 guard set. The ordering, not any single bar, is the finding.}}{10}{figure.7}}
+\newlabel{fig:vlmauth}{{7}{10}{\textbf {How much authority should the neural component have?} Hazard-identification accuracy on the same 19 SafeLIBERO scenes, grouped by what the VLM is asked to do. Letting it \emph {decide the scene} (grey) or \emph {compose the rule} (orange) is worse than restricting it to \emph {grounding predicates} that a fixed rule composes (blue). Light extensions are the deployed top-2 guard set. The ordering, not any single bar, is the finding}{figure.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}A Benchmark Reliability Finding}{11}{section.6}}
+\newlabel{sec:defect}{{VI}{11}{A Benchmark Reliability Finding}{section.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Limitations}{11}{section.7}}
+\newlabel{sec:limitations}{{VII}{11}{Limitations}{section.7}{}}
+\bibcite{hsu2024safetyfilter}{1}
+\bibcite{ames2019cbf}{2}
+\bibcite{mitchell2005hj}{3}
+\bibcite{ames2017cbf}{4}
+\bibcite{bastani2021shielding}{5}
+\bibcite{agrawal2017dcbf}{6}
+\bibcite{nakamura2025latent}{7}
+\bibcite{anysafe}{8}
+\bibcite{nakamura2025latentcbf}{9}
+\bibcite{sota2607}{10}
+\bibcite{liberosafety}{11}
+\bibcite{yourmodel}{12}
+\bibcite{pacs}{13}
+\bibcite{vls}{14}
+\bibcite{frs}{15}
+\bibcite{safediffuser}{16}
+\bibcite{aegis}{17}
+\bibcite{brunke2025semantic}{18}
+\bibcite{vlasurvey}{19}
+\bibcite{gdino}{20}
+\bibcite{pi05}{21}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Conclusion}{12}{section.8}}
+\@writefile{toc}{\contentsline {section}{References}{12}{section*.2}}

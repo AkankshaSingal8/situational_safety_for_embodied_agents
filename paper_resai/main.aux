@@ -1,0 +1,82 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{pi05}
+\citation{liberosafety}
+\citation{sota2607,aegis,safediffuser}
+\citation{brunke2025semantic}
+\citation{sota2607}
+\citation{safediffuser,cbf2602}
+\citation{yourmodel}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}}
+\newlabel{sec:intro}{{I}{1}{Introduction}{section.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{1}{section.2}}
+\newlabel{sec:related}{{II}{1}{Related Work}{section.2}{}}
+\citation{gdino}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textbf  {The division of labor.} A real LIBERO-Safety scene (left; obstacle-avoidance suite) is processed by \emph  {neural} components (blue) that only answer local, checkable questions --- per-object predicates and open-vocabulary localization --- while a fixed \emph  {symbolic} layer (amber) makes every safety-critical decision: hazard election by the three-literal rule of Eq.\nobreakspace  {}\textup  {\hbox {\mathsurround \z@ \normalfont  (\ignorespaces \ref  {eq:fol}\unskip \@@italiccorr )}} and routing into avoid / disengage / refuse regimes. Enforcement searches the frozen flow policy's noise space over $K{=}8$ candidate chunks, and a discrete-CBF chain re-checked on the executed prefix (green) certifies the output independently of which neural search produced it; the certified 5-step prefix executes and the loop replans from the next observation.}}{2}{figure.1}}
+\newlabel{fig:pipeline}{{1}{2}{\textbf {The division of labor.} A real LIBERO-Safety scene (left; obstacle-avoidance suite) is processed by \emph {neural} components (blue) that only answer local, checkable questions --- per-object predicates and open-vocabulary localization --- while a fixed \emph {symbolic} layer (amber) makes every safety-critical decision: hazard election by the three-literal rule of Eq.~\eqref {eq:fol} and routing into avoid / disengage / refuse regimes. Enforcement searches the frozen flow policy's noise space over $K{=}8$ candidate chunks, and a discrete-CBF chain re-checked on the executed prefix (green) certifies the output independently of which neural search produced it; the certified 5-step prefix executes and the loop replans from the next observation}{figure.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Method}{2}{section.3}}
+\newlabel{sec:method}{{III}{2}{Method}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {III-A}}Identification: a first-order rule over grounded predicates}{2}{subsection.3.1}}
+\newlabel{sec:ident}{{\unhbox \voidb@x \hbox {III-A}}{2}{Identification: a first-order rule over grounded predicates}{subsection.3.1}{}}
+\newlabel{eq:fol}{{1}{2}{Identification: a first-order rule over grounded predicates}{equation.3.1}{}}
+\newlabel{eq:folprop}{{2}{2}{Identification: a first-order rule over grounded predicates}{equation.3.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Every predicate and its grounding. ``VLM (cached)'' = one-shot offline majority-voted queries, zero runtime calls.}}{2}{table.1}}
+\newlabel{tab:grounding}{{I}{2}{Every predicate and its grounding. ``VLM (cached)'' = one-shot offline majority-voted queries, zero runtime calls}{table.1}{}}
+\citation{pi05}
+\citation{sota2607}
+\citation{liberosafety}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {III-B}}Three-regime routing}{3}{subsection.3.2}}
+\newlabel{sec:routing}{{\unhbox \voidb@x \hbox {III-B}}{3}{Three-regime routing}{subsection.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {III-C}}Enforcement and certificate (summary)}{3}{subsection.3.3}}
+\newlabel{sec:enforce}{{\unhbox \voidb@x \hbox {III-C}}{3}{Enforcement and certificate (summary)}{subsection.3.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Experiments}{3}{section.4}}
+\newlabel{sec:results}{{IV}{3}{Experiments}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-A}}SafeLIBERO: the symbolic rule matches ground truth}{3}{subsection.4.1}}
+\newlabel{sec:e3}{{\unhbox \voidb@x \hbox {IV-A}}{3}{SafeLIBERO: the symbolic rule matches ground truth}{subsection.4.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Identification swap: enforcement fixed, \emph  {only} the identity source varies. SafeLIBERO Spatial, $n{=}40$/arm/level, same seeds; TSR/CAR (\%). Paired McNemar GT vs.\ FOL: L1 TSR $p=0.55$; L1 CAR $p=0.50$; L2 TSR $p=0.18$; L2 CAR $p=1.0$.}}{3}{table.2}}
+\newlabel{tab:e3}{{II}{3}{Identification swap: enforcement fixed, \emph {only} the identity source varies. SafeLIBERO Spatial, $n{=}40$/arm/level, same seeds; TSR/CAR (\%). Paired McNemar GT vs.\ FOL: L1 TSR $p=0.55$; L1 CAR $p=0.50$; L2 TSR $p=0.18$; L2 CAR $p=1.0$}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-B}}VLM predicate grounding: same decisions, more competence}{3}{subsection.4.2}}
+\newlabel{sec:grounding}{{\unhbox \voidb@x \hbox {IV-B}}{3}{VLM predicate grounding: same decisions, more competence}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-C}}More neural authority fails unsafe}{3}{subsection.4.3}}
+\newlabel{sec:negative}{{\unhbox \voidb@x \hbox {IV-C}}{3}{More neural authority fails unsafe}{subsection.4.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Simulation testbeds. (a)\nobreakspace  {}LIBERO-Safety obstacle avoidance: the elected guard (a spillable bottle) sits directly beside the task target. (b)\nobreakspace  {}Human-safety suite: a hand enters the workspace mid-episode and is captured online by the \textsc  {Moving}/\textsc  {Protected} literals. (c)\nobreakspace  {}SafeLIBERO: a hazardous distractor placed on the reach path. (d)\nobreakspace  {}A certified rollout: the task completes with zero hazard contact under the checked prefix certificate.}}{4}{figure.2}}
+\newlabel{fig:scenes}{{2}{4}{Simulation testbeds. (a)~LIBERO-Safety obstacle avoidance: the elected guard (a spillable bottle) sits directly beside the task target. (b)~Human-safety suite: a hand enters the workspace mid-episode and is captured online by the \textsc {Moving}/\textsc {Protected} literals. (c)~SafeLIBERO: a hazardous distractor placed on the reach path. (d)~A certified rollout: the task completes with zero hazard contact under the checked prefix certificate}{figure.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textbf  {SafeLIBERO, qualitatively.} (a)\nobreakspace  {}An unshielded rollout: the policy drives through the hazardous distractor and topples the moka pot while reaching the bowl. (b)\nobreakspace  {}A barrier-guided rollout on the same task family: the bowl is carried clear and the hazard is never touched. (c)\nobreakspace  {}The compiled constraint, visualized: the FOL rule elects the moka pot ($\lnot \textsc  {Mentioned}\wedge \textsc  {NearestToPath}$; it is not named by the instruction and sits on the reach path), and its barrier's $h{=}0$ boundary (red) is projected into the camera view with the parsed target circled in green. The sphere-with-companions barrier plus per-step inflation is everything the enforcement layer sees --- symbols in, geometry out.}}{4}{figure.3}}
+\newlabel{fig:safelibero}{{3}{4}{\textbf {SafeLIBERO, qualitatively.} (a)~An unshielded rollout: the policy drives through the hazardous distractor and topples the moka pot while reaching the bowl. (b)~A barrier-guided rollout on the same task family: the bowl is carried clear and the hazard is never touched. (c)~The compiled constraint, visualized: the FOL rule elects the moka pot ($\lnot \textsc {Mentioned}\wedge \textsc {NearestToPath}$; it is not named by the instruction and sits on the reach path), and its barrier's $h{=}0$ boundary (red) is projected into the camera view with the parsed target circled in green. The sphere-with-companions barrier plus per-step inflation is everything the enforcement layer sees --- symbols in, geometry out}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-D}}System-level results on LIBERO-Safety}{4}{subsection.4.4}}
+\newlabel{sec:ls}{{\unhbox \voidb@x \hbox {IV-D}}{4}{System-level results on LIBERO-Safety}{subsection.4.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Five-architecture board on LIBERO-Safety physical suites (TSR\tmspace  +\thinmuskip {.1667em}/\tmspace  +\thinmuskip {.1667em}violation\%; $n{=}450$ per cell on obstacle and human suites for baseline and the corresponding ours arms, $n{=}150$ elsewhere, obst.-human $n{=}750$; macro = suite mean of TSR\tmspace  +\thinmuskip {.1667em}/\tmspace  +\thinmuskip {.1667em}viol.\tmspace  +\thinmuskip {.1667em}/\tmspace  +\thinmuskip {.1667em}safe-SR). All arms share one policy, protocol, and violation criterion; comparisons are against our self-run baseline at execution parity. \textbf  {Bold}: best TSR per suite. $^*$paired exact McNemar vs.\ baseline, $50{:}31$ discordant, $p{=}0.045$.}}{4}{table.3}}
+\newlabel{tab:board}{{III}{4}{Five-architecture board on LIBERO-Safety physical suites (TSR\,/\,violation\%; $n{=}450$ per cell on obstacle and human suites for baseline and the corresponding ours arms, $n{=}150$ elsewhere, obst.-human $n{=}750$; macro = suite mean of TSR\,/\,viol.\,/\,safe-SR). All arms share one policy, protocol, and violation criterion; comparisons are against our self-run baseline at execution parity. \textbf {Bold}: best TSR per suite. $^*$paired exact McNemar vs.\ baseline, $50{:}31$ discordant, $p{=}0.045$}{table.3}{}}
+\bibstyle{IEEEtran}
+\bibcite{pi05}{1}
+\bibcite{liberosafety}{2}
+\bibcite{sota2607}{3}
+\bibcite{aegis}{4}
+\bibcite{safediffuser}{5}
+\bibcite{cbf2602}{6}
+\bibcite{yourmodel}{7}
+\bibcite{brunke2025semantic}{8}
+\bibcite{gdino}{9}
+\bibcite{agrawal2017dcbf}{10}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces (a) Identification swap (Table\nobreakspace  {}\ref  {tab:e3}, Spatial L1/L2 mean): the ground-truth-free FOL rule matches privileged identity on both axes. (b)\nobreakspace  {}Safety-reasoning suite: the symbolic instruction judge refuses unsafe instructions where the best published model partially complies --- and the unguided policy executes them.}}{5}{figure.4}}
+\newlabel{fig:results}{{4}{5}{(a) Identification swap (Table~\ref {tab:e3}, Spatial L1/L2 mean): the ground-truth-free FOL rule matches privileged identity on both axes. (b)~Safety-reasoning suite: the symbolic instruction judge refuses unsafe instructions where the best published model partially complies --- and the unguided policy executes them}{figure.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Discussion}{5}{section.5}}
+\newlabel{sec:discussion}{{V}{5}{Discussion}{section.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Conclusion}{5}{section.6}}
+\@writefile{toc}{\contentsline {section}{References}{5}{section*.1}}

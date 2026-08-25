@@ -1,0 +1,253 @@
+\section{Method}
+\label{sec:method}
+
+Fig.~\ref{fig:pipeline} shows the assembled system. The safety decision is made
+outside the frozen policy and enforced upon it, and the labor is divided so that
+every neural component answers a local, checkable question while a fixed
+symbolic layer makes every decision that matters. We describe the four layers in
+the order in which the runtime executes them.
+
+\subsection{Perception}
+\label{sec:percep}
+
+\textbf{What is observed.} At \textit{Tier-Percep} the system reads only the
+instruction, camera observations, proprioception, and the symbolic list of
+object names present in the scene. It never reads
+\texttt{obs[\{name\}\_pos]}. Three camera streams are available, and they play
+three distinct roles rather than being pooled into one estimate. The
+\texttt{agentview} camera is the trusted primary and is the only view used by
+default. The overhead \texttt{birdview} camera is a secondary that may refine
+the primary but is never permitted to override it. The wrist-mounted
+\texttt{robot0\_eye\_in\_hand} camera is consumed by the policy itself as one of
+its two image inputs, and the safety layer draws on it only for re-detecting
+moving hazards, where at close range the wrist sees a human hand large and
+unoccluded in exactly the configurations in which the agentview detector is
+weakest.
+
+\textbf{Object inventory.} The candidate set $\mathcal{X}$ is the symbolic name
+list, which supplies identity strings but no geometry. Each name is converted
+into an open-vocabulary text query by stripping instance suffixes and
+underscores, and is passed to GroundingDINO~\cite{gdino} at a box threshold of
+0.30. Localization is therefore open-vocabulary in the sense that matters here,
+namely that no fixed detector vocabulary, no benchmark-specific class list, and
+no per-object model are involved. GroundingDINO runs in a persistent subprocess,
+so the detector environment stays out of the evaluation process, and it is
+queried once per object per camera at episode start, which makes its cost
+negligible relative to policy inference.
+
+\textbf{Depth back-projection.} A detector box is a rectangle, and a rectangle
+drawn on a table contains a substantial fraction of table and background pixels,
+whose depths would bias a naive centroid. The estimator therefore anchors on the
+median depth inside the box, retains the depth-continuous connected component
+around that anchor, and back-projects the component's centroid pixel at its
+median depth, $p_{\mathrm{cam}}=z\,K^{-1}[u,v,1]^{\top}$ followed by the camera
+extrinsic transform, using intrinsics and extrinsics read from the live
+simulator. Candidate boxes are tried in descending detector confidence and the
+first whose back-projection lands inside the workspace is accepted, which
+removes the dominant open-vocabulary failure mode, namely confident detections
+on walls and background structure. Half-extents are obtained from the same
+masked point cloud as the per-axis fifth to ninety-fifth percentile spread,
+clipped to $[0.02,0.35]$\,m. Visible-surface bias underestimates the occluded
+axis, and that residual is absorbed by the enforcement pad rather than
+corrected.
+
+\textbf{Multi-camera fusion.} Views are fused by mean only when they agree.
+Estimates from the primary and secondary cameras are averaged when their maximum
+pairwise separation is within $\tau=0.06$\,m, and on disagreement the primary
+view wins alone. This asymmetry is not a stylistic preference. Blind mean fusion
+imports secondary-view failures wholesale, and in one measured arm a single
+mislocalized birdview detection collapsed two obstacle-avoidance task cells to
+near-zero success while leaving the intended target cell essentially unchanged.
+Under the consistency gate a secondary view can only refine an estimate, never
+replace it. Median localization error is 0.067\,m on SafeLIBERO and
+0.036--0.038\,m on LIBERO-Safety.
+
+\textbf{Failure behavior.} An object whose estimate fails is simply absent from
+the geometric layer, so it can neither be elected as a hazard nor grant a
+sanctioned corridor. Failures are logged per episode rather than silently
+imputed. Dynamic hazards are handled by re-perception rather than by prediction:
+on the human-hazard suites the moving entities are re-localized at every chunk
+boundary and blended into a filtered track at $\alpha=0.6$, with re-detections
+farther than 0.20\,m from the current track discarded as detector outliers.
+Static entities keep their settle-time estimate.
+
+\subsection{First-order hazard election}
+\label{sec:ident}
+
+The scene-level decision is made by a fixed rule, not by a model:
+\begin{equation}
+\begin{aligned}
+\textsc{Hazard}(x) \coloneqq{}& \textsc{Protected}(x)\ \vee\ \textsc{Moving}(x)\ \vee \\
+&\big(\lnot\textsc{Mentioned}(x)\wedge\lnot\textsc{Target}(x) \\
+&\quad\wedge\ \textsc{NearPath}(x)\big).
+\end{aligned}
+\label{eq:fol}
+\end{equation}
+Table~\ref{tab:predicates} gives every predicate, its formal definition, and a
+worked LIBERO-Safety instance, so we state here only the three properties of the
+rule that the table cannot express.
+
+First, the disjuncts are asymmetric by design. $\textsc{Protected}$ and
+$\textsc{Moving}$ elect unconditionally, and in particular they are not
+cancelled by mention, whereas the third disjunct is a conjunction that any one
+of its literals can defeat. The consequence is that semantics may raise concern
+but never remove protection, which is the fail-safe direction. Second,
+$\textsc{NearPath}$ is a ranking at election time and a gate only at the
+per-replan re-check. Election returns an ordered guard set rather than a single
+argmax, protected and moving entities first and the remainder by distance to the
+sanctioned reach segment. Retaining the top two is what converts identification
+error from a fail-unsafe event into a recoverable one: under inverted, dropped,
+and intact property priors the true hazard remained in the top two in all 19
+probe scenes, against 3 of 19 for the argmax rule, because path geometry alone
+keeps it in the set and the property ordering only permutes within it.
+
+Third, it is worth stating what the rule is not. It is not synthesized per
+scene, not retrieved, and not conditioned on a benchmark-specific table. On the
+affordance suite the third disjunct's geometric literal is replaced by the
+property literal $\textsc{Prop}$ of Table~\ref{tab:predicates}, and this
+substitution is declared per suite in advance rather than selected per episode.
+The rule is deliberately small enough to read, and every literal is separately
+falsifiable, which is what makes the single-clause ablation of
+Sec.~\ref{sec:ablation} possible at all.
+
+\subsection{Grounding the predicates}
+\label{sec:ground}
+
+\textbf{What the model is asked.} The vision-language model is never asked which
+object is dangerous, never asked to rank hazardousness, and never asked to
+evaluate Eq.~\eqref{eq:fol}. It is asked only for the value of a named
+predicate on a named object. Two probes motivate this restriction. A critic
+probe that let the model compose the rule itself failed unsafe on three to eight
+scenes, and a scene-wide hazard-scoring probe ranked a ketchup bottle above a
+toy car. Both failures are decisions, and decisions are what the symbolic layer
+retains.
+
+\textbf{Reference and protection.} $\textsc{Mentioned}$ and $\textsc{Protected}$
+are grounded per scene by a single structured query issued to
+\texttt{claude-haiku-4-5} at temperature 0.3, repeated for three votes with a
+two-of-three majority. The prompt supplies the instruction and the internal
+object-name list, and requires JSON with two fields, the names the instruction
+refers to including paraphrases and synonyms, and the names that are a human
+body part, attached to a person, or a living being. The query is textual rather
+than visual, which is deliberate: reference resolution and body-part
+classification are language questions, and routing them through an image would
+add a failure mode without adding information the name list does not already
+carry. Because instructions are fixed per task, the majority-voted sets are
+cached per scene and the runtime issues no API call at all.
+
+\textbf{Properties.} $\textsc{Hot}$, $\textsc{Sharp}$, and $\textsc{Fragile}$
+are grounded by an offline table built once over base object classes with five
+votes and a three-of-five majority. Base-class normalization strips instance
+indices, so an unseen instance of a known class inherits the class answer and an
+unseen class is simply false on every property, which is the abstaining
+direction. $\textsc{Hot}$ is then made state-dependent at runtime, since an
+object of a hot class is an effective hazard only when a heat source lies within
+0.15\,m of it, and a frying pan away from the stove is therefore not elected.
+
+\textbf{Two interchangeable backends.} Every predicate marked in
+Table~\ref{tab:predicates} can alternatively be grounded by a string heuristic
+over head nouns and a fixed property vocabulary. On all 59 scenes of the two
+benchmarks the heuristic and vision-language backends produce identical
+elections, which is the strongest available evidence that the decision lives in
+the logic rather than in the model. The vision-language backend nonetheless
+resolves references that no string heuristic can, including the instruction
+\textit{``bring it for me''}, under which the hand becomes $\textsc{Protected}$
+without ever being named, and a plate held in a hand, which is correctly both
+$\textsc{Mentioned}$ and $\textsc{Protected}$. The design finding may be stated
+in one sentence: the vision-language model answers local predicates, and the
+logic makes the decision.
+
+\subsection{Three-regime routing}
+\label{sec:routing}
+
+Not every hazard is a keep-out region, and treating every hazard as one is a
+failure mode that we measured. The same predicate layer routes each episode into
+one of three regimes. In \textbf{Avoid}, a geometric hazard lies off the task
+path and is enforced as described below. In \textbf{Disengage}, the hazard is
+itself the destination, indicated by
+$\textsc{Protected}(x)\wedge\textsc{Mentioned}(x)$ or by the guard overlapping
+the parsed destination within 0.15\,m; the geometric keep-out is then disengaged
+for the episode and safety is obtained from routing instead. This regime was
+required by the human-handover suites, in which any keep-out region destroys the
+task (Sec.~\ref{sec:ls}). In \textbf{Refuse}, the instruction itself is the
+hazard, and a rule-based semantic judge over triples of verb, patient, and
+hazard property refuses execution, with offline F1 0.968, precision 0.938, and
+recall 1.000, measured in-domain as discussed in Sec.~\ref{sec:limitations}.
+Routing and identification read the same predicates, so this is one rule system
+rather than three.
+
+\subsection{Enforcement}
+\label{sec:enforce}
+
+\textbf{From elected hazard to barrier.} Each elected guard contributes a
+sphere-like keep-out region centered on its estimated position with effective
+radius $r_{\mathrm{eff}}$ equal to its extent plus the end-effector radius plus a
+safety pad. Reading an action chunk as a single-integrator rollout of
+translational deltas gives predicted end-effector positions $p_j$ over the
+horizon, and the barrier at step $j$ is
+\begin{equation}
+B_j(p)=\min_{m,q}\,\lVert p_j+q-o_m\rVert-r_m(j),
+\end{equation}
+minimized over guards $m$ and companion offsets $q$ that place additional
+witness points at the wrist and fingertips, with $r_m(j)$ inflated linearly in
+$j$ to bound obstacle motion within a chunk. A prefix is safe when it satisfies
+the discrete control barrier chain $B_j\ge(1-\gamma)B_{j-1}$ with $\gamma=0.9$,
+whose geometric decay is standard~\cite{agrawal2017dcbf} and for which we claim
+no novelty. A semantic corridor exemption relaxes, and never removes, the margin
+for rollout points inside a cylinder around the sanctioned approach segments
+from the end-effector to the target and from the target to the destination. The
+exemption is what allows a protective envelope wide enough to matter to coexist
+with grasping and placing next to the guarded object, which a uniform envelope
+cannot, since a uniform envelope cannot distinguish sanctioned approach from
+hazard approach.
+
+\textbf{How the barrier enters the steering.} Let $F(z,\mathrm{obs})$ denote the
+frozen ten-step Euler denoise map and let $M(a_{1:L})$ denote the minimum chain
+margin of the executed $L$-step prefix. All operators search the noise preimage
+$S=\{z:M(F(z))\ge0\}$, so that the emitted action is $F(z^\star)$ for some seed
+$z^\star$. \textsc{Select} draws $K{=}8$ seeds that share one vision-language
+key-value cache and scores the decoded candidates lexicographically by
+feasibility, then margin, then progress toward the target. \textsc{Tilt}
+reweights and resamples the particle population at intermediate denoising steps
+under soft margin potentials, at essentially no additional cost. \textsc{Ascend}
+takes reverse-mode gradient steps of the prefix margin with respect to $z$
+through all ten Euler steps at 57\,ms per step, with the backbone untouched. A
+soft annealed repulsor field on the velocity target complements these operators
+and is the only mechanism we found that navigates obstacle-on-grasp geometry, in
+which the target sits inside the guarded region and every hard projection locks
+up. The correction schedule trusts the flow early, corrects softly at
+intermediate steps, and enforces exactly at the final step, since always-hard
+repair from pure noise is a documented failure pattern for in-denoising safety.
+
+\textbf{Why steering yields better actions than repair.} Three properties follow
+from searching over $z$ rather than editing the decoded action. The emitted
+chunk is a sample the frozen policy would itself have produced, so it lies on
+the policy's own action manifold and inherits its temporal coherence, whereas
+projecting a decoded chunk onto a constraint set produces trajectories the
+policy never generates and cannot continue from. The corridor exemption and the
+soft repulsor act on the flow rather than against it, which is what keeps the
+system moving in the geometries where hard projection deadlocks. Finally, the
+search is free to change the plan rather than only the increment, which is the
+difference between routing around a hazard and stalling in front of it.
+
+\textbf{Certificate.} The acceptance stage re-evaluates the chain on the
+executed prefix of the final decoded chunk by explicit rollout of the actuation
+model.
+
+\begin{proposition}[Checked prefix certificate]\label{prop:cert}
+If the acceptance check passes, the executed prefix satisfies the chain
+regardless of how the chunk was produced. If all $K$ candidates fail, the
+candidate with the largest margin executes and its true margin is reported, so
+that the failure is visible rather than silent.
+\end{proposition}
+
+Because soundness is a predicate of the emitted actions rather than of the
+search that produced them, the certificate covers \textsc{Select},
+\textsc{Tilt}, \textsc{Ascend}, and the repulsor identically. Correction-based
+arguments, of the form that the repair enforces the chain, cannot establish
+this, and prior in-denoising work does not re-verify its intermediate
+corrections on the final chunk at all. Several non-claims should be stated
+explicitly. The rotation channels are uncertified, tracking error is absorbed
+into the safety margin rather than proved, and we claim no formal
+perception-robustness radius, quantifying it empirically instead
+(Sec.~\ref{sec:e3}).
