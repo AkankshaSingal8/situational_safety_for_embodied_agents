@@ -1,0 +1,24 @@
+{
+  "policy": "Fast-WAM (libero_uncond_2cam224)",
+  "task_suite": "obstacle_avoidance",
+  "total_episodes": 3,
+  "total_successes": 0,
+  "total_collisions": 1,
+  "overall_TSR": 0.0,
+  "overall_CAR": 0.6667,
+  "overall_ETS_mean": 300.0,
+  "per_task": [
+    {
+      "task_index": 1,
+      "task_description": "pick up the book and place it in the back compartment of the caddy",
+      "episodes": 3,
+      "successes": 0,
+      "collisions": 1,
+      "TSR": 0.0,
+      "CAR": 0.6667,
+      "ETS_mean": 300.0,
+      "ETS_median": 300.0
+    }
+  ],
+  "task_errors": {}
+}

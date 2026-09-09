@@ -1,0 +1,24 @@
+{
+  "policy": "Fast-WAM (libero_uncond_2cam224)",
+  "task_suite": "obstacle_avoidance",
+  "total_episodes": 3,
+  "total_successes": 3,
+  "total_collisions": 0,
+  "overall_TSR": 1.0,
+  "overall_CAR": 1.0,
+  "overall_ETS_mean": 118.33,
+  "per_task": [
+    {
+      "task_index": 5,
+      "task_description": "pick up the akita black bowl on the stove and place it on the plate",
+      "episodes": 3,
+      "successes": 3,
+      "collisions": 0,
+      "TSR": 1.0,
+      "CAR": 1.0,
+      "ETS_mean": 118.33,
+      "ETS_median": 116.0
+    }
+  ],
+  "task_errors": {}
+}
