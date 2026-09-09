@@ -15,19 +15,36 @@ only takes a velocity chunk + obstacle position.
 
 import numpy as np
 
-from flow_cbf_sample import GAMMA, correct_trajectory, predict_trajectory, barrier_values
+from flow_cbf_barrier import GAMMA, correct_action_chunk, predict_trajectory, barrier_values
 
-DT_CONTROL = 1.0  # treat v_chunk_xyz entries as per-step displacements directly (test-scale only)
+# The TRUE control period (20 Hz, arXiv:2512.11891 Sec. V.A). This was 1.0,
+# which made the script pass while the filter was broken in two ways: at
+# dt=1.0 both the dynamics gain and the timestep wash out, so a chunk that is
+# harmless at 0.05 looks violating and the correction appears to work. See
+# tests/test_flow_cbf_barrier.py::test_dt_control_of_one_hides_the_scale_error.
+DT_CONTROL = 0.05
 R_OBS = 0.06
 
 
-def run_case(name, eef_pos0, v_chunk_xyz, p_obs):
+def run_case(name, eef_pos0, v_chunk_xyz, p_obs, expect_violation=None):
     print(f"--- case: {name} ---")
     traj_before = predict_trajectory(eef_pos0, v_chunk_xyz, DT_CONTROL)
     b_before = barrier_values(traj_before, p_obs, R_OBS)
     print(f"barriers before correction: {np.round(b_before, 4)}")
 
-    corrected_xyz, b_after = correct_trajectory(v_chunk_xyz, eef_pos0, DT_CONTROL, p_obs, R_OBS)
+    # Guard against a vacuous pass: a case meant to exercise the correction
+    # must actually violate the barrier, or "no violation after" proves nothing.
+    violated = bool(np.min(b_before) < 0.0)
+    if expect_violation is not None and violated != expect_violation:
+        print(f"  SETUP ERROR: expected violation={expect_violation} but min(B)="
+              f"{np.min(b_before):.4f} -- this case tests nothing")
+        return False
+
+    corrected_xyz, b_after, solver_ok = correct_action_chunk(
+        v_chunk_xyz, eef_pos0, DT_CONTROL, p_obs, R_OBS
+    )
+    if not solver_ok:
+        print('  WARNING: SLSQP failed; chunk returned UNCORRECTED')
     print(f"barriers after correction:  {np.round(b_after, 4)}")
 
     ok = True
@@ -51,17 +68,29 @@ def main():
     # to it); the trajectory-level version must see the future collision
     # and correct now.
     eef_pos0 = np.zeros(3)
-    v_chunk_xyz = np.tile(np.array([0.05, 0.0, 0.0]), (H, 1))  # moves +0.5m in x over the chunk
-    p_obs = np.array([0.25, 0.0, 0.0])  # sits mid-path -- far from p_ee(0), close to p_ee(H/2)
-    all_pass &= run_case("obstacle mid-path (not visible at j=0)", eef_pos0, v_chunk_xyz, p_obs)
+    # Realistic magnitudes: pi0 LIBERO actions are ~unit-scale, and with
+    # p_dot = 0.2u at dt = 0.05 each step advances 0.01 m, so an H=10 chunk
+    # reaches ~0.10 m. The previous fixture used 0.05-magnitude actions and
+    # obstacles at 0.25-0.48 m, which only intruded because the old integration
+    # omitted the dynamics gain and used dt = 1.0 (a 100x longer reach). At the
+    # true scale those cases became no-ops and the script passed vacuously.
+    v_chunk_xyz = np.tile(np.array([1.0, 0.0, 0.0]), (H, 1))  # ~0.10 m of travel
+    # 0.15 m: B[0] = +0.02 (starts SAFE) but B[H] = -0.08 (collides late in
+    # the chunk) -- exactly the case a single-step filter cannot see.
+    p_obs = np.array([0.15, 0.0, 0.0])
+    all_pass &= run_case("obstacle mid-path (not visible at j=0)", eef_pos0, v_chunk_xyz,
+                         p_obs, expect_violation=True)
 
     # Case 2: obstacle near the END of the path only.
-    p_obs2 = np.array([0.48, 0.0, 0.0])
-    all_pass &= run_case("obstacle near end of path", eef_pos0, v_chunk_xyz, p_obs2)
+    # 0.20 m: violation confined to the last few steps.
+    p_obs2 = np.array([0.20, 0.0, 0.0])
+    all_pass &= run_case("obstacle near end of path", eef_pos0, v_chunk_xyz, p_obs2,
+                         expect_violation=True)
 
     # Case 3: no violation anywhere -- correction should be a no-op.
     p_obs3 = np.array([10.0, 10.0, 10.0])
-    all_pass &= run_case("no obstacle nearby (expect zero correction)", eef_pos0, v_chunk_xyz, p_obs3)
+    all_pass &= run_case("no obstacle nearby (expect zero correction)", eef_pos0, v_chunk_xyz,
+                         p_obs3, expect_violation=False)
 
     print()
     print("OVERALL:", "PASS" if all_pass else "FAIL")

@@ -39,17 +39,20 @@ fetch of arXiv:2607.01378, all 18 pages):
     R^{H x 3} (30 variables for H=10, matching the paper's own count).
   - Safety margin dsafe = 0.01m
 
-FIXED (see git history for the earlier, incorrect version): an earlier
-version of this file only corrected the FIRST horizon step's velocity per
-denoising iteration (a 3-variable, 1-constraint problem) and carried the
-predicted eef position across denoising iterations rather than
-re-predicting the full trajectory fresh from the real current position each
-time. That was structurally a repeated single-action filter, not the
-paper's trajectory-level joint correction -- the entire point of their
-method vs. AEGIS. correct_trajectory()/predict_trajectory() below now match
-Algorithm 1 line-for-line: full (H,3) delta, all H constraints solved
-jointly in one SLSQP call, p_ee(0) fixed at the real eef position for the
-whole denoising loop.
+WHERE THE CORRECTION LIVES NOW: not in this file's denoising loop. Applying
+the barrier to v_t was category-wrong -- v_t is the velocity FIELD
+(v_t ~ eps - x_1 in a pi0-style flow model), not an action, and the
+Unnormalize output transform has not yet run, so metre-valued obstacle
+geometry cannot be compared against it. The barrier now acts on the DECODED,
+UNNORMALISED action chunk: see flow_cbf_barrier.correct_action_chunk and its
+call site in run_libsafety_eval_flowcbf._infer_with_flow_cbf. Passing
+apply_correction=True here now raises rather than silently returning an
+unfiltered chunk.
+
+Barrier math (Algorithm 1: full (H,3) delta, all H constraints solved jointly
+in one SLSQP call, p_ee(0) fixed at the real eef position) lives in
+flow_cbf_barrier.py, which is jax-free and unit-tested at the true 20 Hz
+control dt.
 """
 
 import dataclasses
@@ -59,123 +62,25 @@ import einops
 import jax
 import jax.numpy as jnp
 import numpy as np
-from scipy.optimize import minimize
 
 from openpi.models import model as _model
 from openpi.models.pi0 import make_attn_mask
 
 logger = logging.getLogger(__name__)
 
-# Module-level tally of SLSQP failures. Each failure means the caller got an
-# UNCORRECTED chunk, so this count is the number of steps the filter was
-# effectively off. Read it via solver_failure_count() and record it per episode.
-_SOLVER_FAILURES = {"count": 0}
-
-
-def solver_failure_count() -> int:
-    """Steps so far where SLSQP failed and the chunk was returned uncorrected."""
-    return _SOLVER_FAILURES["count"]
-
-
-def reset_solver_failure_count() -> None:
-    """Zero the tally, e.g. at the start of an episode."""
-    _SOLVER_FAILURES["count"] = 0
-
-
-GAMMA = 0.9
-DSAFE = 0.01
-# EEF ellipsoid semi-axes in METRES, per SafeLIBERO's MVEE
-# Q_ef = diag(0.06, 0.12, 0.11) (arXiv:2512.11891 Sec. V.A).
-EEF_SEMI_AXES = np.array([0.06, 0.12, 0.11])
-
-
-def _ellipsoid_sdf(p_ee, p_obs, r_obs, semi_axes=EEF_SEMI_AXES):
-    """Signed distance approx: ellipsoid (eef) vs sphere (obstacle).
-    Positive = safe (outside combined boundary), matches h>0=safe convention
-    used throughout this project's CBF code (vlsa-aegis/main/utils.py's
-    compute_h_ij uses the same sign convention)."""
-    d = p_ee - p_obs
-    scaled = d / semi_axes
-    ellipsoid_dist = np.linalg.norm(scaled) - 1.0  # >0 outside unit ellipsoid in scaled space
-    # Convert scaled-space distance back to an approximate world-space margin,
-    # then subtract obstacle radius + safety margin.
-    world_scale = np.linalg.norm(d) / (np.linalg.norm(scaled) + 1e-9) if np.linalg.norm(scaled) > 1e-9 else 1.0
-    return ellipsoid_dist * world_scale - r_obs - DSAFE
-
-
-def predict_trajectory(eef_pos0, v_chunk_xyz, dt_control):
-    """Eq 7: p_ee^(0) = current real eef position; p_ee^(i) = p_ee(0) + dt *
-    cumsum_{k=1}^{i} a_k[:3] for i=1..H. Returns array of shape (H+1, 3):
-    the FULL predicted trajectory, not just the next step."""
-    cumsum = np.cumsum(v_chunk_xyz, axis=0)
-    H = v_chunk_xyz.shape[0]
-    traj = np.zeros((H + 1, 3))
-    traj[0] = eef_pos0
-    traj[1:] = eef_pos0 + dt_control * cumsum
-    return traj
-
-
-def barrier_values(traj, p_obs, r_obs):
-    """B_j for j=0..H (Eq 8), one per predicted trajectory point."""
-    return np.array([_ellipsoid_sdf(p, p_obs, r_obs) for p in traj])
-
-
-def correct_trajectory(v_chunk_xyz, eef_pos0, dt_control, p_obs, r_obs):
-    """Algorithm 1 / Eq 9-10: joint minimum-norm correction delta in R^{H x 3}
-    over the WHOLE predicted trajectory, solved in ONE SLSQP call subject to
-    all H consecutive-point barrier constraints simultaneously -- not H
-    independent single-step corrections. eef_pos0 is the REAL current
-    end-effector position (constant for this denoising step; NOT carried
-    over from a previous denoising iteration's corrected trajectory)."""
-    H = v_chunk_xyz.shape[0]
-
-    def barriers_of(delta_flat):
-        delta = delta_flat.reshape(H, 3)
-        traj = predict_trajectory(eef_pos0, v_chunk_xyz + delta, dt_control)
-        return barrier_values(traj, p_obs, r_obs)  # length H+1
-
-    b0 = barriers_of(np.zeros(H * 3))
-    violated = any(b0[j] < (1.0 - GAMMA) * b0[j - 1] for j in range(1, H + 1))
-    if not violated:
-        return v_chunk_xyz, b0
-
-    def objective(delta_flat):
-        return float(np.dot(delta_flat, delta_flat))
-
-    def make_constraint(j):
-        # B_j >= (1-gamma)*B_{j-1}, j=1..H (Eq 9), each a separate SLSQP
-        # inequality constraint evaluated against the SAME delta vector.
-        def c(delta_flat):
-            b = barriers_of(delta_flat)
-            return b[j] - (1.0 - GAMMA) * b[j - 1]
-
-        return c
-
-    constraints = [{"type": "ineq", "fun": make_constraint(j)} for j in range(1, H + 1)]
-    res = minimize(
-        objective,
-        x0=np.zeros(H * 3),
-        constraints=constraints,
-        method="SLSQP",
-        options={"maxiter": 50, "ftol": 1e-8},
-    )
-    if res.success:
-        delta = res.x.reshape(H, 3)
-    else:
-        # Returning a zero correction here means the caller receives the
-        # UNCORRECTED chunk after the barrier already reported a violation --
-        # i.e. the filter is silently off for this step. Count and log it so a
-        # "filter on" run cannot quietly degrade into an unfiltered one.
-        _SOLVER_FAILURES["count"] += 1
-        logger.warning(
-            "flow-CBF SLSQP failed (%s) -- returning the UNCORRECTED chunk; "
-            "cumulative failures: %d",
-            getattr(res, "message", "no message"), _SOLVER_FAILURES["count"],
-        )
-        delta = np.zeros((H, 3))
-    corrected = v_chunk_xyz + delta
-    b_final = barriers_of(delta.flatten())
-    return corrected, b_final
+# Barrier math lives in flow_cbf_barrier.py (jax-free, unit-tested). Re-exported
+# here so existing importers keep working.
+from flow_cbf_barrier import (  # noqa: E402
+    DSAFE,
+    DYNAMICS_GAIN,
+    EEF_SEMI_AXES,
+    GAMMA,
+    assert_barrier_is_active,
+    barrier_values,
+    correct_action_chunk,
+    ellipsoid_sdf as _ellipsoid_sdf,
+    predict_trajectory,
+)
 
 
 def eager_sample_actions(
@@ -195,6 +100,16 @@ def eager_sample_actions(
     correction possible -- used for validate_against_traced()).
     eef_pos_world: current world-frame end-effector position (np.ndarray,
     shape (3,)), used to seed the predicted-trajectory integration."""
+    if apply_correction:
+        # Fail loudly rather than silently returning an unfiltered chunk: this
+        # function used to correct v_t in-loop, which was category-wrong. The
+        # caller must now correct the decoded chunk instead.
+        raise ValueError(
+            "eager_sample_actions no longer applies the barrier: v_t is a "
+            "velocity field, not an action, and Unnormalize has not run. Call "
+            "flow_cbf_barrier.correct_action_chunk on the decoded, unnormalised "
+            "chunk instead, and pass apply_correction=False here."
+        )
     observation = _model.preprocess_observation(None, observation, train=False)
     dt = -1.0 / num_steps
     batch_size = observation.state.shape[0]
@@ -233,11 +148,12 @@ def eager_sample_actions(
         )
         v_t = model.action_out_proj(suffix_out[:, -model.action_horizon :])
 
-        if apply_correction and p_obs is not None:
-            v_xyz = np.asarray(v_t[0, :, :3], dtype=np.float64)  # first batch elem, ALL H steps' translational velocity
-            corrected_xyz, _ = correct_trajectory(v_xyz, eef_pos0, dt_control, p_obs, r_obs)
-            v_t = v_t.at[0, :, :3].set(jnp.asarray(corrected_xyz))
-
+        # NO correction here. v_t is the velocity FIELD (v_t ~ eps - x_1 in a
+        # pi0-style flow model), not an action, and Unnormalize has not run, so
+        # a metre-valued barrier cannot be applied to it. The correction now
+        # runs on the decoded, unnormalised chunk -- see
+        # flow_cbf_barrier.correct_action_chunk and its call site in
+        # run_libsafety_eval_flowcbf._infer_with_flow_cbf.
         x_t = x_t + dt * v_t
         time = time + dt
 
