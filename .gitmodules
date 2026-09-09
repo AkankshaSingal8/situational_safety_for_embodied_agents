@@ -1,0 +1,12 @@
+[submodule "SafeLIBERO"]
+	path = SafeLIBERO
+	url = https://huggingface.co/datasets/THURCSCT/SafeLIBERO
+[submodule "openvla-oft"]
+	path = openvla-oft
+	url = https://github.com/moojink/openvla-oft.git
+[submodule "vlsa-aegis"]
+	path = vlsa-aegis
+	url = https://github.com/THU-RCSCT/vlsa-aegis.git
+[submodule "cosmos-policy"]
+	path = cosmos-policy
+	url = https://github.com/NVlabs/cosmos-policy.git

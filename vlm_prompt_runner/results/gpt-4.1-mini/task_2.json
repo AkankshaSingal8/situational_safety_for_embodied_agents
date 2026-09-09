@@ -1,0 +1,49 @@
+{
+  "suite": "safelibero_spatial",
+  "level": "I",
+  "task": 2,
+  "models": {
+    "gpt-4.1-mini": {
+      "p1_vision_only": {
+        "correct": 6,
+        "total": 10,
+        "accuracy": 0.6
+      },
+      "p2_task_roles": {
+        "correct": 8,
+        "total": 10,
+        "accuracy": 0.8
+      },
+      "p3_candidate_list": {
+        "correct": 9,
+        "total": 10,
+        "accuracy": 0.9
+      },
+      "p4_positions": {
+        "correct": 10,
+        "total": 10,
+        "accuracy": 1.0
+      },
+      "p5_cot_structured": {
+        "correct": 9,
+        "total": 10,
+        "accuracy": 0.9
+      },
+      "p6_visual_path": {
+        "correct": 4,
+        "total": 10,
+        "accuracy": 0.4
+      },
+      "p7_per_object_binary": {
+        "correct": 3,
+        "total": 10,
+        "accuracy": 0.3
+      },
+      "p8_ranked_collision": {
+        "correct": 1,
+        "total": 10,
+        "accuracy": 0.1
+      }
+    }
+  }
+}

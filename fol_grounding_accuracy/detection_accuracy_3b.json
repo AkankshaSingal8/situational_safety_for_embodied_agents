@@ -1,0 +1,295 @@
+{
+ "model": "3b",
+ "episodes": 21,
+ "localized": 3,
+ "within_15cm": 3,
+ "pos_err_median_cm": 3.0,
+ "pos_err_max_cm": 4.0,
+ "rows": [
+  {
+   "episode": "level_I/task_0/episode_00",
+   "gt": "moka_pot_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "coffeepot"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.906,
+   "cand_iou_vs_gt": 0.906,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_01",
+   "gt": "white_storage_box_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "plate"
+   ],
+   "n_unmentioned": 0,
+   "det_iou_vs_gt": 0.0,
+   "cand_iou_vs_gt": 0.0,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_02",
+   "gt": "milk_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "plate"
+   ],
+   "n_unmentioned": 0,
+   "det_iou_vs_gt": 0.0,
+   "cand_iou_vs_gt": 0.0,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_03",
+   "gt": "wine_bottle_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "bottle"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.819,
+   "cand_iou_vs_gt": 0.819,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_04",
+   "gt": "red_coffee_mug_obstacle_1",
+   "n_detections": 5,
+   "det_names": [
+    "red cup",
+    "bowl",
+    "bowl",
+    "bowl",
+    "plate"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.881,
+   "cand_iou_vs_gt": 0.881,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_05",
+   "gt": "yellow_book_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "book"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.84,
+   "cand_iou_vs_gt": 0.84,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_06",
+   "gt": "moka_pot_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "coffeepot"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.758,
+   "cand_iou_vs_gt": 0.758,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_07",
+   "gt": "white_storage_box_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "plate"
+   ],
+   "n_unmentioned": 0,
+   "det_iou_vs_gt": 0.0,
+   "cand_iou_vs_gt": 0.0,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_08",
+   "gt": "milk_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "milk carton"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.788,
+   "cand_iou_vs_gt": 0.788,
+   "picked": "milk carton",
+   "pos_err_cm": 2.0
+  },
+  {
+   "episode": "level_I/task_0/episode_09",
+   "gt": "wine_bottle_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "bottle"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.795,
+   "cand_iou_vs_gt": 0.795,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_10",
+   "gt": "red_coffee_mug_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "red cup"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.855,
+   "cand_iou_vs_gt": 0.855,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_11",
+   "gt": "yellow_book_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "plate"
+   ],
+   "n_unmentioned": 0,
+   "det_iou_vs_gt": 0.0,
+   "cand_iou_vs_gt": 0.0,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_12",
+   "gt": "moka_pot_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "coffeepot"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.773,
+   "cand_iou_vs_gt": 0.773,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_13",
+   "gt": "white_storage_box_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "box"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.686,
+   "cand_iou_vs_gt": 0.686,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_14",
+   "gt": "milk_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "milk carton"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.845,
+   "cand_iou_vs_gt": 0.845,
+   "picked": "milk carton",
+   "pos_err_cm": 3.0
+  },
+  {
+   "episode": "level_I/task_0/episode_15",
+   "gt": "wine_bottle_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "bottle"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.832,
+   "cand_iou_vs_gt": 0.832,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_16",
+   "gt": "red_coffee_mug_obstacle_1",
+   "n_detections": 5,
+   "det_names": [
+    "red cup",
+    "bowl",
+    "bowl",
+    "bowl",
+    "plate"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.838,
+   "cand_iou_vs_gt": 0.838,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_17",
+   "gt": "yellow_book_obstacle_1",
+   "n_detections": 4,
+   "det_names": [
+    "bowl",
+    "bowl",
+    "bowl",
+    "plate"
+   ],
+   "n_unmentioned": 0,
+   "det_iou_vs_gt": 0.01,
+   "cand_iou_vs_gt": 0.0,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_18",
+   "gt": "moka_pot_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "coffeepot"
+   ],
+   "n_unmentioned": 1,
+   "det_iou_vs_gt": 0.755,
+   "cand_iou_vs_gt": 0.755,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_19",
+   "gt": "white_storage_box_obstacle_1",
+   "n_detections": 1,
+   "det_names": [
+    "plate"
+   ],
+   "n_unmentioned": 0,
+   "det_iou_vs_gt": 0.0,
+   "cand_iou_vs_gt": 0.0,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_20",
+   "gt": "milk_obstacle_1",
+   "n_detections": 2,
+   "det_names": [
+    "milk carton",
+    "cookie box"
+   ],
+   "n_unmentioned": 2,
+   "det_iou_vs_gt": 0.847,
+   "cand_iou_vs_gt": 0.847,
+   "picked": "milk carton",
+   "pos_err_cm": 4.0
+  }
+ ]
+}

@@ -1,0 +1,62 @@
+# Secrets
+.env
+.envfile
+
+# IDE / editors
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+
+# Model checkpoints & weights
+checkpoints/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+
+# Rollout videos and other regenerable media (large)
+*_video/
+*_video_*/
+rollouts/
+*.mp4
+
+# Raw VLM observation dumps (regenerate with save_vlm_inputs.py)
+vlm_inputs/
+vlm_inputs_version1/
+vlm_prompt_runner/outputs/
+
+# CBF visualisation dumps (regenerate with the CBF construction scripts)
+cbf_outputs/
+cbf_outputs_*/
+cbf_sq_outputs/
+*.html
+
+# Numeric dumps
+*.npy
+*.npz
+
+# Cluster / run logs
+logs/
+slurm_logs/
+*.log
+*.out
+*.err
+
+# Smoke-test scratch dirs (not needed for reproducibility)
+*_smoke/
+*_smoke_*/
+openvla_benchmark_smoke/
+pi05_benchmark_smoke/
+
+# Local tooling / worktrees
+.worktrees/
+.superpowers/
+*.v3bak

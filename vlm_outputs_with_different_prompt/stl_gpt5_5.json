@@ -1,0 +1,413 @@
+{
+    "task": "Pick up the black bowl between the plate and the ramekin, and place it on the plate",
+    "scene_summary": "The target black bowl is located on the tabletop between a striped plate and a small ramekin. Nearby objects include a moka pot, two metallic bowls, a drawer cabinet, a cookie box, an induction plate, and a black pan-like object. The robot must grasp the black bowl and place it onto the plate while avoiding collisions with nearby objects.",
+    "target_objects": [
+      "black_bowl",
+      "plate"
+    ],
+    "relevant_objects": [
+      {
+        "object": "black_bowl",
+        "role": "target",
+        "reason": "This is the object to be grasped and transported."
+      },
+      {
+        "object": "plate",
+        "role": "support",
+        "reason": "The black bowl must be placed on the plate as the final task goal."
+      },
+      {
+        "object": "ramekin",
+        "role": "obstacle",
+        "reason": "It is close to the black bowl and may be accidentally contacted during grasping or lifting."
+      },
+      {
+        "object": "moka_pot",
+        "role": "obstacle",
+        "reason": "It is tall, bulky, and has protruding handle geometry, so it creates collision and toppling risk."
+      },
+      {
+        "object": "silver_bowl_1",
+        "role": "obstacle",
+        "reason": "It is close to the manipulation area and may be displaced by unintended contact."
+      },
+      {
+        "object": "silver_bowl_2",
+        "role": "obstacle",
+        "reason": "It is close to the manipulation area and may be displaced by unintended contact."
+      },
+      {
+        "object": "drawer_cabinet",
+        "role": "obstacle",
+        "reason": "It forms a rigid workspace boundary and has handles that may collide with the robot or carried bowl."
+      },
+      {
+        "object": "cookie_box",
+        "role": "distractor",
+        "reason": "It is flat and near the moka pot, but less relevant unless the robot path passes over it."
+      },
+      {
+        "object": "induction_plate",
+        "role": "obstacle",
+        "reason": "It is a rigid tabletop object near the robot path and should not be contacted."
+      },
+      {
+        "object": "black_pan",
+        "role": "obstacle",
+        "reason": "It is near the right side of the workspace and may constrain lateral robot motion."
+      }
+    ],
+    "stl_constraints": [
+      {
+        "id": "C1",
+        "type": "task_goal",
+        "natural_language": "The robot should eventually grasp the black bowl.",
+        "stl": "F_[0,T_grasp](grasped(black_bowl,t))",
+        "predicates": [
+          {
+            "name": "grasped(black_bowl,t)",
+            "definition": "True when the gripper securely holds the black bowl.",
+            "measurable_from": "robot_state"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": false,
+          "h_x": "Not directly a CBF; use a task objective, CLF, or reward.",
+          "activation_condition": "until black_bowl is grasped",
+          "priority": "high"
+        },
+        "assumptions": [
+          "A grasp detector or gripper state estimate is available."
+        ]
+      },
+      {
+        "id": "C2",
+        "type": "task_goal",
+        "natural_language": "The robot should eventually place the black bowl on the plate.",
+        "stl": "F_[0,T](on(black_bowl, plate, t) AND NOT grasped(black_bowl,t))",
+        "predicates": [
+          {
+            "name": "on(black_bowl, plate, t)",
+            "definition": "The black bowl is supported by and spatially aligned with the plate.",
+            "measurable_from": "object_pose"
+          },
+          {
+            "name": "NOT grasped(black_bowl,t)",
+            "definition": "The robot has released the black bowl.",
+            "measurable_from": "robot_state"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": false,
+          "h_x": "Not directly a safety CBF; use task completion predicate or goal-reaching controller.",
+          "activation_condition": "after grasped(black_bowl,t)",
+          "priority": "high"
+        },
+        "assumptions": [
+          "The plate pose and black bowl pose are available.",
+          "The plate is stable enough to support the black bowl."
+        ]
+      },
+      {
+        "id": "C3",
+        "type": "hard_safety",
+        "natural_language": "The end effector should avoid unintended collision with the ramekin while approaching or carrying the black bowl.",
+        "stl": "G_[0,T](d(ee, ramekin, t) >= d_min_ramekin)",
+        "predicates": [
+          {
+            "name": "d(ee, ramekin, t) >= d_min_ramekin",
+            "definition": "The end-effector distance from the ramekin is at least the minimum safe clearance.",
+            "measurable_from": "object_pose"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_ramekin(x) = d(ee, ramekin) - d_min_ramekin",
+          "activation_condition": "always",
+          "priority": "high"
+        },
+        "assumptions": [
+          "The ramekin pose is available from perception.",
+          "The ramekin is not the target."
+        ]
+      },
+      {
+        "id": "C4",
+        "type": "hard_safety",
+        "natural_language": "The end effector should avoid unintended collision with the moka pot.",
+        "stl": "G_[0,T](d(ee, moka_pot, t) >= d_min_moka)",
+        "predicates": [
+          {
+            "name": "d(ee, moka_pot, t) >= d_min_moka",
+            "definition": "The end-effector distance from the moka pot is at least the minimum safe clearance.",
+            "measurable_from": "object_pose"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_moka(x) = d(ee, moka_pot) - d_min_moka",
+          "activation_condition": "always",
+          "priority": "high"
+        },
+        "assumptions": [
+          "The moka pot is tall and collision-prone.",
+          "The moka pot pose includes its handle and lid geometry."
+        ]
+      },
+      {
+        "id": "C5",
+        "type": "caution",
+        "natural_language": "The robot should slow down near the moka pot because it is tall and easy to collide with or tip.",
+        "stl": "G_[0,T]((d(ee, moka_pot, t) < d_caution_moka) -> (||v_ee(t)|| <= v_safe_moka))",
+        "predicates": [
+          {
+            "name": "d(ee, moka_pot, t) < d_caution_moka",
+            "definition": "The end effector is inside the caution radius around the moka pot.",
+            "measurable_from": "object_pose"
+          },
+          {
+            "name": "||v_ee(t)|| <= v_safe_moka",
+            "definition": "The end-effector speed is below the safe velocity threshold near the moka pot.",
+            "measurable_from": "robot_state"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_v_moka(x) = v_safe_moka - ||v_ee||",
+          "activation_condition": "d(ee, moka_pot) < d_caution_moka",
+          "priority": "medium"
+        },
+        "assumptions": [
+          "End-effector velocity is available.",
+          "The moka pot is unstable enough to require slow motion nearby."
+        ]
+      },
+      {
+        "id": "C6",
+        "type": "hard_safety",
+        "natural_language": "The carried black bowl should avoid collision with the ramekin after grasping.",
+        "stl": "G_[0,T](grasped(black_bowl,t) -> d(black_bowl, ramekin, t) >= d_min_bowl_ramekin)",
+        "predicates": [
+          {
+            "name": "grasped(black_bowl,t)",
+            "definition": "The robot is holding the black bowl.",
+            "measurable_from": "robot_state"
+          },
+          {
+            "name": "d(black_bowl, ramekin, t) >= d_min_bowl_ramekin",
+            "definition": "The carried black bowl remains at least a safe clearance away from the ramekin.",
+            "measurable_from": "object_pose"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_bowl_ramekin(x) = d(black_bowl, ramekin) - d_min_bowl_ramekin",
+          "activation_condition": "grasped(black_bowl,t)",
+          "priority": "high"
+        },
+        "assumptions": [
+          "The black bowl pose can be estimated while grasped.",
+          "The carried object can be treated as part of the robot collision geometry."
+        ]
+      },
+      {
+        "id": "C7",
+        "type": "hard_safety",
+        "natural_language": "The carried black bowl should avoid collision with the moka pot.",
+        "stl": "G_[0,T](grasped(black_bowl,t) -> d(black_bowl, moka_pot, t) >= d_min_bowl_moka)",
+        "predicates": [
+          {
+            "name": "d(black_bowl, moka_pot, t) >= d_min_bowl_moka",
+            "definition": "The carried black bowl remains at least a safe clearance away from the moka pot.",
+            "measurable_from": "object_pose"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_bowl_moka(x) = d(black_bowl, moka_pot) - d_min_bowl_moka",
+          "activation_condition": "grasped(black_bowl,t)",
+          "priority": "high"
+        },
+        "assumptions": [
+          "The moka pot is close enough to be a relevant obstacle.",
+          "The robot may move the bowl laterally across the tabletop."
+        ]
+      },
+      {
+        "id": "C8",
+        "type": "hard_safety",
+        "natural_language": "The end effector should not make unintended contact with non-target tabletop objects.",
+        "stl": "G_[0,T](NOT contact(ee, ramekin, t) AND NOT contact(ee, moka_pot, t) AND NOT contact(ee, silver_bowl_1, t) AND NOT contact(ee, silver_bowl_2, t) AND NOT contact(ee, drawer_cabinet, t) AND NOT contact(ee, induction_plate, t) AND NOT contact(ee, black_pan, t))",
+        "predicates": [
+          {
+            "name": "contact(ee, object, t)",
+            "definition": "True if the end effector physically contacts a non-target object.",
+            "measurable_from": "contact_sensor"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_contact_obj(x) = d(ee, object) - d_min_object for each non-target object",
+          "activation_condition": "always",
+          "priority": "high"
+        },
+        "assumptions": [
+          "Contact or distance-to-object estimates are available.",
+          "The black bowl is the only object intended to be grasped."
+        ]
+      },
+      {
+        "id": "C9",
+        "type": "soft_safety",
+        "natural_language": "Avoid passing directly above the ramekin or silver bowls unless sufficient vertical clearance exists.",
+        "stl": "G_[0,T]((above(ee, ramekin, t) OR above(ee, silver_bowl_1, t) OR above(ee, silver_bowl_2, t)) -> d_z(ee, object, t) >= d_vertical_safe)",
+        "predicates": [
+          {
+            "name": "above(ee, object, t)",
+            "definition": "The end effector projects horizontally over the object footprint.",
+            "measurable_from": "object_pose"
+          },
+          {
+            "name": "d_z(ee, object, t) >= d_vertical_safe",
+            "definition": "The vertical clearance between the end effector and object top surface is at least the safe vertical margin.",
+            "measurable_from": "depth"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_vertical_obj(x) = d_z(ee, object) - d_vertical_safe",
+          "activation_condition": "above(ee, object, t)",
+          "priority": "medium"
+        },
+        "assumptions": [
+          "Object top heights are estimated from depth or known geometry.",
+          "Passing above bowls can be allowed if vertical clearance is large."
+        ]
+      },
+      {
+        "id": "C10",
+        "type": "workspace",
+        "natural_language": "The end effector should stay within the tabletop manipulation workspace.",
+        "stl": "G_[0,T](inside(ee, tabletop_workspace, t))",
+        "predicates": [
+          {
+            "name": "inside(ee, tabletop_workspace, t)",
+            "definition": "The end-effector position lies within predefined tabletop workspace bounds.",
+            "measurable_from": "robot_state"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_workspace_i(x) = boundary_i_margin(ee) for each workspace boundary",
+          "activation_condition": "always",
+          "priority": "high"
+        },
+        "assumptions": [
+          "Workspace boundaries are known from the environment."
+        ]
+      },
+      {
+        "id": "C11",
+        "type": "hard_safety",
+        "natural_language": "The robot should preserve the black bowl upright orientation while carrying it.",
+        "stl": "G_[0,T](grasped(black_bowl,t) -> upright(black_bowl,t))",
+        "predicates": [
+          {
+            "name": "upright(black_bowl,t)",
+            "definition": "The black bowl orientation remains within theta_max_bowl tilt from vertical.",
+            "measurable_from": "object_pose"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_upright(x) = theta_max_bowl - |theta_bowl|",
+          "activation_condition": "grasped(black_bowl,t)",
+          "priority": "medium"
+        },
+        "assumptions": [
+          "The black bowl may be open-top and should not be tilted excessively.",
+          "Object orientation can be estimated while grasped."
+        ]
+      },
+      {
+        "id": "C12",
+        "type": "task_goal",
+        "natural_language": "After grasping, the black bowl should move toward the plate and eventually be centered over it before release.",
+        "stl": "F_[T_grasp,T](above(black_bowl, plate, t) AND d_xy(black_bowl, plate, t) <= d_place_center)",
+        "predicates": [
+          {
+            "name": "above(black_bowl, plate, t)",
+            "definition": "The black bowl is vertically above the plate support region.",
+            "measurable_from": "object_pose"
+          },
+          {
+            "name": "d_xy(black_bowl, plate, t) <= d_place_center",
+            "definition": "The horizontal distance between the black bowl center and plate center is below placement tolerance.",
+            "measurable_from": "object_pose"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": false,
+          "h_x": "Task placement objective, not a pure safety barrier.",
+          "activation_condition": "after grasped(black_bowl,t)",
+          "priority": "high"
+        },
+        "assumptions": [
+          "The desired placement point is the center of the plate.",
+          "The plate is the intended support surface."
+        ]
+      },
+      {
+        "id": "C13",
+        "type": "hard_safety",
+        "natural_language": "The black bowl should not be released unless it is above the plate.",
+        "stl": "G_[0,T]((release_command(black_bowl,t)) -> (above(black_bowl, plate, t) AND d_xy(black_bowl, plate, t) <= d_place_center))",
+        "predicates": [
+          {
+            "name": "release_command(black_bowl,t)",
+            "definition": "The robot is opening the gripper to release the black bowl.",
+            "measurable_from": "robot_state"
+          },
+          {
+            "name": "d_xy(black_bowl, plate, t) <= d_place_center",
+            "definition": "The black bowl is horizontally aligned with the plate.",
+            "measurable_from": "object_pose"
+          }
+        ],
+        "cbf_candidate": {
+          "can_convert_to_cbf": true,
+          "h_x": "h_release(x) = d_place_center - d_xy(black_bowl, plate)",
+          "activation_condition": "release_command(black_bowl,t)",
+          "priority": "high"
+        },
+        "assumptions": [
+          "Release command is observable from the robot controller.",
+          "The plate region is large enough to receive the black bowl."
+        ]
+      }
+    ],
+    "predicate_dictionary": {
+      "d(a,b,t)": "Euclidean distance between object or robot entity a and b at time t.",
+      "d_xy(a,b,t)": "Horizontal-plane distance between a and b at time t.",
+      "d_z(a,b,t)": "Vertical clearance between a and the top surface of b at time t.",
+      "contact(a,b,t)": "True if a and b are physically touching.",
+      "grasped(object,t)": "True if the robot gripper securely holds the object.",
+      "on(a,b,t)": "True if object a is supported by object or surface b.",
+      "above(a,b,t)": "True if a is vertically above the footprint of b.",
+      "inside(a,region,t)": "True if a lies inside the specified region.",
+      "upright(object,t)": "True if the object tilt angle is within an allowed upright threshold.",
+      "release_command(object,t)": "True when the gripper command is releasing the object.",
+      "||v_ee(t)||": "Magnitude of the end-effector linear velocity.",
+      "d_min_object": "Minimum safe clearance from a generic obstacle.",
+      "d_caution_object": "Distance threshold defining a slower caution zone around an object.",
+      "v_safe_object": "Maximum allowed end-effector speed inside the caution zone.",
+      "d_place_center": "Maximum allowed horizontal placement error relative to the plate center."
+    },
+    "uncertainties": [
+      "The exact 3D distance between the black bowl, plate, and ramekin requires depth or object pose estimation.",
+      "The visually observed target is assumed to be the dark/black bowl between the striped plate and ramekin.",
+      "The moka pot appears tall and collision-prone, but its exact stability and mass are unknown.",
+      "The plate boundary and placement tolerance require segmentation or known object geometry.",
+      "Some objects visible from one view may be partially occluded in another, so fused multi-view perception is preferred."
+    ]
+  }

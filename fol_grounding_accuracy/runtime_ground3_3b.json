@@ -1,0 +1,100 @@
+{
+ "rows": [
+  {
+   "gt": "moka_pot_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "white_storage_box_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "milk_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "wine_bottle_obstacle_1",
+   "picked": "bottle",
+   "method": "visual-triangulated",
+   "err_cm": 12.5,
+   "xy_cm": 11.5
+  },
+  {
+   "gt": "red_coffee_mug_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "yellow_book_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "moka_pot_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "white_storage_box_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "milk_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "wine_bottle_obstacle_1",
+   "picked": "bottle",
+   "method": "visual-triangulated",
+   "err_cm": 13.1,
+   "xy_cm": 1.3
+  },
+  {
+   "gt": "red_coffee_mug_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "yellow_book_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "moka_pot_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "white_storage_box_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "milk_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "wine_bottle_obstacle_1",
+   "picked": "bottle",
+   "method": "visual-triangulated",
+   "err_cm": 13.2,
+   "xy_cm": 3.5
+  },
+  {
+   "gt": "red_coffee_mug_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "yellow_book_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "moka_pot_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "white_storage_box_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "milk_obstacle_1",
+   "picked": null
+  }
+ ],
+ "localized": 3,
+ "within15": 3,
+ "median_cm": 13.1
+}

@@ -1,0 +1,403 @@
+{
+ "model": "3b",
+ "episodes": 21,
+ "localized": 18,
+ "within_15cm": 10,
+ "pos_err_median_cm": 13.75,
+ "pos_err_max_cm": 30.2,
+ "rows": [
+  {
+   "episode": "level_I/task_0/episode_00",
+   "gt": "moka_pot_obstacle_1",
+   "n_det_agent": 9,
+   "n_det_eih": 4,
+   "agent_names": [
+    "plate",
+    "bowl",
+    "bowl",
+    "bowl",
+    "container",
+    "container",
+    "food items",
+    "bowl",
+    "appliance"
+   ],
+   "det_iou_agent": 0.76,
+   "n_matched3d": 4,
+   "n_unmentioned": 2,
+   "picked": "appliance",
+   "pos_err_cm": 30.1
+  },
+  {
+   "episode": "level_I/task_0/episode_01",
+   "gt": "white_storage_box_obstacle_1",
+   "n_det_agent": 6,
+   "n_det_eih": 4,
+   "agent_names": [
+    "plate",
+    "plate",
+    "plate",
+    "plate",
+    "container",
+    "stove"
+   ],
+   "det_iou_agent": 0.71,
+   "n_matched3d": 4,
+   "n_unmentioned": 1,
+   "picked": "container",
+   "pos_err_cm": 17.1
+  },
+  {
+   "episode": "level_I/task_0/episode_02",
+   "gt": "milk_obstacle_1",
+   "n_det_agent": 6,
+   "n_det_eih": 4,
+   "agent_names": [
+    "containers",
+    "containers",
+    "containers",
+    "boxes",
+    "food items",
+    "appliances"
+   ],
+   "det_iou_agent": 0.81,
+   "n_matched3d": 4,
+   "n_unmentioned": 4,
+   "picked": "boxes",
+   "pos_err_cm": 3.4
+  },
+  {
+   "episode": "level_I/task_0/episode_03",
+   "gt": "wine_bottle_obstacle_1",
+   "n_det_agent": 7,
+   "n_det_eih": 4,
+   "agent_names": [
+    "plate",
+    "bowl",
+    "bowl",
+    "bowl",
+    "box",
+    "bottle",
+    "bowl"
+   ],
+   "det_iou_agent": 0.86,
+   "n_matched3d": 3,
+   "n_unmentioned": 1,
+   "picked": "box",
+   "pos_err_cm": 12.3
+  },
+  {
+   "episode": "level_I/task_0/episode_04",
+   "gt": "red_coffee_mug_obstacle_1",
+   "n_det_agent": 5,
+   "n_det_eih": 2,
+   "agent_names": [
+    "plate",
+    "bowl",
+    "bowl",
+    "bowl",
+    "cup"
+   ],
+   "det_iou_agent": 0.85,
+   "n_matched3d": 2,
+   "n_unmentioned": 1,
+   "picked": "cup",
+   "pos_err_cm": 9.2
+  },
+  {
+   "episode": "level_I/task_0/episode_05",
+   "gt": "yellow_book_obstacle_1",
+   "n_det_agent": 4,
+   "n_det_eih": 4,
+   "agent_names": [
+    "containers",
+    "containers",
+    "containers",
+    "food items"
+   ],
+   "det_iou_agent": 0.0,
+   "n_matched3d": 3,
+   "n_unmentioned": 3,
+   "picked": "containers",
+   "pos_err_cm": 13.8
+  },
+  {
+   "episode": "level_I/task_0/episode_06",
+   "gt": "moka_pot_obstacle_1",
+   "n_det_agent": 8,
+   "n_det_eih": 2,
+   "agent_names": [
+    "plate",
+    "bowl",
+    "bowl",
+    "bowl",
+    "container",
+    "container",
+    "container",
+    "box"
+   ],
+   "det_iou_agent": 0.61,
+   "n_matched3d": 2,
+   "n_unmentioned": 1,
+   "picked": "container",
+   "pos_err_cm": 2.9
+  },
+  {
+   "episode": "level_I/task_0/episode_07",
+   "gt": "white_storage_box_obstacle_1",
+   "n_det_agent": 5,
+   "n_det_eih": 6,
+   "agent_names": [
+    "containers",
+    "containers",
+    "containers",
+    "containers",
+    "food items"
+   ],
+   "det_iou_agent": 0.83,
+   "n_matched3d": 4,
+   "n_unmentioned": 4,
+   "picked": "containers",
+   "pos_err_cm": 7.6
+  },
+  {
+   "episode": "level_I/task_0/episode_08",
+   "gt": "milk_obstacle_1",
+   "n_det_agent": 6,
+   "n_det_eih": 1,
+   "agent_names": [
+    "plate",
+    "bowl",
+    "bowl",
+    "bowl",
+    "box",
+    "box"
+   ],
+   "det_iou_agent": 0.75,
+   "n_matched3d": 1,
+   "n_unmentioned": 0,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_09",
+   "gt": "wine_bottle_obstacle_1",
+   "n_det_agent": 6,
+   "n_det_eih": 4,
+   "agent_names": [
+    "plate",
+    "plate",
+    "plate",
+    "container",
+    "bottle",
+    "box"
+   ],
+   "det_iou_agent": 0.77,
+   "n_matched3d": 3,
+   "n_unmentioned": 2,
+   "picked": "container",
+   "pos_err_cm": 19.8
+  },
+  {
+   "episode": "level_I/task_0/episode_10",
+   "gt": "red_coffee_mug_obstacle_1",
+   "n_det_agent": 5,
+   "n_det_eih": 5,
+   "agent_names": [
+    "bowl",
+    "bowl",
+    "bowl",
+    "cup",
+    "box"
+   ],
+   "det_iou_agent": 0.84,
+   "n_matched3d": 4,
+   "n_unmentioned": 2,
+   "picked": "cup",
+   "pos_err_cm": 9.7
+  },
+  {
+   "episode": "level_I/task_0/episode_11",
+   "gt": "yellow_book_obstacle_1",
+   "n_det_agent": 5,
+   "n_det_eih": 5,
+   "agent_names": [
+    "plate",
+    "bowl",
+    "bowl",
+    "bowl",
+    "food items"
+   ],
+   "det_iou_agent": 0.0,
+   "n_matched3d": 2,
+   "n_unmentioned": 0,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_12",
+   "gt": "moka_pot_obstacle_1",
+   "n_det_agent": 0,
+   "n_det_eih": 2,
+   "agent_names": [],
+   "det_iou_agent": 0.0,
+   "n_matched3d": 0,
+   "n_unmentioned": 0,
+   "picked": null,
+   "pos_err_cm": null
+  },
+  {
+   "episode": "level_I/task_0/episode_13",
+   "gt": "white_storage_box_obstacle_1",
+   "n_det_agent": 7,
+   "n_det_eih": 4,
+   "agent_names": [
+    "plate",
+    "bowl",
+    "bowl",
+    "bowl",
+    "container",
+    "container",
+    "appliance"
+   ],
+   "det_iou_agent": 0.85,
+   "n_matched3d": 4,
+   "n_unmentioned": 2,
+   "picked": "container",
+   "pos_err_cm": 17.5
+  },
+  {
+   "episode": "level_I/task_0/episode_14",
+   "gt": "milk_obstacle_1",
+   "n_det_agent": 5,
+   "n_det_eih": 6,
+   "agent_names": [
+    "plate",
+    "plate",
+    "bowl",
+    "box",
+    "food items"
+   ],
+   "det_iou_agent": 0.85,
+   "n_matched3d": 4,
+   "n_unmentioned": 2,
+   "picked": "box",
+   "pos_err_cm": 2.9
+  },
+  {
+   "episode": "level_I/task_0/episode_15",
+   "gt": "wine_bottle_obstacle_1",
+   "n_det_agent": 6,
+   "n_det_eih": 4,
+   "agent_names": [
+    "plate",
+    "plate",
+    "plate",
+    "container",
+    "box",
+    "bottle"
+   ],
+   "det_iou_agent": 0.76,
+   "n_matched3d": 3,
+   "n_unmentioned": 2,
+   "picked": "container",
+   "pos_err_cm": 19.7
+  },
+  {
+   "episode": "level_I/task_0/episode_16",
+   "gt": "red_coffee_mug_obstacle_1",
+   "n_det_agent": 7,
+   "n_det_eih": 4,
+   "agent_names": [
+    "containers",
+    "containers",
+    "containers",
+    "containers",
+    "boxes",
+    "containers",
+    "containers"
+   ],
+   "det_iou_agent": 0.86,
+   "n_matched3d": 4,
+   "n_unmentioned": 4,
+   "picked": "containers",
+   "pos_err_cm": 9.9
+  },
+  {
+   "episode": "level_I/task_0/episode_17",
+   "gt": "yellow_book_obstacle_1",
+   "n_det_agent": 5,
+   "n_det_eih": 4,
+   "agent_names": [
+    "plate",
+    "bowl",
+    "bowl",
+    "bowl",
+    "box"
+   ],
+   "det_iou_agent": 0.83,
+   "n_matched3d": 3,
+   "n_unmentioned": 1,
+   "picked": "box",
+   "pos_err_cm": 13.7
+  },
+  {
+   "episode": "level_I/task_0/episode_18",
+   "gt": "moka_pot_obstacle_1",
+   "n_det_agent": 7,
+   "n_det_eih": 4,
+   "agent_names": [
+    "plate",
+    "plate",
+    "plate",
+    "plate",
+    "container",
+    "appliance",
+    "appliance"
+   ],
+   "det_iou_agent": 0.76,
+   "n_matched3d": 4,
+   "n_unmentioned": 3,
+   "picked": "appliance",
+   "pos_err_cm": 30.2
+  },
+  {
+   "episode": "level_I/task_0/episode_19",
+   "gt": "white_storage_box_obstacle_1",
+   "n_det_agent": 6,
+   "n_det_eih": 4,
+   "agent_names": [
+    "bowl",
+    "bowl",
+    "bowl",
+    "plate",
+    "box",
+    "container"
+   ],
+   "det_iou_agent": 0.65,
+   "n_matched3d": 4,
+   "n_unmentioned": 1,
+   "picked": "box",
+   "pos_err_cm": 23.5
+  },
+  {
+   "episode": "level_I/task_0/episode_20",
+   "gt": "milk_obstacle_1",
+   "n_det_agent": 6,
+   "n_det_eih": 2,
+   "agent_names": [
+    "bowl",
+    "bowl",
+    "bowl",
+    "box",
+    "box",
+    "box"
+   ],
+   "det_iou_agent": 0.91,
+   "n_matched3d": 2,
+   "n_unmentioned": 1,
+   "picked": "box",
+   "pos_err_cm": 26.7
+  }
+ ]
+}

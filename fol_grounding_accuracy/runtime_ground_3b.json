@@ -1,0 +1,136 @@
+{
+ "rows": [
+  {
+   "gt": "moka_pot_obstacle_1",
+   "picked": "coffee pot",
+   "method": "visual-zband",
+   "err_cm": 9.3,
+   "xy_cm": 7.4
+  },
+  {
+   "gt": "white_storage_box_obstacle_1",
+   "picked": "food item",
+   "method": "visual-zband",
+   "err_cm": 26.4,
+   "xy_cm": 26.4
+  },
+  {
+   "gt": "milk_obstacle_1",
+   "picked": "box",
+   "method": "visual-zband",
+   "err_cm": 16.2,
+   "xy_cm": 13.5
+  },
+  {
+   "gt": "wine_bottle_obstacle_1",
+   "picked": "bottles",
+   "method": "visual-zband",
+   "err_cm": 6.4,
+   "xy_cm": 3.8
+  },
+  {
+   "gt": "red_coffee_mug_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "yellow_book_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "moka_pot_obstacle_1",
+   "picked": "coffee pot",
+   "method": "visual-zband",
+   "err_cm": 9.4,
+   "xy_cm": 7.6
+  },
+  {
+   "gt": "white_storage_box_obstacle_1",
+   "picked": "food item",
+   "method": "visual-zband",
+   "err_cm": 23.9,
+   "xy_cm": 23.9
+  },
+  {
+   "gt": "milk_obstacle_1",
+   "picked": "box",
+   "method": "visual-zband",
+   "err_cm": 17.8,
+   "xy_cm": 15.3
+  },
+  {
+   "gt": "wine_bottle_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "red_coffee_mug_obstacle_1",
+   "picked": "red mug",
+   "method": "visual-zband",
+   "err_cm": 6.2,
+   "xy_cm": 4.0
+  },
+  {
+   "gt": "yellow_book_obstacle_1",
+   "picked": "food item",
+   "method": "visual-zband",
+   "err_cm": 19.7,
+   "xy_cm": 19.0
+  },
+  {
+   "gt": "moka_pot_obstacle_1",
+   "picked": "coffee pot",
+   "method": "visual-zband",
+   "err_cm": 9.3,
+   "xy_cm": 7.5
+  },
+  {
+   "gt": "white_storage_box_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "milk_obstacle_1",
+   "picked": "boxes",
+   "method": "visual-zband",
+   "err_cm": 16.2,
+   "xy_cm": 13.5
+  },
+  {
+   "gt": "wine_bottle_obstacle_1",
+   "picked": "bottles",
+   "method": "visual-zband",
+   "err_cm": 6.4,
+   "xy_cm": 3.8
+  },
+  {
+   "gt": "red_coffee_mug_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "yellow_book_obstacle_1",
+   "picked": "book",
+   "method": "visual-zband",
+   "err_cm": 20.4,
+   "xy_cm": 19.7
+  },
+  {
+   "gt": "moka_pot_obstacle_1",
+   "picked": "blue coffee pot",
+   "method": "visual-zband",
+   "err_cm": 10.6,
+   "xy_cm": 9.0
+  },
+  {
+   "gt": "white_storage_box_obstacle_1",
+   "picked": null
+  },
+  {
+   "gt": "milk_obstacle_1",
+   "picked": "food item",
+   "method": "visual-zband",
+   "err_cm": 17.7,
+   "xy_cm": 15.3
+  }
+ ],
+ "localized": 15,
+ "within15": 7,
+ "median_cm": 16.2
+}
