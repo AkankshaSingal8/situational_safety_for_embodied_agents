@@ -52,6 +52,8 @@ import time
 import cvxpy as cp
 import imageio
 import numpy as np
+
+from aegis_controls import qp_fallback_controls, qp_reference_controls
 import tqdm
 import tyro
 from libero.libero import benchmark
@@ -207,6 +209,7 @@ def eval_one_task(args, task_suite, task_index, client, video_dir, results_dir):
         replay_images = []
         done_flag = False
         max_steps = args.max_steps
+        qp_infeasible_steps = 0
 
         while t < max_steps:
             img = np.ascontiguousarray(obs["agentview_image"][::-1, ::-1])
@@ -230,9 +233,7 @@ def eval_one_task(args, task_suite, task_index, client, video_dir, results_dir):
             action = action_plan.popleft()
 
             if flag_safety_control:
-                v_ref = R1.T @ action[:3]
-                u_v_ref = 5 * v_ref
-                u_omega_ref = 5 * action[3:6]
+                u_v_ref, u_omega_ref = qp_reference_controls(action, R1)
 
                 a_v, a_omega, a_uz, h, mu_row = compute_h_coeffs_3d(p1, EEF_Q_DIAG, R1, p2, Q2_diag, R2, z_fixed)
                 a_u_v = 0.2 * a_v
@@ -250,7 +251,17 @@ def eval_one_task(args, task_suite, task_index, client, video_dir, results_dir):
                 if u.value is not None:
                     u_v, u_omega_val, u_z = u.value[:3], u.value[3:6], u.value[6:]
                 else:
-                    u_v, u_omega_val, u_z = action[:3], action[3:6], u_z_nom
+                    # Infeasible/failed solve: pass the nominal action through.
+                    # It must be expressed in the QP's scaled body frame, or the
+                    # reconstruction below emits 0.2 * R1 @ action[:3] -- five
+                    # times too small and rotated instead of frame-cancelled.
+                    qp_infeasible_steps += 1
+                    logger.warning(
+                        "AEGIS QP infeasible at step %d (task %s) -- passing the "
+                        "nominal action through unfiltered", t, task.name,
+                    )
+                    u_v, u_omega_val = qp_fallback_controls(action, R1)
+                    u_z = u_z_nom
 
                 Id = np.eye(len(z_fixed))
                 dz = (Id - np.outer(z_fixed, z_fixed)) @ u_z
@@ -274,6 +285,13 @@ def eval_one_task(args, task_suite, task_index, client, video_dir, results_dir):
             eef_quat = obs["robot0_eef_quat"]
             R1 = R.from_quat(eef_quat).as_matrix()
             p1 = eef_pos + R1 @ np.array([0, 0, -0.08])
+            # Refresh the hazard position too. It was sampled once before the
+            # loop while p1/R1 refreshed every step, so on the suites whose BDDL
+            # carries a :dynamics block (human_safety and
+            # obstacle_avoidance_human, 5/5 tasks per level) the barrier was
+            # built against a stale hazard pose as the hand moved.
+            if flag_safety_control and f"{hazard_name}_pos" in obs:
+                p2 = np.array(obs[f"{hazard_name}_pos"])
 
             if done:
                 done_flag = True
@@ -292,6 +310,10 @@ def eval_one_task(args, task_suite, task_index, client, video_dir, results_dir):
             "collision": bool(collide_flag),
             "hazard_object": hazard_name,
             "num_steps": t,
+            # Steps where the QP was infeasible and the nominal action was
+            # passed through unfiltered. A "filter on" episode with a high count
+            # here is not the method it claims to be.
+            "qp_infeasible_steps": qp_infeasible_steps,
             "video": video_path,
             "checkpoint": args.checkpoint_name,
         }
