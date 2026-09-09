@@ -28,7 +28,7 @@ this is a paper-facing repo, so a silently wrong metric outranks a loud failure.
 
 ---
 
-## 1. CAR / `collision` is structurally always-safe on two of the four suites
+## 1. The arm-hits-hazard channel yields zero detections on ALL FOUR suites
 
 **Files:** all six eval drivers (`run_libsafety_eval_openpi.py:212`,
 `run_libsafety_eval_flowcbf.py:195`, `run_libsafety_eval_aegis_gt.py:262`,
@@ -58,6 +58,48 @@ presented as a collision-aware replication.
 
 **Fix:** append `g_name` instead of `geom_i` in `check_robot_contact`; until then, emit `--`/`n/a`
 for the `human_safety` and `affordance` CAR/CR cells rather than `1.000`/`0.0`.
+
+### Correction (2026-09-09), after a full `:constraints` audit of all 60 BDDL files
+
+The heading above understated the scope, and three points need sharpening:
+
+1. **"Dead code" is the wrong phrase.** `CheckRobotContact` *is* registered
+   (`envs/predicates/__init__.py:24`) and *is* evaluated on every `step()`. It simply can
+   never return `True`. Say "structurally always False", not "never called".
+2. **The scope is all four suites, not two.** Audited counts:
+
+   | suite | files with `:constraints` | `CheckRobotContact` | `CheckContact` | other |
+   |---|---|---|---|---|
+   | `human_safety` | 15/15 | 12 | 0 | `CheckGripperForce` x3 |
+   | `obstacle_avoidance` | 15/15 | 22 | 31 | 0 |
+   | `obstacle_avoidance_human` | 15/15 | 15 | 21 | 0 |
+   | `affordance` | **0/15** | 0 | 0 | 0 |
+
+   The arm-hits-hazard channel is dead everywhere. The two obstacle suites keep a live
+   `CheckContact` channel, so their CAR *is* measured — but it measures
+   **manipulated-object-hits-hazard, never arm-hits-hazard**. That qualification belongs in
+   the metric definition, not a footnote.
+3. **`affordance` is vacuous, not merely zero.** `constraints == []` -> `info['cost'] == {}`
+   -> `any(...)` is False by construction, so CAR = 1.000 with *no measurement taking
+   place*. Distinct from `human_safety`, where the predicate is evaluated and returns False.
+
+**Two further defects in the same scorer** (already recorded in
+`paper_resai_v2/METRIC_RECONCILIATION.md`), which mean a patched predicate still
+under-counts:
+
+- `cost` is keyed by predicate **name**, not instance (`bddl_base_domain.py:931`), so
+  duplicate conjuncts collapse and the last evaluated wins.
+- `cost` is `{}` when `done` (`:928`), so a violation on the success step is never counted.
+
+This is why the fix plan makes an *independent* scorer primary and ships the submodule
+patch as documentation rather than relying on it. See
+`docs/superpowers/plans/2026-09-09-code-review-bug-fixes.md` Tasks 1.1 and 2.4.
+
+### Correction: finding 12 (hardcoded task count)
+
+`set(range(15))` has the **correct value** — the LIBERO-Safety paper specifies 5 tasks x 3
+difficulty levels = 15 tasks per suite, independently confirmed against the registry. Only
+the mechanism is fragile. Downgraded from a defect to a robustness item.
 
 ## 2. Flow-CBF barrier is evaluated in the wrong space
 
