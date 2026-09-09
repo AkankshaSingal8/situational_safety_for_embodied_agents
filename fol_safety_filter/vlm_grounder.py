@@ -171,6 +171,41 @@ class VLMObstacleGrounder:
             self._client = VLMClient()
         return self._client
 
+    # Positions are quantised to this grid (metres) when building a cache key.
+    # SafeLIBERO randomises object poses by centimetres or more, so 1 cm
+    # distinguishes genuinely different layouts while absorbing float noise.
+    _CACHE_POS_QUANTUM_M = 0.01
+
+    def _cache_key(
+        self,
+        task_description: str,
+        candidate_obs_keys: List[str],
+        candidate_positions: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Cache key for one grounding query.
+
+        Must include object POSITIONS: the obstacle choice is made by
+        `symbolic_obstacle_id` from candidate geometry, so two episodes sharing a
+        task and object set but differing in layout are different queries. The
+        previous key used only task text and object names, so every episode of a
+        task reused the first episode's obstacle pick.
+        """
+        parts = [task_description.strip().lower(), ",".join(sorted(candidate_obs_keys))]
+        if candidate_positions:
+            q = self._CACHE_POS_QUANTUM_M
+            sig = []
+            for name in sorted(candidate_positions):
+                pos = candidate_positions[name]
+                try:
+                    coords = [float(c) for c in list(pos)[:3]]
+                except (TypeError, ValueError):
+                    continue
+                # round-to-grid, then normalise -0.0 to 0.0 so the text is stable
+                cells = [f"{(round(c / q) * q) + 0.0:.2f}" for c in coords]
+                sig.append(f"{name}:{'/'.join(cells)}")
+            parts.append(";".join(sig))
+        return "|".join(parts)
+
     def detect(
         self,
         rgb_images: Any,
@@ -186,10 +221,9 @@ class VLMObstacleGrounder:
         else:
             rgb_images = [img for img in (rgb_images or []) if img is not None]
 
-        # Cache key: task description + which obstacle-named objects are in scene.
-        # This ensures VLM re-runs when the obstacle type changes (safelibero_spatial
-        # has different obstacle objects per episode).
-        cache_key = task_description.strip().lower() + "|" + ",".join(sorted(candidate_obs_keys))
+        cache_key = self._cache_key(
+            task_description, candidate_obs_keys, candidate_positions
+        )
         if cache_key in self._cache:
             logger.info(
                 f"[VLMGrounder-v7] Cache hit: task='{task_description[:40]}'"

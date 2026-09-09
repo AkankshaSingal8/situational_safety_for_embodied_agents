@@ -262,6 +262,16 @@ class FOLSafetyFilter:
         self._visual_res = None
         self._task_description = task_description
         self._vision_fallback_active = False
+        # Per-episode vision state. Leaving these set let a stale target from a
+        # previous episode relax the barrier (cancel_scale 0.6) against a
+        # phantom target whenever _vision_ground returned early.
+        self._vision_target_xy = None
+        self._vision_targets_xy = []
+        # The grounder cache must not span episodes: SafeLIBERO randomises
+        # object poses across a task's episodes, and the obstacle choice is made
+        # from that geometry.
+        if getattr(self, "obstacle_grounder", None) is not None:
+            self.obstacle_grounder._cache.clear()
         self._target_name = None
         self._goal_name = None
         self._initialized = False
