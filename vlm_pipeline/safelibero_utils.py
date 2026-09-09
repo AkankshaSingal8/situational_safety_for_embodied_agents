@@ -150,7 +150,7 @@ def get_safelibero_wrist_image(obs, validate=True):
     return np.ascontiguousarray(img[::-1, ::-1])
 
 
-def create_vlm_obs_env(task, resolution: int = 512):
+def create_vlm_obs_env(task, resolution: int = 512, seed: int = 0):
     """Create secondary OffScreenRenderEnv for VLM observation capture.
 
     Enables camera_depths=True and camera_segmentations="instance" at
@@ -175,7 +175,9 @@ def create_vlm_obs_env(task, resolution: int = 512):
         "hard_reset": False,
     }
     env = OffScreenRenderEnv(**env_args)
-    env.seed(0)
+    # Must match the primary env's seed, or the VLM sees a different layout
+    # from the one the policy is acting in.
+    env.seed(seed)
     return env, task_description
 
 

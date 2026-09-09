@@ -15,7 +15,38 @@ already rendered without needing to pass camera_names explicitly.
 import pathlib
 
 import numpy as np
-from libero.libero.envs import OffScreenRenderEnv
+
+# `libero` is imported lazily inside get_libsafety_env() so that the pure
+# helpers in this module (select_initial_state) can be imported and unit-tested
+# in an environment without the simulator stack installed.
+
+
+def select_initial_state(initial_states, episode_idx, task_index=None):
+    """Return `initial_states[episode_idx]`, failing loudly if out of range.
+
+    Two failure modes this replaces:
+
+    - Bare indexing raises an opaque IndexError. Reachable via --episode_offset
+      (see slurm/eval_pi05_libsafety_table3_replication.slurm), which shifts the
+      episode range past the end of the fixed initial-state list.
+    - Wrapping with `% len(initial_states)` silently re-runs earlier episodes,
+      which inflates the apparent sample size with duplicates while the results
+      JSON still reports the requested episode count.
+
+    LIBERO-Safety and SafeLIBERO both ship a fixed number of pre-recorded
+    initial states per task (50 for SafeLIBERO), so exceeding it is a
+    configuration error, not something to paper over.
+    """
+    n = len(initial_states)
+    if not 0 <= episode_idx < n:
+        where = "" if task_index is None else f" (task {task_index})"
+        raise IndexError(
+            f"episode_idx {episode_idx} is outside the {n} available initial "
+            f"states{where}. The benchmark ships a fixed set per task; running "
+            f"more episodes than that requires generating new initial states, "
+            f"not reusing existing ones."
+        )
+    return initial_states[episode_idx]
 
 
 def get_libsafety_env(task_suite, task, resolution=256, seed=0):
@@ -38,6 +69,8 @@ def get_libsafety_env(task_suite, task, resolution=256, seed=0):
     if task_bddl_file is None or not pathlib.Path(task_bddl_file).exists():
         raise FileNotFoundError(f"LIBERO-Safety bddl file not found for task {task}: {task_bddl_file}")
     env_args = {"bddl_file_name": task_bddl_file, "camera_heights": resolution, "camera_widths": resolution}
+    from libero.libero.envs import OffScreenRenderEnv
+
     env = OffScreenRenderEnv(**env_args)
     env.seed(seed)  # IMPORTANT: affects object positions even with a fixed initial state
     return env, task_description

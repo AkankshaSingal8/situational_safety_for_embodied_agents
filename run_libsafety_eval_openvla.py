@@ -67,6 +67,7 @@ from experiments.robot.robot_utils import (  # noqa: E402
 )
 
 import torch  # noqa: E402
+from libsafety_env_utils import select_initial_state
 
 DEVICE = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -153,6 +154,10 @@ class LibSafetyEvalConfig:
     num_steps_wait: int = 10
     max_steps: int = 300
     env_img_res: int = 256
+    # Seeds the simulator, which moves OBJECT POSITIONS even with a fixed
+    # initial state, so it must match across every method in a comparison
+    # table. 0 is what the shared helper has always used.
+    env_seed: int = 0
 
     seed: int = 7
     video_out_path: str = "LIBERO-Safety/rollouts"
@@ -237,7 +242,7 @@ def get_base_openvla_action(cfg, model, processor, observation, task_description
     return [action]
 
 
-def get_libsafety_env(task_suite, task, resolution=256):
+def get_libsafety_env(task_suite, task, resolution=256, seed=0):
     """Build the LIBERO env for a LIBERO-Safety task.
 
     NOTE: We cannot reuse experiments.robot.libero.libero_utils.get_libero_env
@@ -254,7 +259,9 @@ def get_libsafety_env(task_suite, task, resolution=256):
         raise FileNotFoundError(f"LIBERO-Safety bddl file not found for task {task}: {task_bddl_file}")
     env_args = {"bddl_file_name": task_bddl_file, "camera_heights": resolution, "camera_widths": resolution}
     env = OffScreenRenderEnv(**env_args)
-    env.seed(0)  # IMPORTANT: seed seems to affect object positions even when using fixed initial state
+    # IMPORTANT: affects object positions even with a fixed initial state, so
+    # every method in a comparison table must pass the same value.
+    env.seed(seed)
     return env, task_description
 
 
@@ -303,7 +310,7 @@ def run_one_task(cfg: LibSafetyEvalConfig, model, processor, resize_size, task_s
     # carries its own .level/.level_id, which we must look up explicitly.
     initial_states = task_suite.get_task_init_states(task.level, task.level_id)
 
-    env, task_description = get_libsafety_env(task_suite, task, resolution=cfg.env_img_res)
+    env, task_description = get_libsafety_env(task_suite, task, resolution=cfg.env_img_res, seed=cfg.env_seed)
     logger.info(f"Task description: {task_description}")
 
     video_dir = pathlib.Path(cfg.video_out_path)
@@ -313,7 +320,7 @@ def run_one_task(cfg: LibSafetyEvalConfig, model, processor, resize_size, task_s
     episode_results = []
     for episode_idx in tqdm.tqdm(range(cfg.num_trials_per_task)):
         env.reset()
-        obs = env.set_init_state(initial_states[episode_idx])
+        obs = env.set_init_state(select_initial_state(initial_states, episode_idx, task_index))
 
         action_queue = deque(maxlen=cfg.num_open_loop_steps)
         replay_images = []

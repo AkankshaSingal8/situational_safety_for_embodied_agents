@@ -67,6 +67,7 @@ _AEGIS_MAIN_DIR = str(
 if _AEGIS_MAIN_DIR not in sys.path:
     sys.path.insert(0, _AEGIS_MAIN_DIR)
 from utils import compute_h_coeffs_3d, project_matrix  # noqa: E402  (AEGIS's own CBF math, unmodified)
+from libsafety_env_utils import select_initial_state
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -180,7 +181,7 @@ def eval_one_task(args, task_suite, task_index, client, video_dir, results_dir):
     for episode_idx in range(args.episode_offset, args.episode_offset + args.num_trials_per_task):
         env.reset()
         action_plan = collections.deque()
-        obs = env.set_init_state(initial_states[episode_idx % len(initial_states)])
+        obs = env.set_init_state(select_initial_state(initial_states, episode_idx, task_index))
 
         t = 0
         while t < args.num_steps_wait:
@@ -190,6 +191,17 @@ def eval_one_task(args, task_suite, task_index, client, video_dir, results_dir):
         if hazard_name is None:
             hazard_name = _find_hazard_object_name(env)
         flag_safety_control = hazard_name is not None and f"{hazard_name}_pos" in obs
+        if not flag_safety_control:
+            # The affordance suite has no :constraints block in any of its 15
+            # BDDL files, so no hazard resolves and this "safety filter" arm is
+            # byte-identical to the unfiltered policy. Say so loudly: a silent
+            # inert arm reported as a filtered arm is a false claim.
+            logger.warning(
+                "SAFETY FILTER INERT: no hazard resolved for suite=%s task=%s "
+                "(hazard_name=%r). This arm is identical to the unfiltered "
+                "policy for this task.",
+                args.task_suite_name, task.name, hazard_name,
+            )
 
         eef_pos = obs["robot0_eef_pos"]
         eef_quat = obs["robot0_eef_quat"]
@@ -342,9 +354,25 @@ def eval_libsafety(args: Args) -> None:
     logger.info(f"Connected to policy server at {args.host}:{args.port}; metadata={client.get_server_metadata()}")
 
     task_indices = list(range(task_suite.n_tasks)) if args.all_tasks else [args.task_index]
+    failed_tasks = []
     for task_index in task_indices:
         logger.info(f"=== Starting suite='{args.task_suite_name}' task_index={task_index} ===")
-        eval_one_task(args, task_suite, task_index, client, video_dir, results_dir)
+        # The other four drivers guard this. Without it, one bad task -- e.g. a
+        # missing .pruned_init making get_task_init_states_by_level_id return
+        # None, or a robosuite placement RandomizationError -- aborts the whole
+        # --all_tasks sweep and discards every task already completed.
+        try:
+            eval_one_task(args, task_suite, task_index, client, video_dir, results_dir)
+        except Exception:
+            logger.exception(
+                "TASK %d FAILED -- recording and continuing to the next task", task_index
+            )
+            failed_tasks.append(task_index)
+    if failed_tasks:
+        logger.warning(
+            "SWEEP INCOMPLETE: %d of %d tasks failed: %s",
+            len(failed_tasks), len(task_indices), failed_tasks,
+        )
 
 
 if __name__ == "__main__":

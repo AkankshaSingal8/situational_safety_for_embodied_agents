@@ -384,11 +384,22 @@ def run_task(task_index, task_suite, model, processor, cfg, args, device, dtype,
     # single global task index — each Task carries its own .level/.level_id.
     initial_states = task_suite.get_task_init_states(task.level, task.level_id)
 
-    while len(initial_states) < args.num_trials_per_task:
-        initial_states = list(initial_states) + list(initial_states)
+    # Previously this tiled the initial-state list until it was long enough,
+    # then truncated -- silently re-running earlier episodes as if they were new
+    # samples, inflating the apparent n with duplicates. The benchmark ships a
+    # fixed set per task, so asking for more is a configuration error.
+    if args.num_trials_per_task > len(initial_states):
+        raise ValueError(
+            f"num_trials_per_task={args.num_trials_per_task} exceeds the "
+            f"{len(initial_states)} initial states available for task "
+            f"{task_index} (level {task.level}, id {task.level_id}). Duplicating "
+            f"states would inflate the sample size with repeated episodes."
+        )
     initial_states = initial_states[:args.num_trials_per_task]
 
-    env, task_description = get_libsafety_env(task_suite, task, resolution=256)
+    env, task_description = get_libsafety_env(
+        task_suite, task, resolution=256, seed=args.env_seed
+    )
 
     logger.info("")
     logger.info("=" * 60)
@@ -465,7 +476,12 @@ def parse_args():
     parser.add_argument("--stats_path", required=True, help="Path to dataset_stats.json.")
     parser.add_argument("--results_output_dir", default="fastwam_benchmark_libsafety")
     parser.add_argument("--video_output_dir", default="fastwam_video_libsafety")
-    parser.add_argument("--seed", type=int, default=195)
+    parser.add_argument("--seed", type=int, default=195,
+                        help="Seeds torch/numpy/random. Does NOT affect scene layout.")
+    parser.add_argument("--env_seed", type=int, default=0,
+                        help="Seeds the simulator, which moves OBJECT POSITIONS even with "
+                             "a fixed initial state. Must match across every method in a "
+                             "comparison table.")
     parser.add_argument("--task_indices", nargs="+", type=int, default=None,
                          help="Subset of task IDs to evaluate (default: all tasks in suite).")
     parser.add_argument("--save_videos", action="store_true")

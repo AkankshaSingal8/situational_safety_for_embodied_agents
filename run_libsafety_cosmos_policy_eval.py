@@ -70,6 +70,7 @@ from cosmos_policy.experiments.robot.cosmos_utils import (
 from cosmos_policy.utils.utils import set_seed_everywhere
 
 from libsafety_env_utils import get_libsafety_env
+from libsafety_env_utils import select_initial_state
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -161,6 +162,10 @@ class EvalConfig:
     num_trials_per_task: int = 1
     max_steps:           int = 300
     env_img_res:         int = 256
+    # Seeds the simulator, which moves OBJECT POSITIONS even with a fixed
+    # initial state, so it must match across every method in a comparison
+    # table. 0 is what the shared helper has always used.
+    env_seed: int = 0
 
     # ── Output ─────────────────────────────────────────────────────────────────
     video_output_dir:   str = "cosmos_video_libsafety"
@@ -334,7 +339,7 @@ def run_task(cfg: EvalConfig, task_suite, task_index: int, model, dataset_stats:
     # LIBERO-Safety's get_task_init_states() takes (level, level_id), not a
     # single global task index — each Task carries its own .level/.level_id.
     initial_states = task_suite.get_task_init_states(task.level, task.level_id)
-    env, task_description = get_libsafety_env(task_suite, task, resolution=cfg.env_img_res)
+    env, task_description = get_libsafety_env(task_suite, task, resolution=cfg.env_img_res, seed=cfg.env_seed)
 
     log_message(f"\n{'='*60}", log_file)
     log_message(f"Task {task_index}: {task_description}", log_file)
@@ -345,7 +350,7 @@ def run_task(cfg: EvalConfig, task_suite, task_index: int, model, dataset_stats:
 
     try:
         for episode_idx in range(cfg.num_trials_per_task):
-            initial_state = initial_states[episode_idx]
+            initial_state = select_initial_state(initial_states, episode_idx, task_index)
             log_message(f"  Episode {episode_idx + 1}/{cfg.num_trials_per_task}", log_file)
 
             success, collide, replay_images, steps = run_episode(

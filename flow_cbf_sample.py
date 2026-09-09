@@ -53,6 +53,7 @@ whole denoising loop.
 """
 
 import dataclasses
+import logging
 
 import einops
 import jax
@@ -63,8 +64,28 @@ from scipy.optimize import minimize
 from openpi.models import model as _model
 from openpi.models.pi0 import make_attn_mask
 
+logger = logging.getLogger(__name__)
+
+# Module-level tally of SLSQP failures. Each failure means the caller got an
+# UNCORRECTED chunk, so this count is the number of steps the filter was
+# effectively off. Read it via solver_failure_count() and record it per episode.
+_SOLVER_FAILURES = {"count": 0}
+
+
+def solver_failure_count() -> int:
+    """Steps so far where SLSQP failed and the chunk was returned uncorrected."""
+    return _SOLVER_FAILURES["count"]
+
+
+def reset_solver_failure_count() -> None:
+    """Zero the tally, e.g. at the start of an episode."""
+    _SOLVER_FAILURES["count"] = 0
+
+
 GAMMA = 0.9
 DSAFE = 0.01
+# EEF ellipsoid semi-axes in METRES, per SafeLIBERO's MVEE
+# Q_ef = diag(0.06, 0.12, 0.11) (arXiv:2512.11891 Sec. V.A).
 EEF_SEMI_AXES = np.array([0.06, 0.12, 0.11])
 
 
@@ -138,7 +159,20 @@ def correct_trajectory(v_chunk_xyz, eef_pos0, dt_control, p_obs, r_obs):
         method="SLSQP",
         options={"maxiter": 50, "ftol": 1e-8},
     )
-    delta = (res.x if res.success else np.zeros(H * 3)).reshape(H, 3)
+    if res.success:
+        delta = res.x.reshape(H, 3)
+    else:
+        # Returning a zero correction here means the caller receives the
+        # UNCORRECTED chunk after the barrier already reported a violation --
+        # i.e. the filter is silently off for this step. Count and log it so a
+        # "filter on" run cannot quietly degrade into an unfiltered one.
+        _SOLVER_FAILURES["count"] += 1
+        logger.warning(
+            "flow-CBF SLSQP failed (%s) -- returning the UNCORRECTED chunk; "
+            "cumulative failures: %d",
+            getattr(res, "message", "no message"), _SOLVER_FAILURES["count"],
+        )
+        delta = np.zeros((H, 3))
     corrected = v_chunk_xyz + delta
     b_final = barriers_of(delta.flatten())
     return corrected, b_final

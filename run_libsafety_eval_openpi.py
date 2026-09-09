@@ -49,6 +49,7 @@ import tyro
 from libero.libero import benchmark
 from openpi_client import image_tools
 from openpi_client import websocket_client_policy as _websocket_client_policy
+from libsafety_env_utils import select_initial_state
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -166,7 +167,7 @@ def eval_one_task(args: Args, task_suite, task_index: int, client, video_dir: pa
     for episode_idx in tqdm.tqdm(range(args.episode_offset, args.episode_offset + args.num_trials_per_task)):
         env.reset()
         action_plan = collections.deque()
-        obs = env.set_init_state(initial_states[episode_idx])
+        obs = env.set_init_state(select_initial_state(initial_states, episode_idx, task_index))
 
         t, done, success = 0, False, False
         collide_flag = False
