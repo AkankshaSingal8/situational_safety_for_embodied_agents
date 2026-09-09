@@ -24,7 +24,7 @@ formulation.
 | `vlm_pipeline/` | Perception and grounding evaluation: detection/grounding accuracy studies, integrated LIBERO eval |
 | `epistemic_uncertainty/` | Uncertainty quantification (MC dropout, deep ensembles, entropy monitoring, density OOD) |
 | `prompts/` | Prompt templates for obstacle identification, safety predicates, and STL specifications |
-| `slurm/`, `experiments/` | Cluster job definitions for the evaluation campaigns |
+| `slurm/`, `experiments/` | Cluster job definitions for the evaluation campaigns (Bridges2-specific paths; see Running) |
 | `patches/` | Patches applied to the pinned submodules |
 | `results_tables/` | Aggregated benchmark tables |
 | `fol_*_n50/`, `baseline_*/`, `*_benchmark/` | Per-condition evaluation result JSONs (n=50 per task) |
