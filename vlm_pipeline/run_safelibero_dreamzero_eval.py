@@ -62,7 +62,11 @@ TASK_MAX_STEPS = {
     "safelibero_spatial": 300,
     "safelibero_object":  300,
     "safelibero_goal":    300,
-    "safelibero_long":    600,
+    # 550 per SafeLIBERO (arXiv:2512.11891 Sec. V.A): "Maximum episode horizons
+    # are 300 steps for the Spatial, Goal, and Object suites, and 550 for the
+    # Long suite." This driver previously used 600; results produced before this
+    # change are not comparable to 550-step rows (see docs/provenance_ledger.md).
+    "safelibero_long":    550,
 }
 NUM_WARMUP_STEPS = 20
 DUMMY_ACTION = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0]
