@@ -30,6 +30,38 @@ import os
 from statistics import mean, median
 
 
+# LIBERO-Safety defines 5 manipulation tasks at each of 3 difficulty levels
+# (L0-L2) per suite -- 15 tasks per suite. See arXiv:2606.23686 Sec. 3.2.
+TASKS_PER_SUITE = 15
+
+
+def expected_task_ids(n_tasks=TASKS_PER_SUITE):
+    """Task ids a complete suite sweep should produce.
+
+    Takes the count as an argument so a caller holding the suite registry can
+    pass `task_suite.n_tasks` instead of relying on the default.
+    """
+    return set(range(int(n_tasks)))
+
+
+def episode_ets_values(records):
+    """Flatten per-episode ETS values across task records.
+
+    Prefers the per-episode `ets` list. Result files written before per-episode
+    ETS logging have only the task mean, so for those the mean is repeated
+    `episodes` times -- which is what the aggregator previously did for every
+    record, making ETS_median the median of task means rather than of episodes.
+    """
+    values = []
+    for r in records:
+        per_episode = r.get("ets")
+        if per_episode:
+            values.extend(float(v) for v in per_episode)
+        else:
+            values.extend([float(r["ETS_mean"])] * int(r["episodes"]))
+    return values
+
+
 def extract_per_task_records(data):
     """Returns a dict {task_index: task_result_dict} from either schema."""
     records = {}
@@ -63,14 +95,12 @@ def aggregate_suite(results_dir, suite):
             # successful attempt overwrote it under a new timestamp).
             all_records[task_index] = record
 
-    missing = sorted(set(range(15)) - set(all_records.keys()))
+    missing = sorted(expected_task_ids() - set(all_records.keys()))
 
     total_episodes = sum(r["episodes"] for r in all_records.values())
     total_successes = sum(r["successes"] for r in all_records.values())
     total_collisions = sum(r["collisions"] for r in all_records.values())
-    ets_values = []
-    for r in all_records.values():
-        ets_values.extend([r["ETS_mean"]] * r["episodes"])
+    ets_values = episode_ets_values(all_records.values())
 
     summary = {
         "suite": suite,
