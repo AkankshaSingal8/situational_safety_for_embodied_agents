@@ -463,7 +463,7 @@ class FOLSafetyFilter:
                 violation_action = "slow"
             elif action == "rotation_lock":
                 cbf_type = "rotation"
-                cbf_params = {"angular_limit": 0.15}
+                cbf_params = {"omega_max": 0.15}
                 violation_action = "slow"
 
             # Extract primary object from formula — fuzzy-match VLM name to actual obs key
@@ -544,7 +544,7 @@ class FOLSafetyFilter:
             violation_action = "slow"
             if action == "rotation_lock":
                 cbf_type = "rotation"
-                cbf_params = {"angular_limit": 0.15}
+                cbf_params = {"omega_max": 0.15}
             elif action == "slow":
                 cbf_type = "velocity"
                 cbf_params = {"v_max": float(then.get("v_max", 0.08))}

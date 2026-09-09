@@ -179,8 +179,11 @@ class CBFMapper:
                 if desired_orientation is None:
                     desired_orientation = ee_quat.copy()
                 # tilt constraint
-                tl = params.get("tilt_max_deg", 15.0)
-                tilt_max = math.radians(tl)
+                tl = math.radians(params.get("tilt_max_deg", 15.0))
+                # Fold with min like v_limit/omega_limit below: with two
+                # rotation rules active, the tightest tilt must win rather than
+                # whichever rule happened to be evaluated last.
+                tilt_max = min(tilt_max, tl) if tilt_max is not None else tl
                 al = params.get("omega_max", 0.25)
                 omega_limit = min(omega_limit, al) if omega_limit is not None else al
 
