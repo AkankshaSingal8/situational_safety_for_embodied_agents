@@ -167,9 +167,15 @@ def MOVING_FAST(state: RobotState, v_thresh: float = 0.25) -> bool:
     return float(np.linalg.norm(state.ee_vel)) > v_thresh
 
 
+# gripper_width is in METRES. The Panda's range is ~0-0.04 m, so the previous
+# threshold of 0.5 was always true and GRIPPING degenerated to plain NEAR.
+# 0.025 matches the carrying test already used by filter.py:_detect_phase.
+GRIPPER_CLOSED_M = 0.025
+
+
 def GRIPPING(state: RobotState, obj: str, proximity: float = 0.08) -> bool:
-    """Gripper is at least half-closed AND near the object."""
-    return state.gripper_width < 0.5 and NEAR(state, "eef", obj, proximity)
+    """Gripper is closed past the carrying threshold AND near the object."""
+    return state.gripper_width < GRIPPER_CLOSED_M and NEAR(state, "eef", obj, proximity)
 
 
 def HOLDING(state: RobotState, obj: str) -> bool:

@@ -29,6 +29,35 @@ from scipy.spatial.transform import Rotation
 logger = logging.getLogger(__name__)
 
 
+def _substitute_vars(formula: str, bindings: Dict[str, str]) -> str:
+    """Replace FOL variables in `formula` with bound object names.
+
+    Word-boundary substitution is required. A bare ``str.replace("A", obj)``
+    also rewrites the "A" inside ``AND``, ``ABOVE`` and ``IS_SPILLABLE``, which
+    corrupted every seed formula so that ``parse_formula`` raised and the rule
+    was silently discarded.
+
+    All variables are substituted in a single pass so the result cannot depend
+    on binding order, and so an object name containing a variable letter cannot
+    be rewritten by a later substitution.
+    """
+    if not bindings:
+        return formula
+    pattern = re.compile(
+        r"\b(" + "|".join(re.escape(v) for v in sorted(bindings, key=len, reverse=True)) + r")\b"
+    )
+    return pattern.sub(lambda m: bindings[m.group(0)], formula)
+
+
+def _formula_uses_var(formula: str, var: str) -> bool:
+    """True if `var` appears in `formula` as a standalone variable.
+
+    Substring tests such as ``"A" in formula`` are true for any formula
+    containing AND/ABOVE/IS_SPILLABLE, so guards written that way never fired.
+    """
+    return re.search(rf"\b{re.escape(var)}\b", formula) is not None
+
+
 def _load_semantic_filter():
     _vlm_dir = os.path.join(os.path.dirname(__file__), "..", "vlm_pipeline")
     if _vlm_dir not in sys.path:
@@ -1192,18 +1221,27 @@ class FOLSafetyFilter:
                     return best
         return None
 
+    @staticmethod
+    def _substitute(formula: str, bindings: Dict[str, str]) -> str:
+        return _substitute_vars(formula, bindings)
+
     def _add_semantic_rules(self, target_exclusions=None) -> None:
         from .primitives import COMPOSED_RULE_SEEDS
         for seed in COMPOSED_RULE_SEEDS:
-            bindings = self._resolve_bindings(seed)
+            bindings = self._resolve_bindings(seed, target_exclusions)
             if bindings is None:
                 continue
-            formula = seed["formula"]
-            for var, obj in bindings.items():
-                formula = formula.replace(var, obj)
+            formula = _substitute_vars(seed["formula"], bindings)
             try:
                 parsed = parse_formula(formula)
-            except Exception:
+            except Exception as exc:
+                # Never swallow this silently: a substitution bug here disabled
+                # the entire Level-2 semantic layer for months without a trace.
+                logger.error(
+                    "Composed rule seed %r failed to parse after substitution "
+                    "(%r): %s -- rule DISCARDED",
+                    seed.get("name", "<unnamed>"), formula, exc,
+                )
                 continue
             primary_obj = bindings.get("A")
             rule = FOLRule(
@@ -1220,7 +1258,9 @@ class FOLSafetyFilter:
             )
             self.kb.add_rule(rule)
 
-    def _resolve_bindings(self, seed: Dict) -> Optional[Dict[str, str]]:
+    def _resolve_bindings(
+        self, seed: Dict, target_exclusions: Optional[set] = None
+    ) -> Optional[Dict[str, str]]:
         formula = seed["formula"]
         needs_spillable = "IS_SPILLABLE(A)" in formula
         needs_fragile = "IS_FRAGILE(A)" in formula
@@ -1232,8 +1272,21 @@ class FOLSafetyFilter:
         needs_absorbent = "IS_ABSORBENT(B)" in formula
         needs_supports = "SUPPORTS(A" in formula
 
+        # Objects already governed by the geometric layer (the resolved
+        # obstacles) must not also be bound as semantic-rule subjects, or the
+        # same object is constrained twice by two different mechanisms. The
+        # caller has always passed these; until now they were dropped on the
+        # floor, so e.g. SPILL_RISK could bind A to the obstacle itself
+        # (_props_from_name marks pot/bowl/milk spillable).
+        excluded = set(target_exclusions or ())
+        candidates = {
+            name: obj
+            for name, obj in self._object_states.items()
+            if name not in excluded
+        }
+
         obj_A = obj_B = None
-        for name, obj in self._object_states.items():
+        for name, obj in candidates.items():
             if needs_lit and obj.is_lit and obj_A is None:
                 obj_A = name
             if needs_fragile and obj.is_fragile and obj_A is None:
@@ -1246,19 +1299,21 @@ class FOLSafetyFilter:
                 obj_A = name
             if needs_sharp and obj.has_sharp_part and obj_A is None:
                 obj_A = name
-        for name, obj in self._object_states.items():
+        for name, obj in candidates.items():
             if needs_flammable and obj.is_flammable and obj_B is None:
                 obj_B = name
             if needs_absorbent and obj.is_absorbent and obj_B is None:
                 obj_B = name
         if needs_supports:
-            for name, obj in self._object_states.items():
+            for name, obj in candidates.items():
                 if obj_A is None:
                     obj_A = name
 
-        if "A" in formula and obj_A is None:
+        # Word-boundary tests: a bare `"A" in formula` is true for every formula
+        # containing AND, ABOVE, IS_SPILLABLE, ... so these guards never fired.
+        if _formula_uses_var(formula, "A") and obj_A is None:
             return None
-        if "B" in formula and "A" in formula and obj_B is None:
+        if _formula_uses_var(formula, "B") and _formula_uses_var(formula, "A") and obj_B is None:
             return None
 
         bindings: Dict[str, str] = {}
