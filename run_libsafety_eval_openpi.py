@@ -173,15 +173,18 @@ def eval_one_task(args: Args, task_suite, task_index: int, client, video_dir: pa
         collide_flag = False
         replay_images = []
 
+        # Settle the scene BEFORE the counted loop. Previously the warm-up ran
+        # inside it, so (a) num_steps included num_steps_wait and this driver's
+        # ETS was ~10 steps higher than every other row, and (b) collisions
+        # during settling -- while the robot is executing dummy zero actions and
+        # objects are still dropping -- were charged to the policy, depressing
+        # its collision rate relative to drivers that ignore warm-up. Every
+        # other driver settles first and counts afterwards; match them.
+        for _ in range(args.num_steps_wait):
+            obs, _, done, info = env.step(LIBERO_DUMMY_ACTION)
+
         try:
-            while t < args.max_steps + args.num_steps_wait:
-                if t < args.num_steps_wait:
-                    obs, _, done, info = env.step(LIBERO_DUMMY_ACTION)
-                    cost = info.get("cost", {}) if info else {}
-                    if any(v for v in cost.values()):
-                        collide_flag = True
-                    t += 1
-                    continue
+            while t < args.max_steps:
 
                 # IMPORTANT: rotate 180 degrees to match train preprocessing.
                 img = np.ascontiguousarray(obs["agentview_image"][::-1, ::-1])

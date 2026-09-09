@@ -325,6 +325,16 @@ def run_one_task(cfg: LibSafetyEvalConfig, model, processor, resize_size, task_s
         action_queue = deque(maxlen=cfg.num_open_loop_steps)
         replay_images = []
         t, done, success = 0, False, False
+        # This driver recorded no collision signal at all, so every row it
+        # produced scored SR == TSR and CR == 0.0% in
+        # aggregate_table3_replication.py (whose r.get("collision", False)
+        # silently defaulted) -- presented beside the paper's Table 3 as a
+        # collision-aware replication. Read the benchmark's own cost channel,
+        # matching the other five drivers. NOTE: that channel's limits apply --
+        # CheckRobotContact never fires, so on the two obstacle suites this
+        # measures object-hazard contact only, and on human_safety/affordance it
+        # cannot fire at all (see docs/libsafety_metric_validity.md).
+        collide_flag = False
 
         while t < cfg.num_steps_wait:
             obs, _, done, _ = env.step(get_libero_dummy_action(cfg.model_family))
@@ -356,7 +366,13 @@ def run_one_task(cfg: LibSafetyEvalConfig, model, processor, resize_size, task_s
                 action = action_queue.popleft()
                 action = process_action(action, cfg.model_family)
 
-                obs, _, done, _ = env.step(action.tolist() if hasattr(action, "tolist") else list(action))
+                obs, _, done, info = env.step(
+                    action.tolist() if hasattr(action, "tolist") else list(action)
+                )
+                if not collide_flag:
+                    cost = info.get("cost", {}) if info else {}
+                    if any(v for v in cost.values()):
+                        collide_flag = True
                 if done:
                     success = True
                     break
@@ -374,6 +390,7 @@ def run_one_task(cfg: LibSafetyEvalConfig, model, processor, resize_size, task_s
                 "task_index": task_index,
                 "episode": episode_idx,
                 "success": success,
+                "collision": bool(collide_flag),
                 "num_steps": t,
                 "video": mp4_path,
                 "pretrained_checkpoint": str(cfg.pretrained_checkpoint),

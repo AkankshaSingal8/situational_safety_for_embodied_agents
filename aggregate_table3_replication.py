@@ -60,8 +60,20 @@ def sr_cr(records):
     n = len(records)
     if n == 0:
         return None, None, 0
-    sr = 100 * sum(1 for r in records if r["success"] and not r.get("collision", False)) / n
-    cr = 100 * sum(1 for r in records if r.get("collision", False)) / n
+    # Do NOT default a missing collision field to False. Records written before
+    # the openvla driver recorded collisions have no such key, and defaulting
+    # scored SR == TSR with CR == 0.0% -- printed beside the paper's Table 3 as
+    # if collision-aware. Fail instead, so the gap is visible.
+    missing = [i for i, r in enumerate(records) if "collision" not in r]
+    if missing:
+        raise KeyError(
+            f"{len(missing)} of {n} episode records have no 'collision' field "
+            f"(first at index {missing[0]}). These were produced before the "
+            f"driver recorded collisions; SR/CR cannot be computed from them. "
+            f"Re-run, or aggregate only success-rate columns."
+        )
+    sr = 100 * sum(1 for r in records if r["success"] and not r["collision"]) / n
+    cr = 100 * sum(1 for r in records if r["collision"]) / n
     return sr, cr, n
 
 
