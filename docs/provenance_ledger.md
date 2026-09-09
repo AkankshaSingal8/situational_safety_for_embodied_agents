@@ -104,3 +104,51 @@ these two is a checkpoint confound, not a filter effect.
 600 steps for `safelibero_long`; every other driver and the SafeLIBERO paper use 550.
 Existing Fast-WAM and DreamZero long-suite numbers are therefore not comparable to the
 other rows. Corrected in Task 1.6; results produced before that change are marked here.
+
+---
+
+## Smoke verification runs (2026-09-09, account cis240028p)
+
+Three jobs, ~1 SU total, on the `code-review-fixes` worktree.
+
+| Job | Result | What it established |
+|---|---|---|
+| 45617972 | FAILED (exit 1) | `RandomizationError` on spatial task 2 aborted the whole sweep; tasks 0 and 1 had completed but no JSON was written |
+| 45619352 | FAILED (exit 1) | Per-task guard works — JSON written, task 2 recorded. Exposed a `KeyError: 'TSR'` regression in the summary printer |
+| 45623314 | **COMPLETED (0:0)** | Both fixed. Clean exit; only robosuite EGL `__del__` teardown noise in stderr |
+
+Final verified output:
+
+```
+total_episodes: 6     tasks_attempted: 4
+TSR: 0.6667           tasks_completed: 3
+CAR: 0.6667           failed_tasks: [{task_id: 2,
+                        error: "RandomizationError('Cannot place all objects ):')"}]
+```
+
+### New defect found by running, not by review
+
+`run_safelibero_fol_openvla_eval.py` builds the environment inside `run_task`,
+*before* that function's own per-episode `try/except` is reachable. A setup-time
+`robosuite.utils.errors.RandomizationError` therefore propagated out of the task loop and
+killed the run, discarding every task already completed — the results JSON is written
+only after the loop finishes.
+
+The code review missed this: it saw the per-episode guard at `:436-438` and concluded the
+driver was protected. It is the SafeLIBERO analogue of finding L8.
+
+**Budget consequence:** without this fix, a 12-hour n=50 job hitting the same error on a
+late task would discard ~12 SU of completed work. Fixed before any n=50 spend.
+
+### Known reproducible environment failure
+
+`safelibero_spatial` **task 2 fails placement sampling** (`base_region_sampler.py:454`)
+and reproduced on all three runs. Any n=50 spatial campaign will return 3 of 4 tasks
+unless the placement sampler is retried. This is recorded rather than worked around, so
+the gap is visible in `failed_tasks` rather than silently absent.
+
+### Filter is active — not inert
+
+Per-task filter activation rates from the verified run: task 0 `FAR=0.690` (CAR=1.000),
+task 1 `FAR=0.000`, task 3 `FAR=0.323`. The zero on task 1 is task-specific geometry, not
+a systemic inertness problem.
