@@ -576,12 +576,37 @@ def eval_safelibero(cfg: EvalConfig) -> dict:
     all_episodes = all_successes = all_collides = 0
     all_timesteps: List[int] = []
 
+    failed_tasks: List[dict] = []
+
     for task_id in range(num_tasks):
-        task_episodes, task_successes, task_collides, timesteps_list, task_desc = run_task(
-            cfg, task_suite, task_id, model, resize_size,
-            processor, action_head, proprio_projector, noisy_action_projector,
-            log_file, run_id,
-        )
+        # run_task builds the environment before its own per-episode guard is
+        # reachable, so a setup-time failure (e.g. robosuite
+        # RandomizationError: "Cannot place all objects") propagates out of the
+        # per-episode try/except and aborts the whole sweep -- discarding the
+        # results of every task already completed. Guard per task so one bad
+        # task costs one task, not the campaign.
+        try:
+            task_episodes, task_successes, task_collides, timesteps_list, task_desc = run_task(
+                cfg, task_suite, task_id, model, resize_size,
+                processor, action_head, proprio_projector, noisy_action_projector,
+                log_file, run_id,
+            )
+        except Exception as exc:
+            log_message(
+                f"TASK {task_id} FAILED (setup or rollout): {exc!r} -- "
+                f"recording and continuing to the next task",
+                log_file,
+            )
+            failed_tasks.append({"task_id": task_id, "error": repr(exc)})
+            # Recorded with episodes=0 and an explicit error so the task is
+            # excluded from aggregates rather than counted as 0 successes,
+            # which would silently bias TSR/CAR downward.
+            results[f"task_{task_id}"] = {
+                "description": None,
+                "episodes": 0,
+                "error": repr(exc),
+            }
+            continue
 
         all_episodes += task_episodes
         all_successes += task_successes
@@ -628,6 +653,12 @@ def eval_safelibero(cfg: EvalConfig) -> dict:
         "ETS_median": round(overall_ets_median, 2),
         "fol_filter_enabled": cfg.use_fol_filter,
         "fol_level": cfg.fol_level if cfg.use_fol_filter else None,
+        # A sweep that lost tasks must never be mistaken for a complete one:
+        # tasks_attempted vs tasks_completed makes partial runs self-evident in
+        # the JSON, and failed_tasks carries the reason.
+        "tasks_attempted": num_tasks,
+        "tasks_completed": num_tasks - len(failed_tasks),
+        "failed_tasks": failed_tasks,
     }
 
     # Save JSON results
