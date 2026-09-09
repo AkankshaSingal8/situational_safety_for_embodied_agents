@@ -18,13 +18,20 @@ import numpy as np
 from libero.libero.envs import OffScreenRenderEnv
 
 
-def get_libsafety_env(task_suite, task, resolution=256):
+def get_libsafety_env(task_suite, task, resolution=256, seed=0):
     """Build the LIBERO env for a LIBERO-Safety task.
 
     Same as run_libsafety_eval_openvla.py's get_libsafety_env(): LIBERO-Safety
     nests an additional per-difficulty-level directory
     (<bddl_files>/<problem_folder>/L{level}/<bddl_file>), addressable only via
     Benchmark.get_task_bddl_file_path_by_level_id(level, level_id).
+
+    `seed` seeds the environment. It affects OBJECT POSITIONS even when the
+    initial state is fixed, so every method in a comparison table must pass the
+    same value or the rows are not measured on matching scene layouts. This was
+    hardcoded to 0 here while three drivers passed their own --seed, which put
+    Cosmos/Fast-WAM/OpenVLA on different layouts from openpi/AEGIS/flow-CBF.
+    Default 0 preserves the behaviour of callers that do not pass it.
     """
     task_description = task.language
     task_bddl_file = task_suite.get_task_bddl_file_path_by_level_id(task.level, task.level_id)
@@ -32,7 +39,7 @@ def get_libsafety_env(task_suite, task, resolution=256):
         raise FileNotFoundError(f"LIBERO-Safety bddl file not found for task {task}: {task_bddl_file}")
     env_args = {"bddl_file_name": task_bddl_file, "camera_heights": resolution, "camera_widths": resolution}
     env = OffScreenRenderEnv(**env_args)
-    env.seed(0)  # IMPORTANT: seed affects object positions even with fixed initial state
+    env.seed(seed)  # IMPORTANT: affects object positions even with a fixed initial state
     return env, task_description
 
 

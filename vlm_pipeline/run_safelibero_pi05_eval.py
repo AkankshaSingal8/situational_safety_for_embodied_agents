@@ -73,7 +73,13 @@ def parse_args():
     parser.add_argument("--results_output_dir", type=str, default="pi05_benchmark")
     parser.add_argument("--video_output_dir", type=str, default="pi05_video")
     parser.add_argument("--save_videos", action="store_true")
-    parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--seed", type=int, default=7,
+                        help="Seeds torch/numpy/random. Does NOT affect scene layout.")
+    parser.add_argument("--env_seed", type=int, default=0,
+                        help="Seeds the simulator, which moves OBJECT POSITIONS even "
+                             "with a fixed initial state. Must match across every method "
+                             "in a comparison table; 0 is what the shared OpenVLA/FOL/"
+                             "Cosmos helper uses.")
     parser.add_argument("--task_indices", type=int, nargs="+", default=None,
                         help="Subset of task IDs to evaluate. Defaults to all tasks.")
     return parser.parse_args()
@@ -141,8 +147,13 @@ def run_eval(args):
     for task_id in task_ids:
         task = task_suite.get_task(task_id)
         initial_states = task_suite.get_task_init_states(task_id)
+        # env_seed is deliberately SEPARATE from args.seed. args.seed seeds
+        # torch/numpy/random; the env seed moves OBJECT POSITIONS, so it must
+        # match across every method in a comparison table. Passing args.seed
+        # (default 7) here put pi0.5 on different scene layouts from every
+        # OpenVLA/FOL/Cosmos row, which all get 0 from the shared helper.
         env, task_description = _get_libero_env(
-            task, args.safety_level, LIBERO_ENV_RESOLUTION, args.seed
+            task, args.safety_level, LIBERO_ENV_RESOLUTION, args.env_seed
         )
 
         logging.info(f"\n=== Task {task_id}: {task_description} ===")

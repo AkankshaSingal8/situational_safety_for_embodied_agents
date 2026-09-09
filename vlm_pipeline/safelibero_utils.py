@@ -22,7 +22,7 @@ except ModuleNotFoundError:
 
 
 def get_safelibero_env(task, model_family, resolution=256, include_wrist_camera=False,
-                        camera_depths=False, camera_segmentations=None):
+                        camera_depths=False, camera_segmentations=None, seed=0):
     """Initialize SafeLIBERO environment with explicit camera configuration.
 
     Args:
@@ -67,7 +67,11 @@ def get_safelibero_env(task, model_family, resolution=256, include_wrist_camera=
         env_args["camera_segmentations"] = camera_segmentations
 
     env = OffScreenRenderEnv(**env_args)
-    env.seed(0)  # IMPORTANT: seed affects object positions even with fixed initial state
+    # IMPORTANT: affects object positions even with a fixed initial state, so
+    # every method in a comparison table must pass the same value. Hardcoding 0
+    # here while run_safelibero_pi05_eval.py used env.seed(7) meant pi0.5 rows
+    # were not layout-matched to the OpenVLA/FOL rows.
+    env.seed(seed)
 
     return env, task_description
 

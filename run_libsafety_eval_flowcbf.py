@@ -70,18 +70,24 @@ class Args:
     max_steps: int = 300
     checkpoint_name: str = "flowcbf_pi05_libero_safety"
 
+    # Seeds torch/numpy/random only. The simulator seed is env_seed below:
+    # it moves OBJECT POSITIONS even with a fixed initial state, so it must
+    # match across every method in a comparison table. This driver passed
+    # `seed` (7) to env.seed() while Cosmos/Fast-WAM/OpenVLA got 0 from the
+    # shared helper, so the rows were not layout-matched.
     seed: int = 7
+    env_seed: int = 0
     video_out_path: str = "LIBERO-Safety/rollouts"
     results_out_path: str = "LIBERO-Safety/results"
 
 
-def _get_env(task_suite, task, resolution, seed):
+def _get_env(task_suite, task, resolution, env_seed):
     from libero.libero.envs import OffScreenRenderEnv
 
     task_bddl_file = task_suite.get_task_bddl_file_path_by_level_id(task.level, task.level_id)
     env_args = {"bddl_file_name": str(task_bddl_file), "camera_heights": resolution, "camera_widths": resolution}
     env = OffScreenRenderEnv(**env_args)
-    env.seed(seed)
+    env.seed(env_seed)
     return env, task.language
 
 
@@ -142,7 +148,7 @@ def _infer_with_flow_cbf(policy, model, rng, obs_dict, eef_pos_world, p_obs, r_o
 def eval_one_task(args, policy, model, task_suite, task_index, video_dir, results_dir):
     task = task_suite.get_task(task_index)
     initial_states = task_suite.get_task_init_states(task.level, task.level_id)
-    env, task_description = _get_env(task_suite, task, LIBERO_ENV_RESOLUTION, args.seed)
+    env, task_description = _get_env(task_suite, task, LIBERO_ENV_RESOLUTION, args.env_seed)
 
     hazard_name = None
     rng = jax.random.key(args.seed)

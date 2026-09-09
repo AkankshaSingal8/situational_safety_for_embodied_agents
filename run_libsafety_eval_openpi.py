@@ -88,12 +88,18 @@ class Args:
     max_steps: int = 300  # episode horizon
     checkpoint_name: str = ""  # e.g. "pi05_libero" or "pi0_libero" (for results-json bookkeeping only)
 
+    # Seeds torch/numpy/random only. The simulator seed is env_seed below:
+    # it moves OBJECT POSITIONS even with a fixed initial state, so it must
+    # match across every method in a comparison table. This driver passed
+    # `seed` (7) to env.seed() while Cosmos/Fast-WAM/OpenVLA got 0 from the
+    # shared helper, so the rows were not layout-matched.
     seed: int = 7
+    env_seed: int = 0
     video_out_path: str = "LIBERO-Safety/rollouts"
     results_out_path: str = "LIBERO-Safety/results"
 
 
-def _get_env(task_suite, task, resolution, seed):
+def _get_env(task_suite, task, resolution, env_seed):
     from libero.libero.envs import OffScreenRenderEnv
 
     # NOTE: LIBERO-Safety's bddl files live under
@@ -107,7 +113,7 @@ def _get_env(task_suite, task, resolution, seed):
     task_bddl_file = task_suite.get_task_bddl_file_path_by_level_id(task.level, task.level_id)
     env_args = {"bddl_file_name": str(task_bddl_file), "camera_heights": resolution, "camera_widths": resolution}
     env = OffScreenRenderEnv(**env_args)
-    env.seed(seed)
+    env.seed(env_seed)
     return env, task.language
 
 
@@ -153,7 +159,7 @@ def eval_one_task(args: Args, task_suite, task_index: int, client, video_dir: pa
     # its own .level / .level_id fields, which is what init states are
     # actually keyed on.
     initial_states = task_suite.get_task_init_states(task.level, task.level_id)
-    env, task_description = _get_env(task_suite, task, LIBERO_ENV_RESOLUTION, args.seed)
+    env, task_description = _get_env(task_suite, task, LIBERO_ENV_RESOLUTION, args.env_seed)
     logger.info(f"Task description: {task_description}")
 
     episode_results = []
