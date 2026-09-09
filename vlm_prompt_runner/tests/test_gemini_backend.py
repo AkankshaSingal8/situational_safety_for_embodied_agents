@@ -23,14 +23,16 @@ def test_generate_sends_images_and_prompt(fake_image):
     mock_response = MagicMock()
     mock_response.text = '{"obstacle": "bowl"}'
 
-    with patch.object(backend._model, "generate_content",
+    with patch.object(backend._client.models, "generate_content",
                       return_value=mock_response) as mock_gen:
         result = backend.generate("Identify the obstacle.", [fake_image], max_new_tokens=512)
 
     assert result == '{"obstacle": "bowl"}'
-    args = mock_gen.call_args.args[0]  # positional: parts list
-    # should contain at least one non-string (image Part) and the prompt string
-    assert any(isinstance(a, str) or hasattr(a, "data") for a in args)
+    parts = mock_gen.call_args.kwargs["contents"]
+    # one image Part for the supplied image, then the prompt string last
+    assert len(parts) == 2
+    assert not isinstance(parts[0], str)
+    assert parts[-1] == "Identify the obstacle."
 
 
 def test_generate_skips_missing_images(tmp_path):
@@ -38,11 +40,13 @@ def test_generate_skips_missing_images(tmp_path):
     mock_response = MagicMock()
     mock_response.text = "ok"
 
-    with patch.object(backend._model, "generate_content",
-                      return_value=mock_response):
+    with patch.object(backend._client.models, "generate_content",
+                      return_value=mock_response) as mock_gen:
         result = backend.generate("prompt", [str(tmp_path / "missing.png")])
 
     assert result == "ok"
+    # the missing image is skipped, leaving only the prompt
+    assert mock_gen.call_args.kwargs["contents"] == ["prompt"]
 
 
 def test_raises_without_api_key(monkeypatch):

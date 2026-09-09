@@ -104,7 +104,14 @@ python final_results.py
 ## Tests
 
 ```bash
-python -m pytest fol_safety_filter/tests vlm_prompt_runner/tests epistemic_uncertainty/tests
+python -m pytest fol_safety_filter/tests vlm_prompt_runner/tests
+```
+
+The `epistemic_uncertainty/` tests additionally require `torch`, so run them from the
+policy environment:
+
+```bash
+python -m pytest epistemic_uncertainty/tests
 ```
 
 ## Metrics
