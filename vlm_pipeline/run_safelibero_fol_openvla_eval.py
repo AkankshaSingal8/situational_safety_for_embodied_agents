@@ -686,6 +686,10 @@ def eval_safelibero(cfg: EvalConfig) -> dict:
     ]
     for task_id in range(num_tasks):
         tr = results[f"task_{task_id}"]
+        if "error" in tr:
+            # A task guarded out above has no metrics; show why, don't crash.
+            summary_lines.append(f"  Task {task_id}  FAILED  | {tr['error']}")
+            continue
         summary_lines.append(
             f"  Task {task_id}  TSR={tr['TSR']:.3f}  CAR={tr['CAR']:.3f}"
             f"  ETS={tr['ETS_mean']:.1f}  | {tr['description'][:60]}"
