@@ -29,10 +29,16 @@ def test_load_prompt_missing_raises():
         load_prompt(Path("/nonexistent/prompt.md"))
 
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
 def test_load_prompt_real_file():
     """Verify load_prompt works on the actual prompts in the repo."""
-    prompt_dir = Path("/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/prompts")
-    for md_file in prompt_dir.glob("*.md"):
+    prompt_dir = REPO_ROOT / "prompts"
+    md_files = sorted(prompt_dir.glob("*.md"))
+    # Without this the loop body never runs and the test passes vacuously.
+    assert md_files, f"no prompt files found under {prompt_dir}"
+    for md_file in md_files:
         content, stem = load_prompt(md_file, return_stem=True)
         assert isinstance(content, str)
         assert len(content) > 0

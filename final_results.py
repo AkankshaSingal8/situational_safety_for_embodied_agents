@@ -1,5 +1,5 @@
 """Comprehensive FOL safety filter results — all versions."""
-import json, glob
+import json, glob, os
 
 def load_latest(pattern):
     files = sorted(glob.glob(pattern, recursive=True))
@@ -11,7 +11,8 @@ def metrics(d):
     o = d['overall']
     return o['TSR'], o['CAR'], o['ETS_mean']
 
-WT = "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/fol-safety-filter"
+# Result directories live alongside this script in the repository root.
+WT = os.path.dirname(os.path.abspath(__file__))
 
 print("=" * 100)
 print("FOL SAFETY FILTER — COMPLETE RESULTS (OpenVLA-OFT, n=10/task, 40 episodes/condition)")
