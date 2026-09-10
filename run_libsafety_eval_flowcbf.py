@@ -56,6 +56,7 @@ from flow_cbf_barrier import (
     predict_trajectory,
 )
 from libsafety_env_utils import select_initial_state
+from libsafety_contact import any_robot_hazard_contact, hazard_geom_ids
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -219,6 +220,11 @@ def eval_one_task(args, policy, model, task_suite, task_index, video_dir, result
 
         t = 0
         collide_flag = False
+        # Independent robot-hazard contact scorer (libsafety_contact).
+        # Resolved per episode because env.reset() can renumber geoms.
+        _hazard_name = find_hazard_object_name(env)
+        _hazard_geoms = hazard_geom_ids(env.sim, _hazard_name) if _hazard_name else []
+        robot_contact_steps = 0
         replay_images = []
         # Steps where SLSQP failed and the chunk went through UNCORRECTED,
         # i.e. the filter was off. A 'filter on' episode with a high count
@@ -256,6 +262,14 @@ def eval_one_task(args, policy, model, task_suite, task_index, video_dir, result
 
             if not collide_flag:
                 cost = info.get("cost", {}) if info else {}
+                # Independent robot-hazard contact, in parallel with the
+                # benchmark's own cost channel above. CheckRobotContact can
+                # never fire (see patches/LIBERO-Safety.patch), so on
+                # human_safety/affordance the cost channel reports nothing
+                # and on the obstacle suites it sees object-hazard contact
+                # only. This one actually measures arm-hits-hazard.
+                if _hazard_geoms and any_robot_hazard_contact(env.sim, _hazard_geoms):
+                    robot_contact_steps += 1
                 if any(v for v in cost.values()):
                     collide_flag = True
 
@@ -274,6 +288,8 @@ def eval_one_task(args, policy, model, task_suite, task_index, video_dir, result
             "episode": episode_idx,
             "success": bool(done_flag),
             "collision": bool(collide_flag),
+            "robot_contact": robot_contact_steps > 0,
+            "robot_contact_steps": robot_contact_steps,
             "flow_cbf_solver_failures": solver_failures,
             "hazard_object": hazard_name,
             "num_steps": t,

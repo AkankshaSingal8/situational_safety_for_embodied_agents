@@ -22,7 +22,7 @@ under-counts, so this module is the primary metric rather than a fallback:
 This module works in index space throughout and therefore does not depend on
 which submodule commit a reader has checked out.
 """
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 # Substrings identifying robot-side geoms in LIBERO/robosuite naming.
 _ROBOT_GEOM_TOKENS = ("robot", "gripper")
@@ -46,6 +46,61 @@ def robot_geom_ids(sim) -> List[int]:
         if sim.model.geom_group[i] != _VISIBLE_GEOM_GROUP:
             continue
         if any(tok in name for tok in _ROBOT_GEOM_TOKENS):
+            out.append(i)
+    return out
+
+
+def find_hazard_object_name(env) -> Optional[str]:
+    """Ground-truth hazard object from the task's own BDDL ``:constraints``.
+
+    Returns the object argument of the first ``CheckRobotContact`` conjunct, or
+    None when the task declares no such constraint (the whole ``affordance``
+    suite: 0 of its 15 BDDL files carry a ``:constraints`` block).
+
+    NOTE: LIBERO-Safety's BDDL tokenizer lowercases the entire file
+    (bddl/parsing.py:23), so the parsed predicate is ``checkrobotcontact``, not
+    ``CheckRobotContact``. That is why the comparison below looks like a hack.
+
+    A task may declare several hazards; the first is taken, matching
+    vlsa-aegis/main/main_aegis.py's single-obstacle design.
+
+    Previously duplicated verbatim in run_libsafety_eval_aegis_gt.py and
+    run_libsafety_eval_flowcbf.py.
+    """
+    parsed = getattr(env, "parsed_problem", None)
+    if parsed is None:
+        parsed = getattr(getattr(env, "env", None), "parsed_problem", None)
+    if parsed is None:
+        return None
+    for constraint in parsed.get("constraints", []):
+        if (
+            isinstance(constraint, (list, tuple))
+            and len(constraint) >= 2
+            and str(constraint[0]).lower() == "checkrobotcontact"
+        ):
+            return constraint[1]
+    return None
+
+
+def hazard_geom_ids(sim, object_name: str) -> List[int]:
+    """Visible geom indices belonging to `object_name`.
+
+    LIBERO/robosuite name an object's geoms with the object name as a prefix
+    (e.g. ``bottle_of_perfume_1_g0``), and the hazard name the drivers already
+    resolve from the BDDL ``:constraints`` block is exactly that object name.
+    Returns [] when nothing matches, which callers must treat as "no hazard
+    resolved" rather than "no contact".
+    """
+    if not object_name:
+        return []
+    out: List[int] = []
+    for i in range(sim.model.ngeom):
+        name = sim.model.geom_id2name(i)
+        if not name:
+            continue
+        if sim.model.geom_group[i] != _VISIBLE_GEOM_GROUP:
+            continue
+        if name == object_name or name.startswith(object_name):
             out.append(i)
     return out
 
