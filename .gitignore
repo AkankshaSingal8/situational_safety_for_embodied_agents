@@ -60,3 +60,10 @@ pi05_benchmark_smoke/
 .worktrees/
 .superpowers/
 *.v3bak
+
+# Untracked working material that must not reach a public main
+SafeManip/
+paper_resai_v2/
+resai_submission.zip
+docs/plans/
+slurm/aegis_repl_*.slurm
