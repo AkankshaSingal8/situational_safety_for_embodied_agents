@@ -620,7 +620,7 @@ def parse_args():
     )
     parser.add_argument(
         "--results_output_dir",
-        default="fastwam_benchmark",
+        default="results/safelibero/policy_baselines/fastwam",
         help="Directory to save JSON results.",
     )
     parser.add_argument(

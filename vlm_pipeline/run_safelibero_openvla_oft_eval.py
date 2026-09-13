@@ -21,7 +21,7 @@ Usage:
       --safety-level I \\
       --num-trials-per-task 50 \\
       --video-output-dir openvla_video \\
-      --results-output-dir openvla_benchmark
+      --results-output-dir results/safelibero/policy_baselines/openvla_oft
 """
 
 import json
@@ -140,7 +140,7 @@ class EvalConfig:
 
     # ── Output paths ───────────────────────────────────────────────────────────
     video_output_dir: str = "openvla_video"
-    results_output_dir: str = "openvla_benchmark"
+    results_output_dir: str = "results/safelibero/policy_baselines/openvla_oft"
     local_log_dir: str = "./experiments/logs"
 
     # ── Misc ───────────────────────────────────────────────────────────────────

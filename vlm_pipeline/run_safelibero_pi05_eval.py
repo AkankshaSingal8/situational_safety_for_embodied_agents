@@ -25,7 +25,7 @@ Usage:
       --task_suite_name safelibero_spatial \\
       --safety_level I \\
       --num_trials_per_task 50 \\
-      --results_output_dir pi05_benchmark
+      --results_output_dir results/safelibero/policy_baselines/pi05
 """
 
 import argparse
@@ -70,7 +70,7 @@ def parse_args():
     parser.add_argument("--num_trials_per_task", type=int, default=50)
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--results_output_dir", type=str, default="pi05_benchmark")
+    parser.add_argument("--results_output_dir", type=str, default="results/safelibero/policy_baselines/pi05")
     parser.add_argument("--video_output_dir", type=str, default="pi05_video")
     parser.add_argument("--save_videos", action="store_true")
     parser.add_argument("--seed", type=int, default=7)

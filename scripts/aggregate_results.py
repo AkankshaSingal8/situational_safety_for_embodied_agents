@@ -8,9 +8,9 @@ Reads OpenVLA and Pi0.5 SafeLIBERO benchmark result JSONs and generates:
 Usage:
   python scripts/aggregate_results.py
   python scripts/aggregate_results.py \\
-      --openvla-dir openvla_benchmark \\
-      --pi05-dir    pi05_benchmark \\
-      --output-dir  results_tables
+      --openvla-dir results/safelibero/policy_baselines/openvla_oft \\
+      --pi05-dir    results/safelibero/policy_baselines/pi05 \\
+      --output-dir  results/tables
 """
 
 import argparse
@@ -34,9 +34,9 @@ LEVELS = ["I", "II"]
 
 def parse_args():
     p = argparse.ArgumentParser(description="Aggregate SafeLIBERO benchmark results")
-    p.add_argument("--openvla-dir", default="openvla_benchmark")
-    p.add_argument("--pi05-dir",    default="pi05_benchmark")
-    p.add_argument("--output-dir",  default="results_tables")
+    p.add_argument("--openvla-dir", default="results/safelibero/policy_baselines/openvla_oft")
+    p.add_argument("--pi05-dir",    default="results/safelibero/policy_baselines/pi05")
+    p.add_argument("--output-dir",  default="results/tables")
     return p.parse_args()
 
 

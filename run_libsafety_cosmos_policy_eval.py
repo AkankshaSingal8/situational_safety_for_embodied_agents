@@ -164,8 +164,8 @@ class EvalConfig:
 
     # ── Output ─────────────────────────────────────────────────────────────────
     video_output_dir:   str = "cosmos_video_libsafety"
-    results_output_dir: str = "cosmos_benchmark_libsafety"
-    local_log_dir:      str = "cosmos_benchmark_libsafety/logs"
+    results_output_dir: str = "results/libsafety/cosmos"
+    local_log_dir:      str = "results/libsafety/cosmos/logs"
     run_id_note:         Optional[str] = None
 
     # fmt: on

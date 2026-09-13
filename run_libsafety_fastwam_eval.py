@@ -463,7 +463,7 @@ def parse_args():
     parser.add_argument("--max_steps", type=int, default=_DEFAULT_MAX_STEPS)
     parser.add_argument("--ckpt_path", required=True, help="Path to Fast-WAM checkpoint (.pt file).")
     parser.add_argument("--stats_path", required=True, help="Path to dataset_stats.json.")
-    parser.add_argument("--results_output_dir", default="fastwam_benchmark_libsafety")
+    parser.add_argument("--results_output_dir", default="results/libsafety/fastwam")
     parser.add_argument("--video_output_dir", default="fastwam_video_libsafety")
     parser.add_argument("--seed", type=int, default=195)
     parser.add_argument("--task_indices", nargs="+", type=int, default=None,

@@ -169,7 +169,7 @@ class EvalConfig:
 
     # ── Output ─────────────────────────────────────────────────────────────────
     video_output_dir:   str = "cosmos_video"
-    results_output_dir: str = "cosmos_benchmark"
+    results_output_dir: str = "results/safelibero/policy_baselines/cosmos"
     local_log_dir:      str = "./logs"
 
     # ── W&B ────────────────────────────────────────────────────────────────────

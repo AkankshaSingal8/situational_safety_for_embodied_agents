@@ -35,7 +35,7 @@ NUM_TRIALS="${NUM_TRIALS:-50}"                   # Rollouts per task
 
 # Output
 VIDEO_DIR="${VIDEO_DIR:-../openvla_video}"
-RESULTS_DIR="${RESULTS_DIR:-../openvla_benchmark}"
+RESULTS_DIR="${RESULTS_DIR:-../results/safelibero/policy_baselines/openvla_oft}"
 RUN_NOTE="${RUN_NOTE:-}"                         # Optional suffix appended to run_id
 
 # ── Run ───────────────────────────────────────────────────────────────────────

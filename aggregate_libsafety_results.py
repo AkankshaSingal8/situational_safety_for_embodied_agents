@@ -19,7 +19,7 @@ Handles both JSON schemas seen in this repo:
 
 Usage:
     python aggregate_libsafety_results.py \
-        --results_dir cosmos_benchmark_libsafety_full \
+        --results_dir results/libsafety/cosmos \
         --suites human_safety obstacle_avoidance obstacle_avoidance_human affordance
 """
 
