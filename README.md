@@ -17,9 +17,9 @@ The repository covers experiments on two safety benchmarks:
 Base policies evaluated: OpenVLA, OpenVLA-OFT, π0 / π0.5 (openpi), NVIDIA Cosmos
 Policy, and Fast-WAM.
 
-See [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md) for the research brief and the
+See [`docs/project_overview.md`](docs/project_overview.md) for the research brief and the
 six-level safety taxonomy, and
-[`Hierarchical_symbolic_safety.md`](Hierarchical_symbolic_safety.md) for the symbolic
+[`docs/related_work.md`](docs/related_work.md) for the symbolic
 formulation.
 
 ## Repository layout
@@ -69,16 +69,16 @@ The two benchmarks need different stacks; each has a setup script.
 
 ```bash
 # SafeLIBERO
-bash libero_env_setup.sh            # LIBERO + robosuite + MuJoCo (Python 3.8)
-bash openvla_safelibero_setup.sh    # OpenVLA-OFT policy stack (Python 3.10)
-bash qwen_vlm_env_setup.sh          # local Qwen-VL server
-bash openpi_setup.sh                # π0.5 policy stack
+bash setup/safelibero/libero_env_setup.sh            # LIBERO + robosuite + MuJoCo (Python 3.8)
+bash setup/safelibero/openvla_safelibero_setup.sh    # OpenVLA-OFT policy stack (Python 3.10)
+bash setup/safelibero/qwen_vlm_env_setup.sh          # local Qwen-VL server
+bash setup/safelibero/openpi_setup.sh                # π0.5 policy stack
 
 # LIBERO-Safety
-bash libsafety_client_setup.sh      # LIBERO-Safety rollout client (Python 3.10+;
+bash setup/libsafety/libsafety_client_setup.sh      # LIBERO-Safety rollout client (Python 3.10+;
                                     #   3.8 does NOT work — the benchmark uses PEP 604 syntax)
-bash libsafety_openvla_setup.sh     # OpenVLA / OpenVLA-OFT eval env
-bash libsafety_openpi_setup.sh      # π0 / π0.5 server env (Python 3.11)
+bash setup/libsafety/libsafety_openvla_setup.sh     # OpenVLA / OpenVLA-OFT eval env
+bash setup/libsafety/libsafety_openpi_setup.sh      # π0 / π0.5 server env (Python 3.11)
 ```
 
 ---
@@ -97,7 +97,7 @@ python vlm_pipeline/run_safelibero_fol_openvla_eval.py \
     --task_suite_name safelibero_spatial --safety_level I \
     --num_trials_per_task 50 \
     --use_fol_filter True --fol_level 1 \
-    --results_output_dir fol_spatial_L1_n50 \
+    --results_output_dir results/safelibero/fol/v1_clean/spatial_L1 \
     --center_crop True --seed 7
 ```
 
@@ -128,8 +128,8 @@ python vlm_prompt_runner/run_majority_vote_experiment.py --help
 ### 1. Fetch assets and checkpoints
 
 ```bash
-bash libsafety_download_assets.sh        # needs huggingface_hub in the active env
-bash libsafety_download_checkpoints.sh   # pi0 / pi0.5 openpi weights
+bash setup/libsafety/libsafety_download_assets.sh        # needs huggingface_hub in the active env
+bash setup/libsafety/libsafety_download_checkpoints.sh   # pi0 / pi0.5 openpi weights
 ```
 
 ### 2. Point LIBERO at its config directory
@@ -160,7 +160,7 @@ Use `--task_index N` instead of `--all_tasks True` to run a single task.
 **π0 / π0.5** — start the policy server, then run the client:
 
 ```bash
-bash libsafety_serve_openpi.sh pi05_libero 8000    # in the libsafety_openpi env
+bash setup/libsafety/libsafety_serve_openpi.sh pi05_libero 8000    # in the libsafety_openpi env
 python run_libsafety_eval_openpi.py \
     --task_suite_name obstacle_avoidance --all_tasks True \
     --num_trials_per_task 3 --port 8000 \
@@ -242,7 +242,7 @@ python -m pytest epistemic_uncertainty/tests
 - **CAR** — Collision Avoidance Rate: episodes with no obstacle contact.
 - **ETS** — Execution Time Steps: mean episode length.
 
-Headline results: [`results_tables/summary_table.md`](results_tables/summary_table.md)
+Headline results: [`results/tables/summary_table.md`](results/tables/summary_table.md)
 and [`fol_safety_filter/README.md`](fol_safety_filter/README.md).
 
 ## License

@@ -1,88 +1,68 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working in this repository.
 
-## Project Overview
+## What this project is
 
-Research prototype for **semantic safety filtering in robot manipulation**. VLMs analyze robot workspace images to extract semantic constraints (avoid water, fire, heat, etc.), which are then converted to Control Barrier Functions (CBFs) that filter robot actions in real time — without requiring explicit 3D perception.
+Semantic safety filtering for vision-language-action (VLA) robot policies. A VLM
+proposes open-vocabulary safety predicates from robot observations; those are
+grounded into parametric spatial constraints, assembled into control barrier
+functions (CBFs), and used to filter the policy's nominal action each timestep.
 
-## Running the Code
+**The live method is `fol_safety_filter/`** — first-order-logic predicates →
+knowledge base → CBF mapper → runtime filter. It produced every reported number
+and is invoked by `vlm_pipeline/run_safelibero_fol_openvla_eval.py`.
 
-Each module has a `if __name__ == "__main__"` demo that runs standalone (all VLM calls have mock fallbacks when no API key is available):
+> Historical note: earlier revisions of this file described an "M1 (Seg+VLM) /
+> M2 (VLM-only) / M3 (3D+VLM)" architecture. That paradigm was retired. Its
+> prototypes survive in `semantic_cbf/` (2D simulation, mocked VLM calls,
+> no eval path) and parts of `vlm_pipeline/`. Do not treat them as current.
 
-```bash
-# Core VLM→CBF pipeline
-python3 semantic_cbf/vlm_cbf_pipeline.py
+## Two benchmarks, opposite safety semantics
 
-# Multi-prompt strategy (main approach from paper)
-python3 semantic_cbf/multiprompt_pipeline.py
+This is the single most important fact when touching metrics:
 
-# VLA + CBF integration demo (mock VLA by default)
-python3 semantic_cbf/vla_cbf_integration.py
-python3 semantic_cbf/vla_cbf_integration.py --use-vlm   # with Claude API
-
-# Latent-space CBF demo
-python3 semantic_cbf/latent_cbf.py
-```
-
-Pass a Claude API key via the `api_key` parameter in code, or set `ANTHROPIC_API_KEY` in the environment.
-
-## Dependencies
-
-No `requirements.txt` — install as needed:
-- `numpy`, `matplotlib` — always required
-- `anthropic` — for live VLM calls (all modules have mock fallbacks)
-- `torch`, `torchvision`, `transformers` — only for `latent_cbf.py`
-
-## Architecture
-
-**Data flow:**
-```
-Image → VLM Analysis → SafetyContext → CBFConstructor → CBFSafetyFilter (QP) → filtered robot action
-```
-
-**Three integration paradigms** (all in `vla_cbf_integration.py`):
-1. **Post-hoc filter (AEGIS-style)** — VLA generates action → CBF-QP corrects it. No retraining.
-2. **Training-time CBF** — CBF constraints embedded in RL reward (`CBFAugmentedReward`).
-3. **Latent-space CBF** — Safety filter in VLM embedding space (`latent_cbf.py`).
-
-### Key Classes
-
-| Class | File | Role |
+| | SafeLIBERO (arXiv:2512.11891) | LIBERO-Safety (arXiv:2606.23686) |
 |---|---|---|
-| `VLMSceneAnalyzer` | `vlm_cbf_pipeline.py` | Single-prompt VLM scene analysis |
-| `MultiPromptVLMAnalyzer` | `multiprompt_pipeline.py` | Per-pair multi-prompt with majority voting (main approach) |
-| `CBFConstructor` | `vlm_cbf_pipeline.py` | Converts `SemanticConstraint` objects → differentiable CBF functions (superquadrics) |
-| `CBFSafetyFilter` | `vlm_cbf_pipeline.py` | QP safety filter via Dykstra's algorithm |
-| `SafetyMarginNetwork` | `latent_cbf.py` | Neural network for learned latent CBF |
-| `LatentCBFTrainer` | `latent_cbf.py` | Trains safety margin net with Lipschitz/gradient penalties |
-| `VLASafetyFilterLayer` | `vla_cbf_integration.py` | Integration layer connecting VLA output to CBF filter |
-| `ManipulationSimulator2D` | `vlm_cbf_pipeline.py` | 2D simulation environment used for all demos |
+| On violation | episode continues | **episode terminates, scored a failure** |
+| Primary metric | TSR (completion, collisions ignored) | SR (completion **with no** violation) |
+| Collision signal | >1 mm hazard displacement | BDDL `:constraints` predicates |
 
-### Core Data Structures (`vlm_cbf_pipeline.py`)
+**SafeLIBERO TSR and LIBERO-Safety SR are not commensurable and must never share
+a column.** See `docs/experimental_setup_appendix.md` for the full protocol with
+every value traced to `file:line`.
 
-- `ObjectInfo` — scene object with position, dimensions, semantic label
-- `SemanticConstraint` — typed constraint (spatial/behavioral/pose) between objects
-- `SafetyContext` — complete VLM analysis output; input to `CBFConstructor`
+## Layout
 
-### Multi-Prompt Strategy
+| Path | Contents |
+|---|---|
+| `fol_safety_filter/` | The method: predicates, KB, rule composer, VLM grounding, CBF mapper, runtime filter |
+| `vlm_pipeline/` | SafeLIBERO eval drivers + env helpers. Mixed: also holds retired CBF prototypes |
+| `run_libsafety_*.py`, `libsafety_*.py`, `flow_cbf_*.py` | LIBERO-Safety eval drivers and the flow-CBF barrier |
+| `vlm_prompt_runner/` | Multi-model VLM prompt harness (Anthropic/OpenAI/Gemini/Qwen) with majority voting |
+| `semantic_cbf/`, `epistemic_uncertainty/` | Self-contained; not on any eval path. Retained, not current |
+| `results/` | All results, split `safelibero/` vs `libsafety/` so the two cannot be conflated |
+| `slurm/{safelibero,libsafety}/` | Job scripts for the reported conditions only |
+| `setup/` | Environment bootstrap, grouped by benchmark |
 
-The key research contribution (Brunke et al. RA-L 2025): instead of one monolithic VLM prompt, decompose into per-(object, relationship) queries with majority voting. Claims 99% recall vs 78% for single-prompt baseline.
+## Known issues — read before trusting a metric
 
-### CBF Construction
+`docs/code_review_findings.md` records 18 defects, several unfixed on this branch.
+The ones that change numbers:
 
-Superquadric barrier functions:
-```
-h(x) = ((|dx|/ax)^(2/ε) + (|dy|/ay)^(2/ε))^ε - 1
-```
-`h > 0` = safe, `h < 0` = unsafe. Each semantic relationship type (`above`, `around`, `near`) maps to a different barrier shape.
+- **`CheckRobotContact` can never fire** (appends geom *indices*, tested by
+  *name*). The arm-hits-hazard channel yields zero detections on all four
+  LIBERO-Safety suites. `affordance` has no `:constraints` block at all, so its
+  CAR ≡ 1.000 vacuously. Use `libsafety_contact.py` for a real robot-contact
+  metric; `patches/LIBERO-Safety.patch` fixes the predicate but is not applied.
+- Several `fol_*_n50` numbers were produced by an uncommitted working tree and
+  are not reproducible from any commit. See `docs/restructure_plan.md`.
 
-### Safety Filter (QP)
+## Conventions
 
-Solved at each timestep:
-```
-min ||u - u_cmd||²
-s.t. ∇h_i · u ≥ -α_i(h_i)  for all active CBFs
-     ||u||∞ ≤ u_max
-```
-Implemented via Dykstra's iterative projection (no external QP solver needed).
+- `MUJOCO_GL=egl` for all headless rendering.
+- The simulator seed moves **object positions** even with a fixed initial state,
+  so every method in a comparison table must share `env_seed`. It is deliberately
+  separate from the torch/numpy `seed`.
+- Tests: `python -m pytest fol_safety_filter/tests vlm_prompt_runner/tests`.
+  `epistemic_uncertainty/tests` additionally needs `torch`.
