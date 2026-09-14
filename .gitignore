@@ -74,3 +74,6 @@ genesis_bakeoff/
 
 # semantic_cbf demo output
 semantic_cbf/_demo_output/
+
+# untracked vendored policy clones (not submodules)
+dream-policy/
