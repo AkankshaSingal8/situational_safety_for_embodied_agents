@@ -90,8 +90,12 @@ def print_comparison(baseline, fol):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--baseline", default="baseline_benchmark")
-    parser.add_argument("--fol", default="fol_benchmark")
+    # Defaults point at the current results tree. The old n=40 generation
+    # (baseline_benchmark / fol_benchmark) lives on archive/pre-release-2026-09.
+    parser.add_argument("--baseline",
+                        default="results/safelibero/fol/baseline_og10/L1")
+    parser.add_argument("--fol",
+                        default="results/safelibero/fol/v20/L1")
     parser.add_argument("--suite", default="safelibero_spatial")
     parser.add_argument("--level", default="I")
     args = parser.parse_args()
