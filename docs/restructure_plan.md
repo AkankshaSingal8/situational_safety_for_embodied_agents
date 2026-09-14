@@ -188,3 +188,61 @@ explicitly — the cost lands in the paper, not in CI.
   `results/uncertainty_eval`, which **collides with the new results/ tree**.
 - Moving `run_libsafety_*.py` into `libsafety_eval/` changes `Path(__file__).parent`
   depth by one for three drivers — centralise in `libsafety_eval/_paths.py`.
+
+---
+
+## Post-restructure verification (2026-09-13)
+
+Evidence that the restructure changed no experiment and no result.
+
+### Eval-path code
+Diffed every live module against `paper/v1-pre-restructure`:
+
+| Module | Status |
+|---|---|
+| `fol_safety_filter/{filter,cbf_mapper,primitives,kb,rule_composer}.py` | **unchanged** |
+| `vlm_pipeline/{safelibero_utils,semantic_cbf_filter}.py` | **unchanged** |
+| `vlm_pipeline/run_safelibero_fol_openvla_eval.py` | 3 changes, all verified inert |
+
+The three changes to the headline driver:
+1. A docstring example path.
+2. `results_output_dir` default. **All 27 SLURM scripts that invoke this driver
+   pass `--results_output_dir` explicitly**, so the default is never used by a
+   reported run.
+3. The `sys.path.insert` for `openvla-oft`. It previously pointed at
+   `vlm_pipeline/openvla-oft`, which does not exist -- inserting a nonexistent
+   path is silently ignored, so the import resolved through `PYTHONPATH`, which
+   the SLURM scripts set to `$REPO/openvla-oft`. The corrected insert resolves
+   to that same directory, so the same code is imported.
+
+### Result data
+Compared JSON blobs by content hash across the two trees:
+
+- 199 result JSONs **identical content**, relocated only.
+- 8 JSONs new to `main`, all restored from `fol-safety-filter` and verified
+  byte-identical to that branch (the v15/v16/v17/v172 data that `main`'s tables
+  already cited).
+- 33 archived to `archive/pre-release-2026-09`.
+- **0 result files modified or invented.**
+
+### Code health
+104 tracked `.py` files parse; 0 dangling imports of any deleted module;
+137 tests pass.
+
+### Pre-existing discrepancies found while verifying (NOT caused by this work)
+
+1. **`results/tables/summary_table.md` is hand-curated, not aggregator output.**
+   It carries prose headers `scripts/aggregate_results.py` never emits, and its
+   pi0.5 Long-I row (23.0 / 60.5 / 180.2) does not match what the aggregator
+   computes from the data (58.0 / 15.0 / 408.1). Verified this is not a
+   restructure artifact: the `pi05_benchmark/safelibero_long/I/` file set is
+   identical before and after, so `sorted(glob)[-1]` selects the same file.
+2. **`scripts/aggregate_results.py` cannot read the OpenVLA results layout.** It
+   expects `<suite>/<level>/`, but the OpenVLA JSONs are flat with the level in
+   the filename (`...-levelII-...json`). This was equally true before the
+   restructure. It is why the regenerated table shows `-` in the OpenVLA
+   columns.
+
+Both mean the committed tables cannot currently be regenerated from the
+committed data. Worth resolving before publication, but they predate and are
+independent of the restructure.
