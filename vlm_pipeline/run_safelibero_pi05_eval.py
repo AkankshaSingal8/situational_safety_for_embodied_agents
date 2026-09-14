@@ -98,6 +98,14 @@ def _get_libero_env(task, safety_level, resolution, seed):
 
 
 def _quat2axisangle(quat):
+    """Copied from robosuite (see vlsa-aegis/openpi/examples/libero/main.py).
+
+    The copy() is load-bearing: the callsite passes obs["robot0_eef_quat"]
+    directly, so clamping quat[3] in place would mutate the observation dict
+    the rest of the step still reads. Every other copy of this helper in the
+    repo copies first; this one had drifted.
+    """
+    quat = quat.copy()
     if quat[3] > 1.0:
         quat[3] = 1.0
     elif quat[3] < -1.0:

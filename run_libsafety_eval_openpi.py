@@ -134,7 +134,7 @@ def save_rollout_video(replay_images, video_dir: pathlib.Path, task_suite_name, 
         / f"{DATE_TIME}--{task_suite_name}--task{task_index}--episode={episode_idx}"
           f"--success={success}--task={processed_task_description}.mp4"
     )
-    writer = imageio.get_writer(str(mp4_path), fps=10)
+    writer = imageio.get_writer(str(mp4_path), fps=30)  # match every other driver
     for img in replay_images:
         writer.append_data(img)
     writer.close()
