@@ -5,6 +5,17 @@
 **Episodes:** 50 per task × 4 tasks = 200 episodes per condition
 
 
+
+> ⚠️ **The π0.5 Long / Level-I row is stale.** It reads 23.0 / 60.5 / 180.2, which
+> comes from an incomplete run (the footnote below records tasks 2–3 executing 0
+> episodes). The result file in this repository,
+> `results/safelibero/policy_baselines/pi05/safelibero_long/I/results_2026_06_18-13_39_39.json`,
+> is a **complete** 200-episode run across all four tasks and gives
+> **58.0 / 15.0 / 408.1**. Every other row in this table reproduces exactly from
+> the committed data via `python scripts/aggregate_results.py`. The number above
+> has been left as published rather than silently edited — regenerate the table
+> to adopt the complete run.
+
 | Suite   | Level | OVL TSR | OVL CAR | OVL ETS | Pi0.5 TSR | Pi0.5 CAR | Pi0.5 ETS |
 |---------|-------|---------|---------|---------|-----------|-----------|-----------|
 | Spatial | I     | 42.0%   | 12.0%   | 219.2   | 67.0%     | 14.0%     | 188.2     |

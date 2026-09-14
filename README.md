@@ -18,9 +18,34 @@ Base policies evaluated: OpenVLA, OpenVLA-OFT, π0 / π0.5 (openpi), NVIDIA Cosm
 Policy, and Fast-WAM.
 
 See [`docs/project_overview.md`](docs/project_overview.md) for the research brief and the
-six-level safety taxonomy, and
-[`docs/related_work.md`](docs/related_work.md) for the symbolic
-formulation.
+six-level safety taxonomy, and [`docs/related_work.md`](docs/related_work.md) for how this
+sits against comparable work.
+
+## What you can run
+
+Be aware before you invest time: this is research code for a GPU cluster, and most
+of it needs one.
+
+| | Needs | Works from a clean clone |
+|---|---|---|
+| Unit tests (`fol_safety_filter`, `vlm_prompt_runner`) | nothing | **yes** — 137 tests, ~20 s |
+| `semantic_cbf/` 2D demos | `numpy`, `matplotlib` | **yes** — writes plots to `semantic_cbf/_demo_output/` |
+| Reading `results/` and `docs/` | nothing | **yes** |
+| VLM prompt experiments | an API key in `.env`, or a local Qwen server | yes, given a key |
+| Any SafeLIBERO / LIBERO-Safety rollout | GPU, MuJoCo, a policy checkpoint, and one of the conda envs in `setup/` | no — see Setup |
+
+```bash
+pip install -r requirements.txt
+python -m pytest fol_safety_filter/tests vlm_prompt_runner/tests   # 137 passed
+```
+
+The `setup/` scripts build the simulator and policy environments. They are written for
+a SLURM cluster and take a long time; they derive paths from the repo root, so they no
+longer assume the author's machine, but they do assume `conda` and a GPU.
+
+**Before citing any number in `results/`**, read
+[`docs/code_review_findings.md`](docs/code_review_findings.md) — several collision
+columns do not measure what their name suggests.
 
 ## Repository layout
 
@@ -28,7 +53,7 @@ formulation.
 |---|---|
 | `fol_safety_filter/` | First-order-logic safety filter: predicate primitives, knowledge base, rule composer, VLM grounding, CBF mapper, runtime filter (`filter.py`) |
 | `vlm_prompt_runner/` | Multi-model VLM prompt harness (Anthropic / OpenAI / Gemini / Qwen) with majority voting and accuracy scoring |
-| `semantic_cbf/` | Standalone semantic-CBF prototypes: VLM→CBF pipeline, multi-prompt strategy, VLA integration, latent-space CBF |
+| `semantic_cbf/` | Retired 2D prototypes (mocked VLM calls, no eval path). Kept for reference; not the method behind any reported number |
 | `vlm_pipeline/` | SafeLIBERO eval drivers, perception/grounding accuracy studies |
 | `run_libsafety_*.py` | LIBERO-Safety eval drivers (OpenVLA/OFT, openpi, Cosmos, Fast-WAM, flow-CBF, AEGIS) |
 | `setup/` | Environment bootstrap, grouped by benchmark (`safelibero/`, `libsafety/`) |

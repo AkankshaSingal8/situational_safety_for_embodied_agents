@@ -47,13 +47,53 @@ def latest_result_file(results_dir: Path) -> Optional[Path]:
 
 
 def load_result(results_dir: Path, suite: str, level: str) -> Optional[Dict]:
-    """Load the latest result JSON for a given (suite, level)."""
-    path = results_dir / suite / level
-    f = latest_result_file(path)
+    """Load the latest result JSON for a given (suite, level).
+
+    Two layouts exist in results/ and both must be readable:
+
+      nested: <suite>/<level>/results_*.json        (pi0.5, Cosmos, Fast-WAM)
+      flat:   <suite>/results_*-level<LEVEL>-*.json (OpenVLA-OFT)
+
+    Only the nested form was handled before, so every OpenVLA column in a
+    regenerated table came out empty while the committed table showed numbers --
+    i.e. the published tables could not be reproduced from the published data.
+    """
+    nested = results_dir / suite / level
+    f = latest_result_file(nested)
+    if f is None:
+        # flat layout: the level is encoded in the filename as "-levelI-" / "-levelII-"
+        suite_dir = results_dir / suite
+        if suite_dir.is_dir():
+            marker = f"-level{level}-"
+            candidates = sorted(
+                p for p in suite_dir.glob("results_*.json") if marker in p.name
+            )
+            f = candidates[-1] if candidates else None
     if f is None:
         return None
     with open(f) as fh:
         return json.load(fh)
+
+
+def overall_metric(result: Optional[Dict], name: str):
+    """Read an overall metric from either result schema.
+
+    Two shapes exist in results/ and both are real:
+      flat:   {"overall_TSR": ...}              (pi0.5, Cosmos, Fast-WAM)
+      nested: {"overall": {"TSR": ...}}         (OpenVLA-OFT, the FOL driver)
+
+    Only the flat form was read before, so every OpenVLA cell in a regenerated
+    table was blank even when the data was present.
+    """
+    if not result:
+        return None
+    flat = result.get(f"overall_{name}")
+    if flat is not None:
+        return flat
+    overall = result.get("overall")
+    if isinstance(overall, dict):
+        return overall.get(name)
+    return None
 
 
 def fmt_pct(v) -> str:
@@ -141,9 +181,9 @@ def write_per_task_table(model: str, suite: str, level: str, result: dict, outpu
     ov_eps  = result.get("total_episodes", "—")
     ov_succ = result.get("total_successes", "—")
     ov_coll = result.get("total_collisions", "—")
-    ov_tsr  = fmt_pct(result.get("overall_TSR"))
-    ov_car  = fmt_pct(result.get("overall_CAR"))
-    ov_ets  = fmt_float(result.get("overall_ETS_mean"))
+    ov_tsr  = fmt_pct(overall_metric(result, "TSR"))
+    ov_car  = fmt_pct(overall_metric(result, "CAR"))
+    ov_ets  = fmt_float(overall_metric(result, "ETS_mean"))
 
     md_lines.append(f"| **Overall** | | **{ov_eps}** | **{ov_succ}** | **{ov_coll}** | **{ov_tsr}** | **{ov_car}** | **{ov_ets}** |")
     csv_rows.append(["Overall", "", ov_eps, ov_succ, ov_coll, ov_tsr, ov_car, ov_ets])
@@ -182,12 +222,12 @@ def main():
             summary_rows.append({
                 "suite_label": SUITE_LABELS[suite],
                 "level": level,
-                "openvla_tsr": fmt_pct(ov.get("overall_TSR")    if ov else None),
-                "openvla_car": fmt_pct(ov.get("overall_CAR")    if ov else None),
-                "openvla_ets": fmt_float(ov.get("overall_ETS_mean") if ov else None),
-                "pi05_tsr":    fmt_pct(pi.get("overall_TSR")    if pi else None),
-                "pi05_car":    fmt_pct(pi.get("overall_CAR")    if pi else None),
-                "pi05_ets":    fmt_float(pi.get("overall_ETS_mean") if pi else None),
+                "openvla_tsr": fmt_pct(overall_metric(ov, "TSR")),
+                "openvla_car": fmt_pct(overall_metric(ov, "CAR")),
+                "openvla_ets": fmt_float(overall_metric(ov, "ETS_mean")),
+                "pi05_tsr":    fmt_pct(overall_metric(pi, "TSR")),
+                "pi05_car":    fmt_pct(overall_metric(pi, "CAR")),
+                "pi05_ets":    fmt_float(overall_metric(pi, "ETS_mean")),
             })
 
             if ov:

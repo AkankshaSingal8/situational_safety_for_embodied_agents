@@ -59,3 +59,22 @@ tables/                        aggregated markdown tables
 5. Aggregation scripts select runs with `sorted(glob)[-1]`, so **renaming or
    adding a file inside one of these directories can silently change which run a
    table reports.**
+
+## Reproducing the tables
+
+```bash
+python scripts/aggregate_results.py          # writes results/tables/
+```
+
+7 of the 8 rows in `tables/summary_table.md` regenerate **exactly** from the
+committed data. The eighth -- π0.5 Long / Level-I -- does not: the published row
+(23.0 / 60.5 / 180.2) came from an incomplete run whose tasks 2-3 executed zero
+episodes, while the committed result file is a complete 200-episode run giving
+58.0 / 15.0 / 408.1. The stale value is flagged in place rather than silently
+corrected.
+
+Two result schemas exist and the aggregator reads both: flat
+(`{"overall_TSR": ...}`, used by π0.5 / Cosmos / Fast-WAM) and nested
+(`{"overall": {"TSR": ...}}`, used by OpenVLA-OFT and the FOL driver). It also
+handles both directory layouts: `<suite>/<level>/` and flat `<suite>/` with the
+level in the filename.
