@@ -1,0 +1,17 @@
+# Minimal first-party dependencies -- enough to import the safety filter, the
+# prompt runner, and the analysis scripts, and to run the test suite.
+#
+# The POLICY and SIMULATOR stacks are deliberately NOT listed here: they are
+# large, mutually incompatible, and pinned per-benchmark. Install those with the
+# scripts under setup/ (SafeLIBERO needs Python 3.8-3.10; LIBERO-Safety requires
+# >=3.10 -- it uses PEP 604 syntax).
+numpy>=1.22
+scipy>=1.8
+pytest>=7.0
+
+# Optional, per backend -- install only what you use:
+#   anthropic      vlm_prompt_runner Anthropic backend
+#   openai         vlm_prompt_runner OpenAI backend
+#   google-genai   vlm_prompt_runner Gemini backend
+#   torch          epistemic_uncertainty/, local Qwen-VL
+#   matplotlib     semantic_cbf/ demo plots

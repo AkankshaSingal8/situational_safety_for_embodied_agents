@@ -9,7 +9,7 @@
 #SBATCH --time=05:00:00
 #SBATCH --output=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.out
 #SBATCH --error=/ocean/projects/cis250185p/asingal/slurm_logs/%x_%j.err
-#SBATCH --mail-user=asingal2@andrew.cmu.edu
+#SBATCH --mail-user=${SLURM_MAIL_USER}   # set this in your environment
 #SBATCH --mail-type=END,FAIL
 
 REPO=/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents

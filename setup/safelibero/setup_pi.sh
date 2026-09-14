@@ -1,3 +1,6 @@
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cd vlsa-aegis
 pip install -r requirements.txt
 pip install av --no-build-isolation --extra-index-url https://download.pytorch.org/whl/cu118
@@ -24,12 +27,12 @@ pip uninstall tensorflow-addons -y
 pip install typeguard==4.5.1
 
 export MUJOCO_GL=egl
-export PYTHONPATH=$PYTHONPATH:/ocean/projects/cis250185p/asingal/vlsa-aegis
+export PYTHONPATH=$PYTHONPATH:"$REPO_ROOT"/vlsa-aegis
 
 pip install gsutil
 gsutil -m cp -r gs://openpi-assets/checkpoints/pi05_libero ./checkpoints/
 
-cd /ocean/projects/cis250185p/asingal/vlsa-aegis
+cd "$REPO_ROOT"/vlsa-aegis
 git clone https://github.com/IDEA-Research/GroundingDINO.git
 cd GroundingDINO
 wget https://huggingface.co/ShilongLiu/GroundingDINO/resolve/main/groundingdino_swint_ogc.pth

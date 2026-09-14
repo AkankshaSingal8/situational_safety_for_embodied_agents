@@ -1,3 +1,6 @@
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 # Step 1: allocate the node
 salloc -J aegis_job -p GPU --gres=gpu:h100-80:1 --time=08:00:00
 
@@ -20,14 +23,14 @@ python openpi/scripts/serve_policy.py \
 
 
 conda activate libero_env
-cd /ocean/projects/cis250185p/asingal/vlsa-aegis
+cd "$REPO_ROOT"/vlsa-aegis
 export PYTHONPATH=$PYTHONPATH:$(pwd)/../SafeLIBERO/safelibero
 export PYTHONPATH=$PYTHONPATH:$(pwd)/main
 export PYTHONPATH=$PYTHONPATH:$(pwd)/openpi/src
 
-#find /ocean/projects/cis250185p/asingal/envs/libero -name "libstdc++.so.6" 2>/dev/null
+#find "${CONDA_ENV_ROOT:-$HOME/envs}"/libero -name "libstdc++.so.6" 2>/dev/null
 #copy the above to the below command
-#export LD_PRELOAD=/ocean/projects/cis250185p/asingal/envs/libero/lib/libstdc++.so.6
+#export LD_PRELOAD="${CONDA_ENV_ROOT:-$HOME/envs}"/libero/lib/libstdc++.so.6
 
 python main/pi05_evaluation.py \
     --task-suite-name safelibero_spatial \

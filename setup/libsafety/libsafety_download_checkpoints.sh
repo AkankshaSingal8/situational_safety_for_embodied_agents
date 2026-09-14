@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 set -euo pipefail
 
-LIBSAFETY_DIR="/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety"
+LIBSAFETY_DIR="$REPO_ROOT/LIBERO-Safety"
 mkdir -p "${LIBSAFETY_DIR}/checkpoints"
 
 pip install --quiet gsutil || true

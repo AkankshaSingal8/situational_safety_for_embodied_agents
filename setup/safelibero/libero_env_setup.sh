@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 set -euo pipefail
 
 CONDA_BASE=$(conda info --base)
@@ -26,7 +29,7 @@ python -c "import torch; print(torch.__version__, torch.cuda.is_available(), tor
 conda install -c conda-forge "av>=9.0.0" -y --freeze-installed
 
 # --- 4. Install safelibero/libero editable ---
-pip install -e /ocean/projects/cis250185p/asingal/SafeLIBERO/safelibero --no-deps
+pip install -e "$REPO_ROOT"/SafeLIBERO/safelibero --no-deps
 
 # --- 5. Install all requirements from main/requirements.txt
 #        EXCEPT torch/torchvision/torchaudio (already installed)
@@ -95,7 +98,7 @@ pip install --no-deps zai-sdk==0.0.4.2
 pip install "pyjwt==2.8.0"
 
 # --- 6. Install openpi-client (connects to serve_policy server) ---
-pip install -e /ocean/projects/cis250185p/asingal/vlsa-aegis/openpi/packages/openpi-client --no-deps
+pip install -e "$REPO_ROOT"/vlsa-aegis/openpi/packages/openpi-client --no-deps
 
 pip install "cachetools>=4.2.2" "httpx>=0.23.0"
 pip install httpx future

@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 set -euo pipefail
 
-ENV_PREFIX="/ocean/projects/cis250185p/asingal/envs/libsafety_openvla"
-LIBSAFETY_DIR="/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/.worktrees/libero-safety-benchmark/LIBERO-Safety"
-OPENVLA_OFT_REPO="/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/openvla-oft"
+ENV_PREFIX=""${CONDA_ENV_ROOT:-$HOME/envs}"/libsafety_openvla"
+LIBSAFETY_DIR="$REPO_ROOT/LIBERO-Safety"
+OPENVLA_OFT_REPO="$REPO_ROOT/openvla-oft"
 
 source "$(conda info --base)/etc/profile.d/conda.sh"
 

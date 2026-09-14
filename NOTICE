@@ -1,0 +1,38 @@
+NOTICE
+======
+
+This repository is MIT licensed (see LICENSE). It also contains material derived
+from third-party projects, which carry their own licenses.
+
+Submodules (not covered by this repository's LICENSE)
+-----------------------------------------------------
+  SafeLIBERO      https://huggingface.co/datasets/THURCSCT/SafeLIBERO
+  LIBERO-Safety   https://github.com/LIBERO-SAFETY/LIBERO-Safety
+  openvla-oft     https://github.com/moojink/openvla-oft
+  cosmos-policy   https://github.com/NVlabs/cosmos-policy
+  vlsa-aegis      https://github.com/THU-RCSCT/vlsa-aegis
+
+patches/
+--------
+Each file under patches/ is a diff against the corresponding submodule above and
+is a derivative work of that project, NOT of this repository. Apply them to the
+submodule they name; they are governed by that project's license, not by this
+repository's MIT license.
+
+Derived source files
+--------------------
+Several eval drivers adapt upstream code and say so in their module docstrings,
+naming the specific upstream file:
+
+  run_libsafety_eval_openpi.py   adapts vlsa-aegis/main/pi05_evaluation.py
+  run_libsafety_eval_aegis_gt.py imports AEGIS's CBF math unmodified from
+                                 vlsa-aegis/main/utils.py
+  flow_cbf_sample.py             implements Algorithm 1 of English et al.,
+                                 arXiv:2607.01378
+  _quat2axisangle (several)      copied from robosuite
+
+Benchmark results
+-----------------
+Results under results/ were produced with the benchmarks above. See
+docs/experimental_setup_appendix.md for the protocol and
+docs/code_review_findings.md for known defects in the benchmark metrics.

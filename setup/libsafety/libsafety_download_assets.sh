@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 set -euo pipefail
 
-REPO_ROOT="/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents"
+REPO_ROOT="$REPO_ROOT"
 LIBSAFETY_DIR="${REPO_ROOT}/LIBERO-Safety"
 
 # Requires: pip install -U "huggingface_hub[cli]" in whichever env runs this

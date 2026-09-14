@@ -122,15 +122,14 @@ Aggregate the result JSONs:
 
 ```bash
 python scripts/aggregate_results.py --help
-python final_results.py          # prints the cross-version comparison table
 python compare_results.py --help
 ```
 
 ### VLM prompt experiments
 
 ```bash
-python vlm_prompt_runner/run_experiment.py --help          # single or --models multi
-python vlm_prompt_runner/run_majority_vote_experiment.py --help
+python -m vlm_prompt_runner.run_experiment --help          # single or --models multi
+python -m vlm_prompt_runner.run_majority_vote_experiment --help
 ```
 
 ---
@@ -231,7 +230,7 @@ python validate_flow_cbf_trajectory.py
 
 `slurm/` holds the author's Bridges2 job scripts for every reported condition. They are
 kept as an exact record of how each number was produced, **not** as runnable scripts:
-they hardcode a specific cluster allocation path, and 149 of them resolve the source
+they hardcode a specific cluster allocation path, and 39 of the 59 resolve the source
 tree through a git worktree (`$REPO/.worktrees/...`) that is not part of this
 repository. Adapt the `REPO` / `WT` variables at the top of a script before submitting.
 
@@ -253,6 +252,14 @@ python -m pytest epistemic_uncertainty/tests
 - **TSR** — Task Success Rate: episodes completing the task goal.
 - **CAR** — Collision Avoidance Rate: episodes with no obstacle contact.
 - **ETS** — Execution Time Steps: mean episode length.
+
+> **Before reading the results tables:** several collision columns do not measure
+> what their name suggests. The LIBERO-Safety `CheckRobotContact` predicate can
+> never fire, so the arm-hits-hazard channel yields zero detections on all four
+> suites, and the `affordance` suite declares no constraints at all (its CAR is
+> 1.000 vacuously). The LIBERO-Safety runs here are also 3 trials x 1 seed against
+> the paper's 10 x 3. See [`docs/code_review_findings.md`](docs/code_review_findings.md)
+> and [`results/README.md`](results/README.md) for which columns are trustworthy.
 
 Headline results: [`results/tables/summary_table.md`](results/tables/summary_table.md)
 and [`fol_safety_filter/README.md`](fol_safety_filter/README.md).

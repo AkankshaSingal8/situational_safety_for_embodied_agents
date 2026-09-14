@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 set -euo pipefail
 
-ENV_PREFIX="/ocean/projects/cis250185p/asingal/envs/libsafety_openpi"
-OPENPI_REPO="/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/vlsa-aegis/openpi"
+ENV_PREFIX=""${CONDA_ENV_ROOT:-$HOME/envs}"/libsafety_openpi"
+OPENPI_REPO="$REPO_ROOT/vlsa-aegis/openpi"
 
 source "$(conda info --base)/etc/profile.d/conda.sh"
 

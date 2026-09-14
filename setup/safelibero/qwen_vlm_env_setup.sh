@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 # Sets up the qwen conda env for Qwen2-VL inference.
 # NOTE: As of 2026-04-20 this env is already installed at
-#       /ocean/projects/cis250185p/asingal/envs/qwen
+#       "${CONDA_ENV_ROOT:-$HOME/envs}"/qwen
 #       with transformers==5.5.0.dev0, torch==2.7.1+cu118, qwen-vl-utils==0.0.14
 #
 # Run ONCE on a GPU node if recreating from scratch.
@@ -9,7 +12,7 @@
 set -euo pipefail
 
 ENV_NAME="qwen"
-ENV_PREFIX="/ocean/projects/cis250185p/asingal/envs/${ENV_NAME}"
+ENV_PREFIX=""${CONDA_ENV_ROOT:-$HOME/envs}"/${ENV_NAME}"
 
 source "$(conda info --base)/etc/profile.d/conda.sh"
 

@@ -1,3 +1,6 @@
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 #Run after getting GPU
 #!/usr/bin/env bash
 set -euo pipefail
@@ -6,11 +9,11 @@ set -euo pipefail
 # CONFIGURE THESE PATHS
 ###############################################################################
 ENV_NAME="openvla_libero_merged"
-ENV_PREFIX="/ocean/projects/cis250185p/asingal/envs/${ENV_NAME}"
+ENV_PREFIX=""${CONDA_ENV_ROOT:-$HOME/envs}"/${ENV_NAME}"
 
 # Existing local repos
-OPENVLA_OFT_REPO="/ocean/projects/cis250185p/asingal/openvla-oft"
-SAFELIBERO_REPO="/ocean/projects/cis250185p/asingal/SafeLIBERO/safelibero"
+OPENVLA_OFT_REPO="$REPO_ROOT/openvla-oft"
+SAFELIBERO_REPO="$REPO_ROOT/SafeLIBERO/safelibero"
 
 ###############################################################################
 # CONDA INIT

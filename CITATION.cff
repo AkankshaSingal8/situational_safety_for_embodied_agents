@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: Situational Safety for Embodied Agents
+message: If you use this software or its results, please cite it.
+type: software
+authors:
+  - family-names: Singal
+    given-names: Akanksha
+repository-code: "https://github.com/AkankshaSingal8/situational_safety_for_embodied_agents"
+abstract: >-
+  A VLM-grounded safety filter for vision-language-action policies in tabletop
+  manipulation. Semantic safety predicates proposed by a VLM are grounded into
+  parametric spatial constraints, assembled into control barrier functions, and
+  used to filter a policy's nominal action through a CBF-QP at each timestep.
+  Evaluated on SafeLIBERO and LIBERO-Safety.
+license: MIT

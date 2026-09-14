@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# Repo root, derived rather than hardcoded. Override with REPO_ROOT.
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 set -euo pipefail
 # Usage: bash libsafety_serve_openpi.sh <pi0_libero|pi05_libero> [port]
 #
@@ -14,11 +17,11 @@ set -euo pipefail
 # here to match what's actually importable in this env.
 POLICY_CONFIG="${1:?pass pi0_libero or pi05_libero}"
 PORT="${2:-8000}"
-MAIN_REPO="/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents"
-LIBSAFETY_DIR="${MAIN_REPO}/.worktrees/libero-safety-benchmark/LIBERO-Safety"
+MAIN_REPO="$REPO_ROOT"
+LIBSAFETY_DIR="$REPO_ROOT/LIBERO-Safety"
 
 source "$(conda info --base)/etc/profile.d/conda.sh"
-conda activate /ocean/projects/cis250185p/asingal/envs/libsafety_openpi
+conda activate "${CONDA_ENV_ROOT:-$HOME/envs}"/libsafety_openpi
 
 export XLA_PYTHON_CLIENT_MEM_FRACTION=0.9
 
