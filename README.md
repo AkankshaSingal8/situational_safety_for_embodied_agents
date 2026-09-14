@@ -50,6 +50,18 @@ cd situational_safety_for_embodied_agents
 
 Submodules: `SafeLIBERO`, `LIBERO-Safety`, `openvla-oft`, `cosmos-policy`, `vlsa-aegis`.
 
+The `vlsa-aegis` submodule is pinned to its public upstream commit. The AEGIS
+baseline driver (`run_libsafety_eval_aegis_gt.py`) imports `compute_h_coeffs_3d`
+and `project_matrix` from it unmodified, but the other local changes this project
+made are distributed as a patch rather than a fork:
+
+```bash
+git -C vlsa-aegis apply ../patches/vlsa-aegis.patch
+```
+
+`patches/` holds the same for `SafeLIBERO` and `openvla-oft`. Apply the patch for
+whichever submodule you intend to run.
+
 Headless rendering (any cluster or CI machine) requires:
 
 ```bash
