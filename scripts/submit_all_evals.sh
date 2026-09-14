@@ -2,11 +2,11 @@
 # Submit all OpenVLA and Pi0.5 SafeLIBERO evaluation jobs.
 #
 # Usage:
-#   bash slurm/submit_all_evals.sh              # smoke test first, then full sweep
-#   bash slurm/submit_all_evals.sh --skip-smoke  # skip smoke, submit Pi0.5 immediately
-#   bash slurm/submit_all_evals.sh --dry-run     # print sbatch commands without submitting
-#   bash slurm/submit_all_evals.sh --openvla-only
-#   bash slurm/submit_all_evals.sh --pi05-only
+#   bash scripts/submit_all_evals.sh              # smoke test first, then full sweep
+#   bash scripts/submit_all_evals.sh --skip-smoke  # skip smoke, submit Pi0.5 immediately
+#   bash scripts/submit_all_evals.sh --dry-run     # print sbatch commands without submitting
+#   bash scripts/submit_all_evals.sh --openvla-only
+#   bash scripts/submit_all_evals.sh --pi05-only
 #
 # After all jobs finish, generate tables:
 #   python scripts/aggregate_results.py

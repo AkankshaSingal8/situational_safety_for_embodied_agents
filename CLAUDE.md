@@ -40,10 +40,19 @@ every value traced to `file:line`.
 | `vlm_pipeline/` | SafeLIBERO eval drivers + env helpers. Mixed: also holds retired CBF prototypes |
 | `run_libsafety_*.py`, `libsafety_*.py`, `flow_cbf_*.py` | LIBERO-Safety eval drivers and the flow-CBF barrier |
 | `vlm_prompt_runner/` | Multi-model VLM prompt harness (Anthropic/OpenAI/Gemini/Qwen) with majority voting |
-| `semantic_cbf/`, `epistemic_uncertainty/` | Self-contained; not on any eval path. Retained, not current |
+| `semantic_cbf/` | Retired 2D prototype. Self-contained, on no eval path, kept for reference |
+| `epistemic_uncertainty/` | Self-rooted: own SLURM entry points and tests. Not part of the headline method |
 | `results/` | All results, split `safelibero/` vs `libsafety/` so the two cannot be conflated |
 | `slurm/{safelibero,libsafety}/` | Job scripts for the reported conditions only |
 | `setup/` | Environment bootstrap, grouped by benchmark |
+
+> **Do not delete `vlm_pipeline/semantic_cbf_filter.py`.** It reads as a retired
+> prototype but is a runtime dependency of the live method: `fol_safety_filter/filter.py:36`
+> imports it, and `:368` catches the resulting `ImportError` with a
+> `"Geometry-only mode"` warning. Removing it does not raise -- it silently
+> downgrades the filter to geometry-only and changes every reported number.
+> `vlm_pipeline/save_vlm_inputs.py` is similar: no importer, but it is the only
+> way to regenerate the gitignored `vlm_inputs/` tree the accuracy studies read.
 
 ## Known issues — read before trusting a metric
 

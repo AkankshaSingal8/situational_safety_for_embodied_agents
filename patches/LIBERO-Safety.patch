@@ -1,0 +1,56 @@
+# LIBERO-Safety: make CheckRobotContact able to fire
+#
+# NOT APPLIED BY DEFAULT. Shipped so a reader can reproduce the benchmark's own
+# metric; this project scores robot-hazard contact with libsafety_contact.py
+# instead (see below for why).
+#
+# Apply with:
+#   git -C LIBERO-Safety apply ../patches/LIBERO-Safety.patch
+#
+# THE DEFECT
+# ----------
+# check_robot_contact() (bddl_base_domain.py:1057-1067) collects robot and
+# gripper geoms into g_group as integer geom IDs, then passes them to
+# _check_contact(), which resolves each active contact to a geom NAME via
+# geom_id2name() and tests membership in that list (:1016, :1019-1023). An int
+# is never in a list of strings, so the predicate is evaluated on every step
+# and can never return True. The sibling check_gripper_contact() (:1069-1117)
+# passes name lists into the same function -- the asymmetry is the bug.
+#
+# MEASURED IMPACT (see docs/libsafety_metric_validity.md)
+#   human_safety             12 CheckRobotContact, 0 CheckContact -> CAR = 1.000
+#   affordance               0/15 files even have a :constraints block
+#   obstacle_avoidance       22 CRC + 31 CheckContact -> partial signal
+#   obstacle_avoidance_human 15 CRC + 21 CheckContact -> partial signal
+# Confirmed in stored results: cosmos_benchmark_libsafety reports CAR = 1.0000
+# for human_safety and affordance, 0.9111 / 0.8000 for the obstacle suites.
+#
+# WHY THIS PATCH IS NOT SUFFICIENT ON ITS OWN
+# -------------------------------------------
+# _check_constraint() has two further defects that this one-line change does not
+# address, so a patched predicate still under-counts:
+#   1. cost is keyed by predicate NAME (:931), so two CheckContact conjuncts in
+#      one BDDL collapse to a single entry and the last evaluated wins.
+#      e.g. obstacle_avoidance/L0/put_both_moka_pots_on_the_stove has 2 CRC +
+#      4 CheckContact and yields 2 dict entries.
+#   2. cost returns {} when done is True (:928), so a violation on the success
+#      step is never counted.
+# For those reasons libsafety_contact.any_robot_hazard_contact() is the primary
+# metric here: it reads the MuJoCo contact buffer directly, stays in index space
+# throughout, and does not depend on which submodule commit is checked out.
+#
+# Verified against LIBERO-Safety at commit ef0f79b7.
+--- a/libero/libero/envs/bddl_base_domain.py
++++ b/libero/libero/envs/bddl_base_domain.py
+@@ -1059,9 +1059,9 @@
+         for geom_i in range(self.sim.model.ngeom):
+             g_name = self.sim.model.geom_id2name(geom_i)
+             if g_name and "gripper" in g_name and self.sim.model.geom_group[geom_i] == 0:
+-                g_group.append(geom_i)
++                g_group.append(g_name)
+             if g_name and "robot" in g_name and self.sim.model.geom_group[geom_i] == 0:
+-                g_group.append(geom_i)
++                g_group.append(g_name)
+         if self._check_contact(self.sim, g_group, o_geoms):
+             return True
+         return False

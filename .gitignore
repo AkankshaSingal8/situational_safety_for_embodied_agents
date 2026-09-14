@@ -71,3 +71,6 @@ genesis_bakeoff/
 
 # Aggregator output — regenerate with scripts/aggregate_*.py
 **/AGGREGATE_SUMMARY.json
+
+# semantic_cbf demo output
+semantic_cbf/_demo_output/

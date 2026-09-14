@@ -27,6 +27,17 @@ from typing import List, Tuple, Optional, Dict
 from dataclasses import dataclass
 import warnings
 
+import os as _os
+# Demo output directory. Previously hardcoded to /home/claude/, a path from a
+# different machine that does not exist for any other user. Override with
+# SEMANTIC_CBF_OUT.
+_OUT_DIR = _os.environ.get(
+    "SEMANTIC_CBF_OUT",
+    _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "_demo_output"),
+)
+_os.makedirs(_OUT_DIR, exist_ok=True)
+
+
 try:
     import torch
     import torch.nn as nn
@@ -420,7 +431,7 @@ def run_latent_cbf_demo():
 
     # --- Visualize CBF landscape ---
     print("\n[4/4] Generating visualization...")
-    _visualize_latent_cbf(model, data, save_path="/home/claude/latent_cbf_landscape.png")
+    _visualize_latent_cbf(model, data, save_path=_os.path.join(_OUT_DIR, "latent_cbf_landscape.png"))
 
     # --- Run trajectory simulation ---
     print("\n  Running trajectory simulation with latent CBF filter...")
@@ -444,7 +455,7 @@ def run_latent_cbf_demo():
 
     # Plot trajectory on CBF landscape
     _visualize_latent_cbf_with_trajectory(model, data, sim.trajectory,
-                                          save_path="/home/claude/latent_cbf_trajectory.png")
+                                          save_path=_os.path.join(_OUT_DIR, "latent_cbf_trajectory.png"))
 
     print("\n" + "=" * 70)
     print("Latent CBF demo complete!")

@@ -31,12 +31,12 @@ formulation.
 | `semantic_cbf/` | Standalone semantic-CBF prototypes: VLM→CBF pipeline, multi-prompt strategy, VLA integration, latent-space CBF |
 | `vlm_pipeline/` | SafeLIBERO eval drivers, perception/grounding accuracy studies |
 | `run_libsafety_*.py` | LIBERO-Safety eval drivers (OpenVLA/OFT, openpi, Cosmos, Fast-WAM, flow-CBF, AEGIS) |
-| `libsafety_*.sh`, `libsafety_env_utils.py` | LIBERO-Safety environment setup, asset/checkpoint download, policy server |
+| `setup/` | Environment bootstrap, grouped by benchmark (`safelibero/`, `libsafety/`) |
 | `epistemic_uncertainty/` | Uncertainty quantification (MC dropout, deep ensembles, entropy, density OOD) |
 | `prompts/` | Prompt templates for obstacle ID, safety predicates, STL specifications |
-| `slurm/`, `experiments/` | Cluster job definitions (Bridges2-specific paths — see below) |
+| `slurm/{safelibero,libsafety}/` | Cluster job definitions for the reported conditions (Bridges2-specific paths — see below) |
 | `patches/` | Patches applied to the pinned submodules |
-| `results_tables/`, `*_benchmark*/`, `fol_*_n50/`, `baseline_*/` | Aggregated tables and per-condition result JSONs |
+| `results/` | All results: `safelibero/`, `libsafety/`, `tables/`, `grounding_accuracy/`, `vlm_prompts/` |
 
 Rollout videos, raw VLM observation dumps, CBF visualisation HTML, and cluster logs are
 not tracked — they are regenerable and are excluded by `.gitignore`.

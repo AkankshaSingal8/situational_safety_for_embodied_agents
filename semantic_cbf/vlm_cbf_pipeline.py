@@ -27,6 +27,17 @@ from typing import List, Optional, Tuple, Dict
 import json
 import warnings
 
+import os as _os
+# Demo output directory. Previously hardcoded to /home/claude/, a path from a
+# different machine that does not exist for any other user. Override with
+# SEMANTIC_CBF_OUT.
+_OUT_DIR = _os.environ.get(
+    "SEMANTIC_CBF_OUT",
+    _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "_demo_output"),
+)
+_os.makedirs(_OUT_DIR, exist_ok=True)
+
+
 # ============================================================================
 # DATA STRUCTURES
 # ============================================================================
@@ -936,9 +947,9 @@ def run_demo(use_vlm: bool = False, api_key: str = None, scene_image: str = None
     # --- Step 4: Visualize ---
     print("\n[4/4] Generating visualizations...")
     visualize_results(sim, safety_context, cbf_data, info_history,
-                     save_path="/home/claude/vlm_cbf_trajectory.png")
+                     save_path=_os.path.join(_OUT_DIR, "vlm_cbf_trajectory.png"))
     visualize_cbf_landscape(cbf_data, safety_context,
-                           save_path="/home/claude/vlm_cbf_landscape.png")
+                           save_path=_os.path.join(_OUT_DIR, "vlm_cbf_landscape.png"))
 
     # --- Also run with "dry sponge" for comparison ---
     print("\n" + "=" * 70)
@@ -967,7 +978,7 @@ def run_demo(use_vlm: bool = False, api_key: str = None, scene_image: str = None
     print(f"  Safety filter modified {n_mod_sponge}/{len(commands_sponge)} commands for sponge")
 
     visualize_results(sim_sponge, safety_context_sponge, cbf_data_sponge, info_history_sponge,
-                     save_path="/home/claude/vlm_cbf_trajectory_sponge.png")
+                     save_path=_os.path.join(_OUT_DIR, "vlm_cbf_trajectory_sponge.png"))
 
     print("\n" + "=" * 70)
     print("Done! Key insight: same trajectory, different held object →")

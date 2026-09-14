@@ -46,7 +46,8 @@ import tqdm
 from libero.libero import benchmark
 
 # openvla-oft only exists (populated) in the MAIN repo, not this worktree.
-OPENVLA_OFT_PATH = "/ocean/projects/cis250185p/asingal/situational_safety_for_embodied_agents/openvla-oft"
+# Derived from this file's location -- the submodule sits at the repo root.
+OPENVLA_OFT_PATH = str(pathlib.Path(__file__).resolve().parent / "openvla-oft")
 sys.path.insert(0, OPENVLA_OFT_PATH)
 
 from experiments.robot.libero.libero_utils import (  # noqa: E402

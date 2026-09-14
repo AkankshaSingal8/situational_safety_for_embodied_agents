@@ -21,7 +21,6 @@ Pipeline:
 """
 
 import sys
-sys.path.insert(0, "/home/claude/vlm_cbf")
 
 import json
 import base64
@@ -29,10 +28,21 @@ import numpy as np
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple
 from vlm_cbf_pipeline import (
+
     CBFConstructor, CBFSafetyFilter, ManipulationSimulator2D,
     SafetyContext, ObjectInfo, SemanticConstraint,
     visualize_results, visualize_cbf_landscape
 )
+
+import os as _os
+# Demo output directory. Previously hardcoded to /home/claude/, a path from a
+# different machine that does not exist for any other user. Override with
+# SEMANTIC_CBF_OUT.
+_OUT_DIR = _os.environ.get(
+    "SEMANTIC_CBF_OUT",
+    _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "_demo_output"),
+)
+_os.makedirs(_OUT_DIR, exist_ok=True)
 
 
 # ============================================================================
@@ -553,9 +563,9 @@ def main():
         # Save visualizations
         obj_tag = held_obj.replace(" ", "_")
         visualize_results(sim, safety_ctx, cbf_data, info_history,
-                         save_path=f"/home/claude/mp_cbf_{obj_tag}.png")
+                         save_path=f_os.path.join(_OUT_DIR, "mp_cbf_{obj_tag}.png"))
         visualize_cbf_landscape(cbf_data, safety_ctx,
-                               save_path=f"/home/claude/mp_landscape_{obj_tag}.png")
+                               save_path=f_os.path.join(_OUT_DIR, "mp_landscape_{obj_tag}.png"))
 
         results[held_obj] = {
             "safety_ctx": safety_ctx,
@@ -589,12 +599,12 @@ def main():
     fig, axes = plt.subplots(2, 3, figsize=(24, 16))
 
     for idx, obj in enumerate(["cup_of_water", "lit_candle", "dry_sponge"]):
-        img_land = mpimg.imread(f"/home/claude/mp_landscape_{obj}.png")
+        img_land = mpimg.imread(f_os.path.join(_OUT_DIR, "mp_landscape_{obj}.png"))
         axes[0, idx].imshow(img_land)
         axes[0, idx].set_title(f"Safety Landscape: {obj.replace('_', ' ')}", fontsize=13, fontweight='bold')
         axes[0, idx].axis('off')
 
-        img_traj = mpimg.imread(f"/home/claude/mp_cbf_{obj}.png")
+        img_traj = mpimg.imread(f_os.path.join(_OUT_DIR, "mp_cbf_{obj}.png"))
         axes[1, idx].imshow(img_traj)
         axes[1, idx].set_title(f"Filtered Trajectory: {obj.replace('_', ' ')}", fontsize=13, fontweight='bold')
         axes[1, idx].axis('off')
@@ -603,7 +613,7 @@ def main():
                  "(Per-pair queries with majority voting, following Brunke et al. Sec V-B)",
                  fontsize=16, fontweight='bold', y=0.99)
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.savefig("/home/claude/mp_comparison_all.png", dpi=120, bbox_inches='tight')
+    plt.savefig(_os.path.join(_OUT_DIR, "mp_comparison_all.png"), dpi=120, bbox_inches='tight')
     print("  Saved: mp_comparison_all.png")
 
     print(f"\n{'='*70}")

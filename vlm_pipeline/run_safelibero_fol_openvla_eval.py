@@ -58,8 +58,14 @@ from libero.libero import benchmark
 
 import wandb
 
-# Append openvla-oft repo to path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "openvla-oft"))
+# openvla-oft is a submodule at the REPO ROOT, one level up from this file.
+# The previous insert pointed at vlm_pipeline/openvla-oft, which does not
+# exist -- an insert of a nonexistent path fails silently, so this only ever
+# worked because the slurm scripts and README put the real path on PYTHONPATH.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_OFT = os.path.join(_REPO_ROOT, "openvla-oft")
+if _OFT not in sys.path:
+    sys.path.insert(0, _OFT)
 from experiments.robot.libero.libero_utils import (
     get_libero_dummy_action,
     quat2axisangle,

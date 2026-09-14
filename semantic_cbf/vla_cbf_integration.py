@@ -1,4 +1,15 @@
 """
+
+import os as _os
+# Demo output directory. Previously hardcoded to /home/claude/, a path from a
+# different machine that does not exist for any other user. Override with
+# SEMANTIC_CBF_OUT.
+_OUT_DIR = _os.environ.get(
+    "SEMANTIC_CBF_OUT",
+    _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "_demo_output"),
+)
+_os.makedirs(_OUT_DIR, exist_ok=True)
+
 VLA + CBF Safety Filter Integration
 =====================================
 
@@ -71,7 +82,6 @@ Usage:
 """
 
 import sys
-sys.path.insert(0, "/home/claude/vlm_cbf")
 
 import numpy as np
 from typing import List, Tuple, Dict, Optional
@@ -566,7 +576,7 @@ def run_vla_cbf_demo():
         trajectory_unsafe, trajectory_safe,
         safety_ctx, safety_filter.cbf_data,
         safety_filter.history,
-        save_path="/home/claude/vla_cbf_comparison.png"
+        save_path=_os.path.join(_OUT_DIR, "vla_cbf_comparison.png")
     )
 
     # --- Summary ---
