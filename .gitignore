@@ -77,3 +77,7 @@ semantic_cbf/_demo_output/
 
 # untracked vendored policy clones (not submodules)
 dream-policy/
+
+# Bridges2 output dirs (latent git-add hazards)
+aegis_repl/
+openvla_cbf_benchmark/
