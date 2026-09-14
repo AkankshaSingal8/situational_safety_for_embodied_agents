@@ -81,3 +81,6 @@ dream-policy/
 # Bridges2 output dirs (latent git-add hazards)
 aegis_repl/
 openvla_cbf_benchmark/
+
+# unpublished paper/proposal drafts
+docs/design/semantic-safety-overleaf/
