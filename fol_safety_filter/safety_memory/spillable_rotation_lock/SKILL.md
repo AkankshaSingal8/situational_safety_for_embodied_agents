@@ -70,10 +70,11 @@ rotation spills what the wrist is holding. This record tests the carried
 payload, which is also what the benchmark annotates.
 
 That makes it a semantic change, not a port, which is why it is
-`default_loaded: false`. The previous path stays reachable via
-`FOL_RULE_SOURCE=composer`. Enabling this by default is a separate, measured
-decision — and cheap to justify, since the channel it replaces does not
-currently fire on any reported obstacle.
+`default_loaded: false`. The composer's obstacle-pointed rule is not removed:
+it is still authored every episode and still feeds the rotation channel
+through `cbf_mapper`, so leaving this record off changes nothing. Enabling it
+is a separate, measured decision — and cheap to justify, since the channel it
+would join does not currently fire on any reported obstacle.
 
 ## Limitations
 

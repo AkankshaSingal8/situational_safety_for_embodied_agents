@@ -127,9 +127,11 @@ Files: `fol_safety_filter/filter.py`, `fol_safety_filter/rule_memory/effects.py`
    footprint logic in `cbf_mapper._above_sq`.
 2. `setup_episode`: after obstacle grounding, `load_library(...)` then
    `binding.resolve(...)` for each record, and add the resulting rules to the
-   KB. Keep `rule_composer.compose_rules` reachable behind
-   `FOL_RULE_SOURCE=composer` so the previous path stays available for
-   comparison; default is `FOL_RULE_SOURCE=memory`.
+   KB. Keep `rule_composer.compose_rules` running unconditionally: it still
+   supplies the legacy velocity and rotation channels through `self.mapper`,
+   so no env-var switch is needed and nothing is removed. A memory
+   `limit_speed` / `limit_angular_rate` record, when enabled, composes with
+   those strictest-wins.
 3. `_apply_cbf`: replace the hardcoded `for obs_name in self._obstacle_names`
    block with a dispatch over the active constraints, ordered per design §4.1.
    No radius, hard radius, or push constant may remain literal in `filter.py`.

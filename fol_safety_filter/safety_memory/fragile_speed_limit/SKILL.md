@@ -1,12 +1,12 @@
 ---
 schema_version: 1
 id: fragile_speed_limit
-revision: 1
+revision: 2
 description: Slow the end-effector while it is close to a fragile object.
 roles:
   subject: {binding: eef}
   target: {binding: "objects_with_fact:IS_FRAGILE"}
-applies_when: "IS_FRAGILE(TARGET) AND NEAR(SUBJECT, TARGET, 0.15)"
+applies_when: "IS_FRAGILE(TARGET) AND NEAR(SUBJECT, TARGET, 0.15) AND NOT HOLDING(TARGET)"
 requires:
   predicate: limit_speed
   v_max: 0.10
@@ -31,6 +31,25 @@ with a mode flag.
 
 `v_max: 0.10` and the 0.15 m radius are ported from the `IS_FRAGILE` branch of
 `rule_composer.py`, which capped its radius at 0.15 for the same reason.
+
+## Revision 2: the gripper is not near what it carries
+
+Revision 1 was `IS_FRAGILE(TARGET) AND NEAR(SUBJECT, TARGET, 0.15)`, and the
+transfer demo showed it binding to `cup_of_water`, `bowl_of_soup` and `plate`
+— the *held payloads*. The end-effector is trivially within 0.15 m of whatever
+is in its own gripper, so the rule capped the approach speed toward an object
+it could not approach. Not dangerous, but vacuous, and it made the activation
+table read as if the rule were doing more than it was.
+
+`AND NOT HOLDING(TARGET)` fixes it. `HOLDING` is already in
+`PREDICATE_REGISTRY` and means gripped *and* lifted clear of the table
+(`primitives.py:173`), so no new predicate was needed — the exclusion is a
+record edit and a revision bump, not a code change. That is the property the
+schema is for.
+
+`overhead_exclusion` does not need the same clause: its `ABOVE(SUBJECT,
+TARGET, 0.02)` compares the payload with itself when the payload is the
+target, which is false by construction.
 
 ## Opt-in, and why
 

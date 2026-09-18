@@ -1,11 +1,11 @@
 {
   "id": "fragile_speed_limit",
-  "revision": 1,
+  "revision": 2,
   "schema_version": 1,
   "author": "human",
   "authored": "2026-09-18",
   "reviewed_by": null,
-  "provenance": "Ported from the IS_FRAGILE branch of rule_composer.py:84-104 at 75ca90d4: v_max=0.10 and a radius capped at 0.15 m.",
+  "provenance": "Ported from the IS_FRAGILE branch of rule_composer.py:84-104 at 75ca90d4: v_max=0.10 and a radius capped at 0.15 m. Revision 2 adds AND NOT HOLDING(TARGET): the transfer demo showed rev 1 binding to the held payload, which the end-effector is trivially within 0.15 m of. Expressible with an existing registry predicate, so a record edit rather than a code change.",
   "evidence": "none. _props_from_name returns IS_FRAGILE only for egg/vase/crystal/porcelain (vlm_grounder.py:653), and no reported SafeLIBERO obstacle matches, so this channel has never run on the reported configuration.",
   "default_loaded": false,
   "notes": "Geometric or kinematic constraint only. Establishes nothing about spillage, thermal safety, or grasp security."

@@ -1,0 +1,648 @@
+{
+  "caveat": "Activation correctness only. Not task success, not violation rate, not a perception result. Shares no table with SafeLIBERO TSR/CAR or LIBERO-Safety SR.",
+  "disabled": [
+    "fragile_speed_limit",
+    "overhead_exclusion",
+    "spillable_rotation_lock"
+  ],
+  "enabled": [
+    "arm_link_obstacle_avoid",
+    "eef_obstacle_avoid"
+  ],
+  "fact_source": "oracle (hand-declared fixture), not perception",
+  "n_records": 5,
+  "n_scenes": 11,
+  "records": {
+    "arm_link_obstacle_avoid": {
+      "effect": "avoid_sphere",
+      "front_matter_hash": "89305aec0bd9b5e266e04efe5ba069eea0534a258749c2c15b91c7b01b3b5b60",
+      "revision": 1,
+      "scenes": {
+        "Bag of sugar": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Bottle": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Candle": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Cup": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Fish Tank": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Headphones": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Knife": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Nothing": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Plate": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Soup": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Sponge": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        }
+      },
+      "subject_binding": "arm_checkpoints",
+      "target_binding": "obstacles"
+    },
+    "eef_obstacle_avoid": {
+      "effect": "avoid_sphere",
+      "front_matter_hash": "bb2f3fd80e19c263a10085143a2c5d45dfdb7df357fad16bb92cfb663c89e8a4",
+      "revision": 1,
+      "scenes": {
+        "Bag of sugar": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Bottle": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Candle": {
+          "bound_to": [
+            "balloon",
+            "book",
+            "camera",
+            "glass_cup",
+            "laptop",
+            "paper_towel"
+          ],
+          "fired": 6,
+          "posing": "neutral",
+          "resolved": 6,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        },
+        "Cup": {
+          "bound_to": [
+            "balloon",
+            "book",
+            "camera",
+            "glass_cup",
+            "laptop",
+            "paper_towel"
+          ],
+          "fired": 6,
+          "posing": "neutral",
+          "resolved": 6,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        },
+        "Fish Tank": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Headphones": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Knife": {
+          "bound_to": [
+            "balloon",
+            "book",
+            "camera",
+            "glass_cup",
+            "laptop",
+            "paper_towel"
+          ],
+          "fired": 6,
+          "posing": "neutral",
+          "resolved": 6,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        },
+        "Nothing": {
+          "bound_to": [
+            "balloon",
+            "book",
+            "camera",
+            "glass_cup",
+            "laptop",
+            "paper_towel"
+          ],
+          "fired": 6,
+          "posing": "neutral",
+          "resolved": 6,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        },
+        "Plate": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Soup": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Sponge": {
+          "bound_to": [
+            "balloon",
+            "book",
+            "camera",
+            "glass_cup",
+            "laptop",
+            "paper_towel"
+          ],
+          "fired": 6,
+          "posing": "neutral",
+          "resolved": 6,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        }
+      },
+      "subject_binding": "eef",
+      "target_binding": "obstacles"
+    },
+    "fragile_speed_limit": {
+      "effect": "limit_speed",
+      "front_matter_hash": "6d50b465274f77c762941e3bd8001defc25ef9f9a6efc961bf9d5c8ac92fe5d1",
+      "revision": 2,
+      "scenes": {
+        "Bag of sugar": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Bottle": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": [
+            "bottle"
+          ]
+        },
+        "Candle": {
+          "bound_to": [
+            "laptop"
+          ],
+          "fired": 1,
+          "posing": "end-effector placed beside laptop",
+          "resolved": 4,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        },
+        "Cup": {
+          "bound_to": [
+            "laptop"
+          ],
+          "fired": 1,
+          "posing": "end-effector placed beside laptop",
+          "resolved": 5,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        },
+        "Fish Tank": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Headphones": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Knife": {
+          "bound_to": [
+            "laptop"
+          ],
+          "fired": 1,
+          "posing": "end-effector placed beside laptop",
+          "resolved": 4,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        },
+        "Nothing": {
+          "bound_to": [
+            "laptop"
+          ],
+          "fired": 1,
+          "posing": "end-effector placed beside laptop",
+          "resolved": 4,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        },
+        "Plate": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Soup": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Sponge": {
+          "bound_to": [
+            "laptop"
+          ],
+          "fired": 1,
+          "posing": "end-effector placed beside laptop",
+          "resolved": 4,
+          "subject": [
+            "eef"
+          ],
+          "unknown_facts": []
+        }
+      },
+      "subject_binding": "eef",
+      "target_binding": "objects_with_fact:IS_FRAGILE"
+    },
+    "overhead_exclusion": {
+      "effect": "avoid_region_above",
+      "front_matter_hash": "639e2ea872b6a484ca93654034c2a54f3659076017e56cf1dee7161f87c7c805",
+      "revision": 1,
+      "scenes": {
+        "Bag of sugar": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Bottle": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": [
+            "bottle"
+          ]
+        },
+        "Candle": {
+          "bound_to": [
+            "balloon",
+            "camera",
+            "glass_cup",
+            "laptop"
+          ],
+          "fired": 4,
+          "posing": "payload placed above laptop",
+          "resolved": 4,
+          "subject": [
+            "lit_candle"
+          ],
+          "unknown_facts": []
+        },
+        "Cup": {
+          "bound_to": [
+            "balloon",
+            "camera",
+            "glass_cup",
+            "laptop"
+          ],
+          "fired": 4,
+          "posing": "payload placed above laptop",
+          "resolved": 5,
+          "subject": [
+            "cup_of_water"
+          ],
+          "unknown_facts": []
+        },
+        "Fish Tank": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Headphones": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Knife": {
+          "bound_to": [
+            "balloon",
+            "camera",
+            "glass_cup",
+            "laptop"
+          ],
+          "fired": 4,
+          "posing": "payload placed above laptop",
+          "resolved": 4,
+          "subject": [
+            "knife"
+          ],
+          "unknown_facts": []
+        },
+        "Nothing": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "payload placed above laptop",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Plate": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Soup": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral (no fragile object in scene)",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Sponge": {
+          "bound_to": [
+            "balloon",
+            "camera",
+            "glass_cup",
+            "laptop"
+          ],
+          "fired": 4,
+          "posing": "payload placed above laptop",
+          "resolved": 4,
+          "subject": [
+            "dry_sponge"
+          ],
+          "unknown_facts": []
+        }
+      },
+      "subject_binding": "currently_grasped",
+      "target_binding": "objects_with_fact:IS_FRAGILE"
+    },
+    "spillable_rotation_lock": {
+      "effect": "limit_angular_rate",
+      "front_matter_hash": "15fc700972587034495b1c1522c1a93d599488ae6fd7292394daafb220eb371f",
+      "revision": 1,
+      "scenes": {
+        "Bag of sugar": {
+          "bound_to": [],
+          "fired": 1,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [
+            "bag_of_sugar"
+          ],
+          "unknown_facts": []
+        },
+        "Bottle": {
+          "bound_to": [],
+          "fired": 1,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [
+            "bottle"
+          ],
+          "unknown_facts": []
+        },
+        "Candle": {
+          "bound_to": [],
+          "fired": 1,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [
+            "lit_candle"
+          ],
+          "unknown_facts": []
+        },
+        "Cup": {
+          "bound_to": [],
+          "fired": 1,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [
+            "cup_of_water"
+          ],
+          "unknown_facts": []
+        },
+        "Fish Tank": {
+          "bound_to": [],
+          "fired": 1,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [
+            "fish_tank"
+          ],
+          "unknown_facts": []
+        },
+        "Headphones": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Knife": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Nothing": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 0,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Plate": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        },
+        "Soup": {
+          "bound_to": [],
+          "fired": 1,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [
+            "bowl_of_soup"
+          ],
+          "unknown_facts": []
+        },
+        "Sponge": {
+          "bound_to": [],
+          "fired": 0,
+          "posing": "neutral",
+          "resolved": 1,
+          "subject": [],
+          "unknown_facts": []
+        }
+      },
+      "subject_binding": "currently_grasped",
+      "target_binding": null
+    }
+  },
+  "scene_names": [
+    "Bag of sugar",
+    "Bottle",
+    "Candle",
+    "Cup",
+    "Fish Tank",
+    "Headphones",
+    "Knife",
+    "Nothing",
+    "Plate",
+    "Soup",
+    "Sponge"
+  ],
+  "scores": {
+    "arm_link_obstacle_avoid": null,
+    "eef_obstacle_avoid": null,
+    "fragile_speed_limit": null,
+    "overhead_exclusion": null,
+    "spillable_rotation_lock": {
+      "false_negatives": [
+        "Plate"
+      ],
+      "false_positives": [],
+      "ground_truth_file": "prompt_tuning_rotation.json",
+      "precision": 1.0,
+      "recall": 0.8571428571428571,
+      "scenes_scored": 11,
+      "true_positives": [
+        "Bag of sugar",
+        "Bottle",
+        "Candle",
+        "Cup",
+        "Fish Tank",
+        "Soup"
+      ]
+    }
+  }
+}

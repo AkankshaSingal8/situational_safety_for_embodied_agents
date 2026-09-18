@@ -236,10 +236,10 @@ Rule 4 is also re-pointed semantically: `rule_composer.py:70` tested
 `IS_SPILLABLE(obstacle)`, which locks the wrist because something *in the
 scene* is spillable. Rule 4 tests the **carried payload** instead
 (`subject: currently_grasped`), which is what the benchmark's rotation-lock
-ground truth annotates. Parity is unaffected — the golden trace supplies the
-angular channel directly — but the previous path stays reachable via
-`FOL_RULE_SOURCE=composer` for comparison, and this change is called out
-rather than buried.
+ground truth annotates. The composer's rule is not removed, so with rule 4
+off the rotation channel behaves exactly as before. Note that parity does
+**not** vouch for this: the golden trace supplies the angular channel
+directly and never exercises rule selection (§6.1).
 
 Rule 2 is the in-library generalization evidence: one effect implementation,
 one schema, a different `roles.subject`, and no new geometry code. Rule 1 and
