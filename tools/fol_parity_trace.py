@@ -82,6 +82,21 @@ def build_scenarios() -> List[Dict]:
         ("ellipsoid", ["moka_pot_obstacle"], False, True),
         ("ellipsoid_visual", ["visual_obstacle_0"], True, True),
         ("arm_only", ["moka_pot_obstacle"], False, False),
+        ("arm_hand_only", ["moka_pot_obstacle"], False, False),
+        ("arm_hand_ellipsoid", ["moka_pot_obstacle"], False, True),
+    ]
+
+    # FOL_HAND_CHECKPOINT adds two bodies with tighter radii than link4/link6.
+    # The env var is read inside _get_arm_checkpoints, which this harness
+    # bypasses, so the variant is covered by supplying the four-checkpoint list
+    # directly instead of by another env-var axis.
+    _ARM_BODIES = [
+        ("robot0_link4", 0.15, 0.08, 0.06),
+        ("robot0_link6", 0.15, 0.08, 0.06),
+    ]
+    _HAND_BODIES = _ARM_BODIES + [
+        ("robot0_link7", 0.10, 0.06, 0.06),
+        ("robot0_right_hand", 0.10, 0.06, 0.06),
     ]
 
     for name, obstacles, is_visual, with_ellipsoid in specs:
@@ -106,9 +121,9 @@ def build_scenarios() -> List[Dict]:
         start = first + np.array([-0.38, -0.05, 0.10])
         end = first + np.array([0.30, 0.06, -0.02])
 
-        if name == "arm_only":
-            # Keep the EEF far away for every step; only the arm checkpoint
-            # enters a zone.  This is the fixture that proves the arm channel
+        if name.startswith("arm_"):
+            # Keep the EEF far away for every step; only the arm checkpoints
+            # enter a zone.  These are the fixtures that prove the arm channel
             # is a separable rule rather than a side effect of the EEF one.
             start = first + np.array([-0.70, -0.40, 0.30])
             end = first + np.array([-0.55, -0.34, 0.26])
@@ -132,33 +147,26 @@ def build_scenarios() -> List[Dict]:
             )
 
         arm_checkpoints = []
-        if name == "arm_only":
-            # Elbow/wrist parked just inside the 0.15 m warning radius.
-            for i, (body, wr, hr, push) in enumerate(
-                [("robot0_link4", 0.15, 0.08, 0.06), ("robot0_link6", 0.15, 0.08, 0.06)]
-            ):
-                arm_checkpoints.append(
-                    {
-                        "pos": first + np.array([-0.11 + 0.01 * i, 0.04, 0.02]),
-                        "warning_r": wr,
-                        "hard_r": hr,
-                        "push": push,
-                        "name": body,
-                    }
-                )
+        bodies = _HAND_BODIES if "hand" in name else _ARM_BODIES
+        # Arm-only scenarios park the checkpoints just inside their warning
+        # radius (and, for the tighter hand bodies at 0.10 m, inside theirs
+        # too); other scenarios keep them clear so the EEF channel is isolated.
+        if name.startswith("arm_"):
+            offsets = [np.array([-0.055 - 0.012 * i, 0.028, 0.014])
+                       for i in range(len(bodies))]
         else:
-            for i, (body, wr, hr, push) in enumerate(
-                [("robot0_link4", 0.15, 0.08, 0.06), ("robot0_link6", 0.15, 0.08, 0.06)]
-            ):
-                arm_checkpoints.append(
-                    {
-                        "pos": first + np.array([-0.26 + 0.05 * i, -0.13, 0.13]),
-                        "warning_r": wr,
-                        "hard_r": hr,
-                        "push": push,
-                        "name": body,
-                    }
-                )
+            offsets = [np.array([-0.26 + 0.05 * i, -0.13, 0.13])
+                       for i in range(len(bodies))]
+        for (body, wr, hr, push), off in zip(bodies, offsets):
+            arm_checkpoints.append(
+                {
+                    "pos": first + off,
+                    "warning_r": wr,
+                    "hard_r": hr,
+                    "push": push,
+                    "name": body,
+                }
+            )
 
         vision_targets = []
         if is_visual:

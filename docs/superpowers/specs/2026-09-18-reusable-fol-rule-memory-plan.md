@@ -98,10 +98,11 @@ binding; empty target no-op; `target_index`/`subject_rank` correct).
 Files: `fol_safety_filter/safety_memory/MANIFEST.yaml`, and per rule
 `<id>/{SKILL.md,tests.yaml,metadata.json}` for the five ids in design §5.
 
-1. Rules 1–4 must encode exactly the constants the unmodified `_apply_cbf`
+1. Rules 1–2 must encode exactly the constants the unmodified `_apply_cbf`
    uses; read them off `filter.py` rather than from this plan.
-2. Rule 5 `overhead_exclusion` is listed in the manifest with
-   `default_loaded: false`.
+2. Only rules 1–2 are `default_loaded: true`. Rules 3, 4, 5 are
+   `default_loaded: false`, per design §6.1 — parity does not cover rule
+   selection, so no channel's selection behaviour may change by default.
 3. Each `tests.yaml`: at least one positive, one negative, and one boundary
    activation case, expressed as scene facts plus expected activation.
 4. Each `metadata.json`: `revision`, `author: human`, `provenance` naming the
@@ -137,8 +138,10 @@ Files: `fol_safety_filter/filter.py`, `fol_safety_filter/rule_memory/effects.py`
 
 **Verify:**
 - `python tools/fol_parity_trace.py --check fol_safety_filter/tests/data/parity_golden.npz` → `max|Δ| == 0`.
-- `grep -nE "0\.20|0\.10|0\.08|0\.15|0\.06" fol_safety_filter/filter.py` returns
-  no geometry literal inside `_apply_cbf`.
+- no geometry literal remains inside the `_apply_cbf` body. Scope the check to
+  that function — `filter.py:427,508` legitimately contain `0.15` in the
+  VLM-injection path, so a whole-file grep gives a false failure:
+  `sed -n '/def _apply_cbf/,/def _apply_task_bias/p' fol_safety_filter/filter.py | grep -nE "0\.(20|10|08|15|06)"`
 - `pytest fol_safety_filter/tests/test_effect_dispatch.py`.
 
 **If parity fails, stop and report the first mismatching scenario.** Do not

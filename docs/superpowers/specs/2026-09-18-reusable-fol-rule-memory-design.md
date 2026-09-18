@@ -205,12 +205,13 @@ unchanged code.
 |---|---|---|---|---|
 | 1 | `eef_obstacle_avoid` | `avoid_sphere` | default | the 0.20 / 0.10 / 0.08 EEF geometry now hardcoded at `filter.py:886` |
 | 2 | `arm_link_obstacle_avoid` | `avoid_sphere` | default | **same effect, `subject` rebound to `arm_checkpoints`** (0.15 / 0.08 / 0.06) — the record now owns those radii; `_get_arm_checkpoints` supplies only body positions, except that the opt-in `FOL_HAND_CHECKPOINT` bodies keep their tighter per-body override |
-| 3 | `fragile_speed_limit` | `limit_speed` | default | the `cbf_set.velocity_limit` channel as a standalone record |
-| 4 | `spillable_rotation_lock` | `limit_angular_rate` | default | the `cbf_set.angular_limit` channel as a standalone record |
+| 3 | `fragile_speed_limit` | `limit_speed` | **opt-in** | the `cbf_set.velocity_limit` channel as a standalone record |
+| 4 | `spillable_rotation_lock` | `limit_angular_rate` | **opt-in** | the `cbf_set.angular_limit` channel, re-pointed to the carried payload |
 | 5 | `overhead_exclusion` | `avoid_region_above` | **opt-in** | new: do not carry a payload through the column above a sensitive object |
 
-Rules 1–4 are ports of behaviour that already runs and are parity-critical
-(§6). Rule 5 is new, off by default, and is what the activation demo toggles.
+Rules 1 and 2 are ports of behaviour that already runs, are default-loaded, and
+are parity-critical (§6). Rules 3–5 are opt-in for the reasons in §6.1, and
+are what the activation demo toggles.
 
 Two parameter notes that are behaviour, not bookkeeping:
 
@@ -247,7 +248,7 @@ simulator and no GPU — and writes a golden trace. The golden trace is generate
 once from the `main` checkout and committed as
 `fol_safety_filter/tests/data/parity_golden.npz`.
 
-**Pass condition:** with rules 1–4 default-loaded and rule 5 absent, the
+**Pass condition:** with rules 1–2 default-loaded and rules 3–5 absent, the
 refactored filter reproduces the golden `u_safe` with `max|Δ| == 0` across the
 env-var matrix `{FOL_ELLIPSOID, FOL_RAY_RESCALE ∈ {0,1,target}, FOL_TASK_BIAS}`,
 for both oracle-named and `visual_`-prefixed obstacles (the latter exercises the
@@ -256,6 +257,49 @@ target-corridor relaxation).
 Exact equality, not a tolerance: the refactor performs the same float
 operations in the same order, so any nonzero difference is a behaviour change
 and must be explained rather than absorbed.
+
+### 6.1 What parity does and does not cover
+
+The harness constructs `MappedCBFSet` by hand, so it drives `_apply_cbf`
+without `kb.evaluate` or `mapper.map` in the loop. **Parity therefore pins the
+spatial projection and the two clamps given a fixed constraint set; it does not
+pin which rules fire.** Rule selection is covered by unit tests
+(`test_rule_binding.py`, `test_effect_dispatch.py`,
+`test_rule_falsifiability.py`) and by the offline activation demo (§7), not by
+the golden trace. Stating this is necessary because a reader would otherwise
+infer end-to-end coverage that does not exist.
+
+Consequently, only the two spatial records are default-loaded. Rules 3–5 are
+opt-in, so no channel silently changes selection behaviour:
+
+- `fragile_speed_limit` (rule 3) is a faithful port, but `_props_from_name`
+  never returns `IS_FRAGILE` for the reported obstacles (`moka_pot_obstacle`,
+  `wine_bottle_obstacle`), so enabling it by default would be untested rather
+  than unchanged.
+- `spillable_rotation_lock` (rule 4) is re-pointed to the payload and would
+  fire where nothing fires today — see below.
+- `overhead_exclusion` (rule 5) is new.
+
+### 6.2 The rotation channel is currently dead, measured
+
+For `moka_pot_obstacle` the composer *does* author
+`SPILLABLE_LOCK_MOKA_POT_OBSTACLE`, but the rule's own predicate evaluates
+False at runtime and the lock never engages:
+
+| obstacle | `_props_from_name` | `is_full` | `is_open` | `IS_SPILLABLE()` |
+|---|---|---|---|---|
+| `moka_pot_obstacle` | `[IS_SPILLABLE]` | True | False | **False** |
+| `wine_bottle_obstacle` | `[IS_SPILLABLE]` | False | False | **False** |
+| `akita_black_bowl_1` | `[IS_SPILLABLE]` | True | True | True |
+
+`_props_from_name` keys on `pot`/`bottle`/`cup`/`bowl`/`mug`/`milk`
+(`vlm_grounder.py:650`) while `_heuristic_ground` sets `is_open` only for
+`bowl`/`cup`/`glass`/`mug` (`filter.py:74`). The two keyword lists disagree, so
+for a pot or a bottle the composer authors a rule whose precondition it has
+already guaranteed false. Nothing reports the rule as inert.
+
+This is why rule 4 being opt-in costs nothing: the channel it replaces does not
+currently fire on any reported obstacle.
 
 ## 7. Generalization demo
 
