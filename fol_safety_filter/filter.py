@@ -56,7 +56,6 @@ from .rule_memory import (
     resolve,
 )
 from .rule_memory.effects import (
-    LIMIT_PREDICATES,
     SPATIAL_PREDICATES,
     apply_avoid_region_above,
     collect_angular_limit,
@@ -429,6 +428,24 @@ class FOLSafetyFilter:
         refuse. The exception is a missing store, which is a deployment
         problem and is logged loudly rather than turned into silent
         geometry-free operation.
+
+        Two limits of the scene this builds, both affecting opt-in records
+        only, and both worth knowing before enabling one:
+
+        * The fact oracle reads `ObjectState.is_fragile` and friends, which
+          only `VLMGrounder._heuristic_ground` populates. That disagrees with
+          `_props_from_name`: for `moka_pot_obstacle` the latter reports
+          IS_SPILLABLE while the former leaves `is_open` False, so the fact is
+          False. No default-loaded record uses an `objects_with_fact:` target,
+          so nothing currently depends on this — but a record that does may
+          select nothing and raise no error.
+        * `grasped` is `self._target_name`, the grasp target parsed from the
+          task string at episode setup. It is **not** updated when the gripper
+          closes or releases, so a `currently_grasped` role binds to the
+          object the robot is *meant* to pick up, from the first timestep,
+          whether or not it is holding it. A record that needs the real
+          holding state should say so in its formula with `HOLDING`, which
+          checks grip width and lift height.
         """
         self._memory_rules = []
         try:

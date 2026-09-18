@@ -49,6 +49,31 @@ cases:
       objects:
         mystery_jar: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: null}}
 
+  # Negative, and the case that pins revision 2's `AND NOT HOLDING(TARGET)`:
+  # the payload is fragile and is being held, so the end-effector is 0 m from
+  # it. Without the clause this fires on every fragile payload, capping the
+  # approach speed toward an object that cannot be approached. If this case
+  # ever reports `fires`, the clause has been dropped.
+  - name: held_fragile_payload_is_silent
+    expect: silent
+    expect_resolved: 1
+    scene:
+      eef_pos: [0.0, 0.0, 0.95]
+      grasped: glass_cup
+      objects:
+        glass_cup: {pos: [0.0, 0.0, 0.95], facts: {IS_FRAGILE: true}}
+
+  # ...and the same payload, set down on the table and released, DOES fire:
+  # HOLDING requires the object to be lifted clear, so putting it down
+  # restores the rule rather than disabling it permanently.
+  - name: released_fragile_payload_fires
+    expect: fires
+    expect_fired: 1
+    scene:
+      eef_pos: [0.10, 0.0, 0.82]
+      objects:
+        glass_cup: {pos: [0.0, 0.0, 0.82], facts: {IS_FRAGILE: true}}
+
   # Boundary: 1 mm either side of 0.15 m.
   - name: boundary_just_inside_radius
     expect: fires

@@ -167,6 +167,15 @@ def test_every_manifested_record_has_metadata():
 
 
 def test_manifest_holds_exactly_the_five_records():
+    """Deliberate tripwire: adding a record should be a conscious act.
+
+    If you added a sixth rule, this failure is expected. Add its id to the
+    list below and say in the commit message what the record is for and why
+    it is (or is not) default-loaded. If you made it default-loaded, the
+    parity check in `test_parity.py` has to still pass, and if it changes rule
+    *selection* rather than the projection, parity does not cover it — see
+    the design's section 6.1.
+    """
     lib = load_library(MEMORY_ROOT)
     assert [r.id for r in lib.all_records] == [
         "arm_link_obstacle_avoid",
@@ -176,4 +185,10 @@ def test_manifest_holds_exactly_the_five_records():
         "spillable_rotation_lock",
     ]
     # Only the two parity-covered spatial records load by default.
-    assert lib.enabled_ids() == ("arm_link_obstacle_avoid", "eef_obstacle_avoid")
+    assert lib.enabled_ids() == (
+        "arm_link_obstacle_avoid", "eef_obstacle_avoid"
+    ), (
+        "the default-loaded set changed. Every reported FOL number was "
+        "produced by these two records' geometry; enabling a third changes "
+        "rule selection, which the golden parity trace does not cover."
+    )
