@@ -222,6 +222,15 @@ Two parameter notes that are behaviour, not bookkeeping:
   *actually* runs at today (§1). Authoring `0.10` here would be a silent
   tightening dressed up as a port. The defect is recorded in the rule's
   `SKILL.md` body and left for a separate, measured change.
+- Rule 4's activation is `IS_SPILLABLE(SUBJECT) OR IS_LIT(SUBJECT)`, not
+  `IS_SPILLABLE` alone. Measured against the rotation-lock ground truth on the
+  oracle fixture: `IS_SPILLABLE` alone recalls 5/7, the disjunction recalls
+  6/7, both with zero false positives. A lit candle is honestly
+  `IS_FULL: false` — its tilt hazard is the flame, not a spill — so the
+  disjunct is required rather than convenient. `Plate` remains the one miss
+  and the fixture is not adjusted to close it: the registry has no predicate
+  for an unsecured load on a flat surface, and inventing a fact to hit the
+  annotation would make the demo's number meaningless.
 
 Rule 4 is also re-pointed semantically: `rule_composer.py:70` tested
 `IS_SPILLABLE(obstacle)`, which locks the wrist because something *in the
