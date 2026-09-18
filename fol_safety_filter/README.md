@@ -5,6 +5,37 @@ Geometric Control Barrier Function (CBF) wrapper for OpenVLA-OFT robot policy.
 Monitors the end-effector (EEF) and arm body checkpoints against the SafeLIBERO
 obstacle at each timestep and cancels approach components.
 
+## Where the rules live
+
+The safety behaviour is **data**, in `safety_memory/`. Each record is one
+activation condition plus one effect, loaded and validated at episode setup
+and lifted over the scene's objects. See `safety_memory/README.md` for the
+schema and `docs/superpowers/specs/2026-09-18-reusable-fol-rule-memory-design.md`
+for why.
+
+| record | effect | loaded |
+|---|---|---|
+| `eef_obstacle_avoid` | `avoid_sphere` | default |
+| `arm_link_obstacle_avoid` | `avoid_sphere` | default |
+| `fragile_speed_limit` | `limit_speed` | opt-in |
+| `spillable_rotation_lock` | `limit_angular_rate` | opt-in |
+| `overhead_exclusion` | `avoid_region_above` | opt-in |
+
+`_apply_cbf` holds no geometric constant. Deleting a record removes exactly one
+behaviour, and editing its radii changes what the robot does — both asserted
+in `tests/test_rule_falsifiability.py`, in both directions.
+
+**The results below were produced before that refactor, by the geometry that
+was then hardcoded in `_apply_cbf`.** They remain valid because
+`tools/fol_parity_trace.py` holds the two default records to `max|delta| == 0`
+against that implementation over 2592 rows and 12 env-var combinations. Run
+`python tools/fol_parity_trace.py --check fol_safety_filter/tests/data/parity_golden.npz`
+before trusting any of them after a change.
+
+Parity's scope is narrower than it sounds: the harness builds `MappedCBFSet`
+itself, so it pins the projection **given a constraint set** and does not pin
+which rules fire. That is why only the two spatial records load by default.
+
 ## Core Rule
 Binary 100% approach cancellation + proportional outward push inside the hard radius:
 
@@ -36,8 +67,28 @@ Goal L1 TSR regresses 18% → 13% because the obstacle is placed near the goal
 location (stove, drawer). 100% cancellation prevents the robot from completing
 the final ~0.20 m of approach. **Fixed in v2** (see `../v2/fol_safety_filter/README.md`).
 
+## Known defects, pinned rather than fixed
+
+`tests/test_composer_channel_status_quo.py` pins two defects in the composer
+path. Neither is repaired here: repairing either changes behaviour, and the
+table above was produced with both present.
+
+1. A rotation rule authored as `{"angular_limit": 0.10}` runs at 0.25 rad/s,
+   because `cbf_mapper.py:184` reads `omega_max`. The authored value is
+   unreachable and nothing reports it.
+2. For `moka_pot_obstacle` and `wine_bottle_obstacle` the composer authors a
+   rotation lock whose own `IS_SPILLABLE` precondition is permanently false:
+   `_props_from_name` keys on `pot`/`bottle` while `_heuristic_ground` sets
+   `is_open` only for bowl/cup/glass/mug. The channel is inert on both
+   reported obstacles.
+
+Under the record schema the first defect is a load error rather than a shrug,
+since each effect has a closed, typed parameter set.
+
 ## Files
 - `filter.py` — `FOLSafetyFilter` class; `_apply_cbf`, `_apply_point_cbf`
+- `safety_memory/` — the rule records (the safety behaviour, as data)
+- `rule_memory/` — schema, loader, binding compiler, effect handlers
 - `primitives.py` — `RobotState`, `ObjectState`, predicate registry
 - `kb.py` — `FOLKnowledgeBase`, `FOLRule`
 - `cbf_mapper.py` — `CBFMapper`, `MappedCBFSet`

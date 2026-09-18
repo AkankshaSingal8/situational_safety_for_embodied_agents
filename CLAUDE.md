@@ -37,6 +37,8 @@ every value traced to `file:line`.
 | Path | Contents |
 |---|---|
 | `fol_safety_filter/` | The method: predicates, KB, rule composer, VLM grounding, CBF mapper, runtime filter |
+| `fol_safety_filter/safety_memory/` | **The safety rules, as data.** One `SKILL.md` record per rule, loaded and validated at episode setup |
+| `fol_safety_filter/rule_memory/` | Record schema, strict loader, binding compiler, effect handlers |
 | `vlm_pipeline/` | SafeLIBERO eval drivers + env helpers. Mixed: also holds retired CBF prototypes |
 | `run_libsafety_*.py`, `libsafety_*.py`, `flow_cbf_*.py` | LIBERO-Safety eval drivers and the flow-CBF barrier |
 | `vlm_prompt_runner/` | Multi-model VLM prompt harness (Anthropic/OpenAI/Gemini/Qwen) with majority voting |
@@ -75,3 +77,14 @@ The ones that change numbers:
   separate from the torch/numpy `seed`.
 - Tests: `python -m pytest fol_safety_filter/tests vlm_prompt_runner/tests`.
   `epistemic_uncertainty/tests` additionally needs `torch`.
+- **The FOL filter's geometry lives in `safety_memory/` records, not in
+  `_apply_cbf`.** Every reported FOL number predates that refactor and is held
+  valid only by a golden parity trace. After touching `filter.py`,
+  `rule_memory/`, or either default-loaded record, run
+
+      python tools/fol_parity_trace.py --check fol_safety_filter/tests/data/parity_golden.npz
+
+  and expect `max|delta| == 0`. Do not regenerate the golden trace to make it
+  pass. Parity covers the spatial projection given a constraint set; it does
+  **not** cover which rules fire, which is why only the two spatial records
+  are default-loaded.
