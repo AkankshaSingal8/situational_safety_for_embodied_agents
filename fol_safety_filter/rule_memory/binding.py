@@ -166,6 +166,11 @@ def resolve_with_unknowns(
             # `FOLRule` is a plain (non-frozen, non-slotted) dataclass, so the
             # ordering metadata the dispatcher needs is attached directly.
             rule.record_id = record.id
+            # The dispatcher needs the subject *kind*, not just the instance:
+            # the grounded per-obstacle radius floor applies to the
+            # end-effector only, and an arm checkpoint's zone comes from the
+            # record unless the checkpoint overrides it.
+            rule.subject_binding = record.subject_binding
             rule.target_index = target_index
             rule.subject_rank = rank
             rule.checkpoint_index = checkpoint_index

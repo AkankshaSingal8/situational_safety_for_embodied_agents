@@ -49,6 +49,24 @@ from .cbf_mapper import CBFMapper, MappedCBFSet
 from .vlm_grounder import VLMObstacleGrounder, _parse_target_heuristic, _props_from_name
 from .visual_grounder import VisualObstacleGrounder
 from .rule_composer import compose_rules
+from .rule_memory import (
+    SceneBindings,
+    load_library,
+    register_checkpoint_pseudo_objects,
+    resolve,
+)
+from .rule_memory.effects import (
+    LIMIT_PREDICATES,
+    SPATIAL_PREDICATES,
+    apply_avoid_region_above,
+    collect_angular_limit,
+    collect_speed_limit,
+    order_key,
+    resolve_avoid_sphere,
+)
+
+# The rule store this filter loads its safety behaviour from.
+SAFETY_MEMORY_ROOT = os.path.join(os.path.dirname(__file__), "safety_memory")
 
 
 # ---------------------------------------------------------------------------
@@ -197,6 +215,7 @@ class FOLSafetyFilter:
         self._initialized = False
         self._t = 0
         self.replan_requested = False
+        self._memory_rules: List[FOLRule] = []
 
         self.metrics = FilterMetrics()
 
@@ -351,6 +370,11 @@ class FOLSafetyFilter:
         for rule in composed:
             self.kb.add_rule(rule)
 
+        # Step 4b: the rule memory.  These records drive the spatial channel;
+        # the composer rules above still supply the legacy velocity and
+        # rotation channels through `self.mapper`, so nothing is removed here.
+        self._load_memory_rules(env)
+
         # Step 5: Inject VLM-authored composed rules from P4
         vlm_composed_rules = predicate_dict.get("composed_rules", [])
         vlm_composed_predicates = predicate_dict.get("composed_predicates", [])
@@ -386,6 +410,66 @@ class FOLSafetyFilter:
             f"obstacles={self._obstacle_names}, target={self._target_name}, "
             f"goal={self._goal_name}, backend={self.obstacle_grounder._get_client().backend_name}"
         )
+
+    def _load_memory_rules(self, env) -> None:
+        """Load `safety_memory/` and lift each enabled record over this scene.
+
+        A record is scene-independent; the rules the knowledge base evaluates
+        are not. One `eef_obstacle_avoid` record over three grounded obstacles
+        becomes three rules — which is what makes a record authored for one
+        task apply to a scene it was never written for.
+
+        Arm-checkpoint names are read from `env` once here. Their *positions*
+        are re-read every timestep in `_apply_cbf`; only the count and the
+        body names are fixed for the episode, and they only change with the
+        `FOL_HAND_CHECKPOINT` env var, which is fixed per process.
+
+        A broken record raises rather than loading a subset: a memory that
+        silently drops a safety rule is the failure this store exists to
+        refuse. The exception is a missing store, which is a deployment
+        problem and is logged loudly rather than turned into silent
+        geometry-free operation.
+        """
+        self._memory_rules = []
+        try:
+            library = load_library(SAFETY_MEMORY_ROOT)
+        except FileNotFoundError:
+            logger.error(
+                f"[FOL] no rule memory at {SAFETY_MEMORY_ROOT} — the spatial "
+                "safety channel will not run"
+            )
+            return
+
+        checkpoints = self._get_arm_checkpoints(env)
+
+        def facts(obj_name: str, fact: str):
+            obj = self._object_states.get(obj_name)
+            if obj is None:
+                return None
+            # ObjectState stores facts as is_fragile / has_sharp_part / ...
+            return getattr(obj, fact.lower(), None)
+
+        scene = SceneBindings(
+            obstacle_names=list(self._obstacle_names),
+            arm_checkpoints=checkpoints,
+            grasped=self._target_name,
+            facts=facts,
+            object_names=sorted(self._object_states),
+        )
+
+        for record in library.records:
+            rules = resolve(record, scene)
+            for rule in rules:
+                self.kb.add_rule(rule)
+            self._memory_rules.extend(rules)
+            logger.info(
+                f"[FOL-memory] {record.id} rev{record.revision} "
+                f"-> {len(rules)} rule(s) "
+                f"[{record.front_matter_hash[:12]}]"
+            )
+
+        if not library.records:
+            logger.warning("[FOL-memory] no records enabled in the manifest")
 
     def _inject_vlm_composed_rules(
         self,
@@ -766,7 +850,14 @@ class FOLSafetyFilter:
                 obj.pos = np.array(obs[f"{name}_pos"], dtype=np.float64)
             if f"{name}_quat" in obs:
                 obj.quat = np.array(obs[f"{name}_quat"], dtype=np.float64)
-        state.objects = self._object_states
+        # A shallow copy, not the dict itself: the arm checkpoints registered
+        # below are per-timestep pseudo-objects, and leaking them into
+        # `self._object_states` would freeze the first timestep's arm pose
+        # there for the rest of the episode.
+        state.objects = dict(self._object_states)
+
+        arm_checkpoints = self._get_arm_checkpoints(env)
+        register_checkpoint_pseudo_objects(state, arm_checkpoints)
 
         active = self.kb.evaluate(state)
 
@@ -776,12 +867,14 @@ class FOLSafetyFilter:
                 self.metrics.rule_counts.get(ac.rule.name, 0) + 1
 
         cbf_set = self.mapper.map(active, state.ee_quat)
-        arm_checkpoints = self._get_arm_checkpoints(env)
         # v15: direct geometric projection only.  SSF QP is intentionally NOT
         # called — OpenVLA emits position deltas, and the SSF velocity-control
         # correction (dp*dt) is ~20x too small to matter, while its envelope
         # spheres double-block the arm (v12 root cause).
-        u_safe, _ = self._apply_cbf(u_cmd, state, cbf_set, arm_checkpoints)
+        u_safe, _ = self._apply_cbf(
+            u_cmd, state, cbf_set, arm_checkpoints,
+            active_rules=[ac.rule for ac in active],
+        )
 
         correction_mag = float(np.linalg.norm(u_safe[:3] - u_cmd[:3]))
         if correction_mag > 1e-6:
@@ -814,25 +907,27 @@ class FOLSafetyFilter:
         (~12cm clearance) stay open while plow-throughs are braked."""
         if env is None:
             return []
-        bodies = [
-            ("robot0_link4", 0.15, 0.08, 0.06),
-            ("robot0_link6", 0.15, 0.08, 0.06),
-        ]
+        # The elbow and wrist carry NO radii: theirs live in the
+        # arm_link_obstacle_avoid record, so editing that record changes what
+        # the arm does.  Only the opt-in hand bodies override, because they
+        # monitor a different volume at tighter margins.
+        bodies = [("robot0_link4", None), ("robot0_link6", None)]
         # Hand-body monitoring braked plow-throughs but cost TSR broadly at
         # n=50 (v19e: L1 34.5 vs 37.0) — opt-in until the tradeoff is solved.
         if os.environ.get("FOL_HAND_CHECKPOINT", "0") == "1":
             bodies += [
-                ("robot0_link7", 0.10, 0.06, 0.06),
-                ("robot0_right_hand", 0.10, 0.06, 0.06),
+                ("robot0_link7", (0.10, 0.06, 0.06)),
+                ("robot0_right_hand", (0.10, 0.06, 0.06)),
             ]
         checkpoints = []
-        for body_name, warning_r, hard_r, push in bodies:
+        for body_name, override in bodies:
             try:
                 body_id = env.sim.model.body_name2id(body_name)
                 pos = np.array(env.sim.data.body_xpos[body_id], dtype=np.float64)
-                checkpoints.append({"pos": pos, "warning_r": warning_r,
-                                    "hard_r": hard_r, "push": push,
-                                    "name": body_name})
+                cp = {"pos": pos, "name": body_name}
+                if override is not None:
+                    cp["warning_r"], cp["hard_r"], cp["push"] = override
+                checkpoints.append(cp)
             except Exception:
                 pass
         return checkpoints
@@ -869,79 +964,95 @@ class FOLSafetyFilter:
         u_cmd: np.ndarray,
         state: RobotState,
         cbf_set: MappedCBFSet,
-        arm_checkpoints: Optional[List[np.ndarray]] = None,
+        arm_checkpoints: Optional[List[Dict]] = None,
+        active_rules: Optional[List[FOLRule]] = None,
     ) -> np.ndarray:
-        # v15: exact v3 geometry (proven TSR=48.5%, CAR=59.5% on spatial L1),
-        # extended to multi-obstacle with VLM property-modulated radii.
-        # OpenVLA outputs position deltas (m/step), NOT velocities — direct
-        # geometric projection, no QP.  Binary rule: 100% radial approach
-        # cancellation inside warning_r + outward push inside hard_r.
+        """Correct the commanded action using the rules that fired.
+
+        This used to be a loop over ``self._obstacle_names`` with literal
+        0.20 / 0.10 / 0.08 geometry, which meant the knowledge base could not
+        change what ran: deleting a rule stopped it being counted and nothing
+        else.  Now every correction comes from a record in
+        ``safety_memory/``, and no geometric constant is left here.
+
+        Order is semantics: ``_apply_point_cbf`` mutates ``u`` in place, so
+        ``effects.order_key`` reproduces the obstacle-major nesting of the
+        loop this replaces — for each obstacle, the end-effector, then each
+        arm checkpoint.  ``tools/fol_parity_trace.py`` holds the result to
+        ``max|delta| == 0`` against the pre-decomposition implementation.
+
+        OpenVLA emits position deltas (m/step), not velocities, so this is a
+        direct geometric projection and no QP is solved.
+        """
         u = u_cmd.copy()
         ee = state.ee_pos
         z_ceiling_active = False
+        checkpoints = list(arm_checkpoints or [])
 
-        for obs_name in self._obstacle_names:
-            if obs_name not in state.objects:
+        if active_rules is None:
+            # Standalone use (the parity harness, unit tests): evaluate the
+            # knowledge base here.  `certify` has already done it and passes
+            # the result, so the 20 Hz path does not evaluate twice.
+            register_checkpoint_pseudo_objects(state, checkpoints)
+            active_rules = [ac.rule for ac in self.kb.evaluate(state)]
+
+        spatial = sorted(
+            (r for r in active_rules if r.cbf_type in SPATIAL_PREDICATES),
+            key=order_key,
+        )
+
+        # The corridor relaxation is evaluated against the partially corrected
+        # action, exactly as before: `u` changes between obstacles, so where
+        # the command is judged to be pointing changes with it.  Computed once
+        # per obstacle, on first encounter, in sorted order.
+        # `obs_name` is never None past the guard below, so None is a value
+        # no target can equal -- string equality, not identity, because the
+        # rules were lifted independently and need not share a str object.
+        relaxation_target: Optional[str] = None
+        aiming_at_target = False
+
+        for rule in spatial:
+            obs_name = rule.primary_object
+            if obs_name is None or obs_name not in state.objects:
                 continue
             obs_pos = state.objects[obs_name].pos
-            # VLM property-modulated radius can only EXPAND the proven v3
-            # margin (0.20m): IS_HOT / IS_FRAGILE obstacles get larger zones.
-            warning_r = max(0.20, self._obstacle_radii.get(obs_name, 0.20))
 
-            # Target-corridor relaxation (vision-grounded obstacles only):
-            # an ~8cm-offset sphere can swallow the grasp corridor of a target
-            # that sits near the obstacle.  When the commanded motion aims at
-            # the vision-detected target and the EEF is close to it, cancel
-            # only 60% of the approach (v2-validated relaxation).  Oracle-state
-            # obstacles are exactly centered and never need this.
-            aiming_at_target = False
-            cancel_scale = 1.0
-            if obs_name.startswith("visual_"):
-                targets = getattr(self, "_vision_targets_xy", None)
-                if not targets and getattr(
-                        self, "_vision_target_xy", None) is not None:
-                    targets = [self._vision_target_xy]
-                speed = float(np.linalg.norm(u[:2]))
-                for txy in (targets or []):
-                    tdiff = np.asarray(txy) - ee[:2]
-                    tdist = float(np.linalg.norm(tdiff))
-                    cos_xy = (float(u[:2] @ tdiff) / (speed * tdist + 1e-9)
-                              if speed > 1e-6 else 0.0)
-                    # xy-cosine is blind to the vertical grasp descent (zero
-                    # xy speed directly above the target) — treat descending
-                    # while hovering over any mentioned object (grasp target
-                    # or placement goal) as aiming at it.
-                    descending_above = u[2] < -1e-4 and tdist < 0.10
-                    if tdist < 0.30 and (cos_xy > 0.6 or descending_above):
-                        aiming_at_target = True
-                        cancel_scale = 0.6
-                        break
-            ellipsoid = None
-            if os.environ.get("FOL_ELLIPSOID", "1") == "1":
-                ellipsoid = self._obstacle_ellipsoids.get(obs_name)
-            # Grasp-corridor carve-out: slide (cancel) by default; when the
-            # command aims at the vision-detected target, switch to ray-
-            # rescale so the gripper may descend its grasp line up to the
-            # hard boundary instead of being deflected off the corridor.
-            rr_mode = os.environ.get("FOL_RAY_RESCALE", "0")
-            ray_rescale = (rr_mode == "1"
-                           or (rr_mode == "target" and aiming_at_target))
-            self._apply_point_cbf(
-                u, ee, obs_pos,
-                warning_r=warning_r, hard_r=0.10,
-                push_hard=0.08, label=f"EEF-{obs_name}",
-                cancel_scale=cancel_scale,
-                frame_R=ellipsoid["frame_R"] if ellipsoid else None,
-                warn_radii=ellipsoid["warn_radii"] if ellipsoid else None,
-                hard_radii=ellipsoid["hard_radii"] if ellipsoid else None,
-                ray_rescale=ray_rescale,
-            )
-            for cp in (arm_checkpoints or []):
+            if obs_name != relaxation_target:
+                relaxation_target = obs_name
+                aiming_at_target = self._aiming_at_target(u, ee, obs_name)
+
+            subject_binding = getattr(rule, "subject_binding", None)
+            checkpoint = getattr(rule, "checkpoint", None)
+            cp_index = getattr(rule, "checkpoint_index", 0)
+            if checkpoint is not None and cp_index < len(checkpoints):
+                # Positions move every timestep; take the live one rather than
+                # the copy captured when the record was lifted at setup.
+                checkpoint = checkpoints[cp_index]
+
+            if checkpoint is not None:
+                subject_point = checkpoint["pos"]
+                label = f"ARM-{checkpoint['name']}-{obs_name}"
+            else:
+                subject_point = ee
+                label = f"EEF-{obs_name}"
+
+            if rule.cbf_type == "avoid_sphere":
+                args = resolve_avoid_sphere(
+                    rule,
+                    obs_name=obs_name,
+                    subject_binding=subject_binding or "eef",
+                    obstacle_radii=self._obstacle_radii,
+                    obstacle_ellipsoids=self._obstacle_ellipsoids,
+                    checkpoint=checkpoint,
+                    aiming_at_target=aiming_at_target,
+                )
                 self._apply_point_cbf(
-                    u, cp["pos"], obs_pos,
-                    warning_r=cp["warning_r"], hard_r=cp["hard_r"],
-                    push_hard=cp["push"],
-                    label=f"ARM-{cp['name']}-{obs_name}",
+                    u, subject_point, obs_pos, label=label, **args
+                )
+            elif rule.cbf_type == "avoid_region_above":
+                bbox = state.objects[obs_name].bbox_half
+                apply_avoid_region_above(
+                    u, subject_point, obs_pos, bbox, rule.cbf_params
                 )
 
         # v23 Task B: opt-in task-progress bias.  After all obstacle
@@ -952,8 +1063,15 @@ class FOLSafetyFilter:
         if os.environ.get("FOL_TASK_BIAS", "0") == "1":
             u = self._apply_task_bias(u, ee, state)
 
-        # Velocity limit
-        vlim = cbf_set.velocity_limit or self.velocity_limit_default
+        # Velocity limit.  `cbf_set` still carries the legacy composer-authored
+        # channel; a `limit_speed` record, when one is enabled, competes on
+        # strictest-wins rather than replacing it.
+        vlim = collect_speed_limit(active_rules)
+        if cbf_set.velocity_limit is not None:
+            vlim = (cbf_set.velocity_limit if vlim is None
+                    else min(vlim, cbf_set.velocity_limit))
+        if vlim is None:
+            vlim = self.velocity_limit_default
         if self._vision_fallback_active:
             vlim = self._fallback_vlim if vlim is None else min(
                 vlim, self._fallback_vlim)
@@ -962,13 +1080,50 @@ class FOLSafetyFilter:
             if speed > vlim:
                 u[:3] *= vlim / speed
 
-        # Rotation constraint
-        if cbf_set.pose_constrained and cbf_set.angular_limit is not None:
+        # Rotation constraint, same strictest-wins composition.
+        omega_limit = collect_angular_limit(active_rules)
+        pose_constrained = cbf_set.pose_constrained or omega_limit is not None
+        if cbf_set.angular_limit is not None:
+            omega_limit = (cbf_set.angular_limit if omega_limit is None
+                           else min(omega_limit, cbf_set.angular_limit))
+        if pose_constrained and omega_limit is not None:
             omega = np.linalg.norm(u[3:6])
-            if omega > cbf_set.angular_limit:
-                u[3:6] *= cbf_set.angular_limit / omega
+            if omega > omega_limit:
+                u[3:6] *= omega_limit / omega
 
         return u, z_ceiling_active
+
+    def _aiming_at_target(
+        self, u: np.ndarray, ee: np.ndarray, obs_name: str,
+    ) -> bool:
+        """Whether the command is heading for a vision-detected target.
+
+        Target-corridor relaxation (vision-grounded obstacles only): an ~8cm
+        offset sphere can swallow the grasp corridor of a target that sits
+        near the obstacle, so when the commanded motion aims at the detected
+        target the approach is only partially cancelled (the amount is the
+        record's `cancel_scale_on_target_corridor`).  Oracle-state obstacles
+        are exactly centred and never need this.
+        """
+        if not obs_name.startswith("visual_"):
+            return False
+        targets = getattr(self, "_vision_targets_xy", None)
+        if not targets and getattr(self, "_vision_target_xy", None) is not None:
+            targets = [self._vision_target_xy]
+        speed = float(np.linalg.norm(u[:2]))
+        for txy in (targets or []):
+            tdiff = np.asarray(txy) - ee[:2]
+            tdist = float(np.linalg.norm(tdiff))
+            cos_xy = (float(u[:2] @ tdiff) / (speed * tdist + 1e-9)
+                      if speed > 1e-6 else 0.0)
+            # xy-cosine is blind to the vertical grasp descent (zero xy speed
+            # directly above the target) — treat descending while hovering
+            # over any mentioned object (grasp target or placement goal) as
+            # aiming at it.
+            descending_above = u[2] < -1e-4 and tdist < 0.10
+            if tdist < 0.30 and (cos_xy > 0.6 or descending_above):
+                return True
+        return False
 
     def _apply_task_bias(
         self, u: np.ndarray, ee: np.ndarray, state: RobotState,

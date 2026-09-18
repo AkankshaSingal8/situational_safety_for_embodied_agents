@@ -213,3 +213,32 @@ def load_library(root, enabled_ids: Optional[Iterable[str]] = None) -> RuleLibra
         all_records=all_sorted,
         manifest_path=str(manifest_path),
     )
+
+
+def install_rules(kb, scene, root=None, enabled_ids: Optional[Iterable[str]] = None):
+    """Load the memory and add its lifted rules to ``kb``. Returns the rules.
+
+    Used by the parity harness and the unit tests. The filter has its own
+    loader (`_load_memory_rules`) because it additionally resolves facts from
+    the episode's `ObjectState`s and logs each record's revision and hash;
+    both go through `load_library` and `resolve`, so neither can end up with a
+    different notion of which records are in force.
+
+    Callers that build a filter without ``__init__`` need this because the
+    geometry is no longer hardcoded: a knowledge base with no records produces
+    no corrections at all. That is the decomposition working, but it makes the
+    setup step mandatory rather than optional.
+
+    `root` defaults to the package's own `safety_memory/`.
+    """
+    from .binding import resolve
+
+    if root is None:
+        root = Path(__file__).resolve().parent.parent / "safety_memory"
+    library = load_library(root, enabled_ids=enabled_ids)
+    rules = []
+    for record in library.records:
+        for rule in resolve(record, scene):
+            kb.add_rule(rule)
+            rules.append(rule)
+    return rules

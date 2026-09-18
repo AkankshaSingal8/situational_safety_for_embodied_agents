@@ -5,6 +5,7 @@ import pytest
 
 from fol_safety_filter.visual_grounder import VisualObstacleGrounder
 from fol_safety_filter.filter import FOLSafetyFilter
+from fol_safety_filter.rule_memory.testing import install_memory
 from fol_safety_filter.primitives import ObjectState
 
 
@@ -99,6 +100,9 @@ def _cbf_filter(fallback):
     f._vision_fallback_active = fallback
     f._fallback_vlim = 0.010
     cbf_set = MappedCBFSet(semantic_envelopes=[], collision_envelopes=[])
+    # No obstacles in this scene: the memory lifts to zero rules, which is a
+    # valid no-op. The knowledge base still has to exist for the dispatch.
+    install_memory(f, [])
     return f, cbf_set
 
 
@@ -145,10 +149,16 @@ def test_arm_checkpoints_include_hand_with_tight_radii(monkeypatch):
     cps = f._get_arm_checkpoints(_FakeEnv())
     names = [c["name"] for c in cps]
     assert names == ["robot0_link4", "robot0_link6", "robot0_link7"]
+    # The opt-in hand body overrides the record, because it monitors a
+    # different volume at tighter margins.
     hand = cps[-1]
     assert hand["warning_r"] == pytest.approx(0.10)
     assert hand["hard_r"] == pytest.approx(0.06)
-    assert cps[0]["warning_r"] == pytest.approx(0.15)
+    # The elbow and wrist carry NO radii: theirs live in the
+    # arm_link_obstacle_avoid record, so editing that record changes what the
+    # arm does. Asserting 0.15 here would re-pin the geometry to Python.
+    assert "warning_r" not in cps[0]
+    assert "hard_r" not in cps[0]
 
 
 def test_hand_checkpoint_brakes_plow_through():
@@ -173,6 +183,10 @@ def test_hand_checkpoint_brakes_plow_through():
 
     hand_cp = [{"pos": np.array([0.05, 0.0, 0.98]), "warning_r": 0.10,
                 "hard_r": 0.06, "push": 0.06, "name": "robot0_link7"}]
+    # The hand body carries its own radii, so they override the record's --
+    # see arm_link_obstacle_avoid/SKILL.md. The record is still what binds
+    # the checkpoint to the obstacle in the first place.
+    install_memory(f, [synth], arm_checkpoints=hand_cp)
     u = np.zeros(7)
     u[:3] = [-0.02, 0.0, 0.0]  # dragging hand through the pot
     out, _ = f._apply_cbf(u, _S(), MappedCBFSet(
@@ -203,6 +217,10 @@ def test_corridor_relaxation_fires_on_vertical_descent():
             name=synth, pos=np.array([0.0, 0.0, 0.95]),
             quat=np.array([0.0, 0.0, 0.0, 1.0]),
             bbox_half=np.array([0.05, 0.05, 0.05]))}
+
+    # Geometry now comes from the rule records, so the knowledge base has to
+    # be populated -- an empty one yields no corrections.
+    install_memory(f, [synth])
 
     u = np.zeros(7)
     u[:3] = [0.0, 0.0, -0.02]  # pure vertical grasp descent, zero xy speed

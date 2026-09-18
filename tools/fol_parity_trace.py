@@ -218,7 +218,37 @@ def _make_filter(scenario: Dict):
     f._target_name = scenario["target_name"]
     f._vision_fallback_active = False
     f._initialized = True
+    _install_memory_rules(f, scenario)
     return f
+
+
+def _install_memory_rules(f, scenario: Dict) -> None:
+    """Populate the filter's knowledge base from the rule store, if it exists.
+
+    This is what makes the check meaningful after the refactor: the new
+    `_apply_cbf` takes its geometry from the rules that fired, so a harness
+    that left the knowledge base empty would compare the old projection
+    against no projection at all and "pass" by finding zero corrections on
+    both sides.
+
+    Guarded by ImportError because the golden trace is captured from a
+    checkout that predates `rule_memory`. There the block is skipped, the
+    hardcoded loop runs, and the extra attributes are ignored — which is
+    exactly the comparison this file exists to make.
+    """
+    try:
+        from fol_safety_filter.rule_memory import SceneBindings, install_rules
+    except ImportError:
+        return
+
+    scene = SceneBindings(
+        obstacle_names=list(scenario["obstacles"]),
+        arm_checkpoints=scenario["arm_checkpoints"],
+        grasped=None,
+        facts=lambda _obj, _fact: None,
+        object_names=list(scenario["obstacles"]),
+    )
+    install_rules(f.kb, scene)
 
 
 def _make_state(scenario: Dict, ee_pos: np.ndarray):

@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from fol_safety_filter.filter import FOLSafetyFilter
+from fol_safety_filter.rule_memory.testing import install_memory
 from fol_safety_filter.primitives import ObjectState
 from fol_safety_filter.cbf_mapper import MappedCBFSet
 
@@ -28,6 +29,9 @@ def _gate_filter(targets):
             quat=np.array([0.0, 0.0, 0.0, 1.0]),
             bbox_half=np.array([0.05, 0.05, 0.05]))}
 
+    # Geometry now comes from the rule records, so the knowledge base
+    # has to be populated -- an empty one yields no corrections.
+    install_memory(f, [synth])
     return f, _S()
 
 

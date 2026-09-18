@@ -6,6 +6,8 @@ boundary. Direction preserved; hard-zone penetration impossible.
 """
 
 import numpy as np
+
+from fol_safety_filter.rule_memory.testing import install_memory
 import pytest
 
 from fol_safety_filter.filter import FOLSafetyFilter
@@ -103,6 +105,10 @@ def _apply_cbf_mode(mode, aiming, monkeypatch_env):
                 name=synth, pos=np.zeros(3),
                 quat=np.array([0.0, 0.0, 0.0, 1.0]),
                 bbox_half=np.array([0.05, 0.05, 0.05]))}
+
+        # Geometry now comes from the rule records, so the knowledge base
+        # has to be populated -- an empty one yields no corrections.
+        install_memory(f, [synth])
 
         u = np.zeros(7)
         u[:3] = [-0.01, 0.005, 0.0]  # inward + tangential, ends outside hard

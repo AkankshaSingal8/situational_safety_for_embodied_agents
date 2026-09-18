@@ -28,7 +28,7 @@ from .schema import (
     parse_skill_md,
     validate,
 )
-from .store import RuleLibrary, load_library
+from .store import RuleLibrary, install_rules, load_library
 
 __all__ = [
     "EFFECT_PREDICATES",
@@ -39,6 +39,7 @@ __all__ = [
     "RuleRecord",
     "SCHEMA_VERSION",
     "SceneBindings",
+    "install_rules",
     "load_library",
     "load_record",
     "parse_skill_md",
