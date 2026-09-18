@@ -40,6 +40,14 @@ Consequences:
 - Every constant that determines behaviour (`0.20`, `0.10`, `0.08`, the arm
   triples, `cancel_scale=0.6`) lives in Python, so a rule cannot be authored,
   reviewed, versioned, or transferred as data.
+- Rule parameters are an open, untyped dict, so a misspelled key is silent.
+  `rule_composer.py:76` and `filter.py:427,508` all author rotation rules as
+  `cbf_params={"angular_limit": 0.10}` (or `0.15`), while the consumer reads
+  `params.get("omega_max", 0.25)` (`cbf_mapper.py:184`). Every rotation-lock
+  rule in the live path therefore runs at the 0.25 rad/s default and the
+  authored value is unreachable. Nothing reports this. A closed, typed
+  parameter set per effect predicate (§3.1) makes that class of defect a load
+  error instead.
 
 ## 2. Goal
 
@@ -196,13 +204,32 @@ unchanged code.
 | # | `id` | effect | loaded | what it is |
 |---|---|---|---|---|
 | 1 | `eef_obstacle_avoid` | `avoid_sphere` | default | the 0.20 / 0.10 / 0.08 EEF geometry now hardcoded at `filter.py:886` |
-| 2 | `arm_link_obstacle_avoid` | `avoid_sphere` | default | **same effect, `subject` rebound to `arm_checkpoints`** (0.15 / 0.08 / 0.06) |
+| 2 | `arm_link_obstacle_avoid` | `avoid_sphere` | default | **same effect, `subject` rebound to `arm_checkpoints`** (0.15 / 0.08 / 0.06) — the record now owns those radii; `_get_arm_checkpoints` supplies only body positions, except that the opt-in `FOL_HAND_CHECKPOINT` bodies keep their tighter per-body override |
 | 3 | `fragile_speed_limit` | `limit_speed` | default | the `cbf_set.velocity_limit` channel as a standalone record |
 | 4 | `spillable_rotation_lock` | `limit_angular_rate` | default | the `cbf_set.angular_limit` channel as a standalone record |
 | 5 | `overhead_exclusion` | `avoid_region_above` | **opt-in** | new: do not carry a payload through the column above a sensitive object |
 
 Rules 1–4 are ports of behaviour that already runs and are parity-critical
 (§6). Rule 5 is new, off by default, and is what the activation demo toggles.
+
+Two parameter notes that are behaviour, not bookkeeping:
+
+- Rule 1's `warning_r: 0.20` is a **floor**, matching
+  `max(0.20, self._obstacle_radii.get(obs_name, 0.20))`. A grounded
+  per-obstacle radius may expand it and may never shrink it.
+- Rule 4 carries `omega_max: 0.25`, which is what the rotation channel
+  *actually* runs at today (§1). Authoring `0.10` here would be a silent
+  tightening dressed up as a port. The defect is recorded in the rule's
+  `SKILL.md` body and left for a separate, measured change.
+
+Rule 4 is also re-pointed semantically: `rule_composer.py:70` tested
+`IS_SPILLABLE(obstacle)`, which locks the wrist because something *in the
+scene* is spillable. Rule 4 tests the **carried payload** instead
+(`subject: currently_grasped`), which is what the benchmark's rotation-lock
+ground truth annotates. Parity is unaffected — the golden trace supplies the
+angular channel directly — but the previous path stays reachable via
+`FOL_RULE_SOURCE=composer` for comparison, and this change is called out
+rather than buried.
 
 Rule 2 is the in-library generalization evidence: one effect implementation,
 one schema, a different `roles.subject`, and no new geometry code. Rule 1 and
@@ -249,7 +276,12 @@ do not.
 1. Loads the unmodified library and records each record's content hash.
 2. For each scene, resolves bindings from an **oracle fact table**
    (`fol_safety_filter/safety_memory/fixtures/scene_facts.yaml`) — declared as
-   oracle, so this measures rule generalization and not VLM perception.
+   oracle, so this measures rule generalization and not VLM perception. Facts
+   are restricted to names already in `PREDICATE_REGISTRY`
+   (`IS_SPILLABLE`, `IS_LIT`, `IS_FRAGILE`, `HAS_SHARP_PART`, `IS_FLAMMABLE`,
+   `IS_FULL`, `IS_OPEN`, `IS_HEAVY`, `IS_WET`, `IS_ABSORBENT`); no new predicate
+   is introduced, so rule 5's "overhead-sensitive" target set is expressed as
+   `objects_with_fact:IS_FRAGILE`.
 3. Evaluates activation per scene and compares with ground truth.
 4. Reports, per rule: scenes where it fired, which object each role bound to,
    and precision / recall against the annotations.
