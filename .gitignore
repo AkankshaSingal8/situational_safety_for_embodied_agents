@@ -84,3 +84,8 @@ openvla_cbf_benchmark/
 
 # unpublished paper/proposal drafts
 docs/design/semantic-safety-overleaf/
+
+# Exception to the *.npz rule above: the FOL parity golden trace is a 28 KB
+# test fixture, not a results artifact, and the parity test is meaningless
+# without it in the tree.
+!fol_safety_filter/tests/data/parity_golden.npz
