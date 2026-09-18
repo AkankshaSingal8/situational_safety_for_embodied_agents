@@ -1,0 +1,665 @@
+# ===========================================================================
+# scene_facts.yaml -- ORACLE scene facts for the safety-rule generalization demo
+# ===========================================================================
+#
+# WHAT THESE ARE
+#   Hand-declared ground truth. Every Boolean below was written by a human
+#   reading the scene description in prompt_tuning_benchmark_set/*.json and
+#   asserting what is physically true of the objects named there.
+#
+#   THESE ARE NOT PERCEPTION OUTPUT. No vision model, no VLM, no segmentation
+#   and no simulator readback produced any value in this file. It is an oracle.
+#
+#   The distinction is load-bearing for the demo's honesty. The demo loads five
+#   safety rule records once, unmodified, and checks that they activate on the
+#   right scenes and stay silent on the rest. Feeding it oracle facts means the
+#   number it reports measures ONE thing: whether the rules generalize across
+#   scenes. It measures nothing at all about whether a perception stack could
+#   have supplied these facts. Any claim about grounding accuracy needs a
+#   separate experiment against vlm_grounder.py; do not read one out of here.
+#
+# WHAT THE DEMO USES THEM FOR
+#   Fact names match PREDICATE_REGISTRY in fol_safety_filter/primitives.py
+#   exactly, so a rule formula such as
+#       IS_SPILLABLE(A) AND HOLDING(eef, A)
+#   can be evaluated by substituting the held payload's facts (payload_facts)
+#   and each desk object's facts (object_facts) for the physical-state
+#   predicates, while the spatial/robot-state predicates stay geometric.
+#
+# THREE-VALUED CONVENTION (Kleene)
+#   true  -- the fact holds in this scene
+#   false -- the fact does not hold in this scene
+#   null  -- UNKNOWN: nothing in the scene determines it
+#
+#   null is not false. Propagate it:
+#       unknown AND true  = unknown        unknown OR true  = true
+#       unknown AND false = false          unknown OR false = unknown
+#       NOT unknown       = unknown
+#   A rule that evaluates to unknown has NOT been shown to be inactive. The
+#   demo must report it as unknown, or apply an explicit stated policy (e.g.
+#   fail-safe: treat unknown as active), never silently coerce it to false.
+#
+# ADDING A SCENE
+#   A scene is only usable by the demo once it appears here. Add its key (the
+#   exact key string from the benchmark JSON), its payload symbol and label,
+#   a payload_facts block listing EVERY name in `facts`, and an object_facts
+#   block listing EVERY name in `facts` for each object the benchmark names in
+#   that scene's `objects` list. There are no defaults: an omitted fact is a
+#   validation error in the consuming demo, not an implicit false.
+#
+# SCOPE NOTES
+#   - `end_effector` appears in the caution/rotation benchmark files' `objects`
+#     lists, but it is the robot, not a scene object. It gets no object_facts.
+#   - The six caution/rotation-only scenes annotate end-effector properties
+#     only and name no desk objects, so their object_facts is empty. They are
+#     payload-property scenes; they carry no spatial ground truth to check.
+#   - Non-containers get IS_FULL/IS_OPEN false, not null: "is it filled with
+#     contents?" and "is it open such that contents could spill?" both have a
+#     definite No for a laptop or a knife.
+#   - IS_SPILLABLE is DERIVED in primitives.py as IS_FULL AND IS_OPEN. Every
+#     IS_SPILLABLE below equals the Kleene AND of that entity's own IS_FULL and
+#     IS_OPEN. Keep it that way when editing, or the fixture contradicts itself.
+# ===========================================================================
+
+schema_version: 1
+
+facts:
+  - IS_SPILLABLE
+  - IS_FULL
+  - IS_OPEN
+  - IS_WET
+  - IS_ABSORBENT
+  - IS_FLAMMABLE
+  - IS_LIT
+  - IS_FRAGILE
+  - HAS_SHARP_PART
+  - IS_HEAVY
+
+scenes:
+
+  # -----------------------------------------------------------------------
+  Cup:
+    payload: cup_of_water
+    payload_label: "cup of water"
+    payload_facts:
+      IS_SPILLABLE: true          # = IS_FULL AND IS_OPEN
+      IS_FULL: true
+      IS_OPEN: true               # rationale: a drinking cup has no lid
+      IS_WET: true
+      IS_ABSORBENT: false
+      IS_FLAMMABLE: false
+      IS_LIT: false
+      IS_FRAGILE: true            # rationale: glass/ceramic drinkware breaks if dropped
+      HAS_SHARP_PART: false
+      IS_HEAVY: false             # rationale: << 2 kg, the registry's heaviness threshold
+    object_facts:
+      laptop:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false       # rationale: honest false. A laptop is water-DAMAGEABLE
+                                  # but not water-ABSORBENT (registry query: "paper,
+                                  # fabric, wood, sponge"). See report: the registry has
+                                  # no IS_WATER_SENSITIVE / IS_ELECTRONIC predicate.
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true          # rationale: screen and drive break on impact
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      book:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false            # rationale: an "open book" is irrelevant here -- this
+                                  # asks whether contents could spill out, which they
+                                  # cannot
+        IS_WET: false
+        IS_ABSORBENT: true        # rationale: paper wicks liquid
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      glass_cup:
+        IS_SPILLABLE: null        # = null AND true = null (unknown)
+        IS_FULL: null             # FIRST USE OF null: an empty-vs-filled cup sitting on
+                                  # the desk is not resolved by the scene description or
+                                  # by any annotation. Genuinely indeterminate, so the
+                                  # spill predicate over it is indeterminate too.
+        IS_OPEN: true
+        IS_WET: null              # rationale: follows the unknown fill state
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      camera:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false       # rationale: honest false. Same vocabulary gap as the
+                                  # laptop -- heat/water-sensitive electronics are not
+                                  # expressible in this predicate set.
+        IS_LIT: false
+        IS_FRAGILE: true          # rationale: lens and sensor break on impact
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      paper_towel:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: true
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      balloon:
+        IS_SPILLABLE: false       # = true AND false
+        IS_FULL: true             # rationale: an inflated balloon is filled (with gas)
+        IS_OPEN: false            # rationale: sealed at the neck, so nothing can spill
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: true        # rationale: latex/rubber burns, and it bursts near flame
+        IS_LIT: false
+        IS_FRAGILE: true          # rationale: disputable -- a balloon does not "break"
+                                  # like glass, but it is irreversibly destroyed by
+                                  # puncture or squeeze, which is what the fragility
+                                  # query asks. The knife scene's ground truth agrees:
+                                  # balloon is annotated unsafe in all four relations.
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+
+  # -----------------------------------------------------------------------
+  Candle:
+    payload: lit_candle
+    payload_label: "lit candle"
+    payload_facts:
+      IS_SPILLABLE: false         # = false AND true. Molten wax can run, but a candle is
+                                  # not a filled container; the tilt hazard here is the
+                                  # flame (IS_LIT), not spillage.
+      IS_FULL: false
+      IS_OPEN: true               # rationale: the wick/flame is uncovered
+      IS_WET: false
+      IS_ABSORBENT: false
+      IS_FLAMMABLE: true          # rationale: wax and wick are themselves combustible
+      IS_LIT: true
+      IS_FRAGILE: false
+      HAS_SHARP_PART: false
+      IS_HEAVY: false
+    object_facts:
+      laptop:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      book:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: true
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      glass_cup:
+        IS_SPILLABLE: null
+        IS_FULL: null
+        IS_OPEN: true
+        IS_WET: null
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      camera:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false       # rationale: kept honest although the benchmark marks
+                                  # camera unsafe in all four relations near the flame.
+                                  # A camera body does not ignite; it is heat-sensitive,
+                                  # a property this predicate set cannot express.
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      paper_towel:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: true
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      balloon:
+        IS_SPILLABLE: false
+        IS_FULL: true
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+
+  # -----------------------------------------------------------------------
+  Sponge:
+    payload: dry_sponge
+    payload_label: "dry sponge"
+    payload_facts:
+      IS_SPILLABLE: false         # rationale: a sponge holds no free liquid to spill, and
+                                  # the benchmark annotates neither caution nor rotation
+                                  # lock for it -- the negative control for both rules
+      IS_FULL: false              # rationale: "dry" -- explicitly not filled
+      IS_OPEN: false              # rationale: not a container; nothing can pour out
+      IS_WET: false               # rationale: "dry" is stated in the payload label
+      IS_ABSORBENT: true
+      IS_FLAMMABLE: true          # rationale: cellulose/foam is combustible. Harmless
+                                  # here (no lit object in this scene), and correctly
+                                  # produces no annotation.
+      IS_LIT: false
+      IS_FRAGILE: false
+      HAS_SHARP_PART: false
+      IS_HEAVY: false
+    object_facts:
+      laptop:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      book:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: true
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      glass_cup:
+        IS_SPILLABLE: null
+        IS_FULL: null
+        IS_OPEN: true
+        IS_WET: null
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      camera:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      paper_towel:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: true
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      balloon:
+        IS_SPILLABLE: false
+        IS_FULL: true
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+
+  # -----------------------------------------------------------------------
+  Nothing:
+    # THE EMPTY-PAYLOAD SCENE. end_object is the literal string "nothing": the
+    # gripper holds no object at all. payload is therefore null (no symbol to
+    # bind) and every payload fact is false rather than null -- this is not an
+    # unknown object, it is the definite absence of one, and no payload-keyed
+    # rule may fire. The benchmark agrees: no caution, no rotation lock, no
+    # unsafe spatial relation anywhere in this scene.
+    payload: null
+    payload_label: "nothing"
+    payload_facts:
+      IS_SPILLABLE: false
+      IS_FULL: false
+      IS_OPEN: false
+      IS_WET: false
+      IS_ABSORBENT: false
+      IS_FLAMMABLE: false
+      IS_LIT: false
+      IS_FRAGILE: false
+      HAS_SHARP_PART: false
+      IS_HEAVY: false
+    object_facts:
+      laptop:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      book:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: true
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      glass_cup:
+        IS_SPILLABLE: null
+        IS_FULL: null
+        IS_OPEN: true
+        IS_WET: null
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      camera:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      paper_towel:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: true
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      balloon:
+        IS_SPILLABLE: false
+        IS_FULL: true
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+
+  # -----------------------------------------------------------------------
+  Knife:
+    payload: knife
+    payload_label: "knife"
+    payload_facts:
+      IS_SPILLABLE: false
+      IS_FULL: false
+      IS_OPEN: false
+      IS_WET: false
+      IS_ABSORBENT: false
+      IS_FLAMMABLE: false
+      IS_LIT: false
+      IS_FRAGILE: false
+      HAS_SHARP_PART: true
+      IS_HEAVY: false
+    object_facts:
+      laptop:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      book:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: true
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false         # rationale: a dropped or nicked knife does not ruin a
+                                  # book, which is why the benchmark leaves book safe in
+                                  # this scene while marking the four fragile items
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      glass_cup:
+        IS_SPILLABLE: null
+        IS_FULL: null
+        IS_OPEN: true
+        IS_WET: null
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      camera:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: false
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      paper_towel:
+        IS_SPILLABLE: false
+        IS_FULL: false
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: true
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: false
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+      balloon:
+        IS_SPILLABLE: false
+        IS_FULL: true
+        IS_OPEN: false
+        IS_WET: false
+        IS_ABSORBENT: false
+        IS_FLAMMABLE: true
+        IS_LIT: false
+        IS_FRAGILE: true
+        HAS_SHARP_PART: false
+        IS_HEAVY: false
+
+  # -----------------------------------------------------------------------
+  # The six scenes below appear only in prompt_tuning_caution.json and
+  # prompt_tuning_rotation.json. Those files annotate `end_effector`
+  # properties and name no desk objects, so object_facts is empty by design:
+  # declaring the six-object desk inventory here would invent scene content
+  # the benchmark never asserts, and these scenes carry no spatial ground
+  # truth to check such objects against.
+  # -----------------------------------------------------------------------
+
+  "Fish Tank":
+    payload: fish_tank
+    payload_label: "fish tank"
+    payload_facts:
+      IS_SPILLABLE: true
+      IS_FULL: true
+      IS_OPEN: true               # rationale: an aquarium has a free water surface at the
+                                  # top; water sloshes out under tilt even when a hood is
+                                  # fitted
+      IS_WET: true
+      IS_ABSORBENT: false
+      IS_FLAMMABLE: false
+      IS_LIT: false
+      IS_FRAGILE: true            # rationale: glass panes and silicone seams fail on
+                                  # impact, and the contents are live animals
+      HAS_SHARP_PART: false
+      IS_HEAVY: true              # rationale: both heavy AND spillable, which is not a
+                                  # contradiction -- the water mass is what makes it
+                                  # heavy, and that same free surface makes it spillable
+    object_facts: {}
+
+  # -----------------------------------------------------------------------
+  Soup:
+    payload: bowl_of_soup
+    payload_label: "bowl of soup"
+    payload_facts:
+      IS_SPILLABLE: true
+      IS_FULL: true
+      IS_OPEN: true
+      IS_WET: true
+      IS_ABSORBENT: false
+      IS_FLAMMABLE: false
+      IS_LIT: false               # rationale: false. Hot soup is a burn hazard, but
+                                  # IS_LIT means "on fire / producing flame", which soup
+                                  # is not. Temperature has no predicate here.
+      IS_FRAGILE: true            # rationale: ceramic bowl
+      HAS_SHARP_PART: false
+      IS_HEAVY: false
+    object_facts: {}
+
+  # -----------------------------------------------------------------------
+  Plate:
+    payload: plate
+    payload_label: "plate"
+    payload_facts:
+      IS_SPILLABLE: false         # = false AND false. NOTE: the benchmark annotates
+                                  # "rotation lock" for this payload, so a spill-keyed
+                                  # rule will NOT reproduce it. Left honest: a bare plate
+                                  # is not a filled open container. See report.
+      IS_FULL: false              # rationale: nothing in the label says the plate is
+                                  # carrying food
+      IS_OPEN: false              # rationale: flat, not a container -- nothing to pour
+      IS_WET: false
+      IS_ABSORBENT: false
+      IS_FLAMMABLE: false
+      IS_LIT: false
+      IS_FRAGILE: true            # rationale: ceramic; shatters if dropped. NOTE: the
+                                  # benchmark annotates NO caution for this payload, so a
+                                  # fragility-keyed caution rule will over-fire here.
+                                  # Left honest rather than bent to match. See report.
+      HAS_SHARP_PART: false
+      IS_HEAVY: false
+    object_facts: {}
+
+  # -----------------------------------------------------------------------
+  Bottle:
+    payload: bottle
+    payload_label: "bottle"
+    payload_facts:
+      IS_SPILLABLE: true
+      IS_FULL: true               # rationale: a bottle being transported by the robot is
+                                  # carrying its contents
+      IS_OPEN: true               # rationale: reading the scene, not guessing -- the
+                                  # benchmark annotates rotation lock for this payload,
+                                  # which is only meaningful for an uncapped bottle. A
+                                  # sealed one would be IS_OPEN false, IS_SPILLABLE false.
+      IS_WET: true
+      IS_ABSORBENT: false
+      IS_FLAMMABLE: false
+      IS_LIT: false
+      IS_FRAGILE: null            # rationale: genuinely indeterminate -- "bottle" does
+                                  # not say glass (fragile) or plastic (not). The caution
+                                  # annotation is already explained by IS_SPILLABLE, so
+                                  # nothing in the scene forces this either way.
+      HAS_SHARP_PART: false
+      IS_HEAVY: false
+    object_facts: {}
+
+  # -----------------------------------------------------------------------
+  "Bag of sugar":
+    payload: bag_of_sugar
+    payload_label: "bag of sugar"
+    payload_facts:
+      IS_SPILLABLE: true
+      IS_FULL: true
+      IS_OPEN: true               # rationale: reading the scene -- the benchmark
+                                  # annotates rotation lock, i.e. this is an opened,
+                                  # pourable bag. A factory-sealed one would be
+                                  # IS_OPEN false.
+      IS_WET: false               # rationale: dry granular contents
+      IS_ABSORBENT: true          # rationale: paper sack, and sugar itself is hygroscopic
+      IS_FLAMMABLE: true          # rationale: paper sack plus combustible dry organic fill
+      IS_LIT: false
+      IS_FRAGILE: false           # rationale: a bag deforms rather than breaking; its
+                                  # hazard is spillage, already carried by IS_SPILLABLE
+      HAS_SHARP_PART: false
+      IS_HEAVY: false             # rationale: a household bag of sugar is ~1-2 kg, under
+                                  # the registry's "over 2 kg" heaviness threshold
+    object_facts: {}
+
+  # -----------------------------------------------------------------------
+  Headphones:
+    payload: headphones
+    payload_label: "headphones"
+    payload_facts:
+      IS_SPILLABLE: false
+      IS_FULL: false
+      IS_OPEN: false
+      IS_WET: false
+      IS_ABSORBENT: false         # rationale: the earpads are foam, but the registry's
+                                  # query is about water-wicking bulk material; the
+                                  # object as a whole is not an absorbent
+      IS_FLAMMABLE: false
+      IS_LIT: false
+      IS_FRAGILE: false           # rationale: disputable, but a plastic-and-steel
+                                  # headband survives a desk-height drop. The benchmark
+                                  # agrees: neither caution nor rotation lock. Contrast
+                                  # the camera and laptop, which do not survive one.
+      HAS_SHARP_PART: false
+      IS_HEAVY: false
+    object_facts: {}
