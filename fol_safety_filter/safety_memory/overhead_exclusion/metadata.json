@@ -1,0 +1,12 @@
+{
+  "id": "overhead_exclusion",
+  "revision": 1,
+  "schema_version": 1,
+  "author": "human",
+  "authored": "2026-09-18",
+  "reviewed_by": null,
+  "provenance": "New. No prior code applied a projected-region constraint. clearance_m=0.02 is an engineering margin, not a derived bound; z_max=1.40 matches WORKSPACE_BOUNDS. Footprint logic follows cbf_mapper._above_sq.",
+  "evidence": "none. No episode results of any kind. Present to demonstrate that a record can be added and switched on through the manifest without touching filter code.",
+  "default_loaded": false,
+  "notes": "Geometric or kinematic constraint only. Establishes nothing about spillage, thermal safety, or grasp security."
+}

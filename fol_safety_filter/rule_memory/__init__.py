@@ -11,7 +11,12 @@ names is read from the record rather than hardcoded downstream.
 
 from __future__ import annotations
 
-from .binding import SceneBindings, resolve, resolve_with_unknowns
+from .binding import (
+    SceneBindings,
+    register_checkpoint_pseudo_objects,
+    resolve,
+    resolve_with_unknowns,
+)
 from .schema import (
     EFFECT_PREDICATES,
     MAX_RECORD_BYTES,
@@ -37,6 +42,7 @@ __all__ = [
     "load_library",
     "load_record",
     "parse_skill_md",
+    "register_checkpoint_pseudo_objects",
     "resolve",
     "resolve_with_unknowns",
     "validate",

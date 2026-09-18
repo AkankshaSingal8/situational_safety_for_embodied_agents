@@ -1,0 +1,63 @@
+# Activation contract for `spillable_rotation_lock`.
+#
+# Each case is a scene plus the activation this record must produce on it. The
+# runner (tests/test_rule_contracts.py) lifts the record over the scene, then
+# evaluates the resulting rules -- so a case exercises binding AND the formula,
+# not just one of them.
+#
+# `expect: fires` means at least one lifted rule evaluates true;
+# `expect: silent` means none does. `expect_fired` pins the exact count where
+# the count is the point. A boundary case sits deliberately within a
+# millimetre of the threshold, so a sign error or an off-by-one comparison
+# shows up here rather than in an episode.
+schema_version: 1
+cases:
+  # Positive, via IS_SPILLABLE: an open, full container.
+  - name: carrying_full_open_cup_fires
+    expect: fires
+    expect_fired: 1
+    scene:
+      eef_pos: [0.0, 0.0, 0.95]
+      grasped: cup_of_water
+      objects:
+        cup_of_water: {pos: [0.0, 0.0, 0.95], facts: {IS_FULL: true, IS_OPEN: true, IS_SPILLABLE: true, IS_LIT: false}}
+
+  # Positive, via IS_LIT: this is the case IS_SPILLABLE alone misses. A candle
+  # is honestly IS_FULL false; its tilt hazard is the flame.
+  - name: carrying_lit_candle_fires
+    expect: fires
+    expect_fired: 1
+    scene:
+      eef_pos: [0.0, 0.0, 0.95]
+      grasped: lit_candle
+      objects:
+        lit_candle: {pos: [0.0, 0.0, 0.95], facts: {IS_FULL: false, IS_OPEN: false, IS_SPILLABLE: false, IS_LIT: true}}
+
+  # Negative: a dry sponge needs no lock. The annotation agrees.
+  - name: carrying_dry_sponge_is_silent
+    expect: silent
+    scene:
+      eef_pos: [0.0, 0.0, 0.95]
+      grasped: dry_sponge
+      objects:
+        dry_sponge: {pos: [0.0, 0.0, 0.95], facts: {IS_FULL: false, IS_OPEN: false, IS_SPILLABLE: false, IS_LIT: false}}
+
+  # Negative: nothing held -> the subject does not bind at all.
+  - name: empty_gripper_binds_to_nothing
+    expect: silent
+    expect_resolved: 0
+    scene:
+      eef_pos: [0.0, 0.0, 0.95]
+      grasped: null
+      objects: {}
+
+  # Boundary: a sealed full container. Full but not open, so not spillable --
+  # this is the IS_SPILLABLE = IS_FULL AND IS_OPEN derivation, and getting it
+  # backwards would lock the wrist for every closed bottle on the table.
+  - name: sealed_container_is_silent
+    expect: silent
+    scene:
+      eef_pos: [0.0, 0.0, 0.95]
+      grasped: thermos
+      objects:
+        thermos: {pos: [0.0, 0.0, 0.95], facts: {IS_FULL: true, IS_OPEN: false, IS_SPILLABLE: false, IS_LIT: false}}

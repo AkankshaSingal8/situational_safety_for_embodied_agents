@@ -1,0 +1,75 @@
+# Activation contract for `overhead_exclusion`.
+#
+# Each case is a scene plus the activation this record must produce on it. The
+# runner (tests/test_rule_contracts.py) lifts the record over the scene, then
+# evaluates the resulting rules -- so a case exercises binding AND the formula,
+# not just one of them.
+#
+# `expect: fires` means at least one lifted rule evaluates true;
+# `expect: silent` means none does. `expect_fired` pins the exact count where
+# the count is the point. A boundary case sits deliberately within a
+# millimetre of the threshold, so a sign error or an off-by-one comparison
+# shows up here rather than in an episode.
+schema_version: 1
+cases:
+  # Positive: payload directly above a fragile object, well clear of every
+  # avoidance sphere in this memory. No other record constrains this.
+  - name: payload_above_fragile_fires
+    expect: fires
+    expect_fired: 1
+    scene:
+      eef_pos: [0.0, 0.0, 1.25]
+      grasped: cup_of_water
+      objects:
+        cup_of_water: {pos: [0.0, 0.0, 1.25], facts: {IS_FRAGILE: false}}
+        glass_cup: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: true}}
+
+  # Negative: below the fragile object -- the region is above it, not around it.
+  - name: payload_below_fragile_is_silent
+    expect: silent
+    scene:
+      eef_pos: [0.0, 0.0, 0.82]
+      grasped: cup_of_water
+      objects:
+        cup_of_water: {pos: [0.0, 0.0, 0.82], facts: {IS_FRAGILE: false}}
+        glass_cup: {pos: [0.0, 0.0, 0.95], facts: {IS_FRAGILE: true}}
+
+  # Negative: above something sturdy. The rule is fact-conditioned, not a
+  # blanket ban on carrying things over other things.
+  - name: payload_above_sturdy_object_is_silent
+    expect: silent
+    expect_resolved: 0
+    scene:
+      eef_pos: [0.0, 0.0, 1.25]
+      grasped: cup_of_water
+      objects:
+        cup_of_water: {pos: [0.0, 0.0, 1.25], facts: {IS_FRAGILE: false}}
+        book: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: false}}
+
+  # Negative: nothing held.
+  - name: empty_gripper_binds_to_nothing
+    expect: silent
+    expect_resolved: 0
+    scene:
+      eef_pos: [0.0, 0.0, 1.25]
+      grasped: null
+      objects:
+        glass_cup: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: true}}
+
+  # Boundary: 1 mm either side of the 0.02 m ABOVE margin.
+  - name: boundary_just_above_margin
+    expect: fires
+    scene:
+      eef_pos: [0.0, 0.0, 0.871]
+      grasped: cup_of_water
+      objects:
+        cup_of_water: {pos: [0.0, 0.0, 0.871], facts: {IS_FRAGILE: false}}
+        glass_cup: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: true}}
+  - name: boundary_just_below_margin
+    expect: silent
+    scene:
+      eef_pos: [0.0, 0.0, 0.869]
+      grasped: cup_of_water
+      objects:
+        cup_of_water: {pos: [0.0, 0.0, 0.869], facts: {IS_FRAGILE: false}}
+        glass_cup: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: true}}

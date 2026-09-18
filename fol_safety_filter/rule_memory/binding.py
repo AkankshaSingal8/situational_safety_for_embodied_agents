@@ -179,3 +179,38 @@ def resolve_with_unknowns(
 def resolve(record: RuleRecord, scene: SceneBindings) -> List[FOLRule]:
     """Lift ``record`` over ``scene``; see `resolve_with_unknowns`."""
     return resolve_with_unknowns(record, scene)[0]
+
+
+def register_checkpoint_pseudo_objects(state, checkpoints: Sequence[Dict]) -> None:
+    """Make arm checkpoints addressable by the predicate layer, in place.
+
+    `primitives.NEAR` resolves the literal symbol `eef` from `state.ee_pos` and
+    every *other* symbol from `state.objects` (`primitives.py:96`). An arm
+    checkpoint is not in `state.objects`, so `NEAR(wrist, obstacle, r)` raises
+    `KeyError`, `kb.py:57` catches it, and the rule evaluates False — with a
+    DEBUG log and nothing else.
+
+    Measured: a checkpoint 1 cm from an obstacle does not fire unless it has
+    been registered. Every `arm_checkpoints` rule is therefore silently inert
+    without this call, while still loading, validating and reporting as
+    enabled. That is the exact silent-degradation mode this memory exists to
+    refuse, so the registration is a named function with this docstring rather
+    than two lines buried in the filter.
+
+    Extents are zero: a checkpoint is a monitored point, and the avoidance zone
+    comes from the record's radii, not from the body's geometry.
+    """
+    import numpy as np
+
+    from ..primitives import ObjectState
+
+    for cp in checkpoints:
+        name = cp["name"]
+        if name in state.objects:
+            continue
+        state.objects[name] = ObjectState(
+            name=name,
+            pos=np.asarray(cp["pos"], dtype=np.float64),
+            quat=np.array([0.0, 0.0, 0.0, 1.0]),
+            bbox_half=np.zeros(3),
+        )

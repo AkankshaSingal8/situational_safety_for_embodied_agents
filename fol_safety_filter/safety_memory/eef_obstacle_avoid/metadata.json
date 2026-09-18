@@ -1,0 +1,12 @@
+{
+  "id": "eef_obstacle_avoid",
+  "revision": 1,
+  "schema_version": 1,
+  "author": "human",
+  "authored": "2026-09-18",
+  "reviewed_by": null,
+  "provenance": "Ported from the hardcoded obstacle loop in filter.py:_apply_cbf (filter.py:878-916 at 75ca90d4): warning_r from max(0.20, self._obstacle_radii.get(obs_name, 0.20)), hard_r=0.10 and push_hard=0.08 from the _apply_point_cbf call, cancel_scale_on_target_corridor=0.6 from the target-corridor relaxation branch.",
+  "evidence": "fol_safety_filter/README.md reports the results this geometry produced (spatial L1 TSR 48.0%, L2 68.0%, n=50). Held bit-exact by tools/fol_parity_trace.py and tests/test_parity.py.",
+  "default_loaded": true,
+  "notes": "Geometric or kinematic constraint only. Establishes nothing about spillage, thermal safety, or grasp security."
+}

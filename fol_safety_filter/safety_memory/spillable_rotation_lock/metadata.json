@@ -1,0 +1,12 @@
+{
+  "id": "spillable_rotation_lock",
+  "revision": 1,
+  "schema_version": 1,
+  "author": "human",
+  "authored": "2026-09-18",
+  "reviewed_by": null,
+  "provenance": "Effect ported from rule_composer.py:66-86 at 75ca90d4, with two corrections recorded rather than applied. omega_max=0.25 is the value that actually runs: the authored {'angular_limit': 0.1} is unreachable because cbf_mapper.py:184 reads 'omega_max'. Subject re-pointed from the obstacle to the carried payload. Activation formula IS_SPILLABLE OR IS_LIT selected by measurement against prompt_tuning_rotation.json (6/7 recall vs 5/7, 0 FP).",
+  "evidence": "Activation correctness only, on the oracle fixture: 6/7 recall, 0 false positives over 11 payload scenes. No episode evidence. The channel it replaces is inert on the reported obstacles -- see tests/test_composer_channel_status_quo.py.",
+  "default_loaded": false,
+  "notes": "Geometric or kinematic constraint only. Establishes nothing about spillage, thermal safety, or grasp security."
+}

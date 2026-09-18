@@ -1,0 +1,64 @@
+# Activation contract for `fragile_speed_limit`.
+#
+# Each case is a scene plus the activation this record must produce on it. The
+# runner (tests/test_rule_contracts.py) lifts the record over the scene, then
+# evaluates the resulting rules -- so a case exercises binding AND the formula,
+# not just one of them.
+#
+# `expect: fires` means at least one lifted rule evaluates true;
+# `expect: silent` means none does. `expect_fired` pins the exact count where
+# the count is the point. A boundary case sits deliberately within a
+# millimetre of the threshold, so a sign error or an off-by-one comparison
+# shows up here rather than in an episode.
+schema_version: 1
+cases:
+  # Positive: fragile object within 0.15 m.
+  - name: near_fragile_fires
+    expect: fires
+    expect_fired: 1
+    scene:
+      eef_pos: [0.10, 0.0, 0.85]
+      objects:
+        glass_cup: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: true}}
+
+  # Negative: within range, but not fragile -> not even selected as a target.
+  - name: near_sturdy_object_is_silent
+    expect: silent
+    expect_resolved: 0
+    scene:
+      eef_pos: [0.10, 0.0, 0.85]
+      objects:
+        book: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: false}}
+
+  # Negative: fragile, but outside the radius. Binds, does not fire.
+  - name: far_from_fragile_is_silent
+    expect: silent
+    expect_resolved: 1
+    scene:
+      eef_pos: [0.40, 0.0, 0.85]
+      objects:
+        glass_cup: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: true}}
+
+  # Negative: unknown fact is not a false one, and is not selected either.
+  - name: unknown_fragility_is_not_selected
+    expect: silent
+    expect_resolved: 0
+    expect_unknown: [mystery_jar]
+    scene:
+      eef_pos: [0.10, 0.0, 0.85]
+      objects:
+        mystery_jar: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: null}}
+
+  # Boundary: 1 mm either side of 0.15 m.
+  - name: boundary_just_inside_radius
+    expect: fires
+    scene:
+      eef_pos: [0.149, 0.0, 0.85]
+      objects:
+        glass_cup: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: true}}
+  - name: boundary_just_outside_radius
+    expect: silent
+    scene:
+      eef_pos: [0.151, 0.0, 0.85]
+      objects:
+        glass_cup: {pos: [0.0, 0.0, 0.85], facts: {IS_FRAGILE: true}}

@@ -1,0 +1,31 @@
+# Which rule records exist, and which of them load by default.
+#
+# Only the two spatial records are default-loaded. They are bit-exact ports of
+# the geometry that was hardcoded in filter.py:_apply_cbf and that produced
+# every number in fol_safety_filter/README.md; tools/fol_parity_trace.py holds
+# them to max|delta| == 0.
+#
+# The other three are opt-in on purpose. The golden parity trace builds
+# MappedCBFSet itself, so kb.evaluate and mapper.map are not in its loop: it
+# pins what the projection does with a given constraint set, NOT which rules
+# fire. Nothing that changes rule selection may therefore become the default
+# on the strength of parity alone. Each of the three needs its own measured
+# comparison first, for a reason recorded in its SKILL.md:
+#
+#   fragile_speed_limit      faithful port, but the channel has never run on
+#                            the reported obstacles -- untested, not unchanged
+#   spillable_rotation_lock  re-pointed from the obstacle to the payload, so a
+#                            semantic change rather than a port
+#   overhead_exclusion       new; no episode evidence of any kind
+schema_version: 1
+rules:
+  - id: arm_link_obstacle_avoid
+    default_loaded: true
+  - id: eef_obstacle_avoid
+    default_loaded: true
+  - id: fragile_speed_limit
+    default_loaded: false
+  - id: overhead_exclusion
+    default_loaded: false
+  - id: spillable_rotation_lock
+    default_loaded: false

@@ -1,0 +1,69 @@
+# Activation contract for `eef_obstacle_avoid`.
+#
+# Each case is a scene plus the activation this record must produce on it. The
+# runner (tests/test_rule_contracts.py) lifts the record over the scene, then
+# evaluates the resulting rules -- so a case exercises binding AND the formula,
+# not just one of them.
+#
+# `expect: fires` means at least one lifted rule evaluates true;
+# `expect: silent` means none does. `expect_fired` pins the exact count where
+# the count is the point. A boundary case sits deliberately within a
+# millimetre of the threshold, so a sign error or an off-by-one comparison
+# shows up here rather than in an episode.
+schema_version: 1
+cases:
+  # Positive: EEF well inside the 0.60 m pre-filter gate.
+  - name: eef_near_obstacle_fires
+    expect: fires
+    expect_fired: 1
+    scene:
+      eef_pos: [0.05, 0.0, 0.85]
+      obstacles: [moka_pot]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+
+  # Positive: one record, two obstacles, two independent rules. This is the
+  # lifting property -- the record names no obstacle.
+  - name: two_obstacles_lift_to_two_rules
+    expect: fires
+    expect_fired: 2
+    scene:
+      eef_pos: [0.05, 0.0, 0.85]
+      obstacles: [moka_pot, wine_bottle]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+        wine_bottle: {pos: [0.10, 0.0, 0.85]}
+
+  # Negative: outside the gate entirely.
+  - name: eef_far_away_is_silent
+    expect: silent
+    scene:
+      eef_pos: [1.20, 0.0, 0.85]
+      obstacles: [moka_pot]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+
+  # Negative: no obstacle grounded, so nothing to bind to. Vacuous, not broken.
+  - name: no_obstacles_binds_to_nothing
+    expect: silent
+    expect_resolved: 0
+    scene:
+      eef_pos: [0.05, 0.0, 0.85]
+      obstacles: []
+      objects: {}
+
+  # Boundary: 1 mm inside the 0.60 m gate, then 1 mm outside it.
+  - name: boundary_just_inside_gate
+    expect: fires
+    scene:
+      eef_pos: [0.599, 0.0, 0.85]
+      obstacles: [moka_pot]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+  - name: boundary_just_outside_gate
+    expect: silent
+    scene:
+      eef_pos: [0.601, 0.0, 0.85]
+      obstacles: [moka_pot]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}

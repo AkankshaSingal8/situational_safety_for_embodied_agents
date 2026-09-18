@@ -1,0 +1,83 @@
+# Activation contract for `arm_link_obstacle_avoid`.
+#
+# Each case is a scene plus the activation this record must produce on it. The
+# runner (tests/test_rule_contracts.py) lifts the record over the scene, then
+# evaluates the resulting rules -- so a case exercises binding AND the formula,
+# not just one of them.
+#
+# `expect: fires` means at least one lifted rule evaluates true;
+# `expect: silent` means none does. `expect_fired` pins the exact count where
+# the count is the point. A boundary case sits deliberately within a
+# millimetre of the threshold, so a sign error or an off-by-one comparison
+# shows up here rather than in an episode.
+schema_version: 1
+cases:
+  # Positive: the EEF is far away and an arm checkpoint is what fires. This is
+  # the case that is silently inert unless the checkpoint is registered into
+  # state.objects -- see the record's SKILL.md.
+  - name: arm_checkpoint_fires_with_eef_far_away
+    expect: fires
+    expect_fired: 1
+    scene:
+      eef_pos: [2.0, 2.0, 2.0]
+      obstacles: [moka_pot]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+      arm_checkpoints:
+        - {name: robot0_link6, pos: [0.01, 0.0, 0.85], warning_r: 0.15, hard_r: 0.08, push: 0.06}
+
+  # Positive: two checkpoints x two obstacles = four lifted rules.
+  - name: checkpoints_cross_obstacles
+    expect: fires
+    expect_resolved: 4
+    scene:
+      eef_pos: [2.0, 2.0, 2.0]
+      obstacles: [moka_pot, wine_bottle]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+        wine_bottle: {pos: [0.10, 0.0, 0.85]}
+      arm_checkpoints:
+        - {name: robot0_link4, pos: [0.01, 0.0, 0.85], warning_r: 0.15, hard_r: 0.08, push: 0.06}
+        - {name: robot0_link6, pos: [0.02, 0.0, 0.85], warning_r: 0.15, hard_r: 0.08, push: 0.06}
+
+  # Negative: no checkpoints supplied (e.g. no env handle) -> nothing binds.
+  - name: no_checkpoints_binds_to_nothing
+    expect: silent
+    expect_resolved: 0
+    scene:
+      eef_pos: [0.05, 0.0, 0.85]
+      obstacles: [moka_pot]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+      arm_checkpoints: []
+
+  # Negative: checkpoint outside the gate.
+  - name: arm_checkpoint_far_away_is_silent
+    expect: silent
+    scene:
+      eef_pos: [2.0, 2.0, 2.0]
+      obstacles: [moka_pot]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+      arm_checkpoints:
+        - {name: robot0_link6, pos: [1.20, 0.0, 0.85], warning_r: 0.15, hard_r: 0.08, push: 0.06}
+
+  # Boundary: 1 mm either side of the gate.
+  - name: boundary_just_inside_gate
+    expect: fires
+    scene:
+      eef_pos: [2.0, 2.0, 2.0]
+      obstacles: [moka_pot]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+      arm_checkpoints:
+        - {name: robot0_link6, pos: [0.599, 0.0, 0.85], warning_r: 0.15, hard_r: 0.08, push: 0.06}
+  - name: boundary_just_outside_gate
+    expect: silent
+    scene:
+      eef_pos: [2.0, 2.0, 2.0]
+      obstacles: [moka_pot]
+      objects:
+        moka_pot: {pos: [0.0, 0.0, 0.85]}
+      arm_checkpoints:
+        - {name: robot0_link6, pos: [0.601, 0.0, 0.85], warning_r: 0.15, hard_r: 0.08, push: 0.06}

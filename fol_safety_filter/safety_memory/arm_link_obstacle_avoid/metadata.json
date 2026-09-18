@@ -1,0 +1,12 @@
+{
+  "id": "arm_link_obstacle_avoid",
+  "revision": 1,
+  "schema_version": 1,
+  "author": "human",
+  "authored": "2026-09-18",
+  "reviewed_by": null,
+  "provenance": "Radii ported from the per-body table in filter.py:_get_arm_checkpoints (filter.py:818-820 at 75ca90d4): robot0_link4 and robot0_link6 at 0.15/0.08/0.06. The effect predicate is shared verbatim with eef_obstacle_avoid.",
+  "evidence": "Same campaign as eef_obstacle_avoid; the arm channel was active throughout. Held bit-exact by the arm_only, arm_hand_only and arm_hand_ellipsoid parity scenarios.",
+  "default_loaded": true,
+  "notes": "Geometric or kinematic constraint only. Establishes nothing about spillage, thermal safety, or grasp security."
+}
