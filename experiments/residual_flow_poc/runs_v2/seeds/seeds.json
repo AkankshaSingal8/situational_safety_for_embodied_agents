@@ -1,0 +1,528 @@
+{
+ "train": {
+  "Exp1 A text: laptop avoided & placed": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp1 A text: tilt still violated (should be 1)": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp1 B text: upright & placed": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp1 B text: laptop still violated (should be 1)": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp1 no-text model: laptop avoided & placed": {
+   "values": [
+    0.34,
+    0.335,
+    0.335
+   ],
+   "mean": 0.33666666666666667,
+   "sd": 0.002886751345948131
+  },
+  "Exp1 no-text model: upright & placed": {
+   "values": [
+    0.435,
+    0.415,
+    0.415
+   ],
+   "mean": 0.42166666666666663,
+   "sd": 0.011547005383792526
+  },
+  "Exp1 shuffled, A text: laptop avoided & placed": {
+   "values": [
+    0.365,
+    0.37,
+    0.36
+   ],
+   "mean": 0.365,
+   "sd": 0.0050000000000000044
+  },
+  "Exp1 shuffled, B text: upright & placed": {
+   "values": [
+    0.35,
+    0.345,
+    0.34
+   ],
+   "mean": 0.345,
+   "sd": 0.004999999999999977
+  },
+  "Exp1 detour on the reference side": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp1 main_ab A text: laptop avoided & placed": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp1 main_ab B text: upright & placed": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp2 unseen laptop wordings, set 1": {
+   "values": [
+    0.63875,
+    0.7075,
+    0.7125
+   ],
+   "mean": 0.6862499999999999,
+   "sd": 0.041212103804586335
+  },
+  "Exp2 unseen laptop wordings, set 2": {
+   "values": [
+    0.63375,
+    0.6325,
+    0.64625
+   ],
+   "mean": 0.6375,
+   "sd": 0.0076034531628727765
+  },
+  "Exp2 unseen upright wordings, set 1": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp2 unseen upright wordings, set 2": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp3 close set: sentence given directly": {
+   "values": [
+    0.0,
+    0.0,
+    0.0033333333333333335
+   ],
+   "mean": 0.0011111111111111111,
+   "sd": 0.0019245008972987529
+  },
+  "Exp3 close set: velocity composition": {
+   "values": [
+    0.09666666666666666,
+    0.09166666666666666,
+    0.11416666666666667
+   ],
+   "mean": 0.10083333333333333,
+   "sd": 0.011814539065631523
+  },
+  "Exp3 close set: clauses in turn A then B": {
+   "values": [
+    0.9758333333333333,
+    0.9866666666666667,
+    0.9825
+   ],
+   "mean": 0.9816666666666666,
+   "sd": 0.005464532103585017
+  },
+  "Exp3 close set: clauses in turn B then A": {
+   "values": [
+    0.975,
+    0.9841666666666666,
+    0.985
+   ],
+   "mean": 0.9813888888888888,
+   "sd": 0.005548606765399495
+  },
+  "Exp3 close set: corrections added": {
+   "values": [
+    0.9775,
+    0.9866666666666667,
+    0.98
+   ],
+   "mean": 0.981388888888889,
+   "sd": 0.004738533919231108
+  },
+  "Exp3 close set: trained on combined sentences": {
+   "values": [
+    0.8741666666666666,
+    0.8625,
+    0.8725
+   ],
+   "mean": 0.8697222222222223,
+   "sd": 0.006309898162000284
+  },
+  "Exp3 main_ab on its own training sentences": {
+   "values": [
+    0.998,
+    1.0,
+    0.998
+   ],
+   "mean": 0.9986666666666667,
+   "sd": 0.0011547005383792527
+  },
+  "Exp3 far set: sentence given directly": {
+   "values": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mean": 0.0,
+   "sd": 0.0
+  },
+  "Exp3 far set: clauses in turn A then B": {
+   "values": [
+    0.5166666666666667,
+    0.5591666666666667,
+    0.6
+   ],
+   "mean": 0.5586111111111111,
+   "sd": 0.04166944435185799
+  },
+  "Exp3 far set: clauses in turn B then A": {
+   "values": [
+    0.565,
+    0.5941666666666666,
+    0.6425
+   ],
+   "mean": 0.6005555555555556,
+   "sd": 0.03914301886576873
+  },
+  "Exp3 far set: corrections added": {
+   "values": [
+    0.5108333333333334,
+    0.555,
+    0.5775
+   ],
+   "mean": 0.5477777777777778,
+   "sd": 0.033915062752138334
+  },
+  "Exp3 far set: trained on combined sentences": {
+   "values": [
+    0.24166666666666667,
+    0.21583333333333332,
+    0.22666666666666666
+   ],
+   "mean": 0.22805555555555557,
+   "sd": 0.012972549365372914
+  },
+  "Exp3 far set: corrections added, tilt violated": {
+   "values": [
+    0.1925,
+    0.18083333333333335,
+    0.17666666666666667
+   ],
+   "mean": 0.18333333333333335,
+   "sd": 0.008207381501496755
+  },
+  "Exp3 far set: clauses in turn A then B, tilt violated": {
+   "values": [
+    0.0033333333333333335,
+    0.006666666666666667,
+    0.0
+   ],
+   "mean": 0.0033333333333333335,
+   "sd": 0.0033333333333333335
+  }
+ },
+ "test": {
+  "Exp1 A text: laptop avoided & placed": {
+   "values": [
+    0.985,
+    1.0,
+    0.985
+   ],
+   "mean": 0.9899999999999999,
+   "sd": 0.008660254037844393
+  },
+  "Exp1 A text: tilt still violated (should be 1)": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp1 B text: upright & placed": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp1 B text: laptop still violated (should be 1)": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp1 no-text model: laptop avoided & placed": {
+   "values": [
+    0.415,
+    0.41,
+    0.355
+   ],
+   "mean": 0.3933333333333333,
+   "sd": 0.03329164059239696
+  },
+  "Exp1 no-text model: upright & placed": {
+   "values": [
+    0.415,
+    0.415,
+    0.41
+   ],
+   "mean": 0.41333333333333333,
+   "sd": 0.002886751345948131
+  },
+  "Exp1 shuffled, A text: laptop avoided & placed": {
+   "values": [
+    0.425,
+    0.425,
+    0.425
+   ],
+   "mean": 0.425,
+   "sd": 0.0
+  },
+  "Exp1 shuffled, B text: upright & placed": {
+   "values": [
+    0.455,
+    0.425,
+    0.43
+   ],
+   "mean": 0.4366666666666667,
+   "sd": 0.016072751268321604
+  },
+  "Exp1 detour on the reference side": {
+   "values": [
+    0.91,
+    0.905,
+    0.905
+   ],
+   "mean": 0.9066666666666666,
+   "sd": 0.0028867513459481316
+  },
+  "Exp1 main_ab A text: laptop avoided & placed": {
+   "values": [
+    0.99,
+    0.995,
+    1.0
+   ],
+   "mean": 0.995,
+   "sd": 0.0050000000000000044
+  },
+  "Exp1 main_ab B text: upright & placed": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp2 unseen laptop wordings, set 1": {
+   "values": [
+    0.65125,
+    0.65125,
+    0.7175
+   ],
+   "mean": 0.6733333333333333,
+   "sd": 0.03824945533381273
+  },
+  "Exp2 unseen laptop wordings, set 2": {
+   "values": [
+    0.62125,
+    0.615,
+    0.65625
+   ],
+   "mean": 0.6308333333333334,
+   "sd": 0.022232202619923508
+  },
+  "Exp2 unseen upright wordings, set 1": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp2 unseen upright wordings, set 2": {
+   "values": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "mean": 1.0,
+   "sd": 0.0
+  },
+  "Exp3 close set: sentence given directly": {
+   "values": [
+    0.0,
+    0.0,
+    0.0008333333333333334
+   ],
+   "mean": 0.0002777777777777778,
+   "sd": 0.0004811252243246882
+  },
+  "Exp3 close set: velocity composition": {
+   "values": [
+    0.12916666666666668,
+    0.0925,
+    0.12583333333333332
+   ],
+   "mean": 0.11583333333333334,
+   "sd": 0.02027587510099407
+  },
+  "Exp3 close set: clauses in turn A then B": {
+   "values": [
+    0.9633333333333334,
+    0.9841666666666666,
+    0.9658333333333333
+   ],
+   "mean": 0.971111111111111,
+   "sd": 0.01137533068302401
+  },
+  "Exp3 close set: clauses in turn B then A": {
+   "values": [
+    0.9775,
+    0.9891666666666666,
+    0.9825
+   ],
+   "mean": 0.9830555555555556,
+   "sd": 0.005853140973807043
+  },
+  "Exp3 close set: corrections added": {
+   "values": [
+    0.9633333333333334,
+    0.9841666666666666,
+    0.9666666666666667
+   ],
+   "mean": 0.9713888888888889,
+   "sd": 0.011190687265824235
+  },
+  "Exp3 close set: trained on combined sentences": {
+   "values": [
+    0.8725,
+    0.8616666666666667,
+    0.8566666666666667
+   ],
+   "mean": 0.8636111111111111,
+   "sd": 0.008093779046851943
+  },
+  "Exp3 main_ab on its own training sentences": {
+   "values": [
+    0.992,
+    1.0,
+    0.996
+   ],
+   "mean": 0.996,
+   "sd": 0.0040000000000000036
+  },
+  "Exp3 far set: sentence given directly": {
+   "values": [
+    0.0,
+    0.0,
+    0.0008333333333333334
+   ],
+   "mean": 0.0002777777777777778,
+   "sd": 0.0004811252243246882
+  },
+  "Exp3 far set: clauses in turn A then B": {
+   "values": [
+    0.5291666666666667,
+    0.5466666666666666,
+    0.5983333333333334
+   ],
+   "mean": 0.5580555555555555,
+   "sd": 0.035962300218938155
+  },
+  "Exp3 far set: clauses in turn B then A": {
+   "values": [
+    0.5866666666666667,
+    0.5833333333333334,
+    0.66
+   ],
+   "mean": 0.61,
+   "sd": 0.043333333333333335
+  },
+  "Exp3 far set: corrections added": {
+   "values": [
+    0.53,
+    0.5458333333333333,
+    0.5783333333333334
+   ],
+   "mean": 0.5513888888888888,
+   "sd": 0.024640940037383447
+  },
+  "Exp3 far set: trained on combined sentences": {
+   "values": [
+    0.2525,
+    0.23333333333333334,
+    0.2375
+   ],
+   "mean": 0.24111111111111114,
+   "sd": 0.010080692950902255
+  },
+  "Exp3 far set: corrections added, tilt violated": {
+   "values": [
+    0.20916666666666667,
+    0.1825,
+    0.19583333333333333
+   ],
+   "mean": 0.19583333333333333,
+   "sd": 0.013333333333333336
+  },
+  "Exp3 far set: clauses in turn A then B, tilt violated": {
+   "values": [
+    0.0025,
+    0.0,
+    0.0033333333333333335
+   ],
+   "mean": 0.0019444444444444446,
+   "sd": 0.0017347216662217774
+  }
+ }
+}

@@ -1,0 +1,21 @@
+\begin{tikzpicture}[font=\small]
+\foreach \x/\label in {0/{Earlier: source contact},5/{Later: contact ended},10/{Now: proposed push}} {
+  \draw[fill=black!2,draw=black!30] (\x,0) rectangle ++(4.35,2.75);
+  \node[anchor=south west,font=\small\bfseries] at (\x,2.85) {\label};
+  \draw[fill=memorygreen!15,draw=memorygreen] (\x+3.05,0.35) rectangle ++(0.95,1.3);
+  \node[font=\scriptsize] at (\x+3.52,0.12) {tray};
+  \draw[fill=white,thick] (\x+2.15,1.1) rectangle ++(0.5,0.5);
+}
+\draw[fill=evidencered!25,draw=evidencered] (0.4,1.8) rectangle ++(0.9,0.55);
+\node[font=\scriptsize] at (0.85,2.5) {marked source};
+\draw[line width=6pt,draw=black!60] (0.95,1.9)--(1.55,0.8);
+\fill[evidencered] (0.97,1.88) circle (0.1);
+\draw[fill=evidencered!25,draw=evidencered] (5.4,1.8) rectangle ++(0.9,0.55);
+\draw[line width=6pt,draw=black!60] (6.25,0.55)--(7,0.85);
+\draw[line width=6pt,draw=black!60] (11,0.85)--(11.9,1.32);
+\draw[-{Latex},thick,draw=controlblue] (11.9,1.8)--(13.15,1.8);
+\node[font=\scriptsize,align=center] at (12.05,2.35) {source outside crop;\\history still matters};
+\node[align=center,text width=4.2cm,font=\scriptsize] at (2.18,-0.65) {Ground an event, with confidence\\\texttt{contact(tool, source)}};
+\node[align=center,text width=4.2cm,font=\scriptsize] at (7.18,-0.65) {Retain an uncertain state\\$P(\mathrm{exposed})=0.90$};
+\node[align=center,text width=4.2cm,font=\scriptsize] at (12.18,-0.65) {Retrieve for the proposed contact\\Direct push risk: $0.721$};
+\end{tikzpicture}

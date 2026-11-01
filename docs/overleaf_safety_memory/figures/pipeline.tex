@@ -1,0 +1,29 @@
+\begin{tikzpicture}[
+  box/.style={draw=black!35,fill=white,align=center,text width=3.65cm,minimum height=1.12cm,inner sep=6pt,font=\small},
+  flow/.style={-{Latex[length=2mm]},thick,draw=black!65},
+  slow/.style={flow,dashed,draw=memorygreen}]
+\node[box] (input) at (0,0) {\textbf{1. Inputs}\\Images, instruction, proprioception};
+\node[box] (vla) at (5,0) {\textbf{2. Nominal VLA}\\Candidate action chunks};
+\node[box,draw=controlblue] (select) at (10,0) {\textbf{5. Risk-based selection}\\Accept, recover, or replan};
+\node[box] (events) at (0,-2) {\textbf{3. Event grounding}\\Track entities; update beliefs};
+\node[box,draw=memorygreen] (retrieve) at (5,-2) {\textbf{4. Action-aware retrieval}\\Bind mechanisms; predict harm};
+\node[box,draw=controlblue] (execute) at (10,-2) {\textbf{6. Execute and verify}\\VLA/skill + geometric filter};
+\node[box,draw=memorygreen,fill=memorygreen!5] (model) at (0,-4.2) {\textbf{Persistent model $M$}\\States, updates, validity, versions};
+\node[box,draw=evidencered,fill=evidencered!5] (archive) at (5,-4.2) {\textbf{Evidence archive $E$}\\Histories, outcomes, interventions};
+\node[box,draw=memorygreen,fill=memorygreen!5] (learn) at (10,-4.2) {\textbf{Slower discovery loop}\\Counterexamples, tests, validation};
+\draw[flow] (input)--(vla);
+\draw[flow] (vla)--(select);
+\draw[flow] (input)--(events);
+\draw[flow] (events)--(retrieve);
+\draw[flow] (vla)--(retrieve);
+\draw[flow] (retrieve.north east)--(select.south west);
+\draw[flow] (select)--(execute);
+\draw[flow] (model)--(events);
+\draw[flow] (model.north east)--(retrieve.south west);
+\draw[flow] (execute.south west)--(archive.north east);
+\draw[flow] (archive)--(learn);
+\draw[slow] (learn.south)--++(0,-0.65)-|(model.south);
+\node[font=\scriptsize,text=memorygreen,fill=white] at (5,-5.48) {validated representation updates};
+\draw[flow] (execute.east)--++(0.55,0)|-($(input.north)+(0,0.55)$)--(input.north);
+\node[font=\scriptsize,fill=white] at (5,1.05) {next observation and executed-action feedback};
+\end{tikzpicture}

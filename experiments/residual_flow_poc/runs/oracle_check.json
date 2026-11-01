@@ -1,0 +1,30 @@
+{
+ "base": {
+  "viol_A": 1.0,
+  "viol_B": 1.0,
+  "success": 0.99,
+  "max_tilt_deg": 48.106459492257976,
+  "max_track_err": 0.06835755545925404
+ },
+ "oracle_A": {
+  "viol_A": 0.03,
+  "viol_B": 1.0,
+  "success": 0.99,
+  "max_tilt_deg": 48.400330666446216,
+  "max_track_err": 0.06631918419432728
+ },
+ "oracle_B": {
+  "viol_A": 1.0,
+  "viol_B": 0.0,
+  "success": 1.0,
+  "max_tilt_deg": 5.131526934953084,
+  "max_track_err": 0.054383121013487405
+ },
+ "oracle_AB": {
+  "viol_A": 0.0,
+  "viol_B": 0.0,
+  "success": 1.0,
+  "max_tilt_deg": 5.131526934953084,
+  "max_track_err": 0.05695398197792942
+ }
+}

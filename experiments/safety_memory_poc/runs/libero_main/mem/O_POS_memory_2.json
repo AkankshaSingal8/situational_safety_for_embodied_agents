@@ -1,0 +1,14 @@
+{
+  "facts": {
+    "MARKED:eef": {
+      "evidence": "proximity:akita_black_bowl_1_pos:0.0415",
+      "instance": "eef",
+      "predicate": "MARKED",
+      "since_episode": "O_POS|memory|p2|E",
+      "since_t": 32,
+      "source": "contact_event",
+      "value": true
+    }
+  },
+  "schema_version": 1
+}

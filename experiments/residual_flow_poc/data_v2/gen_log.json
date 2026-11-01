@@ -1,0 +1,16 @@
+{
+ "profile": "v2",
+ "sim_filter": true,
+ "splits": {
+  "train": {
+   "seed": 0,
+   "kept": 4000,
+   "candidates": 5000
+  },
+  "test": {
+   "seed": 1000000,
+   "kept": 100,
+   "candidates": 125
+  }
+ }
+}

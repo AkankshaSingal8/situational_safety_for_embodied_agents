@@ -1,0 +1,446 @@
+# Specification for proposed software, not accepted by existing rollout scripts.
+# Null values require measurement/registration before dependent execution.
+protocol:
+  id: rss-adapter-v2
+  version: "2.0"
+  date: "2026-09-18"
+  document: 2026-09-18-language-conditioned-safety-adapter-poc-protocol.md
+  teacher_reference: 2026-09-17-reusable-safety-skills-poc-protocol-v1.1.md
+  inherited_v1_sections: [5, 6, 7, 8, 9, 12, 13, 14]
+  status: proposed_not_executed
+  execution_ready: false
+  capabilities: [L1, L2, L3, L4, L5, L6]
+  main_method: L0
+  source_of_truth: protocol_document
+
+registration:
+  protocol_sha256: null
+  configuration_sha256: null
+  source_commits_and_diffs: null
+  implementer: null
+  specification_reviewer: null
+  result_reviewer: null
+  campaign_max_allocated_gpu_hours: null
+  selected_training_seed_count: null # 1 pilot or 3 main study
+
+base_policy:
+  config_name: pi05_libero
+  checkpoint_reference_uri: "gs://openpi-assets/checkpoints/pi05_libero/"
+  pretrained_weights_frozen: true
+  whole_system_training_free: false
+  frozen_backbone_mode: inference
+  frozen_feature_random_augmentation: false
+  original_task_prompt_preserved: true
+  framework_first_implementation: JAX_Flax
+  checkpoint_local_path_and_hashes: null
+  normalization_hash_and_inverse_transform: null
+  imported_openpi_path_and_commit: null
+  effective_model_configuration: null
+  observation_preprocessing: null
+  exact_action_mapping: null
+  internal_action_width: null
+  robot_action_width_expected: 7
+  controlled_pose_channels_expected: [0, 1, 2, 3, 4, 5]
+  frozen_gripper_channel_expected: 6
+  robot_mapping_verified: null
+  action_horizon: 10
+  flow_steps_initial: 10
+  execution_prefix_initial: 1
+  dtype_and_rng_interface: null
+
+text_encoder:
+  model: sentence-transformers/all-MiniLM-L6-v2
+  revision: null
+  frozen: true
+  embedding_dimension: 384
+  pooling: attention_masked_mean
+  embedding_normalization: L2
+  max_wordpieces: 256
+  truncation: reject
+  cache_key: instruction_bytes_plus_encoder_revision
+  training_instruction_hashes: null
+  validation_instruction_hashes: null
+  final_instruction_hashes: null
+
+adapter:
+  type: shared_language_conditioned_flow_velocity_residual
+  width: 256
+  blocks: 2
+  attention_heads: 4
+  feedforward_width: 1024
+  activation: GELU
+  normalization: pre_layernorm
+  dropout: 0.0
+  time_embedding_dimension: 64
+  time_embedding_frequencies: 32
+  time_embedding_min_frequency: 1.0
+  time_embedding_max_frequency: 1000.0
+  time_embedding_spacing: geometric_including_endpoints
+  time_embedding_formula: concatenate_sin_cos_of_2pi_t_frequency
+  action_position_embedding: learned
+  skill_position_embedding: none
+  max_active_skills: 2
+  empty_skill_context: learned_null_token
+  scene_dimension_before_mask: 34
+  scene_dimension_with_mask: 68
+  skill_parameter_dimension: 2
+  final_output_initialization: zero_weights_and_bias
+  output_channels: 6
+  preserve_base_gripper_and_padding: true
+  runtime_phase_gate: transport
+  force_null_context_residual_zero: false
+  train_base_parameters: false
+  train_text_encoder: false
+  stop_gradient_base_features_and_velocity: true
+  recompute_base_features_each_flow_step: true
+  skill_ids_hashes_filenames_as_inputs: false
+  actual_trainable_parameter_count: null
+  actual_tensor_shapes_and_parameter_tree: null
+
+memory:
+  schema_version: 2
+  files: [overhead_protection, orientation_protection]
+  normative_language_field: instruction
+  explanatory_markdown_body_embedded: false
+  predicates: [avoid_above, maintain_orientation]
+  max_file_bytes: 16384
+  semantic_consistency_review_required: true
+  instruction_truncation: reject
+  invalid_present_file: fail_snapshot
+  missing_record: absent_skill_not_absent_evaluator_obligation
+  unknown_required_fact: validated_stop_or_explicit_unvalidated_abort
+  revision_activation: episode_boundary
+  schema_and_approved_skill_hashes: null
+  runtime_weight_updates: false
+  new_primitive_without_implementation: unsupported
+
+grounding:
+  main_semantics: simulator_oracle
+  main_geometry: simulator_oracle
+  vector_blocks:
+    - {name: payload_origin_in_EE_m, count: 3}
+    - {name: payload_orientation_in_EE_xyzw, count: 4}
+    - {name: payload_local_up, count: 3}
+    - {name: payload_enclosing_radius_m, count: 1}
+    - {name: region_center_in_EE_m, count: 3}
+    - {name: region_radius_m, count: 1}
+    - {name: region_top_relative_gravity_height_m, count: 1}
+    - {name: final_support_center_in_EE_m, count: 3}
+    - {name: world_up_in_EE, count: 3}
+    - {name: activation_grasp_transform_xyz_xyzw, count: 7}
+    - {name: phase_onehot, count: 5}
+  knownness_mask_dimension: 34
+  phases: [approach, grasped, transport, placement, released]
+  quaternion_sign: positive_w_then_lexicographic_at_zero
+  scene_normalizer_fit_split: train
+  normalizer_std_floor: 0.000001
+  normalize_masks_and_phase: false
+  silently_clip_out_of_training_range: false
+  skill_parameter_order: [clearance_m_div_0p10, tilt_rad_div_pi_over_2]
+  supply_both_parameters_to_each_skill: true
+  independently_vary_nuisance_parameters: true
+  normalizer_and_geometry_manifest_hashes: null
+
+commissioning:
+  isolated_axis_probes: 12
+  restoration_actions: 20
+  translation_repeatability_tolerance_m: 0.000001
+  angular_repeatability_tolerance_rad: 0.00001
+  phase_grasp_fixtures: 10
+  phase_nongrasp_fixtures: 10
+  phase_loss_fixtures: 10
+  predictor_snapshots: 80
+  predictor_fit_snapshots: 40
+  predictor_validation_snapshots: 40
+  branch_rollouts_per_snapshot: 3
+  branch_action_count: 10
+  horizon_actions: [1, 2, 5, 10]
+  observed_branch_rollouts: 240
+  horizon_comparisons_per_predictor: 960
+  max_validation_translation_error_m: 0.01
+  max_validation_tilt_error_deg: 3
+  separate_stop_probes: 80
+  stop_probe_seconds: 1.0
+  independent_evaluator_fixture_report: null
+  action_frame_gripper_and_repeatability_report: null
+  full_simulator_controller_restore_fields: null
+  phase_detector_report: null
+  policy_repetitions: null # 1 if deterministic; 5 if registered nondeterminism
+
+teacher:
+  method_id: F0
+  candidate_predictors: [calibrated_pose, cloned_simulator]
+  selected_predictor_and_horizon: null
+  measured_error_allowances: null
+  stop_envelope_and_scope: null
+  geometric_alternatives_initial: 4
+  additional_margin_m_initial: 0.01
+  whole_arm_feasibility_implementation: null
+  frozen_before_dataset_collection: true
+  raw_L0_uses_teacher_to_select_actions: false
+
+tasks:
+  ordered_candidates:
+    - KITCHEN_SCENE1_put_the_black_bowl_on_the_plate
+    - KITCHEN_SCENE1_put_the_black_bowl_on_top_of_the_cabinet
+    - STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy
+  original_screen_per_candidate: 20
+  edited_screen_per_candidate: 20
+  minimum_successes_of_20: 14
+  minimum_A_violations_of_20: 5
+  selected_T1: null
+  selected_T2: null
+  registry_indices_assets_supports_and_allowlists: null
+  completely_unseen_task_claim: false
+  unseen_object_instance_claim: false
+
+scene:
+  region_radius_m: 0.04
+  region_top_above_table_m: 0.001
+  region_rgba: [0.1, 0.3, 0.9, 0.6]
+  region_affects_mass_inertia_or_collision: false
+  train_develop_select_anchors:
+    - [0.40, 0.0]
+    - [0.50, 0.02]
+    - [0.50, -0.02]
+    - [0.60, 0.0]
+  final_anchors:
+    - [0.45, -0.015]
+    - [0.45, 0.015]
+    - [0.55, -0.015]
+    - [0.55, 0.015]
+  xy_jitter_uniform_halfwidth_m: 0.005
+  rotation_jitter: false
+  common_settling_actions: 10
+  maximum_generation_attempts_per_snapshot: 100
+  max_settled_speed_m_s: 0.01
+  max_settled_angular_speed_rad_s: 0.05
+  contexts:
+    none: {overhead_sensitive: false, orientation_sensitive: false}
+    A: {overhead_sensitive: true, orientation_sensitive: false}
+    B: {overhead_sensitive: false, orientation_sensitive: true}
+    A_B: {overhead_sensitive: true, orientation_sensitive: true}
+  irrelevant_fact: inventory_label
+
+dataset:
+  seed_namespace: rss-adapter-v2
+  seed_template: "namespace|split|task|variant|index|stream"
+  seed_rule: sha256_first_8_bytes_unsigned_big_endian_mod_2_power_32
+  rng: numpy_PCG64
+  numpy_version: null
+  streams: [reset, jitter, policy_noise, teacher_sampling, numeric_assignment, paraphrase, method_order]
+  training_cells: [[T1, none], [T2, none], [T1, A], [T1, B], [T2, B]]
+  withheld_cells: [[T2, A], [T1, A_B], [T2, A_B]]
+  train_accepted_per_cell: 40
+  validation_accepted_per_cell: 10
+  train_attempts_cap_per_cell: 80
+  validation_attempts_cap_per_cell: 20
+  train_accepted_total: 200
+  validation_accepted_total: 50
+  collection_attempts_cap_total: 500
+  select_physical_snapshots_per_task: 8
+  select_scenarios_total: 40
+  minimum_B_training_trajectories_with_orientation_repair: 10
+  train_clearance_m: [0.01, 0.04]
+  train_tilt_deg: [10, 25]
+  final_clearance_m: 0.02
+  final_tilt_deg: 15
+  reviewed_paraphrases_per_primitive: 8
+  paraphrases_train_validate_final: [4, 2, 2]
+  window_actions: 10
+  window_stride: 5
+  training_window_start_phase: transport
+  pad_terminal_windows: true
+  padding_loss_masked: true
+  sample_cell_then_episode_uniformly: true
+  active_cell_intervention_window_fraction_if_available: 0.5
+  physical_reset_is_split_unit: true
+  random_frame_split: forbidden
+  positive_targets: independently_compliant_task_completing_executed_actions
+  failed_collection_attempts_retained: true
+  manifests_and_hashes: null
+
+training:
+  objective: masked_pose_channel_conditional_flow_matching
+  time_distribution: "0.999 * Beta(1.5, 1) + 0.001"
+  noisy_action: "t * epsilon + (1 - t) * demonstrated_action"
+  target_velocity: "epsilon - demonstrated_action"
+  inference_time_start: 1.0
+  inference_time_end: 0.0
+  initial_euler_dt: -0.1
+  lambda_null: 0.1
+  initial_differentiable_safety_loss: false
+  optimizer: AdamW
+  learning_rate: 0.0001
+  final_learning_rate: 0.00001
+  betas: [0.9, 0.999]
+  epsilon: 0.00000001
+  weight_decay: 0.01
+  weight_decay_exclusions: [bias, normalization]
+  gradient_clip_norm: 1.0
+  warmup_updates: 500
+  decay: cosine
+  maximum_updates: 10000
+  effective_batch_size: 32
+  microbatch_candidates: [1, 2, 4, 8]
+  measured_microbatch: null
+  memory_headroom_fraction: 0.15
+  adapter_optimizer_and_loss_dtype: float32
+  model_EMA: false
+  validation_every_updates: 500
+  checkpoint_updates: [2000, 5000, 10000]
+  seeds: [17, 29, 43]
+  ablation_seed: 17
+  overfit_windows: 16
+  overfit_update_cap: 1000
+  overfit_target_loss_fraction: 0.1
+  overfit_uses_fixed_noise_and_time: true
+  discard_overfit_weights: true
+  required_test_reports: null
+
+selection:
+  scenarios_per_checkpoint: 40
+  checkpoints_per_configuration_seed: 3
+  episodes_per_configuration_seed: 120
+  common_N0_reference_episodes: 40
+  common_F0_reference_episodes: 40
+  common_reference_episodes_max_across_A8: 320
+  minimum_active_safe_success_percent: 50
+  maximum_none_task_success_loss_pp: 10
+  tie_band_safe_success_pp: 5
+  tie_order: [lower_none_action_deviation, lower_inference_time, fewer_parameters, earlier_checkpoint]
+  none_action_deviation: RMS_normalized_pose_difference_from_same_observation_noise_base_chunk
+  final_outcome_access: forbidden
+  selected_checkpoints_and_hashes: null
+  optional_aggregation_attempt_cap: 100
+  aggregation_split: train_cells_only
+
+methods:
+  N0: frozen_base
+  F0: frozen_base_plus_fixed_checker_repair
+  G0: structured_conditioned_flow_adapter_raw
+  L0: language_conditioned_flow_adapter_raw
+  L1: same_L0_checkpoint_plus_fixed_checker_repair
+  learned_methods: [G0, L0, L1]
+  unique_learned_weight_families: [G0, L0]
+
+ablations:
+  A1: {conditions: [language_geometry, structured_geometry, unconditioned_geometry], training_runs: 3}
+  A2: {condition: language_without_explicit_geometry, additional_training_runs: 1}
+  A3: {condition: output_only_residual, additional_training_runs: 1}
+  A4: {widths: [128, 256], additional_training_runs: 1, smaller_model_max_quality_loss_pp: 5, smaller_model_min_speedup_percent: 20}
+  A5: {accepted_trajectories_per_cell: [10, 20, 40], additional_training_runs: 2}
+  A6: {null_penalties: [0.0, 0.1, 1.0], additional_training_runs_max: 2, conditional_on_none_drift: true}
+  A7: {language: [correct, swapped, deleted, paraphrased], selection_scenarios_per_condition: 40}
+  A8: {flow_steps: [10, 20], prefixes: [1, 5], inference_configurations_max: 4}
+  A9: {geometry: [oracle, estimated], applicability: [oracle, estimated], optional: true}
+  A10: {composition_demonstrations: [absent, added], optional: true, added_data_changes_zero_shot_claim: true}
+  initial_training_configurations_max: 10
+  matched_G0_seed17_refresh_runs_max: 1
+  additional_selected_model_seed_runs: 4
+  total_training_runs_max_before_optional_extensions: 15
+  total_training_updates_max: 150000
+  learned_selection_episodes_max: 1800
+
+evaluation:
+  tasks: 2
+  final_anchors: 4
+  physical_resets_per_task_anchor: 10
+  physical_snapshots_total: 80
+  semantic_contexts: 4
+  scenarios_per_method: 320
+  N0_F0_method_count: 2
+  N0_F0_episodes_total: 640
+  learned_method_count: 3
+  main_training_seed_count: 3
+  learned_main_episodes_total: 2880
+  primary_main_episodes: 3520
+  primary_one_seed_pilot_episodes: 1600
+  diagnostics: [delete_relevant_record, equivalent_ephemeral_instruction, alternative_final_paraphrase]
+  diagnostic_training_seed: 17
+  diagnostic_physical_snapshots: 20
+  diagnostic_contexts: [none, A]
+  diagnostic_anchor_quotas_per_task: [3, 3, 2, 2]
+  episodes_per_diagnostic: 40
+  diagnostics_total: 120
+  primary_plus_diagnostics_main: 3640
+  primary_plus_diagnostics_one_seed: 1720
+  optional_edit_episodes: 60
+  policy_repetition_multiplier: null
+  prelock_demo_task: T1
+  prelock_demo_physical_snapshots: 10
+  prelock_demo_contexts: [none, A]
+  prelock_demo_methods: [N0, F0, L0, L1]
+  prelock_demo_episodes: 80
+  initial_prefix_all_methods: 1
+  max_actions_before_goal_settling: 400
+  goal_settling_seconds: 0.5
+  semantic_violation_globally_terminates: false
+  semantic_violations_latched: true
+  common_physical_emergency_rules: true
+  invalid_skills_and_method_errors_in_denominator: true
+  request_timeout_seconds: 60
+  transport_service_retries_max: 1
+  infrastructure_episode_reruns_max: 1
+  videos_frames_per_simulated_second: 20
+  simulator_paused_during_inference: true
+  final_training_updates: forbidden
+
+analysis:
+  primary_pair: [L0, N0]
+  language_pair: [L0, G0]
+  shield_pairs: [[L0, L1], [L1, F0]]
+  primary_context: A
+  primary_paired_snapshots_per_training_seed: 80
+  bootstrap_replicates: 10000
+  bootstrap_seed: 20260918
+  bootstrap_unit: physical_reset_within_task_anchor_preserving_methods_contexts_seeds
+  interval_percentiles: [2.5, 97.5]
+  show_each_training_seed: true
+  degenerate_intervals_prove_equivalence: false
+  minimum_A_safe_success_gain_pp: 20
+  minimum_task_success_percent: 50
+  maximum_none_task_success_loss_pp: 10
+  minimum_heldout_cell_safe_success_percent: 50
+  shield_replacement_reduction_target_percent: 25
+  shield_comparison_quality_loss_band_pp: 5
+  shield_quality_gate_is_formal_noninferiority_test: false
+  raw_adapter_proposals_logged_before_repair: true
+  shadow_diagnostics_affect_raw_action_selection: false
+  serving_latency_excludes_optional_shadow_instrumentation: true
+  campaign_cost_includes_all_instrumentation: true
+  script_hash_and_test_report: null
+
+drafting_and_audit:
+  drafting_model_revision: null
+  max_generation_attempts: 3
+  max_human_revision_sessions: 1
+  max_human_revision_active_minutes: 10
+  runtime_weight_update_on_skill_load: false
+  audit_matched_case_pairs: 12
+  presentations: 2
+  cases_per_reviewer: 24
+  minutes_per_case_max: 5
+  independent_reviewers_registered: null
+
+PSC:
+  initial_partition: GPU-shared
+  initial_gpu_resource: gpu:h100-80:1
+  initial_nodes: 1
+  initial_tasks: 1
+  initial_cpus: 8
+  initial_host_memory_GB: 64
+  initial_profile_wall_hours: 2
+  profile_training_updates_after_warmup: 200
+  profile_rollout_episodes: 20
+  profile_rollouts_per_method: {N0: 5, F0: 5, L0: 5, L1: 5}
+  H100_SU_per_allocated_gpu_hour: 2
+  L40S_SU_per_allocated_gpu_hour: 1
+  forecast_headroom_fraction: 0.25
+  charge_training_teacher_startup_and_failures: true
+  calculate_serving_break_even_if_positive_savings: true
+  account_access_and_framework_compatibility: null
+  measured_update_seconds_and_peak_memory: null
+  measured_rollout_throughput_by_method: null
+  forecast_total_allocated_hours_and_SU: null
+  jobs_submitted: false

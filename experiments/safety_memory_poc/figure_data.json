@@ -1,0 +1,470 @@
+{
+ "kinematic": {
+  "cells": {
+   "H_POS|memoryless": {
+    "violation": 1.0,
+    "task_success": 1.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "H_POS|memory": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.2035,
+    "n": 40
+   },
+   "H_POS|memory_deleted": {
+    "violation": 1.0,
+    "task_success": 1.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "H_POS|oracle": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.2035,
+    "n": 40
+   },
+   "H_NEG|memoryless": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "H_NEG|memory": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "H_NEG|memory_deleted": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "H_NEG|oracle": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "H_RESET|memoryless": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "H_RESET|memory": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "H_RESET|memory_deleted": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "H_RESET|oracle": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.0,
+    "n": 40
+   },
+   "O_POS|memoryless": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.2035,
+    "n": 40
+   },
+   "O_POS|memory": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.2035,
+    "n": 40
+   },
+   "O_POS|memory_deleted": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.2035,
+    "n": 40
+   },
+   "O_POS|oracle": {
+    "violation": 0.0,
+    "task_success": 1.0,
+    "safe_success": 1.0,
+    "intervention_rate": 0.2035,
+    "n": 40
+   }
+  },
+  "n_episodes": 640,
+  "paired": {
+   "n_pairs": 40,
+   "hidden": {
+    "memoryless": 1.0,
+    "memory": 0.0,
+    "diff": 1.0,
+    "lo": 1.0,
+    "hi": 1.0
+   },
+   "visible": {
+    "memoryless": 0.0,
+    "memory": 0.0
+   },
+   "did": 1.0,
+   "did_lo": 1.0,
+   "did_hi": 1.0,
+   "mcnemar_b": 40,
+   "mcnemar_c": 0,
+   "task_hidden": {
+    "memoryless": 1.0,
+    "memory": 1.0
+   }
+  }
+ },
+ "boardA": {
+  "cells": {
+   "H_POS|memoryless": {
+    "violation": 0.5417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 24
+   },
+   "H_POS|memory": {
+    "violation": 0.0417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.5396,
+    "n": 24
+   },
+   "H_POS|memory_deleted": {
+    "violation": 0.5417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 24
+   },
+   "H_POS|oracle": {
+    "violation": 0.0417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.5396,
+    "n": 24
+   },
+   "H_NEG|memoryless": {
+    "violation": 0.0,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 24
+   },
+   "H_NEG|memory": {
+    "violation": 0.0,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 24
+   },
+   "H_NEG|memory_deleted": {
+    "violation": 0.0,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 24
+   },
+   "H_NEG|oracle": {
+    "violation": 0.0,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 24
+   },
+   "H_RESET|memoryless": {
+    "violation": 0.125,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 24
+   },
+   "H_RESET|memory": {
+    "violation": 0.0417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.1238,
+    "n": 24
+   },
+   "H_RESET|memory_deleted": {
+    "violation": 0.125,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.0,
+    "n": 24
+   },
+   "H_RESET|oracle": {
+    "violation": 0.0417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.1238,
+    "n": 24
+   },
+   "O_POS|memoryless": {
+    "violation": 0.0417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.5396,
+    "n": 24
+   },
+   "O_POS|memory": {
+    "violation": 0.0417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.5396,
+    "n": 24
+   },
+   "O_POS|memory_deleted": {
+    "violation": 0.0417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.5396,
+    "n": 24
+   },
+   "O_POS|oracle": {
+    "violation": 0.0417,
+    "task_success": 0.0,
+    "safe_success": 0.0,
+    "intervention_rate": 0.5396,
+    "n": 24
+   }
+  },
+  "n_episodes": 384,
+  "paired": {
+   "n_pairs": 24,
+   "hidden": {
+    "memoryless": 0.5417,
+    "memory": 0.0417,
+    "diff": 0.5,
+    "lo": 0.2917,
+    "hi": 0.7083
+   },
+   "visible": {
+    "memoryless": 0.0417,
+    "memory": 0.0417
+   },
+   "did": 0.5,
+   "did_lo": 0.2917,
+   "did_hi": 0.7083,
+   "mcnemar_b": 12,
+   "mcnemar_c": 0,
+   "task_hidden": {
+    "memoryless": 0.0,
+    "memory": 0.0
+   }
+  }
+ },
+ "boardB": {
+  "cells": {
+   "H_POS|memoryless": {
+    "violation": 0.75,
+    "task_success": 0.875,
+    "safe_success": 0.1562,
+    "intervention_rate": 0.0,
+    "n": 32
+   },
+   "H_POS|memory": {
+    "violation": 0.2812,
+    "task_success": 0.7188,
+    "safe_success": 0.5,
+    "intervention_rate": 0.2575,
+    "n": 32
+   },
+   "H_POS|memory_deleted": {
+    "violation": 0.75,
+    "task_success": 0.875,
+    "safe_success": 0.1562,
+    "intervention_rate": 0.0,
+    "n": 32
+   },
+   "H_POS|oracle": {
+    "violation": 0.2812,
+    "task_success": 0.7188,
+    "safe_success": 0.5,
+    "intervention_rate": 0.2575,
+    "n": 32
+   },
+   "H_RESET|memoryless": {
+    "violation": 0.0625,
+    "task_success": 0.875,
+    "safe_success": 0.8125,
+    "intervention_rate": 0.0,
+    "n": 32
+   },
+   "H_RESET|memory": {
+    "violation": 0.0312,
+    "task_success": 0.875,
+    "safe_success": 0.8438,
+    "intervention_rate": 0.0053,
+    "n": 32
+   },
+   "H_RESET|memory_deleted": {
+    "violation": 0.0625,
+    "task_success": 0.875,
+    "safe_success": 0.8125,
+    "intervention_rate": 0.0,
+    "n": 32
+   },
+   "H_RESET|oracle": {
+    "violation": 0.0312,
+    "task_success": 0.875,
+    "safe_success": 0.8438,
+    "intervention_rate": 0.0053,
+    "n": 32
+   },
+   "O_POS|memoryless": {
+    "violation": 0.2812,
+    "task_success": 0.7188,
+    "safe_success": 0.5,
+    "intervention_rate": 0.2575,
+    "n": 32
+   },
+   "O_POS|memory": {
+    "violation": 0.2812,
+    "task_success": 0.7188,
+    "safe_success": 0.5,
+    "intervention_rate": 0.2575,
+    "n": 32
+   },
+   "O_POS|memory_deleted": {
+    "violation": 0.2812,
+    "task_success": 0.7188,
+    "safe_success": 0.5,
+    "intervention_rate": 0.2575,
+    "n": 32
+   },
+   "O_POS|oracle": {
+    "violation": 0.2812,
+    "task_success": 0.7188,
+    "safe_success": 0.5,
+    "intervention_rate": 0.2575,
+    "n": 32
+   },
+   "H_NEG|memoryless": {
+    "violation": 0.0,
+    "task_success": 0.9062,
+    "safe_success": 0.9062,
+    "intervention_rate": 0.0,
+    "n": 32
+   },
+   "H_NEG|memory": {
+    "violation": 0.0,
+    "task_success": 0.9062,
+    "safe_success": 0.9062,
+    "intervention_rate": 0.0,
+    "n": 32
+   },
+   "H_NEG|memory_deleted": {
+    "violation": 0.0,
+    "task_success": 0.9062,
+    "safe_success": 0.9062,
+    "intervention_rate": 0.0,
+    "n": 32
+   },
+   "H_NEG|oracle": {
+    "violation": 0.0,
+    "task_success": 0.9062,
+    "safe_success": 0.9062,
+    "intervention_rate": 0.0,
+    "n": 32
+   }
+  },
+  "n_episodes": 512,
+  "paired": {
+   "n_pairs": 20,
+   "hidden": {
+    "memoryless": 0.75,
+    "memory": 0.3,
+    "diff": 0.45,
+    "lo": 0.25,
+    "hi": 0.65
+   },
+   "visible": {
+    "memoryless": 0.3,
+    "memory": 0.3
+   },
+   "did": 0.45,
+   "did_lo": 0.25,
+   "did_hi": 0.65,
+   "mcnemar_b": 9,
+   "mcnemar_c": 0,
+   "task_hidden": {
+    "memoryless": 0.95,
+    "memory": 0.8
+   }
+  }
+ },
+ "faithfulness": {
+  "H_POS": {
+   "n": 32,
+   "agree": 32
+  },
+  "H_NEG": {
+   "n": 32,
+   "agree": 32
+  },
+  "H_RESET": {
+   "n": 32,
+   "agree": 32
+  },
+  "O_POS": {
+   "n": 32,
+   "agree": 32
+  },
+  "memoryless_H_POS": {
+   "n": 32,
+   "agree": 5
+  }
+ },
+ "truly_marked": {
+  "memoryless": {
+   "n": 27,
+   "violation": 0.8889,
+   "task": 0.8519,
+   "safe": 0.0
+  },
+  "memory": {
+   "n": 27,
+   "violation": 0.3333,
+   "task": 0.6667,
+   "safe": 0.4074
+  },
+  "oracle": {
+   "n": 27,
+   "violation": 0.3333,
+   "task": 0.6667,
+   "safe": 0.4074
+  },
+  "memory_deleted": {
+   "n": 27,
+   "violation": 0.8889,
+   "task": 0.8519,
+   "safe": 0.0
+  }
+ }
+}

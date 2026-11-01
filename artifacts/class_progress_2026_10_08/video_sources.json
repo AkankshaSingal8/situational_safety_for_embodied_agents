@@ -1,0 +1,4 @@
+{
+  "baseline": ".worktrees/fol-safety-filter/baseline_og10_L2_video/safelibero_spatial/3/II/episode_0_pick_up_the_black_bowl_on_the_wooden_cabinet_and_p.mp4",
+  "filtered": ".worktrees/fol-safety-filter/fol_v19_spatial_L2_n50_video/safelibero_spatial/3/II/episode_0_pick_up_the_black_bowl_on_the_wooden_cabinet_and_p.mp4"
+}

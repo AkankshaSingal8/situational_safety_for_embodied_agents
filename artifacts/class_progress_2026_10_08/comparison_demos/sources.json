@@ -1,0 +1,38 @@
+{
+  "safelibero_without": {
+    "path": ".worktrees/fol-safety-filter/baseline_og10_L1_video/safelibero_spatial/3/I/episode_0_pick_up_the_black_bowl_on_the_wooden_cabinet_and_p.mp4",
+    "duration": 4.0,
+    "resolution": [
+      1024,
+      1024
+    ],
+    "episode_status": "recording endpoint visually reviewed; not linked to per-episode JSON"
+  },
+  "safelibero_with": {
+    "path": ".worktrees/fol-safety-filter/fol_v19_spatial_L1_n50_video/safelibero_spatial/3/I/episode_0_pick_up_the_black_bowl_on_the_wooden_cabinet_and_p.mp4",
+    "duration": 4.03,
+    "resolution": [
+      1024,
+      1024
+    ],
+    "episode_status": "recording endpoint visually reviewed; not linked to per-episode JSON"
+  },
+  "liberosafety_without": {
+    "path": ".worktrees/flow-guidance-tier-gt/ls_teaser_render/base_oah_L2/obstacle_avoidance_human/L2/videos/t14_ep1_fail.mp4",
+    "playback_multiplier": 2,
+    "duration": 10.0,
+    "size": [
+      256,
+      256
+    ]
+  },
+  "liberosafety_with": {
+    "path": ".worktrees/flow-guidance-tier-gt/ls_teaser_render/nogt_oah_L2/obstacle_avoidance_human/L2/videos/t14_ep1_succ.mp4",
+    "playback_multiplier": 2,
+    "duration": 8.5,
+    "size": [
+      256,
+      256
+    ]
+  }
+}

@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1170" width="1600" height="1170" role="img" aria-labelledby="runtime-title runtime-description">
+<title id="runtime-title">Skills condition action generation.</title>
+<desc id="runtime-description">The learned adapter changes every flow step. Raw and shielded execution are evaluated separately. Proposed architecture, not experimental results. Click or focus components in the interactive HTML for details.</desc>
+<defs>
+<marker id="runtime-arrow-memory" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5354a2"/></marker>
+<marker id="runtime-arrow-ground" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#207460"/></marker>
+<marker id="runtime-arrow-frozen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#326ba7"/></marker>
+<marker id="runtime-arrow-learned" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7951aa"/></marker>
+<marker id="runtime-arrow-check" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#a96713"/></marker>
+<marker id="runtime-arrow-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#68726c"/></marker>
+</defs>
+<rect width="1600" height="100%" fill="#fffefa"/>
+<text x="48" y="43" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="600" fill="#69736f" letter-spacing="2" >REUSABLE SAFETY SKILLS  /  PROPOSED V2 SYSTEM</text>
+<text x="48" y="89" font-family="DejaVu Sans, sans-serif" font-size="34" font-weight="650" fill="#20312e" letter-spacing="0" >Skills condition action generation.</text>
+<text x="48" y="122" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="400" fill="#62716a" letter-spacing="0" >The learned adapter changes every flow step. Raw and shielded execution are evaluated separately.</text>
+<rect x="378" y="392" width="1145" height="300" rx="20" fill="#fafaf7" stroke="#dce2da" stroke-dasharray="6 5"/>
+<text x="400" y="423" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="600" fill="#66746b" letter-spacing="1" >FLOW GENERATION</text>
+<g><path d="M344 257 H403" fill="none" stroke="#5354a2" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-memory)"/>
+</g>
+<g><path d="M716 257 H775" fill="none" stroke="#207460" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-ground)"/>
+</g>
+<g><path d="M945 329 V453" fill="none" stroke="#207460" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-ground)"/>
+<rect x="966" y="369" width="169.640625" height="23" rx="4" fill="#fffefa"/>
+<text x="971" y="386" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#207460" letter-spacing="0" >skill + scene tokens</text>
+</g>
+<g><path d="M344 531 H403" fill="none" stroke="#326ba7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-frozen)"/>
+<rect x="50" y="406" width="236.2421875" height="23" rx="4" fill="#fffefa"/>
+<text x="55" y="423" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#326ba7" letter-spacing="0" >original task + images/state</text>
+</g>
+<g><path d="M716 531 H775" fill="none" stroke="#326ba7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-frozen)"/>
+<rect x="725" y="489" width="34.4140625" height="23" rx="4" fill="#fffefa"/>
+<text x="730" y="506" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#326ba7" letter-spacing="0" >h_t</text>
+</g>
+<g><path d="M1105 531 H1170" fill="none" stroke="#7951aa" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-learned)"/>
+<rect x="1115" y="493" width="30.4140625" height="23" rx="4" fill="#fffefa"/>
+<text x="1120" y="510" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#7951aa" letter-spacing="0" >Δv</text>
+</g>
+<g><path d="M558 609 V660 H1145 V585 H1170" fill="none" stroke="#326ba7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-frozen)"/>
+<rect x="813" y="633" width="176.453125" height="23" rx="4" fill="#fffefa"/>
+<text x="818" y="650" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#326ba7" letter-spacing="0" >base velocity v_base</text>
+</g>
+<g><path d="M1478 492 H1501 V365 H560 V453" fill="none" stroke="#326ba7" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#runtime-arrow-frozen)"/>
+<rect x="809" y="335" width="207.1171875" height="23" rx="4" fill="#fffefa"/>
+<text x="814" y="352" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#326ba7" letter-spacing="0" >next noisy chunk x_t  /  t</text>
+</g>
+<g class="route-raw"><path d="M1325 609 V745 H938 V785" fill="none" stroke="#7951aa" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-learned)"/>
+<rect x="989" y="718" width="142.78125" height="23" rx="4" fill="#fffefa"/>
+<text x="994" y="735" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#7951aa" letter-spacing="0" >L0 · primary test</text>
+</g>
+<g class="route-shield"><path d="M1325 745 H558 V785" fill="none" stroke="#a96713" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#runtime-arrow-check)"/>
+<rect x="594" y="718" width="161.6484375" height="23" rx="4" fill="#fffefa"/>
+<text x="599" y="735" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#a96713" letter-spacing="0" >L1 · optional shield</text>
+</g>
+<g class="route-raw"><path d="M1105 851 H1170" fill="none" stroke="#7951aa" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-learned)"/>
+</g>
+<g class="route-shield"><path d="M558 921 V955 H1330 V921" fill="none" stroke="#a96713" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#runtime-arrow-check)"/>
+<rect x="785" y="930" width="243.484375" height="23" rx="4" fill="#fffefa"/>
+<text x="790" y="947" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#a96713" letter-spacing="0" >checked / repaired command</text>
+</g>
+<g><path d="M1325 921 V1050 H726" fill="none" stroke="#68726c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-neutral)"/>
+<rect x="1021" y="1021" width="190.703125" height="23" rx="4" fill="#fffefa"/>
+<text x="1026" y="1038" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#68726c" letter-spacing="0" >actual states + events</text>
+</g>
+<g><path d="M195 921 V994" fill="none" stroke="#68726c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-neutral)"/>
+</g>
+<g><path d="M1478 851 H1550 V160 H362 V469 H344" fill="none" stroke="#207460" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 6" marker-end="url(#runtime-arrow-ground)"/>
+<rect x="635" y="135" width="327.9375" height="23" rx="4" fill="#fffefa"/>
+<text x="640" y="152" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#207460" letter-spacing="0" >fresh observations and binding updates</text>
+</g>
+<g><path d="M362 257 H403" fill="none" stroke="#207460" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#runtime-arrow-ground)"/>
+</g>
+<g class="component" data-node="memory" role="button" tabindex="0" aria-label="Safety-skill memory: show component details"><title>Safety-skill memory</title><rect class="node-surface" x="48" y="185" width="296" height="144" rx="13" fill="#eef0fc" stroke="#5354a2" stroke-width="1.4"/>
+<text x="68" y="213" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#5354a2" letter-spacing="1.15" >PERSISTENT, EDITABLE</text>
+<text x="68" y="245" font-family="DejaVu Sans, sans-serif" font-size="22.5" font-weight="650" fill="#24352f" letter-spacing="0" >Safety-skill memory</text>
+<text x="68" y="275" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >SKILL.md + typed contract</text>
+<text x="68" y="300" font-family="DejaVu Sans, sans-serif" font-size="15.25" font-weight="400" fill="#52675d" letter-spacing="0" >Instructions · limits · applicability</text>
+</g>
+<g class="component" data-node="grounding" role="button" tabindex="0" aria-label="Retrieve + ground: show component details"><title>Retrieve + ground</title><rect class="node-surface" x="403" y="185" width="313" height="144" rx="13" fill="#eaf5f0" stroke="#207460" stroke-width="1.4"/>
+<text x="423" y="213" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#207460" letter-spacing="1.15" >REFRESHED EACH ACTION</text>
+<text x="423" y="245" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Retrieve + ground</text>
+<text x="423" y="275" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Bind roles to current objects</text>
+<text x="423" y="300" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Oracle facts / geometry in PoC</text>
+</g>
+<g class="component" data-node="encoding" role="button" tabindex="0" aria-label="Encode conditioning: show component details"><title>Encode conditioning</title><rect class="node-surface" x="775" y="185" width="330" height="144" rx="13" fill="#ecf3fc" stroke="#326ba7" stroke-width="1.4"/>
+<text x="795" y="213" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#326ba7" letter-spacing="1.15" >FROZEN TEXT ENCODER</text>
+<text x="795" y="245" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Encode conditioning</text>
+<text x="795" y="275" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >384-D language + 2 parameters</text>
+<text x="795" y="300" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >68-value grounded scene vector</text>
+</g>
+<g class="component" data-node="observations" role="button" tabindex="0" aria-label="Task + observation: show component details"><title>Task + observation</title><rect class="node-surface" x="48" y="453" width="296" height="156" rx="13" fill="#f5f5f2" stroke="#68726c" stroke-width="1.4"/>
+<text x="68" y="481" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#68726c" letter-spacing="1.15" >CURRENT INPUTS</text>
+<text x="68" y="513" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Task + observation</text>
+<text x="68" y="543" font-family="DejaVu Sans, sans-serif" font-size="16.75" font-weight="400" fill="#52675d" letter-spacing="0" >Original task stays unchanged</text>
+<text x="68" y="568" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Images · state · grasp / phase</text>
+<text x="68" y="593" font-family="DejaVu Sans, sans-serif" font-size="16.0" font-weight="400" fill="#52675d" letter-spacing="0" >Noisy action x_t and flow time t</text>
+</g>
+<g class="component" data-node="base" role="button" tabindex="0" aria-label="Frozen π0.5 backbone: show component details"><title>Frozen π0.5 backbone</title><rect class="node-surface" x="403" y="453" width="313" height="156" rx="13" fill="#ecf3fc" stroke="#326ba7" stroke-width="1.4"/>
+<text x="423" y="481" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#326ba7" letter-spacing="1.15" >PRETRAINED WEIGHTS FIXED</text>
+<text x="423" y="513" font-family="DejaVu Sans, sans-serif" font-size="21.75" font-weight="650" fill="#24352f" letter-spacing="0" >Frozen π0.5 backbone</text>
+<text x="423" y="543" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Predict base flow velocity</text>
+<text x="423" y="568" font-family="DejaVu Sans, sans-serif" font-size="16.5" font-weight="400" fill="#52675d" letter-spacing="0" >Expose action-token features h_t</text>
+<text x="423" y="593" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Recompute on adapted x_t</text>
+</g>
+<g class="component" data-node="adapter" role="button" tabindex="0" aria-label="Shared skill adapter: show component details"><title>Shared skill adapter</title><rect class="node-surface" x="775" y="453" width="330" height="156" rx="13" fill="#f3edfb" stroke="#7951aa" stroke-width="1.4"/>
+<text x="795" y="481" font-family="DejaVu Sans, sans-serif" font-size="11.25" font-weight="650" fill="#7951aa" letter-spacing="1.15" >LEARNED OFFLINE · FIXED AT RUNTIME</text>
+<text x="795" y="513" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Shared skill adapter</text>
+<text x="795" y="543" font-family="DejaVu Sans, sans-serif" font-size="16.75" font-weight="400" fill="#52675d" letter-spacing="0" >h_t + x_t + t + skill / scene tokens</text>
+<text x="795" y="568" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >2 blocks · width 256 initially</text>
+<text x="795" y="593" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Predict 6-channel pose residual</text>
+</g>
+<g class="component" data-node="integration" role="button" tabindex="0" aria-label="Add + integrate: show component details"><title>Add + integrate</title><rect class="node-surface" x="1170" y="453" width="308" height="156" rx="13" fill="#f3edfb" stroke="#7951aa" stroke-width="1.4"/>
+<text x="1190" y="481" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#7951aa" letter-spacing="1.15" >EVERY FLOW STEP</text>
+<text x="1190" y="513" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Add + integrate</text>
+<text x="1190" y="543" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >v = v_base + Δv_skill</text>
+<text x="1190" y="568" font-family="DejaVu Sans, sans-serif" font-size="15.25" font-weight="400" fill="#52675d" letter-spacing="0" >Update x_t toward an action chunk</text>
+<text x="1190" y="593" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >10 steps · noise → actions</text>
+</g>
+<g class="component" data-node="requirements" role="button" tabindex="0" aria-label="Intended requirements: show component details"><title>Intended requirements</title><rect class="node-surface" x="48" y="785" width="296" height="136" rx="13" fill="#f5f5f2" stroke="#68726c" stroke-width="1.4"/>
+<text x="68" y="813" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#68726c" letter-spacing="1.15" >INDEPENDENT SCORING INPUT</text>
+<text x="68" y="845" font-family="DejaVu Sans, sans-serif" font-size="19.5" font-weight="650" fill="#24352f" letter-spacing="0" >Intended requirements</text>
+<text x="68" y="875" font-family="DejaVu Sans, sans-serif" font-size="16.75" font-weight="400" fill="#52675d" letter-spacing="0" >Externally declared A / B rules</text>
+<text x="68" y="900" font-family="DejaVu Sans, sans-serif" font-size="16.0" font-weight="400" fill="#52675d" letter-spacing="0" >Unaffected by memory deletion</text>
+</g>
+<g class="component route-shield" data-node="shield" role="button" tabindex="0" aria-label="Checker / repair: show component details"><title>Checker / repair</title><rect class="node-surface" x="403" y="785" width="313" height="136" rx="13" fill="#fff3df" stroke="#a96713" stroke-width="1.4"/>
+<text x="423" y="813" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#a96713" letter-spacing="1.15" >L1 · OPTIONAL AT EXECUTION</text>
+<text x="423" y="845" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Checker / repair</text>
+<text x="423" y="875" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Same fixed backend as F0</text>
+<text x="423" y="900" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Log every replaced command</text>
+</g>
+<g class="component route-raw" data-node="raw" role="button" tabindex="0" aria-label="Execute raw prefix: show component details"><title>Execute raw prefix</title><rect class="node-surface" x="775" y="785" width="330" height="136" rx="13" fill="#f3edfb" stroke="#7951aa" stroke-width="1.4"/>
+<text x="795" y="813" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#7951aa" letter-spacing="1.15" >L0 · PRIMARY CAPABILITY TEST</text>
+<text x="795" y="845" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Execute raw prefix</text>
+<text x="795" y="875" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >No semantic repair or reranking</text>
+<text x="795" y="900" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Initially execute 1 action</text>
+</g>
+<g class="component" data-node="environment" role="button" tabindex="0" aria-label="LIBERO environment: show component details"><title>LIBERO environment</title><rect class="node-surface" x="1170" y="785" width="308" height="136" rx="13" fill="#eaf5f0" stroke="#207460" stroke-width="1.4"/>
+<text x="1190" y="813" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#207460" letter-spacing="1.15" >EXISTING SIMULATOR</text>
+<text x="1190" y="845" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >LIBERO environment</text>
+<text x="1190" y="875" font-family="DejaVu Sans, sans-serif" font-size="15.25" font-weight="400" fill="#52675d" letter-spacing="0" >Execute command · observe again</text>
+<text x="1190" y="900" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Record actual substep events</text>
+</g>
+<g class="component" data-node="evaluator" role="button" tabindex="0" aria-label="Score actual behavior independently: show component details"><title>Score actual behavior independently</title><rect class="node-surface" x="48" y="994" width="678" height="102" rx="13" fill="#f5f5f2" stroke="#68726c" stroke-width="1.4"/>
+<text x="68" y="1022" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#68726c" letter-spacing="1.15" >EVALUATION ONLY</text>
+<text x="68" y="1054" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Score actual behavior independently</text>
+<text x="68" y="1084" font-family="DejaVu Sans, sans-serif" font-size="16.0" font-weight="400" fill="#52675d" letter-spacing="0" >Task completion + violations + repair use; never used to select raw L0 actions</text>
+</g>
+<path d="M48 1113 H1552" stroke="#dde3db"/>
+<text x="48" y="1143" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" fill="#66736b" letter-spacing="0" >Scope: v2 adapter target. Oracle grounding initially. Only the adapter is trained; all weights are fixed during evaluation.</text>
+</svg>

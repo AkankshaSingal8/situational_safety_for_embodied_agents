@@ -1,0 +1,82 @@
+[
+  {
+    "title": "Situational safety for robot manipulation",
+    "notes": "Class presentation. The two completed studies ask what a robot can avoid from current visual observations and what changes when a safety-relevant fact persists across episodes. Results are simulation-only. Recommended speaking time: 15\u201320 minutes.",
+    "footer": "Akanksha Singal \u00b7 October 2026"
+  },
+  {
+    "title": "What counts as a safe rollout?",
+    "notes": "SafeLIBERO: spatial, object, goal and long suites, each at hazard levels I and II. The main baseline comparisons here use 50 episodes per task, four tasks, 200 episodes per condition. TSR and CAR are separate marginal rates; neither is the joint safe-success rate. Level I places hazards near the target; Level II places hazards along the movement path.",
+    "footer": "Source: results/safelibero/policy_baselines/; results/README.md"
+  },
+  {
+    "title": "Task success leaves a safety gap",
+    "notes": "Completed spatial Level-I runs, 200 episodes per policy. Cosmos 7.5/10.5, Fast-WAM 45/5, OpenVLA-OFT 42/12, pi0.5 67/14 (TSR/CAR). These describe the evaluated checkpoints and settings, not universal model rankings. Fast-WAM uses the completed fastwam_50ep run. Full baseline board is in the appendix.",
+    "footer": "SafeLIBERO spatial \u00b7 Level I \u00b7 n = 200 per policy"
+  },
+  {
+    "title": "Use the images to locate the obstacle",
+    "notes": "Completed visual filter v19: vision-based obstacle selection and multi-view triangulation produce a 3D obstacle estimate; uncertainty determines ellipsoid geometry, refined using later views. No ground-truth obstacle positions are used in this control path. The diagram summarizes the evaluated obstacle-avoidance mechanism, not the aspirational six-level taxonomy.",
+    "footer": "Source: fol_safety_filter/filter.py; final campaign report"
+  },
+  {
+    "title": "Adjust motion near the estimated hazard",
+    "notes": "The implemented geometric filter removes the approaching component near the warning boundary and pushes outward inside the hard boundary. It monitors end-effector and arm checkpoints. v19 uses uncertainty-shaped ellipsoids and multi-frame refinement. This is a diagram of the implemented action correction, not a claim of a verified global safety guarantee or an exact QP solve.",
+    "footer": "Source: FOLSafetyFilter._apply_cbf and _apply_point_cbf"
+  },
+  {
+    "title": "Collision avoidance improves; failures remain",
+    "notes": "Matched final campaign, OpenVLA-OFT og10 checkpoint, seed 7. Each condition has 200 episodes. v19 Level I: TSR 40 to 37, CAR 12.5 to 20.5. Level II: TSR stays 37, CAR 6 to 14.5, a gain of 8.5 percentage points. No statistical significance claim. The run working tree was not fully committed; these are recorded experimental results, not a tagged reproducibility claim.",
+    "footer": "SafeLIBERO spatial \u00b7 n = 200 per method and level \u00b7 seed 7"
+  },
+  {
+    "title": "More avoidance can cost task success",
+    "notes": "All points are completed 200-episode campaign conditions. v20 adds a target corridor mechanism; v21-D2 uses RGB-D and two obstacle candidates. GT oracle v17.2 uses simulator positions and differs in filter version, so the gap is diagnostic rather than a clean isolated perception ablation. Do not claim the full gap is caused solely by grounding. Unfinished variants are excluded.",
+    "footer": "Source: results/safelibero/fol/{baseline_og10,v19,v20,v21d2,v172}/"
+  },
+  {
+    "title": "Watch the remaining failure",
+    "notes": "Same spatial Level-II task 3, episode 0, baseline og10 versus v19. Both recordings show the moka pot obstacle being toppled. These illustrate a failure case, not a successful intervention. The campaign rates on preceding slides summarize all 200 episodes. Playback is the stored 30 fps video, not a timing measurement.",
+    "footer": "Task: move the bowl from the cabinet to the plate \u00b7 illustrative episode"
+  },
+  {
+    "title": "Check what the benchmark actually measures",
+    "notes": "Completed code audit of LIBERO-Safety, a different benchmark from SafeLIBERO. Robot-contact checks compare geometry integer IDs against string names, so that channel cannot fire. Affordance has no constraints. Duplicate predicate keys and success-step accounting also affect scoring. These findings prevent interpreting older 100% CAR values as safety evidence. No claim that the fixes or reruns are complete.",
+    "footer": "Source: docs/code_review_findings.md \u00b7 LIBERO-Safety audit"
+  },
+  {
+    "title": "Some hazards outlast the image",
+    "notes": "Separate proof of concept with a scripted waypoint controller, fixed human-written rules and a JSON fact store. A proximity event marks the tool in a marker-transfer analogue. The next episode resets and randomizes object poses while preserving identity. A hidden mark cannot be recovered from the current observation. No VLM, learned rule induction or physical contamination model is evaluated.",
+    "footer": "Source: experiments/safety_memory_poc/README.md and RESULTS.md"
+  },
+  {
+    "title": "Change the information; keep the controller fixed",
+    "notes": "Four cells: hidden marked source, clean lookalike, marked then washed, visible mark. Four arms share the same scripted policy and barrier projection: memoryless, memory, deleted memory and oracle ledger. The memoryless arm has a perfect current-frame grounder. Observed state features of hidden marked/clean twins are identical in the documented leak check; this is not a claim about all raw camera pixels.",
+    "footer": "Fixed rules \u00b7 same policy and filter \u00b7 four belief sources"
+  },
+  {
+    "title": "Memory reduces hidden-hazard violations",
+    "notes": "Full scored hidden-positive cell: 32 episodes per arm. Memoryless: violation 24/32, task 28/32, safe 5/32. Memory: violation 9/32, task 23/32, safe 16/32. Deleted memory matches memoryless. Entire board: 640 episodes run, 128 excluded by cell-aware settle criteria, 512 scored. The paired analysis uses a smaller matched subset of 20; do not mix its rates with these full-cell rates. Success is lower with memory; lack of significance does not establish no cost.",
+    "footer": "Hidden hazard \u00b7 n = 32 per arm \u00b7 512 scored / 640 run across the full board"
+  },
+  {
+    "title": "The effect depends on what can be observed",
+    "notes": "Chart uses full scored cells, n=32 per arm. On the paired subset, hidden violation is 75% versus 30%; visible violation is 30% in both arms. The interaction is 45 percentage points, 95% CI [25,65], n=20 paired comparisons. Full-cell reset belief remains 6.2%, so do not claim perfect wash release. Memory and oracle match, but both derive their marking signal from the same proximity event.",
+    "footer": "Full scored cells: n = 32 per arm \u00b7 paired interaction: 45 pp, 95% CI [25, 65]"
+  },
+  {
+    "title": "Replay: the same task with and without memory",
+    "notes": "Animation replays the stored x/y end-effector trajectory for hidden-positive pair 0 in kin_final_v3. This is a projection of a 3D kinematic testbed trace, not MuJoCo video and not the physics board used in the preceding plots. Frame progression interpolates the display time over stored samples, not real-time simulation speed. Square: food location. Shaded disk: 6 cm proximity threshold in the top-down view. Star: goal. Exact 3D violation/success labels come from the recorded episode.",
+    "footer": "Kinematic testbed \u00b7 recorded pair 0 \u00b7 top view \u00b7 no new rollout"
+  },
+  {
+    "title": "What we have demonstrated",
+    "notes": "Completed work: policy baseline evaluation, visual geometric safety filtering and its campaign, an audit of benchmark scoring, and persistent-fact enforcement in a controlled scripted-policy experiment. These are separate pieces, not an integrated learned memory/VLA system. Visual control still fails in many episodes. Memory improves safe success here but with reduced task success; external perception, learned policy integration and real robots are not established by these results.",
+    "footer": "Simulation results \u00b7 visual filter and memory experiments evaluated separately"
+  },
+  {
+    "title": "Completed baseline board",
+    "notes": "Each entry is task success / collision avoidance (%), n=200. Values are read from completed JSONs. The pi0.5 Long-I stale markdown entry is replaced with its complete result (58 / 15). Fast-WAM Spatial-I uses the completed 50-episode-per-task run. Cross-policy comparisons are descriptive of these checkpoint configurations. All exact source paths are stored in sources.json.",
+    "footer": "Each cell: task success / collision avoidance (%) \u00b7 n = 200"
+  }
+]

@@ -1,0 +1,7 @@
+# Compatibility pointer. Use the referenced v2 specification, not v1 settings.
+status: superseded
+current_version: "2.0"
+current_configuration: 2026-09-18-language-conditioned-safety-adapter-poc-config.yaml
+current_protocol: 2026-09-18-language-conditioned-safety-adapter-poc-protocol.md
+archived_v1_configuration: 2026-09-17-reusable-safety-skills-poc-config-v1.1.yaml
+execution_ready: false

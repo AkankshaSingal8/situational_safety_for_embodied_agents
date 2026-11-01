@@ -1,0 +1,14 @@
+{
+  "facts": {
+    "MARKED:eef": {
+      "evidence": "spurious",
+      "instance": "eef",
+      "predicate": "MARKED",
+      "since_episode": "H_NEG|memory|p3|E",
+      "since_t": -1,
+      "source": "contact_event",
+      "value": true
+    }
+  },
+  "schema_version": 1
+}

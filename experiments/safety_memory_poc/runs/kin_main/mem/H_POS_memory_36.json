@@ -1,0 +1,14 @@
+{
+  "facts": {
+    "MARKED:eef": {
+      "evidence": "proximity:raw_source_pos:0.0311",
+      "instance": "eef",
+      "predicate": "MARKED",
+      "since_episode": "H_POS|memory|p36|E",
+      "since_t": 6,
+      "source": "contact_event",
+      "value": true
+    }
+  },
+  "schema_version": 1
+}

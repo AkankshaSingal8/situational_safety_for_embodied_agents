@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1040" width="1600" height="1040" role="img" aria-labelledby="grounding-title grounding-description">
+<title id="grounding-title">A reusable rule becomes a situated input.</title>
+<desc id="grounding-description">Persist the requirement. Refresh object bindings and geometry. Keep evaluation obligations independent. Proposed architecture, not experimental results. Click or focus components in the interactive HTML for details.</desc>
+<defs>
+<marker id="grounding-arrow-memory" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5354a2"/></marker>
+<marker id="grounding-arrow-ground" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#207460"/></marker>
+<marker id="grounding-arrow-frozen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#326ba7"/></marker>
+<marker id="grounding-arrow-learned" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7951aa"/></marker>
+<marker id="grounding-arrow-check" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#a96713"/></marker>
+<marker id="grounding-arrow-neutral" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#68726c"/></marker>
+</defs>
+<rect width="1600" height="100%" fill="#fffefa"/>
+<text x="48" y="43" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="600" fill="#69736f" letter-spacing="2" >REUSABLE SAFETY SKILLS  /  PROPOSED V2 SYSTEM</text>
+<text x="48" y="89" font-family="DejaVu Sans, sans-serif" font-size="34" font-weight="650" fill="#20312e" letter-spacing="0" >A reusable rule becomes a situated input.</text>
+<text x="48" y="122" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="400" fill="#62716a" letter-spacing="0" >Persist the requirement. Refresh object bindings and geometry. Keep evaluation obligations independent.</text>
+<g><path d="M490 290 H575" fill="none" stroke="#5354a2" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#grounding-arrow-memory)"/>
+</g>
+<g><path d="M1015 290 H1100" fill="none" stroke="#207460" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#grounding-arrow-ground)"/>
+</g>
+<g><path d="M1320 427 V543" fill="none" stroke="#207460" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#grounding-arrow-ground)"/>
+<rect x="1345" y="477" width="172.390625" height="23" rx="4" fill="#fffefa"/>
+<text x="1350" y="494" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" fill="#207460" letter-spacing="0" >bind current entities</text>
+</g>
+<g><path d="M1100 648 H1015" fill="none" stroke="#207460" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#grounding-arrow-ground)"/>
+</g>
+<g><path d="M575 648 H490" fill="none" stroke="#7951aa" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#grounding-arrow-learned)"/>
+</g>
+<g class="component" data-node="ruleexample" role="button" tabindex="0" aria-label="Persistent requirements: show component details"><title>Persistent requirements</title><rect class="node-surface" x="48" y="184" width="442" height="243" rx="13" fill="#eef0fc" stroke="#5354a2" stroke-width="1.4"/>
+<text x="68" y="212" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#5354a2" letter-spacing="1.15" >REUSABLE / UNCHANGED TEMPLATE</text>
+<text x="68" y="244" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Persistent requirements</text>
+<text x="68" y="274" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >A: avoid protected overhead regions</text>
+<text x="68" y="299" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >B: maintain the payload’s upright axis</text>
+<text x="68" y="324" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Default limits: 0.02 m / 15°</text>
+<text x="68" y="349" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Instruction + applicability + contract</text>
+<text x="68" y="374" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >No stored scene-specific coordinates</text>
+</g>
+<g class="component" data-node="facts" role="button" tabindex="0" aria-label="Observe applicability: show component details"><title>Observe applicability</title><rect class="node-surface" x="575" y="184" width="440" height="243" rx="13" fill="#eaf5f0" stroke="#207460" stroke-width="1.4"/>
+<text x="595" y="212" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#207460" letter-spacing="1.15" >SUPPLIED FACTS IN THE MAIN POC</text>
+<text x="595" y="244" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Observe applicability</text>
+<text x="595" y="274" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >phase = transporting</text>
+<text x="595" y="299" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >payload = object_17</text>
+<text x="595" y="324" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >target = region_4</text>
+<text x="595" y="349" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >overhead_sensitive / orientation_sensitive</text>
+<text x="595" y="374" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >These facts are oracle inputs initially</text>
+</g>
+<g class="component" data-node="bindingexample" role="button" tabindex="0" aria-label="Resolve the bindings: show component details"><title>Resolve the bindings</title><rect class="node-surface" x="1100" y="184" width="450" height="243" rx="13" fill="#eaf5f0" stroke="#207460" stroke-width="1.4"/>
+<text x="1120" y="212" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#207460" letter-spacing="1.15" >EPISODE-LOCAL / REFRESHED</text>
+<text x="1120" y="244" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Resolve the bindings</text>
+<text x="1120" y="274" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >carried payload → object_17</text>
+<text x="1120" y="299" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >protected region → region_4</text>
+<text x="1120" y="324" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Obtain pose, extent and local up-axis</text>
+<text x="1120" y="349" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Measure the grasp transform</text>
+<text x="1120" y="374" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Store provenance and knownness</text>
+</g>
+<g class="component" data-node="tokenexample" role="button" tabindex="0" aria-label="Assemble conditioning: show component details"><title>Assemble conditioning</title><rect class="node-surface" x="1100" y="543" width="450" height="230" rx="13" fill="#ecf3fc" stroke="#326ba7" stroke-width="1.4"/>
+<text x="1120" y="571" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#326ba7" letter-spacing="1.15" >SUPPORTED CONDITIONING INTERFACE</text>
+<text x="1120" y="603" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Assemble conditioning</text>
+<text x="1120" y="633" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >One 68-value scene vector</text>
+<text x="1120" y="658" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >One 384-D text embedding per skill</text>
+<text x="1120" y="683" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Two normalized parameters per token</text>
+<text x="1120" y="708" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >No predicate IDs in language model input</text>
+<text x="1120" y="733" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Empty set → learned null token</text>
+</g>
+<g class="component" data-node="groundadapter" role="button" tabindex="0" aria-label="Condition the flow adapter: show component details"><title>Condition the flow adapter</title><rect class="node-surface" x="575" y="543" width="440" height="230" rx="13" fill="#f3edfb" stroke="#7951aa" stroke-width="1.4"/>
+<text x="595" y="571" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#7951aa" letter-spacing="1.15" >SHARED LEARNED INTERFACE</text>
+<text x="595" y="603" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Condition the flow adapter</text>
+<text x="595" y="633" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Same trained weights for A, B, A+B</text>
+<text x="595" y="658" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >New scene → new geometry</text>
+<text x="595" y="683" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Supported edit → new conditioning</text>
+<text x="595" y="708" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >No new adapter per file</text>
+<text x="595" y="733" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >No retraining on skill load</text>
+</g>
+<g class="component" data-node="groundtest" role="button" tabindex="0" aria-label="Test what actually changes: show component details"><title>Test what actually changes</title><rect class="node-surface" x="48" y="543" width="442" height="230" rx="13" fill="#f5f5f2" stroke="#68726c" stroke-width="1.4"/>
+<text x="68" y="571" font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="650" fill="#68726c" letter-spacing="1.15" >EVIDENCE, NOT A DIAGRAMMED RESULT</text>
+<text x="68" y="603" font-family="DejaVu Sans, sans-serif" font-size="23" font-weight="650" fill="#24352f" letter-spacing="0" >Test what actually changes</text>
+<text x="68" y="633" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Relevant fact → appropriate activation</text>
+<text x="68" y="658" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Irrelevant fact → no extra requirement</text>
+<text x="68" y="683" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Delete record → score obligation remains</text>
+<text x="68" y="708" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Paraphrase → preserve the intended rule</text>
+<text x="68" y="733" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" fill="#52675d" letter-spacing="0" >Parameter edit → test changed behavior</text>
+</g>
+<text x="48" y="851" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="400" fill="#5b6e61" letter-spacing="0" >Illustrative bindings only: object_17 and region_4 are example identifiers, never learned skill IDs.</text>
+<text x="48" y="892" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="400" fill="#5b6e61" letter-spacing="0" >Grounding extension: cross estimated/oracle geometry with estimated/oracle applicability; keep the adapter fixed.</text>
+<path d="M48 983 H1552" stroke="#dde3db"/>
+<text x="48" y="1013" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="400" fill="#66736b" letter-spacing="0" >Memory preserves the requirement; grounding supplies its current meaning in the scene. Oracle inputs remain a stated scope limit.</text>
+</svg>

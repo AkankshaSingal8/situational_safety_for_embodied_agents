@@ -1,0 +1,28 @@
+\begin{tikzpicture}[
+ box/.style={rounded corners=2pt,draw=ink!65,fill=ink!4,align=center,text width=3.7cm,minimum height=1.45cm,inner sep=6pt,font=\small},
+ flow/.style={-{Latex[length=2mm]},thick,draw=ink},
+ update/.style={flow,dashed,draw=learn},
+ lab/.style={font=\scriptsize,fill=white,inner sep=2pt}]
+\node[box] (obs) at (0,0) {\textbf{Observation + task}\\Images, robot state\\Objects and events};
+\node[box] (vla) at (5.2,0) {\textbf{Frozen VLA}\\Propose action chunk};
+\node[box] (ctrl) at (10.4,0) {\textbf{Existing controller}\\Geometry filter + veto\\Checked backup};
+\node[box] (robot) at (15.6,0) {\textbf{Execute + measure}\\Check each step\\Measure harm};
+\node[box,draw=mem,fill=mem!8] (mon) at (5.2,-2.9) {\textbf{Memory monitor}\\Update object state\\Bind and evaluate rules};
+\node[box,draw=mem,fill=mem!8] (store) at (5.2,-5.8) {\textbf{One persistent store}\\Evidence + rule versions\\Object snapshots};
+\node[box,draw=learn,fill=learn!7] (fit) at (11,-5.8) {\textbf{Offline fitting job}\\Existing VLM proposes\\Fit, test, and validate};
+\draw[flow] (obs)--(vla);
+\draw[flow] (vla)--node[lab,above]{proposed}(ctrl);
+\draw[flow] (ctrl)--node[lab,above]{executed}(robot);
+\draw[flow] (obs.south)|-(mon.west);
+\node[lab] at (0,-2.05) {shared features};
+\draw[flow] (vla)--node[lab,right]{action scope}(mon);
+\draw[flow] (mon.east)-|(ctrl.south);
+\node[lab] at (9.3,-3.2) {constraints / unknown};
+\draw[flow] (store)--node[lab,right]{validated snapshot}(mon);
+\draw[flow] ([yshift=3mm]store.east)--node[lab,above]{evidence}([yshift=3mm]fit.west);
+\draw[update] ([yshift=-3mm]fit.west)--node[lab,below]{update}([yshift=-3mm]store.east);
+\draw[flow] (robot.south)--(15.6,-7.4)--(5.2,-7.4)--(store.south);
+\node[lab] at (10.4,-7.4) {actions, outcomes, provenance};
+\draw[flow] (robot.north)--(15.6,1.35)--(0,1.35)--(obs.north);
+\node[lab] at (7.8,1.35) {next observation; clear stale chunks after intervention};
+\end{tikzpicture}

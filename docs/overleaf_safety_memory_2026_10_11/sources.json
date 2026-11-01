@@ -1,0 +1,371 @@
+{
+  "safevla": {
+    "url": "https://arxiv.org/abs/2503.03480",
+    "title": "SafeVLA: Towards Safety Alignment of Vision-Language-Action Model via Constrained Learning",
+    "authors": [
+      "Zhang, Borong",
+      "Zhang, Yuhao",
+      "Ji, Jiaming",
+      "Lei, Yingshan",
+      "Cai, Yishuai",
+      "Dai, Josef",
+      "Chen, Yuanpei",
+      "Yang, Yaodong"
+    ],
+    "date": [
+      "2025/03/05"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2503.03480"
+  },
+  "aegis": {
+    "url": "https://arxiv.org/abs/2512.11891",
+    "title": "VLSA: Vision-Language-Action Models with Plug-and-Play Safety Constraint Layer",
+    "authors": [
+      "Hu, Songqiao",
+      "Liu, Zeyi",
+      "Liu, Shuang",
+      "Cen, Jun",
+      "Meng, Zihan",
+      "Wang, Shihefeng",
+      "Li, Xiang",
+      "He, Xiao"
+    ],
+    "date": [
+      "2025/12/09"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2512.11891"
+  },
+  "robosafe": {
+    "url": "https://arxiv.org/abs/2512.21220",
+    "title": "RoboSafe: Safeguarding Embodied Agents via Executable Safety Logic",
+    "authors": [
+      "Wang, Le",
+      "Ying, Zonghao",
+      "Yang, Xiao",
+      "Zou, Quanchen",
+      "Yin, Zhenfei",
+      "Li, Tianlin",
+      "Yang, Jian",
+      "Yang, Yaodong",
+      "Liu, Aishan",
+      "Liu, Xianglong"
+    ],
+    "date": [
+      "2025/12/24"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2512.21220"
+  },
+  "core": {
+    "url": "https://arxiv.org/abs/2602.19983",
+    "title": "Contextual Safety Reasoning and Grounding for Open-World Robots",
+    "authors": [
+      "Ravichandran, Zachary",
+      "Snyder, David",
+      "Robey, Alexander",
+      "Hassani, Hamed",
+      "Kumar, Vijay",
+      "Pappas, George J."
+    ],
+    "date": [
+      "2026/02/23"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2602.19983"
+  },
+  "safe": {
+    "url": "https://arxiv.org/abs/2506.09937",
+    "title": "SAFE: Multitask Failure Detection for Vision-Language-Action Models",
+    "authors": [
+      "Gu, Qiao",
+      "Ju, Yuanliang",
+      "Sun, Shengxiang",
+      "Gilitschenski, Igor",
+      "Nishimura, Haruki",
+      "Itkina, Masha",
+      "Shkurti, Florian"
+    ],
+    "date": [
+      "2025/06/11"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2506.09937"
+  },
+  "anysafe": {
+    "url": "https://arxiv.org/abs/2509.19555",
+    "title": "AnySafe: Adapting Latent Safety Filters at Runtime via Safety Constraint Parameterization in the Latent Space",
+    "authors": [
+      "Agrawal, Sankalp",
+      "Seo, Junwon",
+      "Nakamura, Kensuke",
+      "Tian, Ran",
+      "Bajcsy, Andrea"
+    ],
+    "date": [
+      "2025/09/23"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2509.19555"
+  },
+  "shieldvla": {
+    "url": "https://arxiv.org/abs/2609.13231",
+    "title": "ShieldVLA: Feasibility-Aware Safety Alignment for Vision-Language-Action Models",
+    "authors": [
+      "Tayal, Manan",
+      "Nambi, Akshay"
+    ],
+    "date": [
+      "2026/09/02"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2609.13231"
+  },
+  "failbank": {
+    "url": "https://arxiv.org/abs/2609.39820",
+    "title": "Learning from Runtime Feedback through Failure-Bank Self-Evolution for Vision-Language-Action Models",
+    "authors": [
+      "Cui, Mingyue",
+      "Liu, Zheyuan",
+      "Zhu, Yihan",
+      "Zhang, Zheyuan",
+      "Jiang, Meng"
+    ],
+    "date": [
+      "2026/09/30"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2609.39820"
+  },
+  "multilink": {
+    "url": "https://arxiv.org/abs/2609.40007",
+    "title": "Multi-Link Safety Filtering for VLA Policies Around Moving Hazards",
+    "authors": [
+      "Agarwal, Yatharth",
+      "Raghunathan, Vijay"
+    ],
+    "date": [
+      "2026/09/30"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2609.40007"
+  },
+  "invisible": {
+    "url": "https://arxiv.org/abs/2610.07558",
+    "title": "Seeing the Invisible: Physics-Guided Visual Prompting for Temperature- and Radiation-Aware VLA Navigation",
+    "authors": [
+      "Son, Hojoon",
+      "Zhang, Fan"
+    ],
+    "date": [
+      "2026/10/06"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2610.07558"
+  },
+  "memoryvla": {
+    "url": "https://arxiv.org/abs/2508.19236",
+    "title": "MemoryVLA: Perceptual-Cognitive Memory in Vision-Language-Action Models for Robotic Manipulation",
+    "authors": [
+      "Shi, Hao",
+      "Xie, Bin",
+      "Liu, Yingfei",
+      "Sun, Lin",
+      "Liu, Fengrong",
+      "Wang, Tiancai",
+      "Zhou, Erjin",
+      "Fan, Haoqiang",
+      "Zhang, Xiangyu",
+      "Huang, Gao"
+    ],
+    "date": [
+      "2025/08/26"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2508.19236"
+  },
+  "eventvla": {
+    "url": "https://arxiv.org/abs/2606.20092",
+    "title": "EventVLA: Event-Driven Visual Evidence Memory for Long-Horizon Vision-Language-Action Policies",
+    "authors": [
+      "Yang, Ganlin",
+      "Tu, Zhangzheng",
+      "Yang, Yuqiang",
+      "Mao, Sitong",
+      "Dong, Junyi",
+      "Chen, Tianxing",
+      "Peng, Jiaqi",
+      "Xiong, Jing",
+      "Cao, Jiafei",
+      "Dai, Jifeng",
+      "Zhou, Wengang",
+      "Mu, Yao",
+      "Wang, Tai"
+    ],
+    "date": [
+      "2026/06/18"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2606.20092"
+  },
+  "soma": {
+    "url": "https://arxiv.org/abs/2603.24060",
+    "title": "RoboHarness: A Memory-Augmented Policy Harness for Vision-Language-Action Model Robustness via In-Context Adaptation",
+    "authors": [
+      "Li, Zhuoran",
+      "Li, Zhiyang",
+      "Zhou, Kaijun",
+      "Gu, Jinyu"
+    ],
+    "date": [
+      "2026/03/25"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2603.24060"
+  },
+  "unipred": {
+    "url": "https://arxiv.org/abs/2512.17992",
+    "title": "Unifying Deep Predicate Invention with Pre-trained Foundation Models",
+    "authors": [
+      "Wang, Qianwei",
+      "Li, Bowen",
+      "Luo, Zhanpeng",
+      "Xu, Yifan",
+      "Gray, Alexander",
+      "Silver, Tom",
+      "Scherer, Sebastian",
+      "Sycara, Katia",
+      "Xie, Yaqi"
+    ],
+    "date": [
+      "2025/12/19"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2512.17992"
+  },
+  "skillwrapper": {
+    "url": "https://arxiv.org/abs/2511.18203",
+    "title": "SkillWrapper: Generative Predicate Invention for Task-level Robot Planning",
+    "authors": [
+      "Yang, Ziyi",
+      "Hedegaard, Benned",
+      "Jaafar, Ahmed",
+      "Wei, Yichen",
+      "Thompson, Skye",
+      "Raman, Shreyas S.",
+      "Fu, Haotian",
+      "Tellex, Stefanie",
+      "Konidaris, George",
+      "Paulius, David",
+      "Shah, Naman"
+    ],
+    "date": [
+      "2025/11/22"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2511.18203"
+  },
+  "feedback": {
+    "url": "https://arxiv.org/abs/2409.14580",
+    "title": "Updating Robot Safety Representations Online from Natural Language Feedback",
+    "authors": [
+      "Santos, Leonardo",
+      "Li, Zirui",
+      "Peters, Lasse",
+      "Bansal, Somil",
+      "Bajcsy, Andrea"
+    ],
+    "date": [
+      "2024/09/22"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2409.14580"
+  },
+  "libsafe": {
+    "url": "https://arxiv.org/abs/2606.23686",
+    "title": "LIBERO-Safety: A Comprehensive Benchmark for Physical and Semantic Safety in Vision-Language-Action Models",
+    "authors": [
+      "Cui, Rongxu",
+      "Zhang, Zongzheng",
+      "Pang, Jingrui",
+      "Chi, Haohan",
+      "Guo, Jinbang",
+      "Zhang, Saining",
+      "Xie, Shaoxuan",
+      "Jin, Xin",
+      "Mu, Yao",
+      "Yang, Jiaolong",
+      "Yao, Guocai",
+      "Zhan, Xianyuan",
+      "Zhang, Ya-Qin",
+      "Zhao, Hao"
+    ],
+    "date": [
+      "2026/06/22"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2606.23686"
+  },
+  "safebench": {
+    "url": "https://arxiv.org/abs/2606.00773",
+    "title": "SafeVLA-Bench: A Benchmark for the Success-Safety Gap in Vision-Language-Action Models",
+    "authors": [
+      "Fan, Jialiang",
+      "Xu, Weizhe",
+      "Wang, Zijun",
+      "Sokolsky, Oleg",
+      "Lee, Insup",
+      "Kong, Fanxin"
+    ],
+    "date": [
+      "2026/05/30"
+    ],
+    "accessed": "2026-10-11",
+    "id": "2606.00773"
+  },
+  "visualpred": {
+    "url": "https://proceedings.iclr.cc/paper_files/paper/2025/hash/975db59bfa6eba2175a410f6afcecd99-Abstract-Conference.html",
+    "title": "VisualPredicator: Learning Abstract World Models with Neuro-Symbolic Predicates for Robot Planning",
+    "authors": [],
+    "date": [
+      "2025"
+    ],
+    "accessed": "2026-10-11"
+  },
+  "episodic": {
+    "url": "https://openreview.net/pdf/ab5abed17352d3c1bd4ad7e045305e31836deb3e.pdf",
+    "title": "Learning Safe Robot Planning from Unsafe Experiences: An Episodic Memory Approach for LLM-based Agents",
+    "authors": [
+      "Jing Du",
+      "Hang Zhao",
+      "Shengwei An"
+    ],
+    "date": [
+      "2026"
+    ],
+    "accessed": "2026-10-11",
+    "note": "OpenReview manuscript; archival venue not independently verified."
+  },
+  "psc": {
+    "url": "https://www.psc.edu/resources/bridges-2/user-guide/",
+    "title": "Bridges-2 User Guide",
+    "authors": [
+      "Pittsburgh Supercomputing Center"
+    ],
+    "date": [
+      "2026"
+    ],
+    "accessed": "2026-10-11"
+  },
+  "brunke": {
+    "title": "Semantically Safe Robot Manipulation: From Semantic Scene Understanding to Motion Safeguards",
+    "url": "https://ieeexplore.ieee.org/document/10933541",
+    "doi": "10.1109/LRA.2025.3553046",
+    "read_full_text": "https://arxiv.org/pdf/2410.15185",
+    "version_read": "v2, 2025-04-08",
+    "venue": "IEEE Robotics and Automation Letters 10(5):4810-4817 (2025)",
+    "accessed": "2026-10-11",
+    "notes": "IEEE stamp endpoint inaccessible; read full author manuscript via arXiv. Comparison uses Sections IV-B through IV-D."
+  }
+}
