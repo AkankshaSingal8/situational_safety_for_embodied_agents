@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Safety skills → learned actions · Architecture explorer</title>
+<style>
+:root{color-scheme:light;--ink:#20312e;--muted:#63726b;--line:#dce3d9;--paper:#fffefa;--bg:#f0f2eb;--purple:#7951aa;--teal:#207460;--amber:#a96713;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.55}a{color:#326ba7;text-decoration-thickness:1px;text-underline-offset:3px}button,select{font:inherit}button,a,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid var(--purple);outline-offset:4px}
+.wrap{max-width:1560px;padding:35px 34px 50px;margin:auto}.masthead{display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid #cbd6c9;padding-bottom:15px}.overline{font-size:11px;font-weight:750;letter-spacing:.16em;text-transform:uppercase}.status{font-size:12px;border:1px solid #bccbbc;padding:5px 11px;border-radius:50px;color:#536754;white-space:nowrap}header{padding:25px 0 23px;display:grid;grid-template-columns:1fr 340px;gap:40px;align-items:end}h1{font-size:clamp(28px,3.3vw,46px);line-height:1.08;letter-spacing:-.035em;margin:6px 0 14px;font-weight:650;max-width:900px}header p{margin:0;max-width:860px;color:var(--muted);font-size:16px}.premise{border-left:3px solid var(--purple);padding:7px 0 7px 18px;font-size:14px;color:#4d5e55}.premise strong{display:block;color:var(--ink);font-weight:650;margin-bottom:5px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin:12px 0 15px}.tabs{display:flex;gap:4px;background:#e4e9df;padding:4px;border-radius:9px}.tabs button{border:0;padding:9px 17px;background:transparent;color:#50604f;border-radius:6px;font-size:14px;font-weight:600}.tabs button[aria-selected="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px #22332214}.exports{display:flex;align-items:center;gap:15px;font-size:13px}.exports a{color:#4c6254}.print-button{background:none;border:1px solid #bfcdbd;border-radius:6px;padding:6px 12px;color:#425746;font-size:13px}
+.board{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 5px 25px #26362a05}.viewbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 23px;border-bottom:1px solid #e6eadf;min-height:60px}.hint{font-size:13px;color:var(--muted)}.modes{display:flex;align-items:center;gap:7px}.modes span{font-size:12px;color:var(--muted);margin-right:5px}.modes button{border:1px solid #d5dbd0;color:#5a6559;background:transparent;border-radius:6px;font-size:12px;padding:6px 10px}.modes button[aria-pressed="true"]{background:#ece5f7;border-color:#ad96c8;color:#62448a}.stage{overflow:auto}.view{min-width:860px}.view svg{width:100%;height:auto;display:block}.view[hidden]{display:none}.component{cursor:pointer;outline:none}.component .node-surface{transition:stroke-width .15s,filter .15s}.component:hover .node-surface{stroke-width:3;filter:brightness(.985)}.component:focus .node-surface,.component.selected .node-surface{stroke-width:3.8;stroke:#304c3a}.route-raw,.route-shield{transition:opacity .22s}body[data-mode="raw"] .route-shield{opacity:.23}body[data-mode="shield"] .route-raw{opacity:.23}.route-raw:focus,.route-shield:focus{opacity:1!important}
+.legend{display:flex;gap:20px;flex-wrap:wrap;padding:12px 23px;border-top:1px solid #e6eadf;font-size:12px;color:#56675b}.legend span{display:flex;align-items:center;gap:7px}.swatch{width:11px;height:11px;border:1px solid;border-radius:3px;display:inline-block}.memory{background:#eef0fc;border-color:#5354a2}.frozen{background:#ecf3fc;border-color:#326ba7}.learned{background:#f3edfb;border-color:#7951aa}.ground{background:#eaf5f0;border-color:#207460}.check{background:#fff3df;border-color:#a96713}.neutral{background:#f5f5f2;border-color:#68726c}
+.below{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:20px;margin-top:22px}.inspector,.scope{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:23px 25px}.inspector h2{font-size:22px;margin:4px 0 8px;letter-spacing:-.02em}.inspector>p{font-size:14px;line-height:1.65;margin:0 0 15px;color:#50635a}.tag{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--purple);font-weight:700}dl{display:grid;grid-template-columns:72px 1fr;gap:9px 16px;font-size:13px;margin:0}dt{font-weight:700;color:#5b6e5e}dd{margin:0;color:#394f43}.rule{border-top:1px solid #e4e9df;margin-top:16px;padding-top:14px;font-size:13px;color:#58694e}.detail-link{font-size:12px;display:inline-block;margin-top:12px}.scope h2{font-size:15px;margin:0 0 13px}.scope ul{padding-left:18px;margin:0;font-size:13px;line-height:1.75;color:#52644e}.scope p{font-size:12px;color:#6c7965;margin:17px 0 0}.scope strong{font-weight:650;color:#344936}.caption{font-size:13px;line-height:1.7;color:#5d6e5d;margin:19px 0 0;max-width:1050px}.caption strong{color:#304934}footer{display:flex;justify-content:space-between;gap:24px;font-size:11px;color:#6a7a67;padding-top:23px;margin-top:24px;border-top:1px solid #d1dccd}footer a{color:inherit}.mobile-note{display:none}
+@media(max-width:900px){.wrap{padding:20px 15px}header{grid-template-columns:1fr;gap:20px}.premise{max-width:600px}.below{grid-template-columns:1fr}.viewbar{padding:12px;align-items:flex-start;flex-direction:column}.view{min-width:1050px}.mobile-note{display:inline}.tabs button{padding:8px 10px;font-size:13px}.legend{gap:12px}.status{font-size:10px}.masthead{align-items:flex-start}.exports{gap:11px}h1{font-size:32px}footer{flex-direction:column;gap:8px}.scope,.inspector{padding:20px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{@page{size:A3 landscape;margin:10mm}body{background:white}.wrap{max-width:none;padding:0}.masthead,header,.toolbar,.viewbar,.below,.caption,footer{display:none}.board{border:0;border-radius:0;box-shadow:none}.stage{overflow:visible}.view{min-width:0}.legend{font-size:9pt;padding:7px 12px}.component.selected .node-surface{stroke-width:1.4}body .route-raw,body .route-shield{opacity:1}.view svg{max-height:245mm}.view[hidden]{display:none!important}}
+</style>
+</head>
+<body data-mode="raw">
+<main class="wrap">
+<div class="masthead"><div class="overline">Embodied safety / architecture explorer</div><div class="status">Proposed · protocol v2.0 · no results</div></div>
+<header><div><h1>Safety skills → learned actions</h1><p>A persistent, editable skill supplies the requirement. Current grounding supplies the scene. One shared adapter learns how to change a frozen policy’s action generation.</p></div><div class="premise"><strong>The key experiment</strong>Evaluate the learned adapter before a semantic checker can repair its actions.</div></header>
+<div class="toolbar">
+<div class="tabs" role="tablist" aria-label="Architecture views">
+<button id="tab-runtime" role="tab" aria-controls="view-runtime" aria-selected="true" tabindex="0" data-view="runtime">01 · Inference</button>
+<button id="tab-training" role="tab" aria-controls="view-training" aria-selected="false" tabindex="-1" data-view="training">02 · Training</button>
+<button id="tab-grounding" role="tab" aria-controls="view-grounding" aria-selected="false" tabindex="-1" data-view="grounding">03 · Grounding</button>
+</div>
+<div class="exports"><a id="svg-export" href="runtime.svg" download>SVG</a><a id="pdf-export" href="runtime.pdf" download>PDF</a><a id="png-export" href="runtime.png" download>PNG</a><button class="print-button" id="print-button">Print view</button></div>
+</div>
+<section class="board" aria-label="Interactive architecture diagram">
+<div class="viewbar"><div class="hint">Select a component to inspect its inputs and responsibilities. <span class="mobile-note">Scroll the diagram horizontally.</span></div><div class="modes" id="mode-control" role="group" aria-label="Inference execution route"><span>Trace</span><button data-mode="raw" aria-pressed="true">L0 · Raw</button><button data-mode="shield" aria-pressed="false">L1 · Shielded</button><button data-mode="both" aria-pressed="false">Compare</button></div></div>
+<div class="stage">
+<div class="view" id="view-runtime" role="tabpanel" aria-labelledby="tab-runtime">@@RUNTIME@@</div>
+<div class="view" id="view-training" role="tabpanel" aria-labelledby="tab-training" hidden>@@TRAINING@@</div>
+<div class="view" id="view-grounding" role="tabpanel" aria-labelledby="tab-grounding" hidden>@@GROUNDING@@</div>
+</div>
+<div class="legend" aria-label="Color legend"><span><i class="swatch memory"></i>Persistent record / dataset</span><span><i class="swatch frozen"></i>Frozen pretrained component</span><span><i class="swatch learned"></i>Learned adapter / its outputs</span><span><i class="swatch ground"></i>Grounding / environment</span><span><i class="swatch check"></i>Teacher / optional checker</span><span><i class="swatch neutral"></i>Input / independent evaluation</span></div>
+</section>
+<div class="below">
+<section class="inspector" aria-label="Selected component details" aria-live="polite">
+<div class="tag" id="detail-category">Learned offline · fixed at runtime</div><h2 id="detail-title">Shared skill adapter</h2><p id="detail-purpose">Learns how grounded skill meaning should change continuous action generation.</p>
+<dl><dt>Inputs</dt><dd id="detail-inputs"></dd><dt>Outputs</dt><dd id="detail-outputs"></dd></dl>
+<div class="rule" id="detail-rule"></div><a class="detail-link" id="detail-link" href="../../2026-09-18-language-conditioned-safety-adapter-poc-protocol.html#section-10">Read the protocol specification ↗</a>
+</section>
+<aside class="scope"><h2>Read the diagram with these boundaries</h2><ul><li><strong>Learned offline:</strong> only the shared adapter receives weight updates.</li><li><strong>Fixed at runtime:</strong> pretrained policy, text encoder and trained adapter.</li><li><strong>Oracle grounding first:</strong> semantic facts and geometry are supplied in the main PoC.</li><li><strong>Separate evaluation:</strong> intended obligations survive skill deletion or incorrect retrieval.</li><li><strong>No safety guarantee:</strong> raw and shielded results must be measured separately.</li></ul><p>The separate <a href="../../2026-09-19-safety-memory-proof-of-life-protocol.md">September 19 proof-of-life plan</a> tests historical fact memory with fixed rules. This figure shows the v2 learned-adapter target, not that smaller experiment.</p></aside>
+</div>
+<p class="caption" id="caption"><strong>Inference.</strong> The skill and current scene condition a residual at every flow step. L0 executes the adapted prefix without semantic repair; L1 inserts the fixed checker. Actual behavior is scored independently in both cases.</p>
+<footer><span>Design reference: <a href="../../2026-09-18-language-conditioned-safety-adapter-poc-protocol.html">v2.0 protocol</a> · <a href="../../2026-09-18-language-conditioned-safety-adapter-poc-config.yaml">configuration</a></span><span>21 September 2026 · Editable SVG · Offline HTML · <a href="README.md">Figure notes</a> · <a href="build.py">Renderer source</a></span></footer>
+</main>
+<script id="component-data" type="application/json">@@DETAILS@@</script>
+<script>
+'use strict';
+const details=JSON.parse(document.getElementById('component-data').textContent);
+const protocol='../../2026-09-18-language-conditioned-safety-adapter-poc-protocol.html';
+const defaults={runtime:'adapter',training:'trainadapter',grounding:'bindingexample'};
+const captions={runtime:['Inference.','The skill and current scene condition a residual at every flow step. L0 executes the adapted prefix without semantic repair; L1 inserts the fixed checker. Actual behavior is scored independently in both cases.'],training:['Training.','Executed, independently accepted demonstrations define the flow target. Base-policy features and velocity are detached. Only adapter parameters receive optimizer updates; the text encoder, base weights and skill files stay fixed.'],grounding:['Grounding.','The same persistent skill binds to new objects and geometry. The adapter receives semantic language, explicit numeric limits and current scene values. The example identifiers are illustrative, not learned labels or measured outcomes.']};
+function inspect(id){
+ const d=details[id]; if(!d)return;
+ document.querySelectorAll('.component').forEach(node=>node.classList.toggle('selected',node.dataset.node===id));
+ for(const field of ['category','title','purpose','inputs','outputs','rule'])document.getElementById('detail-'+field).textContent=d[field];
+ document.getElementById('detail-link').href=protocol+'#section-'+d.section;
+}
+function showView(name,focus=false){
+ if(!defaults[name])return;
+ document.querySelectorAll('[role="tab"]').forEach(tab=>{const active=tab.dataset.view===name;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;if(active&&focus)tab.focus();});
+ document.querySelectorAll('.view').forEach(view=>view.hidden=view.id!=='view-'+name);
+ document.getElementById('mode-control').hidden=name!=='runtime';
+ document.getElementById('mode-control').style.display=name==='runtime'?'flex':'none';
+ for(const type of ['svg','pdf','png'])document.getElementById(type+'-export').href=name+'.'+type;
+ const caption=document.getElementById('caption');caption.replaceChildren();const label=document.createElement('strong');label.textContent=captions[name][0]+' ';caption.append(label,document.createTextNode(captions[name][1]));
+ inspect(defaults[name]);history.replaceState(null,'','#'+name);
+}
+document.querySelectorAll('[data-view]').forEach(tab=>tab.addEventListener('click',()=>showView(tab.dataset.view)));
+document.querySelector('.tabs').addEventListener('keydown',event=>{
+ const tabs=[...document.querySelectorAll('[role="tab"]')];const i=tabs.indexOf(document.activeElement);if(i<0)return;
+ let next=null;if(event.key==='ArrowRight')next=(i+1)%tabs.length;if(event.key==='ArrowLeft')next=(i+tabs.length-1)%tabs.length;if(event.key==='Home')next=0;if(event.key==='End')next=tabs.length-1;
+ if(next!==null){event.preventDefault();showView(tabs[next].dataset.view,true);}
+});
+document.querySelectorAll('[data-mode]').forEach(button=>{if(button.tagName!=='BUTTON')return;button.addEventListener('click',()=>{document.body.dataset.mode=button.dataset.mode;document.querySelectorAll('.modes button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));});});
+document.querySelectorAll('.component').forEach(node=>{node.addEventListener('click',()=>inspect(node.dataset.node));node.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();inspect(node.dataset.node);}});});
+document.getElementById('print-button').addEventListener('click',()=>window.print());
+showView(defaults[location.hash.slice(1)]?location.hash.slice(1):'runtime');
+</script>
+</body>
+</html>

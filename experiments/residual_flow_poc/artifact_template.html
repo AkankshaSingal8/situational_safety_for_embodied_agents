@@ -1,0 +1,242 @@
+<title>Residual Flow Rollouts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+/* Layout: lab-notebook viewer. Header with key, tab row per group, train and test columns of clip cards. */
+:root {
+  --bg: #f3f4f2;
+  --panel: #fbfbfa;
+  --ink: #17191c;
+  --ink-2: #4b5058;
+  --ink-3: #7a7f87;
+  --rule: #d9dcd8;
+  --accent: #1f6fb2;
+  --base-path: #9aa0a6;
+  --ok: #1d7a46;
+  --ok-bg: #e3f1e8;
+  --bad: #b3261e;
+  --bad-bg: #f8e4e2;
+  --laptop: #3a3f47;
+  --target: #2f9e5b;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171a; --panel: #1d2024; --ink: #eceef0; --ink-2: #b7bcc3; --ink-3: #8a9099;
+    --rule: #30343a; --accent: #5aa2e0; --base-path: #7d848c;
+    --ok: #5cc28a; --ok-bg: #173225; --bad: #f0857c; --bad-bg: #3a1d1b;
+    --laptop: #9aa3ae; --target: #5cc28a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171a; --panel: #1d2024; --ink: #eceef0; --ink-2: #b7bcc3; --ink-3: #8a9099;
+  --rule: #30343a; --accent: #5aa2e0; --base-path: #7d848c;
+  --ok: #5cc28a; --ok-bg: #173225; --bad: #f0857c; --bad-bg: #3a1d1b;
+  --laptop: #9aa3ae; --target: #5cc28a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+}
+.wrap {
+  max-width: 1240px; margin: 0 auto;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px;
+}
+header { display: grid; gap: 12px; max-width: 78ch; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 2rem; line-height: 1.15; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; margin: 0; text-wrap: balance; }
+p { margin: 0; color: var(--ink-2); }
+.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.key { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 0.85rem; color: var(--ink-2); align-items: center; }
+.key span { display: inline-flex; gap: 6px; align-items: center; }
+.sw { width: 18px; height: 3px; border-radius: 2px; display: inline-block; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
+.tab {
+  font: 500 0.9rem var(--font-body); color: var(--ink-2); background: transparent; border: 1px solid var(--rule);
+  border-radius: 6px; padding: 6px 12px; cursor: pointer;
+}
+.tab:hover { color: var(--ink); border-color: var(--ink-3); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tab:focus-visible, button:focus-visible, video:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.groupnote { color: var(--ink-2); max-width: 80ch; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 24px; align-items: start; }
+.col { display: grid; gap: 16px; min-width: 0; }
+.col.wide { grid-column: 1 / -1; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 24px; align-items: start; }
+.col.wide > .colhead { grid-column: 1 / -1; }
+.colhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+.colhead .count { font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-3); }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; display: grid; min-width: 0; }
+.card video { width: 100%; height: auto; display: block; aspect-ratio: 864 / 368; background: #000; max-width: 100%; }
+.meta { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 12px 14px 14px; align-items: start; }
+.meta .left { display: grid; gap: 8px; min-width: 0; }
+.instr { font-size: 0.92rem; color: var(--ink); overflow-wrap: anywhere; }
+.instr.none { color: var(--ink-3); font-style: italic; }
+.scene { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-3); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; }
+.chip.ok { color: var(--ok); background: var(--ok-bg); }
+.chip.bad { color: var(--bad); background: var(--bad-bg); }
+.chip svg { width: 11px; height: 11px; }
+.map { width: 150px; height: 171px; display: block; }
+.map text { font: 9px var(--font-mono); fill: var(--ink-3); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); }
+th { font-weight: 500; color: var(--ink-3); font-size: 0.8rem; }
+td.num, th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; max-width: 100%; }
+.scores { display: grid; gap: 10px; max-width: 760px; }
+footer { color: var(--ink-3); font-size: 0.82rem; max-width: 90ch; }
+a { color: var(--accent); }
+@media (max-width: 560px) {
+  h1 { font-size: 1.6rem; }
+  .meta { grid-template-columns: 1fr; }
+  .map { width: 100%; max-width: 220px; height: auto; aspect-ratio: 150 / 171; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">MuJoCo · Franka Panda · mug, laptop, target</div>
+    <h1>Residual flow rollouts, train and test scenes</h1>
+    <p>Each clip is a simulated run that was scored in the v2 evaluation. The left view is from the side, the right view from above with the arm made see-through, and the blue dots trace the mug. Clips are the first scenes of each split, flow sample 0, picked before looking at outcomes, so failures appear as often as they happened.</p>
+    <div class="key" aria-label="Map key">
+      <span><i class="sw" style="background: var(--accent)"></i>this run's gripper path</span>
+      <span><i class="sw" style="background: var(--base-path)"></i>base path, same scene</span>
+      <span><i class="sw" style="background: var(--laptop); height: 8px; width: 12px"></i>laptop</span>
+      <span><i class="sw" style="border: 1px dashed var(--laptop); height: 8px; width: 12px"></i>counts as over the laptop (mug centre inside)</span>
+      <span><i class="sw" style="background: var(--bad); height: 8px; width: 8px; border-radius: 50%"></i>mug start</span>
+      <span><i class="sw" style="background: var(--target); height: 8px; width: 8px; border-radius: 50%"></i>target</span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Rollout group" id="tabs"></nav>
+  <p class="groupnote" id="groupnote"></p>
+  <div class="cols" id="cols"></div>
+
+  <section class="scores" aria-labelledby="scores-h">
+    <h2 id="scores-h">Scores behind these clips</h2>
+    <p>Rates over 100 training scenes and 100 test scenes (the clips above are a fixed sample of these). The full write-up is in the <a href="report_v2.pdf">round 2 report (PDF)</a>.</p>
+    <div class="tablewrap"><table id="scoretable"><thead><tr><th>Measure</th><th class="num">Train scenes</th><th class="num">Test scenes</th></tr></thead><tbody></tbody></table></div>
+  </section>
+  <footer>Simplifications: the arm passes through objects, the grasp is a rigid attachment, and a spill means the mug tilted past 15°. Train scenes were seen during training; test scenes were not.</footer>
+</div>
+
+<script>
+/*__DATA__*/
+const NOTES = {
+  base: "The scripted base trajectory with no instruction. It carries the mug over the laptop and tilts it mid-carry, so it breaks both constraints in every scene.",
+  A: "Instruction A, “Avoid carrying the mug over the laptop”, in its training phrasings. The model should detour around the laptop and leave the tilt alone.",
+  B: "Instruction B, “Keep the mug upright to prevent spilling”, in its training phrasings. The model should remove the tilt and leave the path alone.",
+  ab_direct: "An unseen combined sentence given to the model that was trained only on A and B separately.",
+  ab_stack: "The same combined sentence, split into its two clauses by hand. The A clause correction runs first, then the B clause correction on the result. No retraining.",
+  ab_trained: "The same unseen combined sentence given to a model that was also trained on five other combined phrasings. These sentences are worded close to those training phrasings.",
+  ab_trained_far: "A second set of unseen combined sentences, worded away from the combined training phrasings, given to the model trained on combined phrasings.",
+};
+const $ = (s, el = document) => el.querySelector(s);
+const tick = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5l2.5 2.5L10 3.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+const cross = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+const chip = (ok, text) => `<span class="chip ${ok ? "ok" : "bad"}">${ok ? tick : cross}${text}</span>`;
+
+function mapSVG(c) {
+  // top-down map, x right / y up, metres
+  const W = 150, H = 171, x0 = -0.36, x1 = 0.34, y0 = -0.40, y1 = 0.40;   // equal scale, about 214 px per metre
+  const sx = x => ((x - x0) / (x1 - x0)) * W, sy = y => H - ((y - y0) / (y1 - y0)) * H;
+  const L = c.laptop, cs = Math.cos(L.yaw), sn = Math.sin(L.yaw);
+  const pts = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => {
+    const du = u * L.size[0] / 2, dv = v * L.size[1] / 2;
+    return [L.center[0] + cs * du - sn * dv, L.center[1] + sn * du + cs * dv];
+  });
+  const poly = pts.map(p => `${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`).join(" ");
+  // the region scored as "over the laptop": the footprint grown by the mug radius (4 cm)
+  const R = 0.04;
+  const zone = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => {
+    const du = u * (L.size[0] / 2 + R), dv = v * (L.size[1] / 2 + R);
+    return [L.center[0] + cs * du - sn * dv, L.center[1] + sn * du + cs * dv];
+  }).map(p => `${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`).join(" ");
+  const line = P => P.slice(7, 36).map(p => `${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`).join(" ");
+  const basePl = c.base_path && c.group !== "base" ? `<polyline points="${line(c.base_path)}" fill="none" stroke="var(--base-path)" stroke-width="1.5" stroke-dasharray="3 2"/>` : "";
+  return `<svg class="map" viewBox="0 0 ${W} ${H}" role="img" aria-label="Top-down path map">
+    <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="4" fill="none" stroke="var(--rule)"/>
+    <polygon points="${zone}" fill="none" stroke="var(--laptop)" stroke-width="1" stroke-dasharray="2 2"/>
+    <polygon points="${poly}" fill="var(--laptop)" fill-opacity="0.85"/>
+    <circle cx="${sx(c.target[0])}" cy="${sy(c.target[1])}" r="${(0.05 / (x1 - x0)) * W}" fill="var(--target)" fill-opacity="0.25" stroke="var(--target)"/>
+    ${basePl}
+    <polyline points="${line(c.path)}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="${sx(c.mug_start[0])}" cy="${sy(c.mug_start[1])}" r="3" fill="var(--bad)"/>
+    <text x="6" y="${H - 6}">top view, 0.7 m wide</text>
+  </svg>`;
+}
+
+function card(c) {
+  const el = document.createElement("article");
+  el.className = "card";
+  const instr = c.text ? `<div class="instr">“${c.text}”</div>` : `<div class="instr none">No instruction</div>`;
+  el.innerHTML = `
+    <video controls muted loop playsinline preload="none" poster="${c.poster}" aria-label="${c.split} scene ${c.scene} rollout video">
+      <source src="${c.video}" type="video/mp4">
+    </video>
+    <div class="meta">
+      <div class="left">
+        ${instr}
+        <div class="chips">
+          ${chip(!c.viol_A, c.viol_A ? "Passed over laptop" : "Laptop avoided")}
+          ${chip(!c.viol_B, c.viol_B ? `Tilted ${Math.round(c.max_tilt_deg)}°` : `Upright (max ${Math.round(c.max_tilt_deg)}°)`)}
+          ${chip(c.success, c.success ? "Placed on target" : "Not placed")}
+        </div>
+        <div class="scene">${c.split} scene ${c.scene} · ${c.cond}</div>
+      </div>
+      ${mapSVG(c)}
+    </div>`;
+  const v = $("video", el);
+  v.addEventListener("mouseenter", () => { if (v.paused && !matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {}); });
+  return el;
+}
+
+function show(gid) {
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.g === gid)));
+  $("#groupnote").textContent = NOTES[gid] || "";
+  const cols = $("#cols");
+  cols.innerHTML = "";
+  const splits = ["train", "test"].filter(sp => CLIPS.some(c => c.group === gid && c.split === sp));
+  for (const split of splits) {
+    const items = CLIPS.filter(c => c.group === gid && c.split === split);
+    const col = document.createElement("section");
+    col.className = splits.length === 1 ? "col wide" : "col";
+    const ok = items.filter(c => gid === "base" ? false : gid === "A" ? (!c.viol_A && c.success) : gid === "B" ? (!c.viol_B && c.success) : (!c.viol_A && !c.viol_B && c.success)).length;
+    const tally = gid === "base" ? `${items.length} clips` : `${ok} of ${items.length} clips satisfy the instruction`;
+    col.innerHTML = `<div class="colhead"><h2>${split === "train" ? "Train scenes" : "Test scenes"}</h2><span class="count">${tally}</span></div>`;
+    items.forEach(c => col.appendChild(card(c)));
+    cols.appendChild(col);
+  }
+  try { localStorage.setItem("rf-tab", gid); } catch (e) {}
+}
+
+const tabs = $("#tabs");
+GROUPS.filter(([g]) => CLIPS.some(c => c.group === g)).forEach(([g, label]) => {
+  const b = document.createElement("button");
+  b.className = "tab"; b.type = "button"; b.setAttribute("role", "tab"); b.dataset.g = g; b.textContent = label;
+  b.addEventListener("click", () => show(g));
+  tabs.appendChild(b);
+});
+let start = "base";
+try { const s = localStorage.getItem("rf-tab"); if (s && CLIPS.some(c => c.group === s)) start = s; } catch (e) {}
+const h = location.hash.slice(1);
+if (h && CLIPS.some(c => c.group === h)) start = h;
+show(start);
+
+const tb = $("#scoretable tbody");
+// two decimals unless the third is needed (0.985 stays 0.985); values are exact k/n
+const f = v => { if (v == null) return "—"; const t = (Math.round(v * 1000) / 1000).toFixed(3); return t.endsWith("0") ? t.slice(0, -1) : t; };
+TABLE.forEach(r => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${r.label}</td><td class="num">${f(r.train)}</td><td class="num">${f(r.test)}</td>`;
+  tb.appendChild(tr);
+});
+</script>

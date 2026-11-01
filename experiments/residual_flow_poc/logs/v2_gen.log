@@ -1,0 +1,3 @@
+candidates per split: [{'seed': 0, 'kept': 4000, 'candidates': 5000}, {'seed': 1000000, 'kept': 100, 'candidates': 125}]
+train: n=4000 |dA|max mean=0.205m [0.080,0.345] |dB|max mean=45.8deg detour side +y frac=0.50
+test: n=100 |dA|max mean=0.198m [0.110,0.310] |dB|max mean=45.7deg detour side +y frac=0.50

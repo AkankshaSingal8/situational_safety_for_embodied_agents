@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Reusable Safety Skills: Current Proof-of-Concept Protocol</title><style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#182333;background:#eef1f5;font-size:16px;line-height:1.6}
+body{margin:0}main{max-width:1100px;margin:2rem auto;padding:2.5rem 3rem;background:white;border:1px solid #d6dde5;border-radius:8px}
+h1{font-size:2.1rem;line-height:1.2;color:#142a43}h2{font-size:1.5rem;line-height:1.3;margin-top:2.8rem;border-top:1px solid #dae1e9;padding-top:1.1rem;scroll-margin-top:1rem}h3{font-size:1.12rem;margin-top:1.8rem}
+a{color:#155c9a;text-decoration-thickness:1px;text-underline-offset:2px}p,li{max-width:95ch}li{margin:.3rem 0}table{border-collapse:collapse;width:100%;font-size:.88rem;line-height:1.45;margin:1.2rem 0}th,td{border:1px solid #cbd4df;padding:.6rem .7rem;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#e9eff6}tr:nth-child(even){background:#f8fafc}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.85em;background:#edf2f7;padding:.1em .25em;border-radius:3px;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf2f7;padding:1rem;border-left:3px solid #4e7399;line-height:1.4}pre code{padding:0;background:transparent}blockquote{border-left:3px solid #6c8daf;margin-left:0;padding-left:1rem;color:#344d68}nav{background:#f5f8fb;border:1px solid #d5dfe9;padding:1rem 1.3rem;margin:1.4rem 0}nav ol{columns:2;column-gap:2.2rem;font-size:.86rem;padding-left:1.4rem}nav li{break-inside:avoid}.print-note{font-size:.85rem;color:#465d74}
+@media(max-width:800px){main{margin:0;border:none;padding:1.2rem}nav ol{columns:1}table{font-size:.8rem}th,td{padding:.4rem}}
+@media print{@page{size:A4;margin:16mm 14mm}html{font-size:10pt;background:white}body{background:white}main{margin:0;padding:0;border:0;max-width:none}h1{font-size:21pt}h2{font-size:15pt;break-after:avoid}h3{break-after:avoid}pre,blockquote{break-inside:avoid}tr{break-inside:avoid}thead{display:table-header-group}table{font-size:8pt}nav{break-after:page}nav ol{font-size:8.5pt}a{color:inherit}.print-note{display:none}}
+</style></head><body><main><p class="print-note">Updated 18 September 2026 · Proposed experiments · Browser Print can save a PDF. <a href="2026-09-17-reusable-safety-skills-poc-protocol.md">Markdown source</a></p><h1>Reusable Safety Skills: Current Proof-of-Concept Protocol</h1>
+<p><strong>Updated 18 September 2026.</strong> The project now trains a shared language-conditioned flow adapter on top of a frozen pretrained robot policy. Geometric checking/repair is the teacher, comparator, and optional fallback; the primary test measures the learned adapter before repair.</p>
+<ul>
+<li><a href="2026-09-18-language-conditioned-safety-adapter-poc-protocol.html">Read the complete v2.0 implementation and experimental protocol</a>.</li>
+<li><a href="2026-09-18-language-conditioned-safety-adapter-poc-protocol.html">Printable v2.0 document</a>.</li>
+<li><a href="2026-09-18-language-conditioned-safety-adapter-poc-config.yaml">Current configuration specification</a>.</li>
+<li><a href="2026-09-17-reusable-safety-skills-poc-protocol-v1.1.html">Archived training-free v1.1 protocol and teacher/evaluator procedures</a>.</li>
+<li><a href="2026-09-17-reusable-safety-skills-poc-config-v1.1.yaml">Archived v1.1 configuration</a>.</li>
+</ul>
+<p>The current protocol specifies architecture, grounding, skill format, data collection, training, ablations, held-out tests, raw/shielded comparisons, uncertainty reporting, and PSC cost measurement. No adapter training or robot evaluation has been performed as part of this documentation update.</p>
+</main></body></html>

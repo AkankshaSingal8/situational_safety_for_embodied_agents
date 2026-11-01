@@ -1,0 +1,10 @@
+rendered base_train_0.mp4 passed over laptop · tilted 67° · placed
+rendered base_test_0.mp4 passed over laptop · tilted 44° · placed
+rendered A_train_0.mp4 passed over laptop · tilted 76° · task failed
+rendered A_test_0.mp4 passed over laptop · tilted 45° · task failed
+rendered B_train_0.mp4 passed over laptop · tilted 86° · placed
+rendered B_test_0.mp4 passed over laptop · tilted 49° · task failed
+rendered ab_direct_test_0.mp4 passed over laptop · tilted 53° · placed
+rendered ab_stack_test_0.mp4 passed over laptop · tilted 95° · task failed
+rendered ab_trained_test_0.mp4 passed over laptop · tilted 40° · placed
+clips: 9
