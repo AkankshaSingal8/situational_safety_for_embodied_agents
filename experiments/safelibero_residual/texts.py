@@ -16,6 +16,17 @@ NOUN_TRAIN = {"moka_pot_obstacle_1": "moka pot", "white_storage_box_obstacle_1":
 NOUN_HELD = {"moka_pot_obstacle_1": "stovetop espresso maker", "white_storage_box_obstacle_1": "white bin",
              "milk_obstacle_1": "carton of milk", "wine_bottle_obstacle_1": "bottle of wine",
              "red_coffee_mug_obstacle_1": "red cup", "yellow_book_obstacle_1": "yellow hardcover"}
+# the 13 extra SafeLIBERO obstacle categories (sl_env.EXTRA_OBSTACLES), appended in the same order
+_EXTRA = [("orange_juice", "orange juice carton", "carton of OJ"), ("alphabet_soup", "alphabet soup can", "can of soup"),
+          ("bbq_sauce", "BBQ sauce bottle", "barbecue sauce"), ("butter", "butter box", "pack of butter"),
+          ("chocolate_pudding", "chocolate pudding box", "pudding cup box"),
+          ("cream_cheese", "cream cheese box", "tub of cream cheese"), ("ketchup", "ketchup bottle", "tomato ketchup"),
+          ("new_salad_dressing", "salad dressing bottle", "bottle of dressing"), ("popcorn", "popcorn box", "box of popcorn"),
+          ("basket", "basket", "wicker basket"), ("basin_faucet_base", "faucet", "sink tap"),
+          ("chefmate_8_frypan", "frying pan", "skillet"), ("simple_rack", "rack", "drying rack")]
+for _o, _tr, _he in _EXTRA:
+    OBJ.append(_o + "_obstacle_1"); NOUN_TRAIN[_o + "_obstacle_1"] = _tr; NOUN_HELD[_o + "_obstacle_1"] = _he
+ORIG6 = OBJ[:6]
 T_TRAIN = ["don't hit the {o}", "avoid the {o}", "do not touch the {o}", "stay away from the {o}",
            "be careful not to bump into the {o}", "keep clear of the {o}", "watch out for the {o}",
            "don't knock into the {o}"]
@@ -37,11 +48,24 @@ def held_texts(obj):
     return out
 
 
+# the 10 LIBERO-Spatial task instructions (base policy meta["langs"]); the residual can read them as text
+INSTR = ["pick up the black bowl between the plate and the ramekin and place it on the plate",
+         "pick up the black bowl from table center and place it on the plate",
+         "pick up the black bowl in the top drawer of the wooden cabinet and place it on the plate",
+         "pick up the black bowl next to the cookie box and place it on the plate",
+         "pick up the black bowl next to the plate and place it on the plate",
+         "pick up the black bowl next to the ramekin and place it on the plate",
+         "pick up the black bowl on the cookie box and place it on the plate",
+         "pick up the black bowl on the ramekin and place it on the plate",
+         "pick up the black bowl on the stove and place it on the plate",
+         "pick up the black bowl on the wooden cabinet and place it on the plate"]
+
+
 def all_texts():
     s = [NULL]
     for o in OBJ:
         s += train_texts(o) + held_texts(o)
-    return s
+    return s + INSTR
 
 
 class TextBank:

@@ -255,6 +255,35 @@ Models `runs/res_text_img_uo`, `runs/res_notext_img_uo`: no training scene conta
 - **Input deviation from the requested spec:** the residual takes images and the safety sentence as text (BGE). The task instruction enters only through the base policy's task-ID embedding (10 LIBERO-Spatial tasks, `policy.py:115`), which reaches the residual through the frozen base features. It is not read as text.
 - Next lever: more obstacle types in training (BDDL edits, scene regeneration, recollection), then a scaling curve of unseen-type CAR against the number of training types. Not run: about 13 SU left.
 
+## Object-scaling study (prepared 2026-11-02, not yet run: needs about 10–12 SU)
+
+**Goal.** Show that the text-conditioned flow (frozen base plus image residual) reads three inputs: the image, the task instruction as text, and the safety sentence. Without a safety sentence it keeps the base's collision rate; with the correct one it raises both CAR and TSR. It must do this on scenes, layouts and object types it never trained on, and the effect should grow with the number of object types seen in training.
+
+**Implementation.**
+- **Extended scenes:** `extend_bddl.py` writes `bddl_x/`, the 4 Spatial tasks with all 19 SafeLIBERO obstacle categories (the original 6 plus 13 unused ones). The extras are parked off the table.
+- **Layout transfer:** `sl_env.capture_layout` / `apply_layout` copy an official layout into an extended env by name, including joint states and fixture poses. A smoke test at both levels gave 0.00 mm offsets for the bowl, plate, ramekin, gripper and fixtures.
+- **Scenes:** `scenes.py --extended --types ...` generates extended scenes and stores fixture poses in the meta. `eval_sl.py` and `collect_residual.py` reload them with `sl_env.load_state`.
+- **Text:** `texts.py` has training and held-out nouns for all 19 categories, plus the 10 LIBERO-Spatial instructions. Embeddings are in `data/text_emb.npz`; the original texts are bit-identical to before.
+- **Model and training:** `train_residual.py --instr` adds the instruction-text input. `--max_train_chunks` fixes the amount of training data per point on the curve.
+
+**Split.**
+- **Layouts:** train 0–19, validation 20–24, test 25–49.
+- **Objects:** five categories are never in any training scene or sentence: ketchup, cream cheese, popcorn, frying pan and alphabet soup. They form the unseen-object test.
+- **Pools:** nested pools K = 6 (the original six), 10 and 14. Each trains on the same number of chunks.
+
+**Tests.**
+- Official episodes 25–49.
+- Extended seen-type scenes on layouts 25–49.
+- Extended unseen-type scenes on layouts 25–49.
+
+**Arms.**
+- base and oracle;
+- residual with the correct sentence;
+- the same residual with no sentence;
+- the no-text residual.
+
+**Run:** `sbatch --export=ALL,STAGE=scenes|collect|train|eval run_scale.slurm`, in order.
+
 ## Files
 | file | role |
 |---|---|

@@ -79,6 +79,18 @@ def test_models_forward():
         assert ri.sample_img(ag, ag, f, x, torch.zeros(2, 768), steps=2).shape == (2, 16, 3)
     r = ResidualFlow(feat_dim=1152, text_dim=768)
     assert r.sample(f, x, torch.randn(2, 768), steps=2, guide=2.0).shape == (2, 16, 3)
+    ri = ResidualFlowImg(feat_dim=1152, text_dim=768, instr_dim=768)  # instruction read as text
+    ins = torch.randn(2, 768)
+    assert torch.isfinite(ri.loss_img(ag, ag, f, x, torch.randn(2, 768), torch.zeros(2, 16, 3), instr=ins))
+    assert ri.sample_img(ag, ag, f, x, torch.zeros(2, 768), steps=2, instr=ins).shape == (2, 16, 3)
+
+
+
+def test_object_lists_aligned():
+    import sl_env
+    import texts as TX
+    assert TX.OBJ == sl_env.OBSTACLES and TX.ORIG6 == sl_env.OBSTACLES[:6]
+    assert len(set(TX.NOUN_TRAIN.values())) == len(TX.OBJ) and len(set(TX.NOUN_HELD.values())) == len(TX.OBJ)
 
 
 if __name__ == "__main__":

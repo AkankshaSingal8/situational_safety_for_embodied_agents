@@ -56,18 +56,33 @@ def sample_xy(rng, bowl, plate, mode, start=np.array([-0.21, 0.0])):
     return bowl[:2] + u * d + n * rng.normal(0, 0.04)
 
 
-def make_scene(env, init_state, rng, n_obs, types=None, p_elevated=0.0):
-    """p_elevated: chance that the first obstacle stands on the box_base platform (as in level II)."""
-    env.reset()
-    obs = env.set_init_state(init_state)
-    for i, n in enumerate(sl_env.OBSTACLES):
+def in_env(env, name):
+    try:
+        env.sim.model.get_joint_qpos_addr(name + "_joint0")
+        return True
+    except (ValueError, KeyError):
+        return False
+
+
+def make_scene(env, init_state, rng, n_obs, types=None, p_elevated=0.0, pool=None, layout=None):
+    """p_elevated: chance that the first obstacle stands on the box_base platform (as in level II).
+    layout: an extended env (bddl_x) starts from sl_env.capture_layout(...) instead of an official state.
+    pool: obstacle names to draw from (default: every obstacle the env has)."""
+    if layout is not None:
+        obs = sl_env.apply_layout(env, layout)
+    else:
+        env.reset()
+        obs = env.set_init_state(init_state)
+    present = [n for n in sl_env.OBSTACLES if in_env(env, n)]
+    for i, n in enumerate(present):
         sl_env.move_object(env, n, CLEAR(i))
     sl_env.move_object(env, "box_base_1", [0.0, 20.0, 0.0])
     obs = sl_env.settle(env, 5)
     zt = table_top(env)
     bowl, plate = obs["akita_black_bowl_1_pos"], obs["plate_1_pos"]
     others = {n: obs[n + "_pos"][:2] for n in TASK_OBJS if n + "_pos" in obs}
-    chosen = types or list(rng.choice(sl_env.OBSTACLES, n_obs, replace=False))
+    pool = [n for n in (pool or present) if n in present]
+    chosen = types or list(rng.choice(pool, n_obs, replace=False))
     placed = {}
     elevated = "box_base_1_pos" in obs and rng.random() < p_elevated
     if elevated:
@@ -138,6 +153,8 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--p_elev_I", type=float, default=0.2)
     ap.add_argument("--p_elev_II", type=float, default=0.6)
+    ap.add_argument("--extended", action="store_true", help="bddl_x scenes with 19 obstacle types (extend_bddl.py)")
+    ap.add_argument("--types", default="", help="comma-separated obstacle names to draw from (default: all in the env)")
     a = ap.parse_args()
     rng = np.random.default_rng(a.seed)
     lo, hi = map(int, a.layouts.split("-"))
@@ -146,16 +163,27 @@ def main():
     for lv in a.levels.split(","):
         for t in [int(x) for x in a.tasks.split(",")]:
             env, lang, inits = sl_env.make_env(lv, t)
+            layouts = {}
+            if a.extended:  # capture the official layouts, then work in the extended env
+                for e in range(lo, hi + 1):
+                    env.reset(); env.set_init_state(inits[e])
+                    layouts[e] = sl_env.capture_layout(env)
+                env.close()
+                env, _, _ = sl_env.make_env(lv, t, extended=True)
+            pool = [x for x in a.types.split(",") if x] or None
             for e in range(lo, hi + 1):
                 made = 0
                 tries_here = 0
                 while made < a.per_layout and tries_here < 60:
                     tries_here += 1
                     tries += 1
-                    r = make_scene(env, inits[e], rng, int(rng.choice(nchoice)), p_elevated=a.p_elev_II if lv == "II" else a.p_elev_I)
+                    r = make_scene(env, inits[e], rng, int(rng.choice(nchoice)), p_elevated=a.p_elev_II if lv == "II" else a.p_elev_I,
+                                   pool=pool, layout=layouts.get(e))
                     if r is None:
                         continue
                     states.append(r[0]); meta.append(dict(level=lv, task=t, layout=e, obstacles=r[1], elevated=bool(r[2]), lang=lang))
+                    if a.extended:
+                        meta[-1].update(extended=True, bodies=layouts[e]["body"])
                     made += 1
             env.close()
             print(lv, t, len(states), "scenes, tries", tries, dict(REJECT), flush=True)

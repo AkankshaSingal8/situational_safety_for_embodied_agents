@@ -94,6 +94,8 @@ def main():
     ap.add_argument("--eval_only", default="", help="skip training; report fit of this residual.pt")
     ap.add_argument("--bn_batch", action="store_true", help="with --eval_only: BatchNorm uses batch statistics")
     ap.add_argument("--bn_free", action="store_true", help="*_img: let encoder BatchNorm stats update (old behaviour)")
+    ap.add_argument("--max_train_chunks", type=int, default=0, help="subsample training chunks to this many")
+    ap.add_argument("--instr", action="store_true", help="*_img: also condition on the task instruction as text (needs --scenes)")
     ap.add_argument("--base_ckpt", default="runs/base/ema_last.pt", help="encoder init for *_img")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -126,6 +128,12 @@ def main():
     if ho_obj:
         named_ho = np.isin(R[:, 1], ho_idx)
         tr_rows &= ~named_ho
+    if a.max_train_chunks:  # scaling study: same amount of training data whatever the object pool
+        keep_c = np.unique(R[tr_rows, 0])
+        if len(keep_c) > a.max_train_chunks:
+            keep_c = np.random.default_rng(a.seed + 1).choice(keep_c, a.max_train_chunks, replace=False)
+        tr_rows &= np.isin(R[:, 0], keep_c)
+        print(f"training chunks capped at {a.max_train_chunks}: using {len(keep_c)}", flush=True)
     va_rows = val_chunk[R[:, 0]]
     Rtr, Rva = R[tr_rows], R[va_rows]
     bank = TX.TextBank()
@@ -141,11 +149,19 @@ def main():
     Eg = torch.from_numpy(temb).to(dev)
     if img:
         IAg, IWg = torch.from_numpy(data[5]).to(dev), torch.from_numpy(data[6]).to(dev)
+    INg = None
+    if a.instr:  # per-chunk task instruction embedding, from the scene the chunk was collected in
+        from eval_sl import load_scenes
+        smeta = load_scenes(a.scenes)[1]
+        assert (CS >= 0).all(), "--instr needs chunk_scene"
+        INg = torch.from_numpy(np.stack([bank(smeta[s]["lang"]) for s in CS]).astype(np.float32)).to(dev)
+    IN = (lambda c: INg[c]) if INg is not None else (lambda c: None)
     by_kind = [np.flatnonzero(Rtr[:, 2] == k) for k in range(3)]
     Rg = torch.from_numpy(Rtr.astype(np.int64)).to(dev)
     tdim = 768 if use_text else 0
     if img:
-        model = ResidualFlowImg(feat_dim=F.shape[1], text_dim=tdim).to(dev)
+        idim = 768 if a.instr else 0
+        model = ResidualFlowImg(feat_dim=F.shape[1], text_dim=tdim, instr_dim=idim).to(dev)
         model.init_from_base(torch.load(a.base_ckpt, map_location="cpu")["model"])
         enc = set(id(p) for p in model.encoder_params())
         groups = [{"params": [p for p in model.parameters() if id(p) not in enc], "lr": a.lr},
@@ -182,7 +198,7 @@ def main():
             outs = []
             for _ in range(4):
                 if img:
-                    outs.append(m.sample_img(IAg[c], IWg[c], Fg[c], Bg[c], t))
+                    outs.append(m.sample_img(IAg[c], IWg[c], Fg[c], Bg[c], t, instr=IN(c)))
                 else:
                     outs.append(m.sample(Fg[c], Bg[c], t))
             return torch.stack(outs).mean(0).float().cpu().numpy()
@@ -200,7 +216,7 @@ def main():
         tgt = Tg[torch.from_numpy(tr_idx[idx]).to(dev)]
         with torch.autocast("cuda", dtype=torch.float16, enabled=img):
             if img:
-                loss = model.loss_img(IAg[c], IWg[c], Fg[c], Bg[c], text, tgt)
+                loss = model.loss_img(IAg[c], IWg[c], Fg[c], Bg[c], text, tgt, instr=IN(c))
             else:
                 loss = model.loss(Fg[c], Bg[c], text, tgt)
         opt.zero_grad(set_to_none=True)
@@ -218,7 +234,8 @@ def main():
             rec = dict(step=step, loss=round(run, 5), min=round((time.time() - t0) / 60, 1))
             print(rec, flush=True); log.write(json.dumps(rec) + "\n"); log.flush()
     if not a.eval_only:
-      torch.save(dict(model=ema.state_dict(), variant=a.variant, scale=scale, feat_dim=F.shape[1]),
+      torch.save(dict(model=ema.state_dict(), variant=a.variant, scale=scale, feat_dim=F.shape[1],
+                    instr_dim=768 if (img and a.instr) else 0),
                os.path.join(a.out, "residual.pt"))
       print("saved", flush=True)
     # fit on training rows and on held-out-layout rows

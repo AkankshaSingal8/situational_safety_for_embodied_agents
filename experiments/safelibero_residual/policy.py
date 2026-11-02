@@ -216,12 +216,16 @@ class ResidualFlowImg(ResidualFlow):
     """ResidualFlow plus its own trainable image encoders (agentview, wrist; initialised from the
     base policy's trunks), keeping the 4x4 layer-4 map for text-conditioned attention pooling."""
 
-    def __init__(self, feat_dim=1152, horizon=16, act_dim=7, text_dim=768, res_dims=3):
+    def __init__(self, feat_dim=1152, horizon=16, act_dim=7, text_dim=768, res_dims=3, instr_dim=0):
+        """instr_dim>0: also read the task instruction as text (BGE embedding), separate from the
+        safety sentence, so the no-safety-sentence condition still knows the task."""
         super().__init__(feat_dim, horizon, act_dim, text_dim, res_dims)
         self.enc_a, self.enc_w = ImageEncoder(False), ImageEncoder(False)
         self.pool_a, self.pool_w = TextSpatialPool(512, text_dim), TextSpatialPool(512, text_dim)
         self.gproj = nn.Sequential(nn.Linear(512 * 2 + 256 * 2, 256), nn.Mish())
-        cd = 256 * (4 if text_dim else 3)
+        self.instr_dim = instr_dim
+        self.iproj = nn.Sequential(nn.Linear(instr_dim, 256), nn.Mish()) if instr_dim else None
+        cd = 256 * ((4 if text_dim else 3) + (1 if instr_dim else 0))
         self.fuse = nn.Sequential(nn.Linear(cd, 512), nn.Mish(), nn.Linear(512, 256))
 
     def init_from_base(self, base_state):
@@ -252,19 +256,21 @@ class ResidualFlowImg(ResidualFlow):
         x = (x - IMNET_MEAN.to(x.device)) / IMNET_STD.to(x.device)
         return enc.trunk[:-1](x)                                        # B,512,4,4 at 128 px
 
-    def cond_img(self, agent, wrist, feats, base_n, text, aug=False):
+    def cond_img(self, agent, wrist, feats, base_n, text, aug=False, instr=None):
         ma, mw = self._map(self.enc_a, agent, aug), self._map(self.enc_w, wrist, aug)
         t = text if self.text_dim else None
         g = torch.cat([ma.mean((2, 3)), mw.mean((2, 3)), self.pool_a(ma, t), self.pool_w(mw, t)], -1)
         parts = [self.fproj(feats), self.bproj(base_n.flatten(1)), self.gproj(g)]
         if self.tproj is not None:
             parts.append(self.tproj(text))
+        if self.iproj is not None:
+            parts.append(self.iproj(instr))
         return self.fuse(torch.cat(parts, -1))
 
-    def loss_img(self, agent, wrist, feats, base_n, text, d_n):
-        return flow_loss(self.head, d_n, self.cond_img(agent, wrist, feats, base_n, text, aug=True))
+    def loss_img(self, agent, wrist, feats, base_n, text, d_n, instr=None):
+        return flow_loss(self.head, d_n, self.cond_img(agent, wrist, feats, base_n, text, aug=True, instr=instr))
 
     @torch.no_grad()
-    def sample_img(self, agent, wrist, feats, base_n, text, steps=10):
-        c = self.cond_img(agent, wrist, feats, base_n, text)
+    def sample_img(self, agent, wrist, feats, base_n, text, steps=10, instr=None):
+        c = self.cond_img(agent, wrist, feats, base_n, text, instr=instr)
         return euler_sample(self.head, c, (feats.shape[0], self.H, self.R), steps)

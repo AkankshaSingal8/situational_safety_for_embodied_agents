@@ -51,14 +51,14 @@ def worker(args):
     envs = {}
     for i in ids:
         m = meta[i]
-        key = (m["level"], m["task"])
+        key = (m["level"], m["task"], bool(m.get("extended")))
         if key not in envs:
             for v in envs.values():
                 v[0].close()
-            envs = {key: sl_env.make_env(*key)}
+            envs = {key: sl_env.make_env(m["level"], m["task"], extended=key[2])}
         env, lang, _ = envs[key]
         tid = r.task_id(lang)
-        env.reset(); obs = env.set_init_state(states[i]); obs = sl_env.settle(env)
+        sl_env.load_state(env, states[i], m.get("bodies")); obs = sl_env.settle(env)
         present = [n for n in m["obstacles"] if n in sl_env.active_obstacles(obs)]
         absent = [n for n in sl_env.OBSTACLES if n not in present]
         drive = [present[rng.integers(len(present))]] if (present and rng.random() < 0.8) else []

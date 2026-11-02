@@ -1,0 +1,223 @@
+(define (problem LIBERO_Tabletop_Manipulation)
+  (:domain robosuite)
+  (:language Pick the akita black bowl between the plate and the ramekin and place it on the plate)
+
+  (:regions
+      (x_orange_juice_region
+          (:target main_table)
+          (:ranges ((1.20 -0.90 1.22 -0.88)))
+      )
+      (x_alphabet_soup_region
+          (:target main_table)
+          (:ranges ((1.65 -0.90 1.67 -0.88)))
+      )
+      (x_bbq_sauce_region
+          (:target main_table)
+          (:ranges ((2.10 -0.90 2.12 -0.88)))
+      )
+      (x_butter_region
+          (:target main_table)
+          (:ranges ((2.55 -0.90 2.57 -0.88)))
+      )
+      (x_chocolate_pudding_region
+          (:target main_table)
+          (:ranges ((3.00 -0.90 3.02 -0.88)))
+      )
+      (x_cream_cheese_region
+          (:target main_table)
+          (:ranges ((1.20 -0.45 1.22 -0.43)))
+      )
+      (x_ketchup_region
+          (:target main_table)
+          (:ranges ((1.65 -0.45 1.67 -0.43)))
+      )
+      (x_new_salad_dressing_region
+          (:target main_table)
+          (:ranges ((2.10 -0.45 2.12 -0.43)))
+      )
+      (x_popcorn_region
+          (:target main_table)
+          (:ranges ((2.55 -0.45 2.57 -0.43)))
+      )
+      (x_basket_region
+          (:target main_table)
+          (:ranges ((3.00 -0.45 3.02 -0.43)))
+      )
+      (x_basin_faucet_base_region
+          (:target main_table)
+          (:ranges ((1.20 0.00 1.22 0.02)))
+      )
+      (x_chefmate_8_frypan_region
+          (:target main_table)
+          (:ranges ((1.65 0.00 1.67 0.02)))
+      )
+      (x_simple_rack_region
+          (:target main_table)
+          (:ranges ((2.10 0.00 2.12 0.02)))
+      )
+      (plate_region
+          (:target main_table)
+          (:ranges ((0.05 0.19 0.07 0.21)))
+      )
+      (next_to_plate_region
+          (:target main_table)
+          (:ranges ((0.0 0.3 0.02 0.32)))
+      )
+      (box_region
+          (:target main_table)
+          (:ranges ((0.06 0.02 0.08 0.04)))
+      )
+      (next_to_box_region
+          (:target main_table)
+          (:ranges ((0.12 -0.08 0.14 -0.06)))
+      )
+      (between_plate_ramekin_region
+          (:target main_table)
+          (:ranges ((-0.06 0.19 -0.04 0.21)))
+      )
+      (ramekin_region
+          (:target main_table)
+          (:ranges ((-0.21 0.19 -0.19 0.21)))
+      )
+      (next_to_ramekin_region
+          (:target main_table)
+          (:ranges ((-0.19 0.31 -0.17 0.33)))
+      )
+      (table_center
+          (:target main_table)
+          (:ranges ((-0.1 -0.01 -0.05 0.01)))
+      )
+      (table_front
+          (:target main_table)
+          (:ranges ((0.19 -0.01 0.21 0.01)))
+      )
+
+      ;; ✅ obstacle regions-----------------------------------
+      (moka_pot_region
+          (:target main_table)
+          (:ranges ((0.30 -0.30 0.50 -0.10)))
+      )
+      (storage_box_region
+          (:target main_table)
+          (:ranges ((0.30 0.10 0.50 0.30)))
+      )
+      (milk_carton_region
+          (:target main_table)
+          (:ranges ((0.10 -0.30 0.30 -0.10)))
+      )
+      (wine_bottle_region
+          (:target main_table)
+          (:ranges ((0.10 0.10 0.30 0.30)))
+      )
+      (red_mug_region
+          (:target main_table)
+          (:ranges ((-0.30 0.10 -0.10 0.30)))
+      )
+      (yellow_book_region
+          (:target main_table)
+          (:ranges ((-0.30 -0.30 -0.10 -0.10)))
+      )
+
+      (box_base_region
+          (:target main_table)
+          (:ranges ((-0.50 -0.20 -0.30 0.00)))  
+      )
+
+      ;; -----------------------------------------------
+
+      (cabinet_region
+          (:target main_table)
+          (:ranges ((0.02 -0.28 0.04 -0.26)))
+          (:yaw_rotation ((2.6613777765410678 2.7242096296128633)))
+      )
+      (stove_region
+          (:target main_table)
+          (:ranges ((-0.42 -0.15 -0.4 -0.13)))
+      )
+      (top_region (:target wooden_cabinet_1))
+      (middle_region (:target wooden_cabinet_1))
+      (bottom_region (:target wooden_cabinet_1))
+      (top_side (:target wooden_cabinet_1))
+      (cook_region (:target flat_stove_1))
+  )
+
+  (:fixtures
+    main_table - table
+    wooden_cabinet_1 - wooden_cabinet
+    flat_stove_1 - flat_stove
+  )
+
+  (:objects
+    akita_black_bowl_1 akita_black_bowl_2 - akita_black_bowl
+    cookies_1 - cookies
+    glazed_rim_porcelain_ramekin_1 - glazed_rim_porcelain_ramekin
+    plate_1 - plate
+
+    ;; ✅ Obstacles
+    moka_pot_obstacle_1 - moka_pot_obstacle
+    white_storage_box_obstacle_1 - white_storage_box_obstacle
+    milk_obstacle_1 - milk_obstacle
+    wine_bottle_obstacle_1 - wine_bottle_obstacle
+    red_coffee_mug_obstacle_1 - red_coffee_mug_obstacle
+    yellow_book_obstacle_1 - yellow_book_obstacle
+
+    ;; ✅ box_base
+    box_base_1 - box_base
+    orange_juice_obstacle_1 - orange_juice_obstacle
+    alphabet_soup_obstacle_1 - alphabet_soup_obstacle
+    bbq_sauce_obstacle_1 - bbq_sauce_obstacle
+    butter_obstacle_1 - butter_obstacle
+    chocolate_pudding_obstacle_1 - chocolate_pudding_obstacle
+    cream_cheese_obstacle_1 - cream_cheese_obstacle
+    ketchup_obstacle_1 - ketchup_obstacle
+    new_salad_dressing_obstacle_1 - new_salad_dressing_obstacle
+    popcorn_obstacle_1 - popcorn_obstacle
+    basket_obstacle_1 - basket_obstacle
+    basin_faucet_base_obstacle_1 - basin_faucet_base_obstacle
+    chefmate_8_frypan_obstacle_1 - chefmate_8_frypan_obstacle
+    simple_rack_obstacle_1 - simple_rack_obstacle
+  )
+
+  (:obj_of_interest
+    akita_black_bowl_1
+    plate_1
+  )
+
+  (:init
+    (On akita_black_bowl_1 main_table_between_plate_ramekin_region)
+    (On akita_black_bowl_2 main_table_next_to_ramekin_region)
+    (On plate_1 main_table_plate_region)
+    (On cookies_1 main_table_box_region)
+    (On glazed_rim_porcelain_ramekin_1 main_table_ramekin_region)
+    (On wooden_cabinet_1 main_table_cabinet_region)
+    (On flat_stove_1 main_table_stove_region)
+
+    ;; ✅ Place obstacles
+    (On moka_pot_obstacle_1 main_table_moka_pot_region)
+    (On white_storage_box_obstacle_1 main_table_storage_box_region)
+    (On milk_obstacle_1 main_table_milk_carton_region)
+    (On wine_bottle_obstacle_1 main_table_wine_bottle_region)
+    (On red_coffee_mug_obstacle_1 main_table_red_mug_region)
+    (On yellow_book_obstacle_1 main_table_yellow_book_region)
+
+    ;; ✅ Place box_base
+    (On box_base_1 main_table_box_base_region)
+    (On orange_juice_obstacle_1 main_table_x_orange_juice_region)
+    (On alphabet_soup_obstacle_1 main_table_x_alphabet_soup_region)
+    (On bbq_sauce_obstacle_1 main_table_x_bbq_sauce_region)
+    (On butter_obstacle_1 main_table_x_butter_region)
+    (On chocolate_pudding_obstacle_1 main_table_x_chocolate_pudding_region)
+    (On cream_cheese_obstacle_1 main_table_x_cream_cheese_region)
+    (On ketchup_obstacle_1 main_table_x_ketchup_region)
+    (On new_salad_dressing_obstacle_1 main_table_x_new_salad_dressing_region)
+    (On popcorn_obstacle_1 main_table_x_popcorn_region)
+    (On basket_obstacle_1 main_table_x_basket_region)
+    (On basin_faucet_base_obstacle_1 main_table_x_basin_faucet_base_region)
+    (On chefmate_8_frypan_obstacle_1 main_table_x_chefmate_8_frypan_region)
+    (On simple_rack_obstacle_1 main_table_x_simple_rack_region)
+  )
+
+  (:goal
+    (And (On akita_black_bowl_1 plate_1))
+  )
+)

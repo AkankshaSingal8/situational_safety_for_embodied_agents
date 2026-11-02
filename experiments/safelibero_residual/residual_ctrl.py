@@ -14,7 +14,8 @@ class ResidualController:
         self.variant, self.scale = ck["variant"], ck["scale"]
         self.img = self.variant.endswith("_img")
         cls = ResidualFlowImg if self.img else ResidualFlow
-        self.m = cls(feat_dim=ck["feat_dim"], text_dim=768 if self.variant.startswith("text") else 0)
+        kw = dict(instr_dim=ck.get("instr_dim", 0)) if self.img else {}
+        self.m = cls(feat_dim=ck["feat_dim"], text_dim=768 if self.variant.startswith("text") else 0, **kw)
         self.m.load_state_dict(ck["model"]); self.m.eval().to(cfg["device"])
         self.bank = TX.TextBank()
         self.k, self.fs, self.dev = cfg["exec_steps"], cfg["flow_steps"], cfg["device"]
@@ -24,13 +25,15 @@ class ResidualController:
     def reset(self, env, obs, lang, named, text):
         self.tid = self.r.task_id(lang)
         self.text = torch.from_numpy(self.bank(text)).unsqueeze(0).to(self.dev)
+        self.instr = (torch.from_numpy(self.bank(lang)).unsqueeze(0).to(self.dev)
+                      if self.img and getattr(self.m, "instr_dim", 0) else None)
         self.n_chunks, self.mag = 0, []
 
     def act_chunk(self, env, obs):
         x, f = self.r.chunk(obs, self.tid)
         if self.img:
             ia, iw = self.r.obs_tensors(obs, self.tid)[:2]
-            d = self.m.sample_img(ia, iw, f, x.unsqueeze(0), self.text, steps=self.fs)[0].cpu().numpy() / self.scale
+            d = self.m.sample_img(ia, iw, f, x.unsqueeze(0), self.text, steps=self.fs, instr=self.instr)[0].cpu().numpy() / self.scale
         else:
             d = self.m.sample(f, x.unsqueeze(0), self.text, steps=self.fs, guide=self.guide)[0].cpu().numpy() / self.scale
         A = self.r.unnorm(x.cpu().numpy())

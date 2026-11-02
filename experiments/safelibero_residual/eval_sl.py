@@ -35,7 +35,9 @@ def naming(mode, present, ep):
         h = T.held_texts(obj)
         return [obj], h[ep % len(h)]
     if mode == "wrong":
-        absent = [o for o in T.OBJ if o not in present]
+        # original scenes keep the original six as wrong-object candidates (comparable with earlier runs)
+        cand = T.OBJ if any(o not in T.ORIG6 for o in present) else T.ORIG6
+        absent = [o for o in cand if o not in present]
         w = absent[ep % len(absent)]
         return [w], T.train_texts(w)[0]
     raise ValueError(mode)
@@ -62,14 +64,16 @@ def worker(args):
             lv, t = m["level"], m["task"]
             key = dict(level=lv, task=t, ep=e, scene=e, layout=m["layout"])
         try:
-            if (lv, t) not in envs:
+            ext = job[0] != "off" and bool(scenes[1][e].get("extended"))
+            if (lv, t, ext) not in envs:
                 for v in envs.values():
                     v[0].close()
-                envs = {(lv, t): sl_env.make_env(lv, t, cfg["res"])}
-            env, lang, inits = envs[(lv, t)]
+                envs = {(lv, t, ext): sl_env.make_env(lv, t, cfg["res"], extended=ext)}
+            env, lang, inits = envs[(lv, t, ext)]
             init = inits[e] if job[0] == "off" else scenes[0][e]
             order = None if job[0] == "off" else scenes[1][e]["obstacles"]
-            rec = run_episode(env, lang, init, ctrl, cfg, e, order)
+            bodies = None if job[0] == "off" else scenes[1][e].get("bodies")
+            rec = run_episode(env, lang, init, ctrl, cfg, e, order, bodies)
             rec.update(key, arm=cfg["arm"], text_mode=cfg.get("text_mode"))
         except Exception as ex:  # an env crash is logged and scored as a failure, never silently dropped
             rec = dict(key, arm=cfg["arm"], error=repr(ex), tb=traceback.format_exc()[-800:], success=False, collide=None)
@@ -82,11 +86,10 @@ def load_scenes(path):
     return z["states"], json.loads(str(z["meta"]))
 
 
-def run_episode(env, lang, init_state, ctrl, cfg, ep, order=None):
+def run_episode(env, lang, init_state, ctrl, cfg, ep, order=None, bodies=None):
     """order: obstacle names in scene order (generated scenes); the first is the one 'true' names."""
     import sl_env
-    env.reset()
-    obs = env.set_init_state(init_state)
+    obs = sl_env.load_state(env, init_state, bodies)
     if cfg.get("no_obstacle"):
         for i, n in enumerate(sl_env.active_obstacles(obs)):
             sl_env.move_object(env, n, [30.0 + 3 * i, 30.0, 0.0])
