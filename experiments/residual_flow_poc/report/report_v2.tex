@@ -17,7 +17,7 @@
 \newcommand{\te}{\textsc{test}}
 
 \title{Text-Conditioned Residual Flow, Round 2:\\ More Varied Scenes, Train and Test Scenes, and Combined Instructions With and Without Training}
-\date{October 20, 2026}
+\date{October 20, 2026; updated October 31, 2026}
 \author{}
 
 \begin{document}
@@ -34,6 +34,8 @@ same mug and laptop, same two constraints: A is ``Avoid carrying the mug over th
   \item A second set of unseen combined sentences, worded away from those five, checks whether the
         trained model learned to combine constraints or only learned its five sentences.
 \end{enumerate}
+Section~\ref{sec:update} (added October 31) repeats the training with two more seeds and reports what
+three independent reviews found about where the recipe can fail before it is scaled up to OopsieVerse.
 Videos of the runs are in the companion page (private until shared):\\
 \url{https://claude.ai/artifact/S8SGRe55C1Rnw3YGbNf7GW}
 
@@ -327,8 +329,8 @@ closest combined training sentence.}
         not memorize scenes. They say nothing about scenes outside these ranges.
   \item Scenes were kept only if the scripted references succeeded in simulation (at least 80\% of
         candidates passed). Scenes where the arm cannot execute a correction are not represented.
-  \item Each model was trained once. The flow-sampling noise is about $\pm 4$ points per 100-run cell
-        (measured in round 1), but run-to-run training variance is unmeasured.
+  \item Training-seed variance is now measured (Section~\ref{sec:update}): across seeds 0, 7 and 42 the
+        standard deviation of every headline number is at most 0.04.
   \item Confidence intervals on pooled Experiment 3 arms treat every run as independent, although runs
         share scenes and sentences; they are too narrow. The paired comparisons are lopsided enough
         that this does not change any conclusion.
@@ -346,7 +348,146 @@ closest combined training sentence.}
         This targets the failures in Experiments 2 and 3 directly.
   \item Constraints that interact, so that combining them takes more than two independent fixes.
   \item An automatic clause splitter in front of stacking.
-  \item Three training seeds for the main and combined-training models.
+\end{enumerate}
+Section~\ref{sec:update} gives a more detailed, ordered plan for the dummy environment and the path to
+OopsieVerse.
+
+
+%=====================================================================
+\section{Update, October 31, 2026: three seeds and where the recipe can fail}
+\label{sec:update}
+
+\subsection{Three training seeds}
+
+I trained all four models again with seeds 7 and 42 and scored them on the same 100 train and 100 test
+scenes as seed 0. Figure~\ref{fig:seeds} shows the test-scene results. The standard deviation across
+seeds is at most 0.04 for every headline number; the widest gap between two seeds is 0.08 (far-wording
+clauses applied B then A, 0.58 to 0.66). Every paired comparison points the same way on all three seeds. For example,
+on the far-wording set, clause stacking beat the model trained on combined sentences on 212, 240 and 248
+paired runs and lost on 47, 50 and 35. The conclusions in Sections 4 to 7 do not depend on the seed. Full
+tables: \texttt{runs\_v2/seeds/seeds.md}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\linewidth]{figs_v3/seeds.pdf}
+\caption{Test-scene results for three training seeds. Each grey dot is one seed and the blue bar is
+their mean, printed on the right.}
+\label{fig:seeds}
+\end{figure}
+
+\subsection{Where the recipe can fail}
+
+Three agents reviewed the recipe independently: one looked at the method as a learning algorithm, one at
+what changes in OopsieVerse (they read its paper and code and the GR00T setup cached on the cluster),
+and one read the experiments the way a conference reviewer would. Their findings overlap, so they are
+merged here. The full write-up is \texttt{CRITIQUE.md}.
+
+\paragraph{Composition is guaranteed in this environment.} The reference correction for A+B is exactly
+the A correction plus the B correction: I checked all 4{,}100 scenes and the difference is zero. A only
+moves the path and B only changes the tilt, and the B correction is exactly minus the base tilt, which
+the model receives as input. So clause stacking and adding the corrections must succeed whenever each
+clause works, and their 0.97 says nothing about whether the model can compose constraints. The test
+needs two constraints that change the same part of the action, such as a second obstacle on the side the
+laptop detour prefers, or ``don't crush'' against ``don't drop'' on the gripper.
+
+\paragraph{The text pathway behaves like a three-way switch.} Every one of the 32 held-out wordings sits
+closer to its own constraint's training wordings than to the other constraint's (Figure~\ref{fig:lookup}),
+so a lookup that picks the nearest training wording would choose the right constraint every time. The
+learned model gets the upright wordings right every time and the laptop wordings only 63 to 67\% of the
+time, and laptop success climbs with how clearly the wording leans toward its class. Feeding the lookup's
+choice to the existing model should score near the training-wording level of about 0.99. That baseline is
+a prediction and has not been run.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{figs_v3/lookup.pdf}
+\caption{Each point is one unseen wording. All of them sit right of the dashed line, where a
+nearest-wording lookup picks the right constraint. Laptop wordings near the line fail even so.}
+\label{fig:lookup}
+\end{figure}
+
+\paragraph{Corrections sit right at the boundary.} The reference detour is the smallest one that keeps
+3\,cm of clearance, and the model learned to copy it. Pooled over the three seeds (600 test runs), the A
+corrections keep a median clearance of 2.71\,cm, the closest 5\% come within 1.18\,cm, and 1.0\% of runs
+pass over the laptop (Figure~\ref{fig:clearance}). Any shrinkage from noisier perception, a blended
+instruction or a base that drifts would turn into violations.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{figs_v3/clearance.pdf}
+\caption{How close the carried mug came to the laptop with the A instruction (blue) and with the
+reference correction (outline), on test scenes. Values beyond the axis are piled at its ends.}
+\label{fig:clearance}
+\end{figure}
+
+\paragraph{Two cases the training never covers.} Every training scene breaks both constraints, so safety
+text always comes with a correction. The model has never seen a scene that is already safe, and will
+probably correct anyway (predicted). The environment also cannot show a cost to the task: the grasp is
+rigid and the arm passes through objects, so success stays at 0.96 or higher for every condition.
+
+\paragraph{OopsieVerse is a different setting.}
+\begin{itemize}
+  \item GR00T, as configured for RoboCasa in the local cache, predicts 16-step chunks, executes 8 and
+        plans again, about 90 times in a 720-step episode. A detour from one chunk can be undone by the
+        next, and errors compound. The dummy corrects one open-loop plan.
+  \item The RoboCasa track scores only mechanical damage, from contact and impact forces, mostly through
+        the gripper. Spill and heat damage exist only in the OmniGibson track, which needs Isaac Sim and
+        does not run on this cluster. Neither of the dummy's two constraints has a counterpart.
+  \item The damage model is not differentiable, so there is no analytic safe trajectory. Training
+        targets would come from best-of-$K$ search with simulator save and restore. A method trained on
+        that search then has to beat running the search directly as a filter.
+  \item GR00T already takes language, so adding the safety sentence to its prompt is a baseline the
+        residual has to beat.
+  \item Collecting search-based training data and paired evaluations would probably exceed the roughly
+        40 GPU hours left, unless the simulation runs on CPU nodes. This is an estimate.
+\end{itemize}
+
+\subsection{What to change in the dummy environment first}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{7.2cm}Y@{}}
+\toprule
+Change & Go / no-go check \\
+\midrule
+1. Probes and baselines on the existing models, no retraining: nearest-wording lookup, one-hot class
+model, parsed constraint plus the scripted reference; already-safe scenes; negated, irrelevant and
+absent-object instructions. One small GPU job. &
+If the lookup matches the learned text pathway, treat language as a parsing step in front of the
+correction model and present the correction mechanism as the contribution. \\
+\addlinespace
+2. Closed loop: a stochastic scripted base that plans again every 8 of 16 waypoints, the residual applied
+per chunk, relabelling in the loop, and no correction on chunks that are already safe. &
+Violations stay low as chunks shrink, without corrections on safe chunks. \\
+\addlinespace
+3. Force constraints and real composition: finger contact in place of the rigid grasp, OopsieVerse's
+damage evaluator, ``don't crush'' and ``don't drop'' on the gripper, a second obstacle. This rebuilds the
+grasp and takes days. &
+Stacking or composition beats the alternatives against a joint reference correction that is not the sum
+of the singles. \\
+\addlinespace
+4. Best-of-$K$ search in place of the scripted reference corrections. &
+Within 10 points of the model trained on the scripted reference. \\
+\addlinespace
+5. Noisy object poses and attention to object slots in place of global FiLM. &
+Performance degrades gradually as noise grows. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Path to OopsieVerse}
+
+\begin{enumerate}
+  \item The dummy-environment changes above.
+  \item Reproduce GR00T on \texttt{pick\_egg} and one multi-object task inside OopsieVerse's damage
+        environments. Go if task completion lands within about 15 points of the paper and completion
+        without damage is above zero.
+  \item Count how often a damage-free alternative chunk exists in logged GR00T episodes. Go if best-of-$K$
+        rescues at least half of the damaging episodes.
+  \item Train a single-constraint residual on \texttt{pick\_egg} with privileged state, against GR00T
+        prompted with the safety sentence and a no-text residual. Go if completion without damage rises
+        while completion does not fall (paired test, $p < 0.05$).
+  \item Test the language claims on the multi-object tasks, then replace privileged state with images.
 \end{enumerate}
 
 \vspace{1em}

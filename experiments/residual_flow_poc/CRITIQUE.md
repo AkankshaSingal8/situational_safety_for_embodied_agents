@@ -104,7 +104,8 @@ language-conditioned, so appending the safety clause to its prompt is a mandator
     - The unit for language generalization is the wording. Clustered by wording, pooled laptop
       paraphrase success is 0.65 ± 0.29 and 0.62 ± 0.39, against reported Wilson intervals about
       0.03 wide.
-    - Training-seed variance is now measured and small (seeds 0, 7 and 42,
+    - Training-seed variance is now measured and small (standard deviation at most 0.04, widest
+      gap between two seeds 0.08; seeds 0, 7 and 42,
       `runs_v2/seeds/seeds.md`), so it is not what limits the claims. On test scenes:
       - laptop paraphrases: 0.67 ± 0.04 and 0.63 ± 0.02;
       - far-set clauses in turn: 0.56 ± 0.04;
@@ -172,7 +173,7 @@ Each step has a go/no-go check, and the early ones need no new environment.
 5. **Noisy perception features and object-slot conditioning** in place of global FiLM.
    *Go:* a noisy-state model degrades gracefully.
 6. **Evaluation hygiene.**
-   - Three seeds (done: 0, 7 and 42, spread at most 0.04).
+   - Three seeds (done: 0, 7 and 42, standard deviation at most 0.04).
    - Confidence intervals clustered by wording.
    - 30 or more held-out wordings per constraint written blind (by an LLM or another person).
    - Every post-hoc addition declared as post hoc.

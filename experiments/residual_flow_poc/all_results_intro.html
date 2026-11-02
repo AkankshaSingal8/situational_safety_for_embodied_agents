@@ -1,0 +1,21 @@
+<header>
+  <div class="eyebrow">Round 2 · randomised scenes · every number</div>
+  <h1>All results, randomised proof of concept</h1>
+  <p>This view lists every result from round 2, the version with randomised scenes. It covers all three training seeds, then every condition for seed 0 on both the train and test scenes. The Report view summarises the same numbers. Tables are generated from <code>runs_v2/seeds/seeds.md</code> and <code>runs_v2/results_v2.md</code> and are not edited by hand.</p>
+</header>
+<section>
+  <h2>How to read the tables</h2>
+  <div class="tablewrap"><table class="plan">
+    <tbody>
+      <tr><td>Scenes</td><td>Each scene is randomised: mug start, target, laptop pose and size, carry height, and the base policy's tilt (35–60°, random axis and timing). There are 100 train scenes and 100 held-out test scenes. The base trajectory carries the mug over the laptop and tilts it in every scene.</td></tr>
+      <tr><td>A (laptop rule)</td><td>Don't carry the mug over the laptop. A violation means the mug's centre is inside the laptop footprint, inflated by the mug's size, while the mug is held.</td></tr>
+      <tr><td>B (upright rule)</td><td>Keep the mug upright. A violation means the mug tilts more than 15° while held.</td></tr>
+      <tr><td>success</td><td>After release and a 1.2 s settle, the mug is within 5 cm of the target, tilted under 10°, and on the table.</td></tr>
+      <tr><td>"A ok &amp; succ"</td><td>Rule A respected and the task succeeded. "B ok &amp; succ" and "both ok &amp; succ" work the same way.</td></tr>
+      <tr><td>Models</td><td><b>main</b>: the text-conditioned residual flow.<br><b>notext</b>: the same model without text.<br><b>shuffled</b>: text drawn independently of the target.<br><b>mean_A / mean_B</b>: the average residual for each rule.<br><b>main_ab</b>: main, also trained on combined A+B wordings.</td></tr>
+      <tr><td>Exp 2 / Exp 3 terms</td><td><b>heldout</b> and <b>heldout2</b>: two sets of 8 unseen wordings for each rule.<br><b>direct</b>: the combined sentence fed as is.<br><b>compose</b>: velocity composition.<br><b>stack / clauses in turn</b>: one clause's correction, then the other's.<br><b>sum</b>: both corrections added.<br><b>far set</b>: combined sentences worded far from main_ab's training phrasings.</td></tr>
+      <tr><td>Brackets</td><td>95% Wilson interval for the rate.</td></tr>
+      <tr><td>b / c, p</td><td>Paired comparison on the same scenes: b counts scenes where the first arm wins, c where the second wins. p is the exact two-sided binomial (McNemar) test.</td></tr>
+    </tbody>
+  </table></div>
+</section>

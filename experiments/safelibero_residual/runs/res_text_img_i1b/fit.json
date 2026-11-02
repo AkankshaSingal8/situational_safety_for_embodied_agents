@@ -1,0 +1,1 @@
+{"train": {"R2": 0.472, "ratio": 0.773, "cos": 0.645, "mag_present_zero": 0.015, "mag_absent": 0.008}, "val": {"R2": 0.087, "ratio": 0.557, "cos": 0.393, "mag_present_zero": 0.08, "mag_absent": 0.031}}

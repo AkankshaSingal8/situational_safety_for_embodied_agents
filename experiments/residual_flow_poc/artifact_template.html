@@ -3,7 +3,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500&display=swap">
 <style>
-/* Layout: lab-notebook viewer. Header with key, tab row per group, train and test columns of clip cards. */
+/* Layout: lab-notebook viewer with two views. Report: one readable column of text, tables and figures.
+   Videos: header with key, tab row per group, train and test columns of clip cards. */
 :root {
   --bg: #f3f4f2;
   --panel: #fbfbfa;
@@ -19,6 +20,7 @@
   --bad-bg: #f8e4e2;
   --laptop: #3a3f47;
   --target: #2f9e5b;
+  --fig-bg: #ffffff;   /* the report figures are rendered on white, so they keep a white panel in both themes */
   --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -93,6 +95,48 @@ td.num, th.num { text-align: right; font-family: var(--font-mono); font-variant-
 .scores { display: grid; gap: 10px; max-width: 760px; }
 footer { color: var(--ink-3); font-size: 0.82rem; max-width: 90ch; }
 a { color: var(--accent); }
+.views { display: flex; gap: 6px; flex-wrap: wrap; }
+.view-btn { font: 600 0.95rem var(--font-display); letter-spacing: 0.01em; color: var(--ink-2); background: transparent;
+  border: 1px solid var(--rule); border-radius: 6px; padding: 7px 16px; cursor: pointer; }
+.view-btn:hover { color: var(--ink); border-color: var(--ink-3); }
+.view-btn[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.view-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.viewpane { display: grid; gap: 28px; min-width: 0; }
+.report { max-width: 780px; display: grid; gap: 14px; min-width: 0; }
+.report h1 { margin-bottom: 2px; }
+.report h2 { font-size: 1.45rem; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--rule); }
+.report h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; margin: 10px 0 0; text-wrap: balance; }
+.report p, .report li { color: var(--ink-2); max-width: 72ch; }
+.report strong { color: var(--ink); font-weight: 500; }
+.report .lede { font-size: 1.05rem; color: var(--ink); }
+.report ol, .report ul { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+.report figure { margin: 6px 0; display: grid; gap: 8px; }
+.report figure img { width: 100%; height: auto; display: block; background: var(--fig-bg); border: 1px solid var(--rule);
+  border-radius: 8px; padding: 10px; }
+.report figcaption { font-size: 0.85rem; color: var(--ink-3); max-width: 72ch; }
+.report table caption { caption-side: top; text-align: left; font-size: 0.85rem; color: var(--ink-3); padding-bottom: 8px; }
+.report tr.sep td { border-top: 2px solid var(--rule); }
+.report table.plan td { vertical-align: top; }
+.allres table { font-size: 0.82rem; }
+.allres td, .allres th { white-space: nowrap; }
+.allres td.text { white-space: normal; min-width: 16rem; }
+.allres .ci { color: var(--ink-3); font-size: 0.85em; }
+.allres h2 { margin-top: 1.2em; }
+.sl td, .sl th { white-space: normal; }
+.sl td.num, .sl th.num { white-space: nowrap; }
+.sl code { font-family: var(--font-mono); font-size: 0.86em; color: var(--ink); overflow-wrap: anywhere; }
+.sl ul ul { margin-top: 6px; }
+.sl .verdict { display: grid; gap: 8px; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); }
+.sl .verdict p { max-width: none; }
+.sl tr.hl td { background: var(--ok-bg); }
+.sl .pill { display: inline-block; font: 500 0.75rem var(--font-body); padding: 1px 8px; border-radius: 999px; }
+.sl .pill.ok { color: var(--ok); background: var(--ok-bg); }
+.sl .pill.bad { color: var(--bad); background: var(--bad-bg); }
+.report table.plan td:first-child { width: 58%; }
+.report .update { display: grid; gap: 14px; margin-top: 18px; padding: 4px 18px 18px; border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent); border-radius: 8px; background: var(--panel); min-width: 0; }
+.report .update h2 { border-top: 0; margin-top: 4px; padding-top: 0; }
+.report .fine { font-size: 0.82rem; color: var(--ink-3); }
 @media (max-width: 560px) {
   h1 { font-size: 1.6rem; }
   .meta { grid-template-columns: 1fr; }
@@ -102,6 +146,26 @@ a { color: var(--accent); }
 </style>
 
 <div class="wrap">
+  <nav class="views" role="tablist" aria-label="Page view">
+    <button class="view-btn" type="button" role="tab" id="btn-report" data-view="report">Report</button>
+    <button class="view-btn" type="button" role="tab" id="btn-videos" data-view="videos">Videos</button>
+    <button class="view-btn" type="button" role="tab" id="btn-results" data-view="results">All results</button>
+    <button class="view-btn" type="button" role="tab" id="btn-safelibero" data-view="safelibero">SafeLIBERO</button>
+  </nav>
+
+  <div class="viewpane" id="view-report">
+<!--__REPORT__-->
+  </div>
+
+  <div class="viewpane report allres" id="view-results" hidden>
+<!--__ALLRESULTS__-->
+  </div>
+
+  <div class="viewpane report allres sl" id="view-safelibero" hidden>
+<!--__SAFELIBERO__-->
+  </div>
+
+  <div class="viewpane" id="view-videos" hidden>
   <header>
     <div class="eyebrow">MuJoCo · Franka Panda · mug, laptop, target</div>
     <h1>Residual flow rollouts, train and test scenes</h1>
@@ -126,6 +190,7 @@ a { color: var(--accent); }
     <div class="tablewrap"><table id="scoretable"><thead><tr><th>Measure</th><th class="num">Train scenes</th><th class="num">Test scenes</th></tr></thead><tbody></tbody></table></div>
   </section>
   <footer>Simplifications: the arm passes through objects, the grasp is a rigid attachment, and a spill means the mug tilted past 15°. Train scenes were seen during training; test scenes were not.</footer>
+  </div>
 </div>
 
 <script>
@@ -230,6 +295,38 @@ try { const s = localStorage.getItem("rf-tab"); if (s && CLIPS.some(c => c.group
 const h = location.hash.slice(1);
 if (h && CLIPS.some(c => c.group === h)) start = h;
 show(start);
+
+// two views: the report (default) and the videos; a group id or "videos" in the hash opens the videos
+function setView(v) {
+  document.getElementById("view-report").hidden = v !== "report";
+  document.getElementById("view-videos").hidden = v !== "videos";
+  document.getElementById("view-results").hidden = v !== "results";
+  document.getElementById("view-safelibero").hidden = v !== "safelibero";
+  document.querySelectorAll(".view-btn").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === v)));
+  try { localStorage.setItem("rf-view", v); } catch (e) {}
+}
+document.querySelectorAll(".view-btn").forEach(b => b.addEventListener("click", () => { setView(b.dataset.view); window.scrollTo(0, 0); }));
+let view = "report";
+try { const sv = localStorage.getItem("rf-view"); if (["videos", "report", "results", "safelibero"].includes(sv)) view = sv; } catch (e) {}
+function viewForHash(hh, fallback) {
+  if (hh === "videos") return "videos";
+  if (hh === "results") return "results";
+  if (hh === "safelibero") return "safelibero";
+  if (hh && CLIPS.some(c => c.group === hh)) { show(hh); return "videos"; }
+  const el = hh && document.getElementById(hh);
+  if (el && document.getElementById("view-report").contains(el)) return "report";
+  if (el && document.getElementById("view-results").contains(el)) return "results";
+  if (el && document.getElementById("view-safelibero").contains(el)) return "safelibero";
+  return fallback;
+}
+setView(viewForHash(h, view));
+window.addEventListener("hashchange", () => {
+  const hh = location.hash.slice(1);
+  const cur = ["report", "videos", "results", "safelibero"].find(v => !document.getElementById("view-" + v).hidden) || "report";
+  setView(viewForHash(hh, cur));
+  const el = hh && document.getElementById(hh);
+  if (el && !el.closest("[hidden]")) el.scrollIntoView();
+});
 
 const tb = $("#scoretable tbody");
 // two decimals unless the third is needed (0.985 stays 0.985); values are exact k/n

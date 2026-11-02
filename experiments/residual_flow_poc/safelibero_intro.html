@@ -1,0 +1,54 @@
+<header>
+  <div class="eyebrow">Scale-up · SafeLIBERO-Spatial, levels I and II · November 1–2, 2026</div>
+  <h1>Text-conditioned residual flow on SafeLIBERO</h1>
+  <p>The same recipe as the proof of concept, moved to a real benchmark. A flow-matching policy learns the LIBERO-Spatial tasks from images. A residual flow then takes the camera images and a safety sentence such as &ldquo;don't hit the moka pot&rdquo; and corrects the policy's motion around the named obstacle. Its training targets come from a geometric detour that uses privileged simulator state. All numbers on this page come from <code>experiments/safelibero_residual/</code>; the sections after the summary are generated from its README.</p>
+</header>
+
+<section id="sl-summary">
+  <h2>Summary</h2>
+  <div class="verdict">
+    <p><strong>On held-out episodes the safety sentence raises both collision avoidance and task success, and removing it removes the gain.</strong> The test uses official episodes 25–49, 200 episodes, compared episode by episode. These episodes were never used for training or for choosing a model, and each model was run on them once.</p>
+    <p><span class="pill ok">pass</span> All three pre-registered bars pass: CAR above base, correct sentence above wrong-object sentence, and the named obstacle hit less in two-obstacle scenes.</p>
+    <p><span class="pill bad">fails</span> Obstacle types never seen in training (milk carton and red mug): no significant gain.</p>
+  </div>
+  <div class="tablewrap"><table>
+    <caption>Held-out official episodes 25–49 (n=200). b/c counts episodes where the arm beats base and where base beats the arm; p is the exact McNemar test.</caption>
+    <thead><tr><th>arm</th><th class="num">TSR</th><th class="num">CAR</th><th class="num">safe &amp; success</th><th class="num">CAR vs base b/c, p</th></tr></thead>
+    <tbody>
+      <tr><td>Base flow policy</td><td class="num">0.385</td><td class="num">0.080</td><td class="num">0.075</td><td class="num"></td></tr>
+      <tr class="hl"><td>Text residual, correct sentence</td><td class="num">0.570</td><td class="num">0.450</td><td class="num">0.345</td><td class="num">76/2, 2e-20</td></tr>
+      <tr><td>Text residual, unseen wording or noun</td><td class="num">0.580</td><td class="num">0.435</td><td class="num">0.360</td><td class="num">73/2, 2e-19</td></tr>
+      <tr><td>Text residual, wrong object named</td><td class="num">0.420</td><td class="num">0.095</td><td class="num">0.085</td><td class="num">4/1, 0.38</td></tr>
+      <tr><td>Text residual, no sentence</td><td class="num">0.385</td><td class="num">0.085</td><td class="num">0.075</td><td class="num">2/1, 1</td></tr>
+      <tr><td>Same residual trained without text</td><td class="num">0.485</td><td class="num">0.175</td><td class="num">0.135</td><td class="num">20/1, 2e-5</td></tr>
+      <tr><td>Detour oracle (teacher, privileged state)</td><td class="num">0.535</td><td class="num">0.745</td><td class="num">0.455</td><td class="num">135/2, 1e-37</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><strong>Text against no text, same data and architecture:</strong> CAR 61/6 (p=1.5e-12), safe &amp; success 48/6, TSR 44/27 (p=0.057, borderline).</li>
+    <li><strong>Two obstacles, sentence names one (n=177):</strong> named obstacle hit 0.44, the other 0.60. Within a scene, the other obstacle alone is hit 54 times and the named one alone 26 times (p=0.002). Base shows the opposite bias, and the no-text model shows none.</li>
+    <li><strong>Unseen obstacle types (retrained without milk carton and red mug):</strong> CAR on those types goes from 0.067 to 0.107 (4/1, p=0.38). On seen types the same model gives 0.09 to 0.32 (31/2, p=1e-7). New wordings for known objects transfer; new object categories learned from four training types do not.</li>
+  </ul>
+  <h3>Caveats</h3>
+  <ul>
+    <li>The TSR gain over the no-text model is borderline on the main test. In the second training run, used for the unseen-object test, the no-text model has the higher TSR on seen types (0.61 against 0.49). The CAR gain holds in both runs.</li>
+    <li>The residual reads images and the safety sentence as text. The task instruction reaches it only through the base policy's task ID (10 tasks), not as text.</li>
+    <li>The residual gets about 55% of the teacher's CAR gain (0.45 against 0.745). Only one training seed for each model.</li>
+    <li>Adding obstacle types and measuring how unseen-type CAR scales with the number of training types needs more compute. The account had 0 of 480 SU left on November 2.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>How to read the tables</h2>
+  <div class="tablewrap"><table class="plan">
+    <tbody>
+      <tr><td>TSR</td><td>Task success rate. Collisions are ignored, as in SafeLIBERO.</td></tr>
+      <tr><td>CAR</td><td>Collision avoidance rate: the obstacle moved no more than 1 mm during the episode.</td></tr>
+      <tr><td>safe &amp; success</td><td>The task succeeded and the obstacle was not moved.</td></tr>
+      <tr><td>noContact</td><td>No contact between the robot and the obstacle at all.</td></tr>
+      <tr><td>b / c, p</td><td>Paired comparison on the same episodes: b counts episodes where the first arm wins, c where the second wins. p is the exact two-sided binomial (McNemar) test.</td></tr>
+      <tr><td>c0, i1, i1b</td><td><b>c0</b>: residual on pooled base features, oracle-driven data.<br><b>i1</b>: adds images and states visited by the residual itself (DAgger).<br><b>i1b</b>: i1 with the encoder BatchNorm frozen; the model sent to the final test.</td></tr>
+      <tr><td>Gate</td><td>Official episodes 0–24 (or 20–24, the held-out training layouts), used to choose models. The test set is official episodes 25–49.</td></tr>
+    </tbody>
+  </table></div>
+</section>

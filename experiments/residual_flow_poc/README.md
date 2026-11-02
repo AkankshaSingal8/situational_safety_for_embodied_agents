@@ -34,8 +34,13 @@ Results and interpretation: `RESULTS.md`.
   in MuJoCo. With the new code, v1 data regenerates bit-identically, v1 rollouts replay exactly, and v1 training step-0 losses match.
 - `main_ab` trains on 30/30/20/20 A/B/null/A+B with the five `TRAIN_AB` sentences. `COMBINED` (set 1)
   and `COMBINED_FAR` (set 2, worded away from `TRAIN_AB`) are held out from every model.
-- Report: `report/report_v2.pdf`. Full tables: `runs_v2/results_v2.md`. Videos:
-  https://claude.ai/artifact/S8SGRe55C1Rnw3YGbNf7GW
+- Report: `report/report_v2.pdf` (updated 2026-10-31 with three seeds and the failure review;
+  the 2026-10-20 version is kept as `report/report_v2_2026-10-20.pdf`). Full tables:
+  `runs_v2/results_v2.md`, three seeds in `runs_v2/seeds/seeds.md`, review in `CRITIQUE.md`.
+- Page (report view + videos): https://claude.ai/artifact/S8SGRe55C1Rnw3YGbNf7GW. The report view is
+  `report_section.html`, a hand-kept copy of `report_v2.tex`: edit both together, then run
+  `report/make_report_figs_v3.py`, export the figures to `runs_v2/artifact/figs/` and run
+  `make_artifact_v2.py`.
 
 ## Design (frozen before training)
 

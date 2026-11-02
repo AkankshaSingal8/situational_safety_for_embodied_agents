@@ -1,0 +1,72 @@
+{
+ "I/0": {
+  "n": 50,
+  "tsr": 0.46,
+  "car": 0.04,
+  "safe_success": 0.04,
+  "errors": 0
+ },
+ "I/1": {
+  "n": 50,
+  "tsr": 0.1,
+  "car": 0.02,
+  "safe_success": 0.0,
+  "errors": 0
+ },
+ "I/2": {
+  "n": 50,
+  "tsr": 0.72,
+  "car": 0.1,
+  "safe_success": 0.04,
+  "errors": 0
+ },
+ "I/3": {
+  "n": 50,
+  "tsr": 0.64,
+  "car": 0.1,
+  "safe_success": 0.08,
+  "errors": 0
+ },
+ "II/0": {
+  "n": 50,
+  "tsr": 0.38,
+  "car": 0.0,
+  "safe_success": 0.0,
+  "errors": 0
+ },
+ "II/1": {
+  "n": 50,
+  "tsr": 0.12,
+  "car": 0.0,
+  "safe_success": 0.0,
+  "errors": 0
+ },
+ "II/2": {
+  "n": 50,
+  "tsr": 0.42,
+  "car": 0.0,
+  "safe_success": 0.0,
+  "errors": 0
+ },
+ "II/3": {
+  "n": 50,
+  "tsr": 0.68,
+  "car": 0.5,
+  "safe_success": 0.5,
+  "errors": 0
+ },
+ "level I": {
+  "n": 200,
+  "tsr": 0.48,
+  "car": 0.065,
+  "safe_success": 0.04,
+  "errors": 0
+ },
+ "level II": {
+  "n": 200,
+  "tsr": 0.4,
+  "car": 0.125,
+  "safe_success": 0.125,
+  "errors": 0
+ }
+}

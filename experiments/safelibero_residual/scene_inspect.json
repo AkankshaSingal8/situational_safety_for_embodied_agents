@@ -1,0 +1,682 @@
+{
+ "I/0": {
+  "lang": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+  "n_init": 50,
+  "active": [
+   "moka_pot_obstacle_1"
+  ],
+  "pos": {
+   "akita_black_bowl_1": [
+    -0.063,
+    0.202,
+    0.898
+   ],
+   "akita_black_bowl_2": [
+    -0.189,
+    0.32,
+    0.898
+   ],
+   "cookies_1": [
+    0.078,
+    -0.014,
+    0.909
+   ],
+   "glazed_rim_porcelain_ramekin_1": [
+    -0.197,
+    0.189,
+    0.899
+   ],
+   "plate_1": [
+    0.053,
+    0.205,
+    0.903
+   ],
+   "moka_pot_obstacle_1": [
+    -0.052,
+    0.02,
+    1.006
+   ],
+   "white_storage_box_obstacle_1": [
+    10.0,
+    -0.0,
+    0.058
+   ],
+   "milk_obstacle_1": [
+    0.0,
+    -10.0,
+    1.312
+   ],
+   "wine_bottle_obstacle_1": [
+    -0.0,
+    10.0,
+    -0.002
+   ],
+   "red_coffee_mug_obstacle_1": [
+    20.0,
+    -0.0,
+    0.002
+   ],
+   "yellow_book_obstacle_1": [
+    -20.0,
+    0.0,
+    -0.002
+   ],
+   "box_base_1": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "eef": [
+   -0.211,
+   -0.011,
+   1.174
+  ],
+  "keys": [
+   "agentview_image",
+   "object-state",
+   "robot0_eye_in_hand_image",
+   "robot0_gripper_qpos",
+   "robot0_gripper_qvel",
+   "robot0_joint_pos_cos",
+   "robot0_joint_pos_sin",
+   "robot0_joint_vel",
+   "robot0_proprio-state"
+  ]
+ },
+ "I/1": {
+  "lang": "pick up the black bowl on the ramekin and place it on the plate",
+  "n_init": 50,
+  "active": [
+   "moka_pot_obstacle_1"
+  ],
+  "pos": {
+   "akita_black_bowl_1": [
+    -0.212,
+    0.168,
+    0.943
+   ],
+   "akita_black_bowl_2": [
+    0.057,
+    0.042,
+    0.917
+   ],
+   "cookies_1": [
+    0.057,
+    0.043,
+    0.909
+   ],
+   "glazed_rim_porcelain_ramekin_1": [
+    -0.197,
+    0.202,
+    0.899
+   ],
+   "plate_1": [
+    0.073,
+    0.185,
+    0.903
+   ],
+   "moka_pot_obstacle_1": [
+    -0.08,
+    0.25,
+    1.006
+   ],
+   "white_storage_box_obstacle_1": [
+    10.0,
+    -0.0,
+    0.058
+   ],
+   "milk_obstacle_1": [
+    0.0,
+    -10.0,
+    1.312
+   ],
+   "wine_bottle_obstacle_1": [
+    -0.0,
+    10.0,
+    -0.002
+   ],
+   "red_coffee_mug_obstacle_1": [
+    20.0,
+    0.0,
+    0.002
+   ],
+   "yellow_book_obstacle_1": [
+    -20.0,
+    0.0,
+    -0.002
+   ],
+   "box_base_1": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "eef": [
+   -0.212,
+   0.005,
+   1.167
+  ],
+  "keys": [
+   "agentview_image",
+   "object-state",
+   "robot0_eye_in_hand_image",
+   "robot0_gripper_qpos",
+   "robot0_gripper_qvel",
+   "robot0_joint_pos_cos",
+   "robot0_joint_pos_sin",
+   "robot0_joint_vel",
+   "robot0_proprio-state"
+  ]
+ },
+ "I/2": {
+  "lang": "pick up the black bowl on the stove and place it on the plate",
+  "n_init": 50,
+  "active": [
+   "moka_pot_obstacle_1"
+  ],
+  "pos": {
+   "akita_black_bowl_1": [
+    -0.262,
+    -0.131,
+    0.929
+   ],
+   "akita_black_bowl_2": [
+    0.039,
+    -0.282,
+    1.126
+   ],
+   "cookies_1": [
+    0.057,
+    0.023,
+    0.909
+   ],
+   "glazed_rim_porcelain_ramekin_1": [
+    -0.193,
+    0.209,
+    0.899
+   ],
+   "plate_1": [
+    0.06,
+    0.205,
+    0.903
+   ],
+   "moka_pot_obstacle_1": [
+    -0.1,
+    -0.003,
+    1.006
+   ],
+   "white_storage_box_obstacle_1": [
+    10.0,
+    -0.0,
+    0.058
+   ],
+   "milk_obstacle_1": [
+    0.0,
+    -10.0,
+    1.312
+   ],
+   "wine_bottle_obstacle_1": [
+    -0.0,
+    10.0,
+    -0.002
+   ],
+   "red_coffee_mug_obstacle_1": [
+    20.0,
+    0.0,
+    0.002
+   ],
+   "yellow_book_obstacle_1": [
+    -20.0,
+    0.0,
+    -0.002
+   ],
+   "box_base_1": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "eef": [
+   -0.217,
+   0.015,
+   1.158
+  ],
+  "keys": [
+   "agentview_image",
+   "object-state",
+   "robot0_eye_in_hand_image",
+   "robot0_gripper_qpos",
+   "robot0_gripper_qvel",
+   "robot0_joint_pos_cos",
+   "robot0_joint_pos_sin",
+   "robot0_joint_vel",
+   "robot0_proprio-state"
+  ]
+ },
+ "I/3": {
+  "lang": "pick up the black bowl on the wooden cabinet and place it on the plate",
+  "n_init": 50,
+  "active": [
+   "wine_bottle_obstacle_1"
+  ],
+  "pos": {
+   "akita_black_bowl_1": [
+    0.069,
+    -0.295,
+    1.126
+   ],
+   "akita_black_bowl_2": [
+    -0.252,
+    -0.141,
+    0.929
+   ],
+   "cookies_1": [
+    0.067,
+    0.028,
+    0.909
+   ],
+   "glazed_rim_porcelain_ramekin_1": [
+    -0.202,
+    0.205,
+    0.899
+   ],
+   "plate_1": [
+    0.048,
+    0.215,
+    0.903
+   ],
+   "moka_pot_obstacle_1": [
+    -10.0,
+    -0.001,
+    0.724
+   ],
+   "white_storage_box_obstacle_1": [
+    10.0,
+    -0.0,
+    0.058
+   ],
+   "milk_obstacle_1": [
+    0.0,
+    -10.0,
+    1.312
+   ],
+   "wine_bottle_obstacle_1": [
+    -0.07,
+    -0.22,
+    1.126
+   ],
+   "red_coffee_mug_obstacle_1": [
+    20.0,
+    0.0,
+    0.002
+   ],
+   "yellow_book_obstacle_1": [
+    -20.0,
+    0.0,
+    -0.002
+   ],
+   "box_base_1": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "eef": [
+   -0.212,
+   -0.005,
+   1.178
+  ],
+  "keys": [
+   "agentview_image",
+   "object-state",
+   "robot0_eye_in_hand_image",
+   "robot0_gripper_qpos",
+   "robot0_gripper_qvel",
+   "robot0_joint_pos_cos",
+   "robot0_joint_pos_sin",
+   "robot0_joint_vel",
+   "robot0_proprio-state"
+  ]
+ },
+ "II/0": {
+  "lang": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+  "n_init": 50,
+  "active": [
+   "moka_pot_obstacle_1"
+  ],
+  "pos": {
+   "akita_black_bowl_1": [
+    -0.063,
+    0.202,
+    0.898
+   ],
+   "akita_black_bowl_2": [
+    -0.189,
+    0.32,
+    0.898
+   ],
+   "cookies_1": [
+    0.058,
+    0.026,
+    0.909
+   ],
+   "glazed_rim_porcelain_ramekin_1": [
+    -0.197,
+    0.189,
+    0.899
+   ],
+   "plate_1": [
+    0.053,
+    0.205,
+    0.903
+   ],
+   "moka_pot_obstacle_1": [
+    -0.078,
+    0.03,
+    1.145
+   ],
+   "white_storage_box_obstacle_1": [
+    10.0,
+    -0.0,
+    0.058
+   ],
+   "milk_obstacle_1": [
+    0.0,
+    -10.0,
+    1.312
+   ],
+   "wine_bottle_obstacle_1": [
+    -0.0,
+    10.0,
+    -0.002
+   ],
+   "red_coffee_mug_obstacle_1": [
+    20.0,
+    -0.0,
+    0.002
+   ],
+   "yellow_book_obstacle_1": [
+    -20.0,
+    0.0,
+    -0.002
+   ],
+   "box_base_1": [
+    -0.078,
+    0.03,
+    0.898
+   ]
+  },
+  "eef": [
+   -0.211,
+   -0.011,
+   1.174
+  ],
+  "keys": [
+   "agentview_image",
+   "object-state",
+   "robot0_eye_in_hand_image",
+   "robot0_gripper_qpos",
+   "robot0_gripper_qvel",
+   "robot0_joint_pos_cos",
+   "robot0_joint_pos_sin",
+   "robot0_joint_vel",
+   "robot0_proprio-state"
+  ]
+ },
+ "II/1": {
+  "lang": "pick up the black bowl on the ramekin and place it on the plate",
+  "n_init": 50,
+  "active": [
+   "moka_pot_obstacle_1"
+  ],
+  "pos": {
+   "akita_black_bowl_1": [
+    -0.212,
+    0.168,
+    0.943
+   ],
+   "akita_black_bowl_2": [
+    0.057,
+    0.042,
+    0.917
+   ],
+   "cookies_1": [
+    0.057,
+    0.043,
+    0.909
+   ],
+   "glazed_rim_porcelain_ramekin_1": [
+    -0.197,
+    0.202,
+    0.899
+   ],
+   "plate_1": [
+    0.073,
+    0.185,
+    0.903
+   ],
+   "moka_pot_obstacle_1": [
+    -0.078,
+    0.05,
+    1.145
+   ],
+   "white_storage_box_obstacle_1": [
+    10.0,
+    -0.0,
+    0.058
+   ],
+   "milk_obstacle_1": [
+    0.0,
+    -10.0,
+    1.312
+   ],
+   "wine_bottle_obstacle_1": [
+    -0.0,
+    10.0,
+    -0.002
+   ],
+   "red_coffee_mug_obstacle_1": [
+    20.0,
+    -0.0,
+    0.002
+   ],
+   "yellow_book_obstacle_1": [
+    -20.0,
+    0.0,
+    -0.002
+   ],
+   "box_base_1": [
+    -0.078,
+    0.05,
+    0.898
+   ]
+  },
+  "eef": [
+   -0.212,
+   0.005,
+   1.167
+  ],
+  "keys": [
+   "agentview_image",
+   "object-state",
+   "robot0_eye_in_hand_image",
+   "robot0_gripper_qpos",
+   "robot0_gripper_qvel",
+   "robot0_joint_pos_cos",
+   "robot0_joint_pos_sin",
+   "robot0_joint_vel",
+   "robot0_proprio-state"
+  ]
+ },
+ "II/2": {
+  "lang": "pick up the black bowl on the stove and place it on the plate",
+  "n_init": 50,
+  "active": [
+   "moka_pot_obstacle_1"
+  ],
+  "pos": {
+   "akita_black_bowl_1": [
+    -0.262,
+    -0.131,
+    0.929
+   ],
+   "akita_black_bowl_2": [
+    0.039,
+    -0.282,
+    1.126
+   ],
+   "cookies_1": [
+    0.057,
+    0.023,
+    0.909
+   ],
+   "glazed_rim_porcelain_ramekin_1": [
+    -0.193,
+    0.209,
+    0.899
+   ],
+   "plate_1": [
+    0.06,
+    0.205,
+    0.903
+   ],
+   "moka_pot_obstacle_1": [
+    -0.078,
+    0.03,
+    1.145
+   ],
+   "white_storage_box_obstacle_1": [
+    10.0,
+    -0.0,
+    0.058
+   ],
+   "milk_obstacle_1": [
+    0.0,
+    -10.0,
+    1.312
+   ],
+   "wine_bottle_obstacle_1": [
+    -0.0,
+    10.0,
+    -0.002
+   ],
+   "red_coffee_mug_obstacle_1": [
+    20.0,
+    -0.0,
+    0.002
+   ],
+   "yellow_book_obstacle_1": [
+    -20.0,
+    0.0,
+    -0.002
+   ],
+   "box_base_1": [
+    -0.078,
+    0.03,
+    0.898
+   ]
+  },
+  "eef": [
+   -0.217,
+   0.015,
+   1.158
+  ],
+  "keys": [
+   "agentview_image",
+   "object-state",
+   "robot0_eye_in_hand_image",
+   "robot0_gripper_qpos",
+   "robot0_gripper_qvel",
+   "robot0_joint_pos_cos",
+   "robot0_joint_pos_sin",
+   "robot0_joint_vel",
+   "robot0_proprio-state"
+  ]
+ },
+ "II/3": {
+  "lang": "pick up the black bowl on the wooden cabinet and place it on the plate",
+  "n_init": 50,
+  "active": [
+   "moka_pot_obstacle_1"
+  ],
+  "pos": {
+   "akita_black_bowl_1": [
+    0.039,
+    -0.265,
+    1.126
+   ],
+   "akita_black_bowl_2": [
+    -0.252,
+    -0.141,
+    0.929
+   ],
+   "cookies_1": [
+    0.107,
+    0.028,
+    0.909
+   ],
+   "glazed_rim_porcelain_ramekin_1": [
+    -0.202,
+    0.205,
+    0.899
+   ],
+   "plate_1": [
+    0.048,
+    0.215,
+    0.903
+   ],
+   "moka_pot_obstacle_1": [
+    -0.046,
+    0.04,
+    1.145
+   ],
+   "white_storage_box_obstacle_1": [
+    10.0,
+    -0.0,
+    0.058
+   ],
+   "milk_obstacle_1": [
+    0.0,
+    -10.0,
+    1.312
+   ],
+   "wine_bottle_obstacle_1": [
+    -0.0,
+    10.0,
+    -0.002
+   ],
+   "red_coffee_mug_obstacle_1": [
+    20.0,
+    -0.0,
+    0.002
+   ],
+   "yellow_book_obstacle_1": [
+    -20.0,
+    0.0,
+    -0.002
+   ],
+   "box_base_1": [
+    -0.045,
+    0.04,
+    0.898
+   ]
+  },
+  "eef": [
+   -0.212,
+   -0.005,
+   1.178
+  ],
+  "keys": [
+   "agentview_image",
+   "object-state",
+   "robot0_eye_in_hand_image",
+   "robot0_gripper_qpos",
+   "robot0_gripper_qvel",
+   "robot0_joint_pos_cos",
+   "robot0_joint_pos_sin",
+   "robot0_joint_vel",
+   "robot0_proprio-state"
+  ]
+ }
+}

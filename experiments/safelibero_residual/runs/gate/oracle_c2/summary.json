@@ -1,0 +1,72 @@
+{
+ "I/0": {
+  "n": 10,
+  "tsr": 0.4,
+  "car": 0.9,
+  "safe_success": 0.4,
+  "errors": 0
+ },
+ "I/1": {
+  "n": 10,
+  "tsr": 0.0,
+  "car": 0.6,
+  "safe_success": 0.0,
+  "errors": 0
+ },
+ "I/2": {
+  "n": 10,
+  "tsr": 0.5,
+  "car": 0.9,
+  "safe_success": 0.5,
+  "errors": 0
+ },
+ "I/3": {
+  "n": 10,
+  "tsr": 0.0,
+  "car": 1.0,
+  "safe_success": 0.0,
+  "errors": 0
+ },
+ "II/0": {
+  "n": 10,
+  "tsr": 0.5,
+  "car": 0.5,
+  "safe_success": 0.3,
+  "errors": 0
+ },
+ "II/1": {
+  "n": 10,
+  "tsr": 0.0,
+  "car": 0.7,
+  "safe_success": 0.0,
+  "errors": 0
+ },
+ "II/2": {
+  "n": 10,
+  "tsr": 0.5,
+  "car": 0.7,
+  "safe_success": 0.5,
+  "errors": 0
+ },
+ "II/3": {
+  "n": 10,
+  "tsr": 0.9,
+  "car": 0.9,
+  "safe_success": 0.9,
+  "errors": 0
+ },
+ "level I": {
+  "n": 40,
+  "tsr": 0.225,
+  "car": 0.85,
+  "safe_success": 0.225,
+  "errors": 0
+ },
+ "level II": {
+  "n": 40,
+  "tsr": 0.475,
+  "car": 0.7,
+  "safe_success": 0.425,
+  "errors": 0
+ }
+}
