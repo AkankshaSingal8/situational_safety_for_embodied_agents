@@ -11,21 +11,40 @@ import numpy as np
 
 os.environ.setdefault("MUJOCO_GL", "egl")
 
+# Canonical obstacle types. SafeLIBERO-Long uses "<type>_small_obstacle_1" variants of milk, moka pot and
+# wine bottle; canon() maps them onto these six, so texts, residual rows and naming are suite independent.
 OBSTACLES = ["moka_pot_obstacle_1", "white_storage_box_obstacle_1", "milk_obstacle_1",
              "wine_bottle_obstacle_1", "red_coffee_mug_obstacle_1", "yellow_book_obstacle_1"]
+OBSTACLES_ALL = OBSTACLES + [n.replace("_obstacle_1", "_small_obstacle_1") for n in OBSTACLES]
 NOUN = {"moka_pot_obstacle_1": "moka pot", "white_storage_box_obstacle_1": "white storage box",
         "milk_obstacle_1": "milk carton", "wine_bottle_obstacle_1": "wine bottle",
         "red_coffee_mug_obstacle_1": "red coffee mug", "yellow_book_obstacle_1": "yellow book"}
+SUITES = ["safelibero_spatial", "safelibero_object", "safelibero_goal", "safelibero_long"]
+SUITE = "safelibero_spatial"
+MAX_STEPS_BY_SUITE = {"safelibero_long": 550}   # paper horizons; 300 for the other three
 MAX_STEPS = 300
 SETTLE = 10
 ENV_SEED = 0  # eval_sl --env_seed / --settle override these per worker (pi0.5 driver: seed 7, 20 settle steps)
 DUMMY = [0.0] * 6 + [-1.0]
 
 
+def set_suite(name):
+    """Select the SafeLIBERO suite for this process (call in every worker before make_env)."""
+    global SUITE, MAX_STEPS
+    assert name in SUITES, name
+    SUITE = name
+    MAX_STEPS = MAX_STEPS_BY_SUITE.get(name, 300)
+
+
+def canon(name):
+    """Scene obstacle name -> canonical type name (identity for non-small variants)."""
+    return name.replace("_small_obstacle_1", "_obstacle_1")
+
+
 def make_env(level, task_id, res=128):
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs import OffScreenRenderEnv
-    suite = benchmark.get_benchmark_dict()["safelibero_spatial"](safety_level=level)
+    suite = benchmark.get_benchmark_dict()[SUITE](safety_level=level)
     task = suite.get_task(task_id)
     bddl = os.path.join(get_libero_path("bddl_files"), task.problem_folder, task.bddl_file)
     from robosuite.utils.errors import RandomizationError
@@ -38,7 +57,23 @@ def make_env(level, task_id, res=128):
             if attempt == 9:
                 raise
     env.seed(ENV_SEED)
+    env.ooi = objects_of_interest(bddl)
     return env, task.language, suite.get_task_init_states(task_id)
+
+
+def objects_of_interest(bddl_path):
+    """(:obj_of_interest ...) of a BDDL file: the manipulated object first, then targets/regions."""
+    import re
+    m = re.search(r"\(:obj_of_interest(.*?)\)", open(bddl_path).read(), re.S)
+    return m.group(1).split() if m else []
+
+
+def scene_name(obs, name):
+    """The scene's own name for an obstacle given by canonical or scene name (handles '_small_'), or None."""
+    for n in (name, name.replace("_obstacle_1", "_small_obstacle_1"), canon(name)):
+        if n + "_pos" in obs:
+            return n
+    return None
 
 
 def proprio(obs):
@@ -47,11 +82,22 @@ def proprio(obs):
 
 
 def on_table(p):
-    return p[2] > 0.5 and abs(p[0]) < 0.5 and abs(p[1]) < 0.5
+    """In the workspace: the reference drivers' test (run_safelibero_pi05_eval.py: z > 0, |x|, |y| < 0.5).
+    Parked objects sit 10-20 m away in xy. The earlier z > 0.5 only held for the Spatial/Goal table
+    (z ~ 0.9); Object is a floor scene (z ~ 0.07) and Long's table is at z ~ 0.45."""
+    # z > -0.02, not > 0: GSO models (gso_objects.py) have their origin at the base, so on the Object floor
+    # (z = 0) they rest at z ~ 0; every other object's origin is at least 5 cm above its support
+    return p[2] > -0.02 and abs(p[0]) < 0.5 and abs(p[1]) < 0.5
 
 
 def active_obstacles(obs):
-    return [n for n in OBSTACLES if n + "_pos" in obs and on_table(obs[n + "_pos"])]
+    """Scene names (possibly '_small_' variants) of obstacles standing in the workspace."""
+    return [n for n in OBSTACLES_ALL if n + "_pos" in obs and on_table(obs[n + "_pos"])]
+
+
+def scene_obstacles(obs):
+    """Scene names of every obstacle object this env defines (active or parked)."""
+    return [n for n in OBSTACLES_ALL if n + "_pos" in obs]
 
 
 def body_tree_ids(sim, root_name):

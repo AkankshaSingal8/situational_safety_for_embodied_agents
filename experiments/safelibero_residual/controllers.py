@@ -42,9 +42,17 @@ class BaseRunner:
         return a
 
 
+def make_runner(cfg):
+    """Flow base (default) or pi0.5 served over websocket (cfg['base'] == 'pi05')."""
+    if cfg.get("base", "flow") == "pi05":
+        from pi05_runner import Pi05Runner
+        return Pi05Runner(cfg["ckpt"], cfg["device"], cfg["flow_steps"], port=int(cfg.get("pi_port", 8000)))
+    return BaseRunner(cfg["ckpt"], cfg["device"], cfg["flow_steps"])
+
+
 class BaseController:
     def __init__(self, cfg):
-        self.r = BaseRunner(cfg["ckpt"], cfg["device"], cfg["flow_steps"])
+        self.r = make_runner(cfg)
         self.k = cfg["exec_steps"]
 
     def reset(self, env, obs, lang, named, text):
@@ -66,6 +74,21 @@ def make_controller(cfg):
     if cfg["arm"] == "oracle":
         from oracle import OracleController
         return OracleController(cfg)
+    if cfg["arm"] == "shield":
+        from shield import ShieldController
+        return ShieldController(cfg)
+    if cfg["arm"] == "filter":
+        from safety_filter import FilterController
+        return FilterController(cfg)
+    if cfg["arm"] == "residual_pg":
+        from residual_pg_ctrl import ResidualPGController
+        return ResidualPGController(cfg)
+    if cfg["arm"] == "residual_ex":
+        from residual_ex_ctrl import ResidualExController
+        return ResidualExController(cfg)
+    if cfg["arm"] == "residual_v2":
+        from residual_v2_ctrl import ResidualV2Controller
+        return ResidualV2Controller(cfg)
     if cfg["arm"].startswith("residual"):
         from residual_ctrl import ResidualController
         return ResidualController(cfg)

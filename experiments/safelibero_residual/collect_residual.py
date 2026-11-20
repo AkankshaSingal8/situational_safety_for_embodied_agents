@@ -31,11 +31,14 @@ def worker(args):
     import torch
     torch.set_num_threads(1)
     import sl_env
-    from controllers import BaseRunner
+    sl_env.set_suite(cfg["suite"])
+    sl_env.ENV_SEED, sl_env.SETTLE = cfg["env_seed"], cfg["settle"]
+    from controllers import make_runner
+    from pi05_runner import down
     from eval_sl import load_scenes
     from oracle import Oracle
     states, meta = load_scenes(cfg["scenes"])
-    r = BaseRunner(cfg["ckpt"], cfg["device"], cfg["flow_steps"])
+    r = make_runner(cfg)
     oc = json.loads(cfg["oracle_cfg"]) if cfg["oracle_cfg"] else None
     half = (r.amax[:3] - r.amin[:3]) / 2
     res = None
@@ -43,7 +46,8 @@ def worker(args):
         import texts as TX
         from policy import ResidualFlow
         ck = torch.load(cfg["residual"], map_location="cpu")
-        res = ResidualFlow(feat_dim=ck["feat_dim"], text_dim=768 if ck["variant"] == "text" else 0)
+        res = ResidualFlow(feat_dim=ck["feat_dim"], text_dim=768 if ck["variant"] == "text" else 0,
+                           horizon=ck.get("horizon", 16))
         res.load_state_dict(ck["model"]); res.eval().to(cfg["device"]); res_scale = ck["scale"]
         bank = TX.TextBank()
     rng = np.random.default_rng(cfg["seed"] * 1000 + wid)
@@ -55,16 +59,16 @@ def worker(args):
         if key not in envs:
             for v in envs.values():
                 v[0].close()
-            envs = {key: sl_env.make_env(*key)}
+            envs = {key: sl_env.make_env(*key, res=cfg["res"])}
         env, lang, _ = envs[key]
         tid = r.task_id(lang)
         env.reset(); obs = env.set_init_state(states[i]); obs = sl_env.settle(env)
         present = [n for n in m["obstacles"] if n in sl_env.active_obstacles(obs)]
-        absent = [n for n in sl_env.OBSTACLES if n not in present]
+        absent = [n for n in sl_env.OBSTACLES if n not in {sl_env.canon(p) for p in present}]  # canonical
         drive = [present[rng.integers(len(present))]] if (present and rng.random() < 0.8) else []
         init_pos = {n: obs[n + "_pos"].copy() for n in present}
         if res is not None:
-            words = TX.train_texts(drive[0]) if drive else None
+            words = TX.train_texts(sl_env.canon(drive[0])) if drive else None
             sent = words[rng.integers(len(words))] if drive else ""
             temb = torch.from_numpy(bank(sent)).unsqueeze(0).to(cfg["device"])
         oracles = {n: Oracle(oc) for n in present}
@@ -79,7 +83,7 @@ def worker(args):
                 c = len(F)
                 F.append(f[0].cpu().numpy().astype(np.float16)); B.append(xn.astype(np.float16)); CS.append(i)
                 if cfg["save_images"]:
-                    IA.append(obs["agentview_image"].copy()); IW.append(obs["robot0_eye_in_hand_image"].copy())
+                    IA.append(down(obs["agentview_image"]).copy()); IW.append(down(obs["robot0_eye_in_hand_image"]).copy())
                 exec_A = A
                 if res is not None:
                     d = res.sample(f, x.unsqueeze(0), temb, steps=cfg["flow_steps"], guide=cfg["guide"])[0].cpu().numpy() / res_scale
@@ -87,7 +91,7 @@ def worker(args):
                 for n, o in oracles.items():
                     A2, prof = o.correct(env, obs, A)
                     d = ((A2[:, :3] - A[:, :3]) / half).astype(np.float32)
-                    rows.append((c, sl_env.OBSTACLES.index(n), KIND["present"])); T.append(d)
+                    rows.append((c, sl_env.OBSTACLES.index(sl_env.canon(n)), KIND["present"])); T.append(d)
                     if drive and n == drive[0] and res is None:
                         exec_A = A2
                         n_corr += int(np.abs(prof).max() > 0)
@@ -121,6 +125,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", required=True)
     ap.add_argument("--scenes", required=True)
+    ap.add_argument("--suite", default="safelibero_spatial")
+    ap.add_argument("--base", default="flow", choices=["flow", "pi05"])
+    ap.add_argument("--pi_port", type=int, default=8000)
+    ap.add_argument("--res", type=int, default=128, help="render size; 256 for the pi0.5 base")
+    ap.add_argument("--env_seed", type=int, default=0)
+    ap.add_argument("--settle", type=int, default=10)
     ap.add_argument("--out", required=True)
     ap.add_argument("--workers", type=int, default=5)
     ap.add_argument("--exec_steps", type=int, default=8)

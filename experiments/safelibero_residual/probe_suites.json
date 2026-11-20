@@ -1,0 +1,5604 @@
+{
+ "safelibero_spatial/I/0": {
+  "lang": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+  "bddl": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 0,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.063,
+     0.202,
+     0.898
+    ],
+    "akita_black_bowl_2": [
+     -0.189,
+     0.32,
+     0.898
+    ],
+    "cookies_1": [
+     0.078,
+     -0.014,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.197,
+     0.189,
+     0.899
+    ],
+    "plate_1": [
+     0.053,
+     0.205,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.052,
+     0.02,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.211,
+    -0.011,
+    1.174
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.052,
+     0.201,
+     0.898
+    ],
+    "akita_black_bowl_2": [
+     -0.169,
+     0.331,
+     0.898
+    ],
+    "cookies_1": [
+     0.101,
+     -0.012,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.189,
+     0.188,
+     0.899
+    ],
+    "plate_1": [
+     0.066,
+     0.211,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     -0.105,
+     0.12,
+     0.958
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.211,
+    0.001,
+    1.16
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_spatial/I/1": {
+  "lang": "pick up the black bowl on the ramekin and place it on the plate",
+  "bddl": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 7,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.211,
+     0.202,
+     0.934
+    ],
+    "akita_black_bowl_2": [
+     0.057,
+     0.042,
+     0.917
+    ],
+    "cookies_1": [
+     0.057,
+     0.043,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.197,
+     0.202,
+     0.899
+    ],
+    "plate_1": [
+     0.073,
+     0.185,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.08,
+     0.25,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.212,
+    0.005,
+    1.167
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.202,
+     0.201,
+     0.934
+    ],
+    "akita_black_bowl_2": [
+     0.076,
+     0.028,
+     0.917
+    ],
+    "cookies_1": [
+     0.076,
+     0.029,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.187,
+     0.201,
+     0.899
+    ],
+    "plate_1": [
+     0.05,
+     0.19,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     -0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     -0.08,
+     0.38,
+     0.958
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.21,
+    0.005,
+    1.173
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_spatial/I/2": {
+  "lang": "pick up the black bowl on the stove and place it on the plate",
+  "bddl": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 8,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.262,
+     -0.131,
+     0.929
+    ],
+    "akita_black_bowl_2": [
+     0.039,
+     -0.282,
+     1.126
+    ],
+    "cookies_1": [
+     0.057,
+     0.023,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.193,
+     0.209,
+     0.899
+    ],
+    "plate_1": [
+     0.06,
+     0.205,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.1,
+     -0.003,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.217,
+    0.015,
+    1.158
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.258,
+     -0.128,
+     0.929
+    ],
+    "akita_black_bowl_2": [
+     0.014,
+     -0.266,
+     1.126
+    ],
+    "cookies_1": [
+     0.068,
+     0.022,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.196,
+     0.191,
+     0.899
+    ],
+    "plate_1": [
+     0.059,
+     0.203,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     -0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     -0.207,
+     0.135,
+     0.958
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.202,
+    -0.004,
+    1.182
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_spatial/I/3": {
+  "lang": "pick up the black bowl on the wooden cabinet and place it on the plate",
+  "bddl": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 9,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     0.069,
+     -0.295,
+     1.126
+    ],
+    "akita_black_bowl_2": [
+     -0.252,
+     -0.141,
+     0.929
+    ],
+    "cookies_1": [
+     0.067,
+     0.028,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.202,
+     0.205,
+     0.899
+    ],
+    "plate_1": [
+     0.048,
+     0.215,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     -0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.07,
+     -0.22,
+     1.126
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.212,
+    -0.005,
+    1.178
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     0.062,
+     -0.295,
+     1.126
+    ],
+    "akita_black_bowl_2": [
+     -0.243,
+     -0.128,
+     0.929
+    ],
+    "cookies_1": [
+     0.081,
+     0.032,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.209,
+     0.214,
+     0.899
+    ],
+    "plate_1": [
+     0.049,
+     0.21,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     -0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     -0.05,
+     -0.18,
+     1.13
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.216,
+    0.008,
+    1.161
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_spatial/II/0": {
+  "lang": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+  "bddl": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 0,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.063,
+     0.202,
+     0.898
+    ],
+    "akita_black_bowl_2": [
+     -0.189,
+     0.32,
+     0.898
+    ],
+    "cookies_1": [
+     0.058,
+     0.026,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.197,
+     0.189,
+     0.899
+    ],
+    "plate_1": [
+     0.053,
+     0.205,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.078,
+     0.03,
+     1.145
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     -0.078,
+     0.03,
+     0.898
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.211,
+    -0.011,
+    1.174
+   ],
+   "box_base": [
+    -0.078,
+    0.03,
+    0.898
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.052,
+     0.201,
+     0.898
+    ],
+    "akita_black_bowl_2": [
+     -0.169,
+     0.331,
+     0.898
+    ],
+    "cookies_1": [
+     0.081,
+     0.028,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.189,
+     0.188,
+     0.899
+    ],
+    "plate_1": [
+     0.066,
+     0.211,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.072,
+     0.03,
+     1.145
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     -0.072,
+     0.03,
+     0.898
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.211,
+    0.001,
+    1.16
+   ],
+   "box_base": [
+    -0.072,
+    0.03,
+    0.898
+   ]
+  }
+ },
+ "safelibero_spatial/II/1": {
+  "lang": "pick up the black bowl on the ramekin and place it on the plate",
+  "bddl": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 7,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.211,
+     0.202,
+     0.934
+    ],
+    "akita_black_bowl_2": [
+     0.057,
+     0.042,
+     0.917
+    ],
+    "cookies_1": [
+     0.057,
+     0.043,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.197,
+     0.202,
+     0.899
+    ],
+    "plate_1": [
+     0.073,
+     0.185,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.078,
+     0.05,
+     1.145
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     -0.078,
+     0.05,
+     0.898
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.212,
+    0.005,
+    1.167
+   ],
+   "box_base": [
+    -0.078,
+    0.05,
+    0.898
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.202,
+     0.201,
+     0.934
+    ],
+    "akita_black_bowl_2": [
+     0.076,
+     0.028,
+     0.917
+    ],
+    "cookies_1": [
+     0.076,
+     0.029,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.187,
+     0.201,
+     0.899
+    ],
+    "plate_1": [
+     0.05,
+     0.19,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.072,
+     0.05,
+     1.145
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     -0.072,
+     0.05,
+     0.898
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.21,
+    0.005,
+    1.173
+   ],
+   "box_base": [
+    -0.072,
+    0.05,
+    0.898
+   ]
+  }
+ },
+ "safelibero_spatial/II/2": {
+  "lang": "pick up the black bowl on the stove and place it on the plate",
+  "bddl": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 8,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.262,
+     -0.131,
+     0.929
+    ],
+    "akita_black_bowl_2": [
+     0.039,
+     -0.282,
+     1.126
+    ],
+    "cookies_1": [
+     0.057,
+     0.023,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.193,
+     0.209,
+     0.899
+    ],
+    "plate_1": [
+     0.06,
+     0.205,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.078,
+     0.03,
+     1.145
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     -0.078,
+     0.03,
+     0.898
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.217,
+    0.015,
+    1.158
+   ],
+   "box_base": [
+    -0.078,
+    0.03,
+    0.898
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.258,
+     -0.128,
+     0.929
+    ],
+    "akita_black_bowl_2": [
+     0.014,
+     -0.266,
+     1.126
+    ],
+    "cookies_1": [
+     0.068,
+     0.022,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.196,
+     0.191,
+     0.899
+    ],
+    "plate_1": [
+     0.059,
+     0.203,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.072,
+     0.03,
+     1.145
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     -0.072,
+     0.03,
+     0.898
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.202,
+    -0.004,
+    1.182
+   ],
+   "box_base": [
+    -0.072,
+    0.03,
+    0.898
+   ]
+  }
+ },
+ "safelibero_spatial/II/3": {
+  "lang": "pick up the black bowl on the wooden cabinet and place it on the plate",
+  "bddl": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 9,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     0.039,
+     -0.265,
+     1.126
+    ],
+    "akita_black_bowl_2": [
+     -0.252,
+     -0.141,
+     0.929
+    ],
+    "cookies_1": [
+     0.107,
+     0.028,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.202,
+     0.205,
+     0.899
+    ],
+    "plate_1": [
+     0.048,
+     0.215,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.045,
+     0.04,
+     1.145
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     -0.045,
+     0.04,
+     0.898
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.212,
+    -0.005,
+    1.178
+   ],
+   "box_base": [
+    -0.045,
+    0.04,
+    0.898
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     0.032,
+     -0.295,
+     1.126
+    ],
+    "akita_black_bowl_2": [
+     -0.243,
+     -0.128,
+     0.929
+    ],
+    "cookies_1": [
+     0.121,
+     0.032,
+     0.909
+    ],
+    "glazed_rim_porcelain_ramekin_1": [
+     -0.209,
+     0.214,
+     0.899
+    ],
+    "plate_1": [
+     0.049,
+     0.21,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.035,
+     0.04,
+     1.145
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     -0.034,
+     0.04,
+     0.898
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.216,
+    0.008,
+    1.161
+   ],
+   "box_base": [
+    -0.034,
+    0.04,
+    0.898
+   ]
+  }
+ },
+ "safelibero_object/I/0": {
+  "lang": "pick up the orange juice and place it in the basket",
+  "bddl": "pick_up_the_orange_juice_and_place_it_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "orange_juice_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 7,
+  "ep0": {
+   "pos": {
+    "orange_juice_1": [
+     0.1,
+     -0.15,
+     0.07
+    ],
+    "basket_1": [
+     -0.004,
+     0.251,
+     -0.005
+    ],
+    "butter_1": [
+     -0.118,
+     -0.273,
+     0.009
+    ],
+    "chocolate_pudding_1": [
+     -0.15,
+     0.06,
+     0.013
+    ],
+    "bbq_sauce_1": [
+     18.091,
+     -0.196,
+     0.055
+    ],
+    "ketchup_1": [
+     0.15,
+     0.03,
+     0.072
+    ],
+    "salad_dressing_1": [
+     -0.2,
+     -0.08,
+     0.073
+    ],
+    "moka_pot_obstacle_1": [
+     0.0,
+     9.999,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.082,
+     -0.144,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     19.95,
+     -0.1,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.05,
+     -0.1,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.082,
+     -0.144,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.153,
+    -0.015,
+    0.261
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "orange_juice_1": [
+     0.1,
+     -0.15,
+     0.07
+    ],
+    "basket_1": [
+     -0.01,
+     0.273,
+     -0.005
+    ],
+    "butter_1": [
+     -0.121,
+     -0.269,
+     0.009
+    ],
+    "chocolate_pudding_1": [
+     -0.15,
+     0.06,
+     0.013
+    ],
+    "bbq_sauce_1": [
+     18.11,
+     -0.199,
+     0.055
+    ],
+    "ketchup_1": [
+     0.15,
+     0.03,
+     0.072
+    ],
+    "salad_dressing_1": [
+     -0.2,
+     -0.08,
+     0.073
+    ],
+    "moka_pot_obstacle_1": [
+     0.0,
+     9.999,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.099,
+     -0.159,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     -10.05,
+     -0.15,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.05,
+     -0.1,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.099,
+     -0.159,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.145,
+    -0.004,
+    0.264
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_object/I/1": {
+  "lang": "pick up the chocolate pudding and place it in the basket",
+  "bddl": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "chocolate_pudding_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 3,
+  "ep0": {
+   "pos": {
+    "chocolate_pudding_1": [
+     -0.17,
+     -0.44,
+     0.013
+    ],
+    "basket_1": [
+     0.012,
+     0.251,
+     -0.005
+    ],
+    "orange_juice_1": [
+     0.05,
+     -0.1,
+     0.07
+    ],
+    "bbq_sauce_1": [
+     -0.143,
+     0.064,
+     0.055
+    ],
+    "ketchup_1": [
+     0.1,
+     -0.2,
+     0.072
+    ],
+    "salad_dressing_1": [
+     0.15,
+     0.03,
+     0.073
+    ],
+    "alphabet_soup_1": [
+     -0.199,
+     -0.08,
+     0.038
+    ],
+    "moka_pot_obstacle_1": [
+     -0.05,
+     9.849,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.106,
+     -0.217,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.106,
+     -0.217,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.158,
+    -0.01,
+    0.256
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "chocolate_pudding_1": [
+     -0.17,
+     -0.44,
+     0.013
+    ],
+    "basket_1": [
+     -0.002,
+     0.268,
+     -0.005
+    ],
+    "orange_juice_1": [
+     0.05,
+     -0.1,
+     0.07
+    ],
+    "bbq_sauce_1": [
+     -0.149,
+     0.063,
+     0.055
+    ],
+    "ketchup_1": [
+     0.1,
+     -0.2,
+     0.072
+    ],
+    "salad_dressing_1": [
+     0.15,
+     0.03,
+     0.073
+    ],
+    "alphabet_soup_1": [
+     -0.199,
+     -0.08,
+     0.038
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     -0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.102,
+     -0.213,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.102,
+     -0.213,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.142,
+    0.003,
+    0.261
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_object/I/2": {
+  "lang": "pick up the milk and place it in the basket",
+  "bddl": "pick_up_the_milk_and_place_it_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "milk_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 6,
+  "ep0": {
+   "pos": {
+    "milk_1": [
+     -0.177,
+     -0.394,
+     0.07
+    ],
+    "basket_1": [
+     0.011,
+     0.269,
+     -0.005
+    ],
+    "cream_cheese_1": [
+     0.127,
+     -0.104,
+     0.009
+    ],
+    "tomato_sauce_1": [
+     -0.15,
+     0.06,
+     0.038
+    ],
+    "butter_1": [
+     0.096,
+     -0.196,
+     0.009
+    ],
+    "orange_juice_1": [
+     0.15,
+     0.03,
+     0.07
+    ],
+    "chocolate_pudding_1": [
+     -0.2,
+     -0.08,
+     0.013
+    ],
+    "moka_pot_obstacle_1": [
+     0.0,
+     9.999,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.099,
+     -0.198,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.099,
+     -0.198,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.153,
+    -0.009,
+    0.256
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "milk_1": [
+     -0.181,
+     -0.39,
+     0.07
+    ],
+    "basket_1": [
+     -0.001,
+     0.266,
+     -0.005
+    ],
+    "cream_cheese_1": [
+     0.13,
+     -0.101,
+     0.009
+    ],
+    "tomato_sauce_1": [
+     -0.15,
+     0.06,
+     0.038
+    ],
+    "butter_1": [
+     0.099,
+     -0.2,
+     0.009
+    ],
+    "orange_juice_1": [
+     0.15,
+     0.03,
+     0.07
+    ],
+    "chocolate_pudding_1": [
+     -0.2,
+     -0.08,
+     0.013
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     -0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.093,
+     -0.195,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.093,
+     -0.195,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.155,
+    -0.0,
+    0.263
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_object/I/3": {
+  "lang": "pick up the bbq sauce and place it in the basket",
+  "bddl": "pick_up_the_bbq_sauce_and_place_it_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "bbq_sauce_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 1,
+  "ep0": {
+   "pos": {
+    "bbq_sauce_1": [
+     0.143,
+     -0.058,
+     0.055
+    ],
+    "basket_1": [
+     0.086,
+     0.254,
+     -0.005
+    ],
+    "chocolate_pudding_1": [
+     -0.12,
+     -0.27,
+     0.013
+    ],
+    "ketchup_1": [
+     -0.15,
+     0.06,
+     0.072
+    ],
+    "salad_dressing_1": [
+     0.1,
+     -0.2,
+     0.073
+    ],
+    "alphabet_soup_1": [
+     0.051,
+     0.1,
+     0.038
+    ],
+    "cream_cheese_1": [
+     -0.196,
+     -0.079,
+     0.009
+    ],
+    "moka_pot_obstacle_1": [
+     0.0,
+     9.999,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.047,
+     -0.137,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.047,
+     -0.137,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.16,
+    0.002,
+    0.251
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "bbq_sauce_1": [
+     0.152,
+     -0.075,
+     0.055
+    ],
+    "basket_1": [
+     0.083,
+     0.258,
+     -0.005
+    ],
+    "chocolate_pudding_1": [
+     -0.12,
+     -0.27,
+     0.013
+    ],
+    "ketchup_1": [
+     -0.15,
+     0.06,
+     0.072
+    ],
+    "salad_dressing_1": [
+     0.1,
+     -0.2,
+     0.073
+    ],
+    "alphabet_soup_1": [
+     0.051,
+     0.1,
+     0.038
+    ],
+    "cream_cheese_1": [
+     -0.195,
+     -0.078,
+     0.009
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     -0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.048,
+     -0.133,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.048,
+     -0.133,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.154,
+    -0.003,
+    0.249
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_object/II/0": {
+  "lang": "pick up the orange juice and place it in the basket",
+  "bddl": "pick_up_the_orange_juice_and_place_it_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "orange_juice_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 7,
+  "ep0": {
+   "pos": {
+    "orange_juice_1": [
+     0.05,
+     -0.2,
+     0.07
+    ],
+    "basket_1": [
+     0.056,
+     0.301,
+     -0.005
+    ],
+    "butter_1": [
+     -0.118,
+     -0.243,
+     0.009
+    ],
+    "chocolate_pudding_1": [
+     -0.15,
+     0.06,
+     0.013
+    ],
+    "bbq_sauce_1": [
+     0.091,
+     -0.296,
+     0.055
+    ],
+    "ketchup_1": [
+     0.15,
+     0.03,
+     0.072
+    ],
+    "salad_dressing_1": [
+     -0.2,
+     -0.08,
+     0.073
+    ],
+    "moka_pot_obstacle_1": [
+     -0.0,
+     0.1,
+     0.182
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.1,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.153,
+    -0.015,
+    0.261
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "orange_juice_1": [
+     0.05,
+     -0.1,
+     0.07
+    ],
+    "basket_1": [
+     0.05,
+     0.323,
+     -0.005
+    ],
+    "butter_1": [
+     -0.121,
+     -0.239,
+     0.009
+    ],
+    "chocolate_pudding_1": [
+     -0.15,
+     0.06,
+     0.013
+    ],
+    "bbq_sauce_1": [
+     0.11,
+     -0.199,
+     0.055
+    ],
+    "ketchup_1": [
+     0.15,
+     0.03,
+     0.072
+    ],
+    "salad_dressing_1": [
+     -0.2,
+     -0.08,
+     0.073
+    ],
+    "moka_pot_obstacle_1": [
+     -10.001,
+     -0.0,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     0.1,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.1,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.145,
+    -0.004,
+    0.264
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_object/II/1": {
+  "lang": "pick up the chocolate pudding and place it in the basket",
+  "bddl": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "chocolate_pudding_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 3,
+  "ep0": {
+   "pos": {
+    "chocolate_pudding_1": [
+     -0.12,
+     -0.24,
+     0.013
+    ],
+    "basket_1": [
+     0.062,
+     0.301,
+     -0.005
+    ],
+    "orange_juice_1": [
+     0.05,
+     -0.1,
+     0.07
+    ],
+    "bbq_sauce_1": [
+     -0.143,
+     0.064,
+     0.055
+    ],
+    "ketchup_1": [
+     0.1,
+     -0.2,
+     0.072
+    ],
+    "salad_dressing_1": [
+     0.15,
+     0.03,
+     0.073
+    ],
+    "alphabet_soup_1": [
+     -0.199,
+     -0.08,
+     0.038
+    ],
+    "moka_pot_obstacle_1": [
+     0.0,
+     0.1,
+     0.182
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.1,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.158,
+    -0.01,
+    0.256
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "chocolate_pudding_1": [
+     -0.12,
+     -0.24,
+     0.013
+    ],
+    "basket_1": [
+     0.048,
+     0.318,
+     -0.005
+    ],
+    "orange_juice_1": [
+     0.05,
+     -0.1,
+     0.07
+    ],
+    "bbq_sauce_1": [
+     -0.149,
+     0.063,
+     0.055
+    ],
+    "ketchup_1": [
+     0.1,
+     -0.2,
+     0.072
+    ],
+    "salad_dressing_1": [
+     0.15,
+     0.03,
+     0.073
+    ],
+    "alphabet_soup_1": [
+     -0.199,
+     -0.08,
+     0.038
+    ],
+    "moka_pot_obstacle_1": [
+     -10.001,
+     -0.0,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     0.1,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.1,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.142,
+    0.003,
+    0.261
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_object/II/2": {
+  "lang": "pick up the milk and place it in the basket",
+  "bddl": "pick_up_the_milk_and_place_it_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "milk_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 6,
+  "ep0": {
+   "pos": {
+    "milk_1": [
+     -0.117,
+     -0.194,
+     0.07
+    ],
+    "basket_1": [
+     0.061,
+     0.249,
+     -0.005
+    ],
+    "cream_cheese_1": [
+     0.047,
+     49.896,
+     0.009
+    ],
+    "tomato_sauce_1": [
+     -0.15,
+     49.96,
+     0.038
+    ],
+    "butter_1": [
+     0.096,
+     -0.296,
+     0.009
+    ],
+    "orange_juice_1": [
+     0.15,
+     -0.07,
+     0.07
+    ],
+    "chocolate_pudding_1": [
+     -0.2,
+     -0.28,
+     0.013
+    ],
+    "moka_pot_obstacle_1": [
+     0.0,
+     0.05,
+     0.182
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.1,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.1,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     9.95,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.05,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     -0.05,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.05,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.153,
+    -0.009,
+    0.256
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "milk_1": [
+     -0.121,
+     -0.19,
+     0.07
+    ],
+    "basket_1": [
+     0.049,
+     0.246,
+     -0.005
+    ],
+    "cream_cheese_1": [
+     0.05,
+     49.899,
+     0.009
+    ],
+    "tomato_sauce_1": [
+     -0.15,
+     49.96,
+     0.038
+    ],
+    "butter_1": [
+     0.099,
+     -0.3,
+     0.009
+    ],
+    "orange_juice_1": [
+     0.15,
+     -0.07,
+     0.07
+    ],
+    "chocolate_pudding_1": [
+     -0.2,
+     -0.28,
+     0.013
+    ],
+    "moka_pot_obstacle_1": [
+     -10.001,
+     -0.05,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.1,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.1,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     0.05,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.05,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     -0.05,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.05,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.155,
+    -0.0,
+    0.263
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_object/II/3": {
+  "lang": "pick up the bbq sauce and place it in the basket",
+  "bddl": "pick_up_the_bbq_sauce_and_place_it_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "bbq_sauce_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 1,
+  "ep0": {
+   "pos": {
+    "bbq_sauce_1": [
+     0.043,
+     -0.09,
+     0.055
+    ],
+    "basket_1": [
+     -0.004,
+     0.304,
+     -0.005
+    ],
+    "chocolate_pudding_1": [
+     -0.12,
+     -0.24,
+     0.013
+    ],
+    "ketchup_1": [
+     -0.15,
+     0.06,
+     0.072
+    ],
+    "salad_dressing_1": [
+     0.1,
+     -0.2,
+     0.073
+    ],
+    "alphabet_soup_1": [
+     0.151,
+     0.03,
+     0.038
+    ],
+    "cream_cheese_1": [
+     -0.196,
+     -0.079,
+     0.009
+    ],
+    "moka_pot_obstacle_1": [
+     0.0,
+     0.1,
+     0.182
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.1,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.16,
+    0.002,
+    0.251
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "bbq_sauce_1": [
+     0.052,
+     -0.106,
+     0.055
+    ],
+    "basket_1": [
+     -0.007,
+     0.308,
+     -0.005
+    ],
+    "chocolate_pudding_1": [
+     -0.12,
+     -0.24,
+     0.013
+    ],
+    "ketchup_1": [
+     -0.15,
+     0.06,
+     0.072
+    ],
+    "salad_dressing_1": [
+     0.1,
+     -0.2,
+     0.073
+    ],
+    "alphabet_soup_1": [
+     0.151,
+     0.03,
+     0.038
+    ],
+    "cream_cheese_1": [
+     -0.195,
+     -0.078,
+     0.009
+    ],
+    "moka_pot_obstacle_1": [
+     -10.001,
+     -0.0,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     0.1,
+     0.073
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.1,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.154,
+    -0.003,
+    0.249
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_goal/I/0": {
+  "lang": "put the bowl on the plate",
+  "bddl": "put_the_bowl_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 3,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.098,
+     -0.009,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.046,
+     0.134,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -20.204,
+     -0.062,
+     -0.001
+    ],
+    "plate_1": [
+     0.092,
+     0.021,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.07,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     20.0,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.207,
+    0.002,
+    1.179
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.077,
+     -0.004,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.051,
+     0.139,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -20.203,
+     -0.052,
+     -0.001
+    ],
+    "plate_1": [
+     0.082,
+     0.005,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.07,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     20.0,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.206,
+    0.001,
+    1.174
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_goal/I/1": {
+  "lang": "put the bowl on top of the cabinet",
+  "bddl": "put_the_bowl_on_top_of_the_cabinet.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "wooden_cabinet_1_top_side"
+  ],
+  "demo_match": true,
+  "demo_idx": 5,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.1,
+     0.01,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.061,
+     0.126,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -50.074,
+     0.303,
+     -0.001
+    ],
+    "plate_1": [
+     0.062,
+     -0.018,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.07,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.209,
+    -0.015,
+    1.169
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.102,
+     -0.0,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.059,
+     0.12,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -50.06,
+     0.31,
+     -0.001
+    ],
+    "plate_1": [
+     0.051,
+     -0.011,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.07,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.21,
+    -0.002,
+    1.185
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_goal/I/2": {
+  "lang": "put the bowl on the stove",
+  "bddl": "put_the_bowl_on_the_stove.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "flat_stove_1_cook_region"
+  ],
+  "demo_match": true,
+  "demo_idx": 4,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.098,
+     -0.009,
+     0.898
+    ],
+    "cream_cheese_1": [
+     0.154,
+     0.134,
+     0.909
+    ],
+    "wine_bottle_1": [
+     -20.204,
+     -0.062,
+     -0.001
+    ],
+    "plate_1": [
+     0.092,
+     0.021,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.07,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.207,
+    0.002,
+    1.179
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.077,
+     -0.004,
+     0.898
+    ],
+    "cream_cheese_1": [
+     0.149,
+     0.139,
+     0.909
+    ],
+    "wine_bottle_1": [
+     -20.203,
+     -0.052,
+     -0.001
+    ],
+    "plate_1": [
+     0.082,
+     0.005,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.07,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.206,
+    0.001,
+    1.174
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_goal/I/3": {
+  "lang": "open the top drawer and put the bowl inside",
+  "bddl": "open_the_top_drawer_and_put_the_bowl_inside.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "wooden_cabinet_1_top_region"
+  ],
+  "demo_match": true,
+  "demo_idx": 1,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.18,
+     0.014,
+     0.898
+    ],
+    "cream_cheese_1": [
+     0.101,
+     0.148,
+     0.909
+    ],
+    "wine_bottle_1": [
+     29.79,
+     -0.035,
+     -0.001
+    ],
+    "plate_1": [
+     0.035,
+     -0.012,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.17,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.202,
+    -0.008,
+    1.176
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.176,
+     -0.004,
+     0.898
+    ],
+    "cream_cheese_1": [
+     0.12,
+     0.122,
+     0.909
+    ],
+    "wine_bottle_1": [
+     29.806,
+     -0.061,
+     -0.001
+    ],
+    "plate_1": [
+     0.063,
+     -0.021,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.17,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.211,
+    -0.004,
+    1.174
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_goal/II/0": {
+  "lang": "put the bowl on the plate",
+  "bddl": "put_the_bowl_on_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "plate_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 3,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.198,
+     -0.009,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.046,
+     0.134,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -20.204,
+     -0.062,
+     -0.001
+    ],
+    "plate_1": [
+     0.112,
+     0.291,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.06,
+     0.14,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     30.0,
+     -0.009,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.207,
+    0.002,
+    1.179
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.177,
+     -0.004,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.051,
+     0.139,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -20.203,
+     -0.052,
+     -0.001
+    ],
+    "plate_1": [
+     0.102,
+     0.275,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.06,
+     0.14,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     30.0,
+     -0.025,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.206,
+    0.001,
+    1.174
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_goal/II/1": {
+  "lang": "put the bowl on top of the cabinet",
+  "bddl": "put_the_bowl_on_top_of_the_cabinet.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "wooden_cabinet_1_top_side"
+  ],
+  "demo_match": true,
+  "demo_idx": 5,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.1,
+     0.01,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.061,
+     0.126,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -20.204,
+     -0.047,
+     -0.001
+    ],
+    "plate_1": [
+     0.062,
+     -0.018,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     -0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     0.05,
+     -0.22,
+     1.13
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.209,
+    -0.015,
+    1.169
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.102,
+     -0.0,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.059,
+     0.12,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -20.19,
+     -0.04,
+     -0.001
+    ],
+    "plate_1": [
+     0.051,
+     -0.011,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -10.0,
+     -0.001,
+     0.106
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     0.05,
+     -0.24,
+     1.13
+    ],
+    "yellow_book_obstacle_1": [
+     20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.21,
+    -0.002,
+    1.185
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_goal/II/2": {
+  "lang": "put the bowl on the stove",
+  "bddl": "put_the_bowl_on_the_stove.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "akita_black_bowl_1",
+   "flat_stove_1_cook_region"
+  ],
+  "demo_match": true,
+  "demo_idx": 4,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.094,
+     -0.032,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.057,
+     0.132,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -20.189,
+     -0.049,
+     -0.001
+    ],
+    "plate_1": [
+     0.049,
+     -0.027,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.22,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.217,
+    -0.013,
+    1.16
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     -0.083,
+     -0.044,
+     0.898
+    ],
+    "cream_cheese_1": [
+     -0.038,
+     0.124,
+     0.009
+    ],
+    "wine_bottle_1": [
+     -20.205,
+     -0.06,
+     -0.001
+    ],
+    "plate_1": [
+     0.042,
+     -0.024,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.22,
+     0.21,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     0.0,
+     -10.0,
+     0.194
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.216,
+    -0.001,
+    1.174
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_goal/II/3": {
+  "lang": "put the cream cheese in the bowl",
+  "bddl": "put_the_cream_cheese_in_the_bowl.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "cream_cheese_1",
+   "akita_black_bowl_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 6,
+  "ep0": {
+   "pos": {
+    "akita_black_bowl_1": [
+     0.038,
+     0.14,
+     0.898
+    ],
+    "cream_cheese_1": [
+     0.038,
+     0.29,
+     0.909
+    ],
+    "wine_bottle_1": [
+     -30.189,
+     0.34,
+     -0.001
+    ],
+    "plate_1": [
+     0.038,
+     -0.013,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.1,
+     0.13,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     -0.0,
+     -10.0,
+     0.139
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     9.917,
+     0.13,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.203,
+    -0.013,
+    1.174
+   ],
+   "box_base": [
+    9.917,
+    0.13,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "akita_black_bowl_1": [
+     0.056,
+     0.121,
+     0.898
+    ],
+    "cream_cheese_1": [
+     0.056,
+     0.271,
+     0.909
+    ],
+    "wine_bottle_1": [
+     -30.177,
+     0.321,
+     -0.001
+    ],
+    "plate_1": [
+     0.056,
+     -0.024,
+     0.902
+    ],
+    "moka_pot_obstacle_1": [
+     -0.1,
+     0.13,
+     1.006
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_obstacle_1": [
+     -0.0,
+     -10.0,
+     0.139
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_base_1": [
+     9.917,
+     0.13,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.206,
+    -0.006,
+    1.167
+   ],
+   "box_base": [
+    9.917,
+    0.13,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_long/I/0": {
+  "lang": "put both the alphabet soup and the cream cheese box in the basket",
+  "bddl": "LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "alphabet_soup_1",
+   "cream_cheese_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 4,
+  "ep0": {
+   "pos": {
+    "alphabet_soup_1": [
+     0.133,
+     -0.08,
+     0.475
+    ],
+    "cream_cheese_1": [
+     -0.14,
+     0.042,
+     0.446
+    ],
+    "tomato_sauce_1": [
+     -10.144,
+     -0.232,
+     0.038
+    ],
+    "ketchup_1": [
+     -0.197,
+     -0.157,
+     0.509
+    ],
+    "basket_1": [
+     -0.0,
+     0.267,
+     0.432
+    ],
+    "moka_pot_small_obstacle_1": [
+     -10.0,
+     0.0,
+     0.066
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     20.0,
+     0.0,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     0.02,
+     -0.1,
+     0.514
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     0.02,
+     -0.1,
+     0.439
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.066,
+    0.011,
+    0.668
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "alphabet_soup_1": [
+     0.133,
+     -0.075,
+     0.475
+    ],
+    "cream_cheese_1": [
+     -0.147,
+     0.065,
+     0.446
+    ],
+    "tomato_sauce_1": [
+     -10.15,
+     -0.244,
+     0.038
+    ],
+    "ketchup_1": [
+     -0.193,
+     -0.166,
+     0.509
+    ],
+    "basket_1": [
+     -0.002,
+     0.268,
+     0.432
+    ],
+    "moka_pot_small_obstacle_1": [
+     -10.0,
+     0.0,
+     0.066
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     20.0,
+     0.0,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     0.02,
+     -0.1,
+     0.514
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     0.02,
+     -0.1,
+     0.439
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.052,
+    -0.0,
+    0.689
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_long/I/1": {
+  "lang": "put both the alphabet soup and the tomato sauce in the basket",
+  "bddl": "LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "alphabet_soup_1",
+   "tomato_sauce_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 5,
+  "ep0": {
+   "pos": {
+    "alphabet_soup_1": [
+     0.132,
+     -0.152,
+     0.475
+    ],
+    "cream_cheese_1": [
+     0.079,
+     -14.244,
+     0.009
+    ],
+    "tomato_sauce_1": [
+     -0.167,
+     0.106,
+     0.475
+    ],
+    "ketchup_1": [
+     -0.268,
+     -0.149,
+     0.509
+    ],
+    "orange_juice_1": [
+     13.76,
+     -0.289,
+     0.07
+    ],
+    "milk_1": [
+     100.0,
+     -0.121,
+     0.07
+    ],
+    "butter_1": [
+     0.07,
+     0.103,
+     0.445
+    ],
+    "basket_1": [
+     -0.002,
+     0.269,
+     0.432
+    ],
+    "moka_pot_small_obstacle_1": [
+     -10.0,
+     0.0,
+     0.066
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     20.0,
+     0.0,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     0.02,
+     -0.15,
+     0.514
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     0.02,
+     -0.15,
+     0.439
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.044,
+    -0.003,
+    0.703
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "alphabet_soup_1": [
+     0.132,
+     -0.146,
+     0.475
+    ],
+    "cream_cheese_1": [
+     0.089,
+     -14.261,
+     0.009
+    ],
+    "tomato_sauce_1": [
+     -0.155,
+     0.09,
+     0.475
+    ],
+    "ketchup_1": [
+     -0.261,
+     -0.126,
+     0.509
+    ],
+    "orange_juice_1": [
+     13.737,
+     -0.281,
+     0.07
+    ],
+    "milk_1": [
+     100.0,
+     -0.101,
+     0.07
+    ],
+    "butter_1": [
+     0.025,
+     0.115,
+     0.445
+    ],
+    "basket_1": [
+     0.005,
+     0.256,
+     0.432
+    ],
+    "moka_pot_small_obstacle_1": [
+     -10.0,
+     0.0,
+     0.066
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     20.0,
+     0.0,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     0.02,
+     -0.15,
+     0.514
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     0.02,
+     -0.15,
+     0.439
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.056,
+    0.003,
+    0.686
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_long/I/2": {
+  "lang": "put the white mug on the left plate and put the yellow and white mug on the right plate",
+  "bddl": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "plate_1",
+   "plate_2",
+   "white_yellow_mug_1",
+   "porcelain_mug_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 7,
+  "ep0": {
+   "pos": {
+    "porcelain_mug_1": [
+     -0.117,
+     -0.156,
+     0.434
+    ],
+    "chocolate_pudding_1": [
+     -0.302,
+     -0.082,
+     0.45
+    ],
+    "white_yellow_mug_1": [
+     -0.028,
+     0.078,
+     0.437
+    ],
+    "plate_1": [
+     -0.004,
+     -0.323,
+     0.439
+    ],
+    "plate_2": [
+     0.005,
+     0.311,
+     0.439
+    ],
+    "moka_pot_small_obstacle_1": [
+     -0.05,
+     -0.05,
+     0.503
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     0.0,
+     -10.0,
+     0.07
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     20.0,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.053,
+    -0.011,
+    0.687
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "porcelain_mug_1": [
+     -0.125,
+     -0.163,
+     0.434
+    ],
+    "chocolate_pudding_1": [
+     -0.309,
+     -0.08,
+     0.45
+    ],
+    "white_yellow_mug_1": [
+     -0.028,
+     0.103,
+     0.437
+    ],
+    "plate_1": [
+     0.004,
+     -0.275,
+     0.439
+    ],
+    "plate_2": [
+     -0.008,
+     0.276,
+     0.439
+    ],
+    "moka_pot_small_obstacle_1": [
+     -10.0,
+     -0.0,
+     0.066
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     0.0,
+     -10.0,
+     0.07
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -0.05,
+     -0.05,
+     0.435
+    ],
+    "box_small_base_1": [
+     -0.0,
+     20.0,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.073,
+    0.003,
+    0.668
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_long/I/3": {
+  "lang": "put the white mug on the plate and put the chocolate pudding to the right of the plate",
+  "bddl": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "plate_1",
+   "chocolate_pudding_1",
+   "porcelain_mug_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 8,
+  "ep0": {
+   "pos": {
+    "porcelain_mug_1": [
+     -0.139,
+     -0.136,
+     0.434
+    ],
+    "akita_black_bowl_1": [
+     -0.221,
+     0.021,
+     0.435
+    ],
+    "plate_1": [
+     0.149,
+     0.006,
+     0.439
+    ],
+    "chocolate_pudding_1": [
+     -0.04,
+     0.197,
+     0.45
+    ],
+    "moka_pot_small_obstacle_1": [
+     -0.05,
+     -0.06,
+     0.503
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     0.0,
+     -10.0,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     -0.02,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.053,
+    -0.008,
+    0.696
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "porcelain_mug_1": [
+     -0.109,
+     -0.149,
+     0.434
+    ],
+    "akita_black_bowl_1": [
+     -0.194,
+     0.025,
+     0.435
+    ],
+    "plate_1": [
+     0.149,
+     -0.016,
+     0.439
+    ],
+    "chocolate_pudding_1": [
+     -0.03,
+     0.197,
+     0.45
+    ],
+    "moka_pot_small_obstacle_1": [
+     -10.0,
+     -0.01,
+     0.066
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     -20.0,
+     0.0,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -0.05,
+     -0.04,
+     0.435
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.056,
+    -0.018,
+    0.683
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ },
+ "safelibero_long/II/0": {
+  "lang": "put both the alphabet soup and the cream cheese box in the basket",
+  "bddl": "LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "alphabet_soup_1",
+   "cream_cheese_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 4,
+  "ep0": {
+   "pos": {
+    "alphabet_soup_1": [
+     0.042,
+     -0.1,
+     0.475
+    ],
+    "cream_cheese_1": [
+     -0.14,
+     -0.008,
+     0.446
+    ],
+    "tomato_sauce_1": [
+     0.106,
+     -0.183,
+     0.475
+    ],
+    "ketchup_1": [
+     -0.197,
+     -0.157,
+     0.509
+    ],
+    "basket_1": [
+     -0.0,
+     0.267,
+     0.432
+    ],
+    "moka_pot_small_obstacle_1": [
+     0.001,
+     0.1,
+     0.579
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     0.0,
+     -10.0,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.1,
+     0.439
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.066,
+    0.011,
+    0.668
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "alphabet_soup_1": [
+     0.041,
+     -0.095,
+     0.475
+    ],
+    "cream_cheese_1": [
+     -0.147,
+     0.015,
+     0.446
+    ],
+    "tomato_sauce_1": [
+     0.1,
+     -0.194,
+     0.475
+    ],
+    "ketchup_1": [
+     -0.193,
+     -0.166,
+     0.509
+    ],
+    "basket_1": [
+     -0.002,
+     0.268,
+     0.432
+    ],
+    "moka_pot_small_obstacle_1": [
+     0.051,
+     0.1,
+     0.579
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     0.0,
+     -10.0,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     0.05,
+     0.1,
+     0.439
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.052,
+    -0.0,
+    0.689
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_long/II/1": {
+  "lang": "put both the alphabet soup and the tomato sauce in the basket",
+  "bddl": "LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "alphabet_soup_1",
+   "tomato_sauce_1",
+   "basket_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 5,
+  "ep0": {
+   "pos": {
+    "alphabet_soup_1": [
+     -0.1,
+     -0.152,
+     0.475
+    ],
+    "cream_cheese_1": [
+     0.079,
+     -0.194,
+     0.446
+    ],
+    "tomato_sauce_1": [
+     -0.217,
+     0.006,
+     0.475
+    ],
+    "ketchup_1": [
+     -0.268,
+     -0.149,
+     0.509
+    ],
+    "orange_juice_1": [
+     0.01,
+     -0.259,
+     0.507
+    ],
+    "milk_1": [
+     100.0,
+     -0.121,
+     0.07
+    ],
+    "butter_1": [
+     0.07,
+     -0.027,
+     0.445
+    ],
+    "basket_1": [
+     -0.002,
+     0.269,
+     0.432
+    ],
+    "moka_pot_small_obstacle_1": [
+     -0.0,
+     0.07,
+     0.579
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     0.0,
+     -10.03,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     9.97,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.03,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     -0.03,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.07,
+     0.439
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.044,
+    -0.003,
+    0.703
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "alphabet_soup_1": [
+     -0.104,
+     -0.146,
+     0.475
+    ],
+    "cream_cheese_1": [
+     0.089,
+     -0.211,
+     0.446
+    ],
+    "tomato_sauce_1": [
+     -0.205,
+     -0.01,
+     0.475
+    ],
+    "ketchup_1": [
+     -0.261,
+     -0.126,
+     0.509
+    ],
+    "orange_juice_1": [
+     -0.013,
+     -0.251,
+     0.507
+    ],
+    "milk_1": [
+     100.0,
+     -0.101,
+     0.07
+    ],
+    "butter_1": [
+     0.025,
+     -0.015,
+     0.445
+    ],
+    "basket_1": [
+     0.005,
+     0.256,
+     0.432
+    ],
+    "moka_pot_small_obstacle_1": [
+     -10.0,
+     -0.03,
+     0.066
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     -0.0,
+     0.07,
+     0.582
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.0,
+     9.97,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     -0.03,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     -0.03,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     0.07,
+     0.439
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.056,
+    0.003,
+    0.686
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_long/II/2": {
+  "lang": "put the white mug on the left plate and put the yellow and white mug on the right plate",
+  "bddl": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "plate_1",
+   "plate_2",
+   "white_yellow_mug_1",
+   "porcelain_mug_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 7,
+  "ep0": {
+   "pos": {
+    "porcelain_mug_1": [
+     -0.087,
+     -0.156,
+     0.434
+    ],
+    "chocolate_pudding_1": [
+     -0.252,
+     0.018,
+     0.45
+    ],
+    "white_yellow_mug_1": [
+     -0.138,
+     0.078,
+     0.437
+    ],
+    "plate_1": [
+     -0.004,
+     -0.323,
+     0.439
+    ],
+    "plate_2": [
+     0.005,
+     0.311,
+     0.439
+    ],
+    "moka_pot_small_obstacle_1": [
+     -0.1,
+     0.25,
+     0.503
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     0.0,
+     -10.0,
+     0.07
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.0,
+     0.0,
+     -0.002
+    ],
+    "box_small_base_1": [
+     -0.0,
+     20.0,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.053,
+    -0.011,
+    0.687
+   ],
+   "box_base": null
+  },
+  "ep25": {
+   "pos": {
+    "porcelain_mug_1": [
+     -0.095,
+     -0.163,
+     0.434
+    ],
+    "chocolate_pudding_1": [
+     -0.259,
+     0.02,
+     0.45
+    ],
+    "white_yellow_mug_1": [
+     -0.138,
+     0.103,
+     0.437
+    ],
+    "plate_1": [
+     0.004,
+     -0.275,
+     0.439
+    ],
+    "plate_2": [
+     -0.008,
+     0.276,
+     0.439
+    ],
+    "moka_pot_small_obstacle_1": [
+     -10.0,
+     -0.0,
+     0.066
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     0.0,
+     -10.0,
+     0.07
+    ],
+    "wine_bottle_obstacle_1": [
+     -0.0,
+     10.0,
+     -0.002
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -0.1,
+     0.25,
+     0.435
+    ],
+    "box_small_base_1": [
+     -0.0,
+     20.0,
+     0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.073,
+    0.003,
+    0.668
+   ],
+   "box_base": null
+  }
+ },
+ "safelibero_long/II/3": {
+  "lang": "put the white mug on the plate and put the chocolate pudding to the right of the plate",
+  "bddl": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate.bddl",
+  "n_init": 50,
+  "obj_of_interest": [
+   "plate_1",
+   "chocolate_pudding_1",
+   "porcelain_mug_1"
+  ],
+  "demo_match": true,
+  "demo_idx": 8,
+  "ep0": {
+   "pos": {
+    "porcelain_mug_1": [
+     -0.094,
+     -0.136,
+     0.434
+    ],
+    "akita_black_bowl_1": [
+     -0.221,
+     -0.029,
+     0.435
+    ],
+    "plate_1": [
+     0.149,
+     0.006,
+     0.439
+    ],
+    "chocolate_pudding_1": [
+     -0.21,
+     0.117,
+     0.45
+    ],
+    "moka_pot_small_obstacle_1": [
+     -0.03,
+     0.2,
+     0.503
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     -0.08,
+     -9.7,
+     0.07
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.08,
+     10.3,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.08,
+     0.3,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.053,
+    -0.008,
+    0.696
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  },
+  "ep25": {
+   "pos": {
+    "porcelain_mug_1": [
+     -0.084,
+     -0.149,
+     0.434
+    ],
+    "akita_black_bowl_1": [
+     -0.194,
+     -0.025,
+     0.435
+    ],
+    "plate_1": [
+     0.149,
+     -0.016,
+     0.439
+    ],
+    "chocolate_pudding_1": [
+     -0.2,
+     0.117,
+     0.45
+    ],
+    "moka_pot_small_obstacle_1": [
+     -10.08,
+     0.3,
+     0.066
+    ],
+    "white_storage_box_obstacle_1": [
+     10.0,
+     -0.0,
+     0.058
+    ],
+    "milk_small_obstacle_1": [
+     -0.03,
+     0.2,
+     0.507
+    ],
+    "wine_bottle_small_obstacle_1": [
+     -0.08,
+     10.3,
+     -0.001
+    ],
+    "red_coffee_mug_obstacle_1": [
+     20.0,
+     0.0,
+     0.002
+    ],
+    "yellow_book_obstacle_1": [
+     -20.08,
+     0.3,
+     -0.002
+    ],
+    "box_base_1": [
+     0.0,
+     20.0,
+     -0.002
+    ]
+   },
+   "obstacles": [
+    "moka_pot_small_obstacle_1",
+    "white_storage_box_obstacle_1",
+    "milk_small_obstacle_1",
+    "wine_bottle_small_obstacle_1",
+    "red_coffee_mug_obstacle_1",
+    "yellow_book_obstacle_1"
+   ],
+   "eef": [
+    -0.056,
+    -0.018,
+    0.683
+   ],
+   "box_base": [
+    0.0,
+    20.0,
+    -0.002
+   ]
+  }
+ }
+}

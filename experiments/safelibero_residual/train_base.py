@@ -41,18 +41,28 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--no_pretrained", action="store_true")
     ap.add_argument("--save_every", type=int, default=20000)
+    ap.add_argument("--data_device", default="auto",
+                    help="cuda | cpu | auto. cpu keeps frames in pinned host memory and copies each batch "
+                         "(for 11 GB GPUs); the sampled batches and the recipe are identical.")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     torch.manual_seed(a.seed); np.random.seed(a.seed)
     dev = "cuda"
     meta = json.load(open(os.path.join(a.data, "meta.json")))
     L = lambda k: np.load(os.path.join(a.data, k + ".npy"), mmap_mode="r")  # noqa: E731
-    agent = torch.from_numpy(np.ascontiguousarray(L("agent"))).to(dev)
-    wrist = torch.from_numpy(np.ascontiguousarray(L("wrist"))).to(dev)
+    img_bytes = 2 * np.prod(L("agent").shape)
+    ddev = a.data_device
+    if ddev == "auto":
+        ddev = "cuda" if img_bytes < 0.4 * torch.cuda.get_device_properties(0).total_memory else "cpu"
+    print(f"image data {img_bytes / 1e9:.1f} GB on {ddev}", flush=True)
+    put = (lambda x: x.to(dev)) if ddev == "cuda" else (lambda x: x.pin_memory())  # noqa: E731
+    agent = put(torch.from_numpy(np.ascontiguousarray(L("agent"))))
+    wrist = put(torch.from_numpy(np.ascontiguousarray(L("wrist"))))
     prop = torch.from_numpy(np.ascontiguousarray(L("prop"))).to(dev)
     act = torch.from_numpy(np.ascontiguousarray(L("act"))).to(dev)
     task = torch.from_numpy(np.ascontiguousarray(L("task")).astype(np.int64)).to(dev)
     cidx = torch.from_numpy(build_chunk_index(np.asarray(L("ep")))).to(dev)
+    img = (lambda x, i: x[i]) if ddev == "cuda" else (lambda x, i: x[i.cpu()].to(dev, non_blocking=True))  # noqa: E731
     N = len(act)
     amin, amax = torch.tensor(meta["act_min"], device=dev), torch.tensor(meta["act_max"], device=dev)
     pm, ps = torch.tensor(meta["prop_mean"], device=dev), torch.tensor(meta["prop_std"], device=dev)
@@ -72,7 +82,7 @@ def main():
     for step in range(1, a.steps + 1):
         i = torch.randint(0, N, (a.bs,), device=dev)
         with torch.autocast("cuda", dtype=torch.float16):
-            loss = model.loss(agent[i], wrist[i], (prop[i] - pm) / ps, task[i], norm_a(act[cidx[i]]))
+            loss = model.loss(img(agent, i), img(wrist, i), (prop[i] - pm) / ps, task[i], norm_a(act[cidx[i]]))
         opt.zero_grad(set_to_none=True)
         scaler.scale(loss).backward()
         scaler.unscale_(opt)

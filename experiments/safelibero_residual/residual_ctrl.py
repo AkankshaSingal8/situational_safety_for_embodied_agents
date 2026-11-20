@@ -3,18 +3,19 @@ import numpy as np
 import torch
 
 import texts as TX
-from controllers import BaseRunner
+from controllers import make_runner
 from policy import ResidualFlow, ResidualFlowImg
 
 
 class ResidualController:
     def __init__(self, cfg):
-        self.r = BaseRunner(cfg["ckpt"], cfg["device"], cfg["flow_steps"])
+        self.r = make_runner(cfg)
         ck = torch.load(cfg["residual"], map_location="cpu")
         self.variant, self.scale = ck["variant"], ck["scale"]
         self.img = self.variant.endswith("_img")
         cls = ResidualFlowImg if self.img else ResidualFlow
-        self.m = cls(feat_dim=ck["feat_dim"], text_dim=768 if self.variant.startswith("text") else 0)
+        self.m = cls(feat_dim=ck["feat_dim"], text_dim=768 if self.variant.startswith("text") else 0,
+                     horizon=ck.get("horizon", 16))
         self.m.load_state_dict(ck["model"]); self.m.eval().to(cfg["device"])
         self.bank = TX.TextBank()
         self.k, self.fs, self.dev = cfg["exec_steps"], cfg["flow_steps"], cfg["device"]

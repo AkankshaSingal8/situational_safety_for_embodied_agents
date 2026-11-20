@@ -1,0 +1,64 @@
+0|wooden block tower|toy
+1|wooden construction toy|toy
+2|boy doll|doll
+3|toy floor lamp|toy
+4|toy refrigerator|toy
+5|toy kitchen sink|toy
+6|purple toy sofa|toy
+7|yellow toy chair|toy
+8|purple toy table|toy
+9|white tape roll|tape roll
+10|green tape roll|tape roll
+11|green ramekin|bowl
+12|white supplement bottle|bottle
+13|red patterned mug|mug
+14|blue high-top sneaker|shoe
+15|black and orange sneaker|shoe
+16|yellow running shoe|shoe
+17|white golf shoe|shoe
+18|white and blue golf shoe|shoe
+19|white and pink sneaker|shoe
+20|white and blue sneaker|shoe
+21|toy vegetable tray|toy
+22|red toy airplane|toy
+23|yellow label supplement bottle|bottle
+24|silver robot figure|toy
+25|orange robot figure|toy
+26|panda robot figure|toy
+27|green robot figure|toy
+28|card game box|box
+29|white refill box|box
+30|steel milk frother|kitchen appliance
+31|black motherboard box|box
+32|black computer part box|box
+33|snake print ballet flat|shoe
+34|rainbow toy car|toy
+35|toy bagel plate|toy
+36|toy cactus|toy
+37|wooden toy bathroom set|toy
+38|toy bathtub set|toy
+39|toy bedroom set|toy
+40|white utensil holder|container
+41|white ramekin|bowl
+42|bird rattle toy|toy
+43|toy breakfast tray|toy
+44|toy zoo block set|toy
+45|bunny toy car|toy
+46|wooden bunny rattle|toy
+47|stacking cups toy|toy
+48|blue board game box|box
+49|video game cartridge|video game
+50|blue supplement bottle|bottle
+51|purple supplement bottle|bottle
+52|aqua dotted pencil case|pencil case
+53|pink dotted pencil case|pencil case
+54|black handheld game console|game console
+55|syrup box|box
+56|fruit snacks box|box
+57|green fruit snacks box|box
+58|blender box|box
+59|purple label supplement bottle|bottle
+60|blue handheld game console|game console
+61|orange label supplement bottle|bottle
+62|toy horse|toy
+63|blue ink cartridge box|box

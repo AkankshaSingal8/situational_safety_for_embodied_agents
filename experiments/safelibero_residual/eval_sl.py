@@ -23,19 +23,26 @@ def naming(mode, present, ep):
     true[_K]: the (first) obstacle in the scene, training wording K (default 0)
     held    : the same object, a held-out wording/noun (cycled by episode)
     wrong   : an obstacle type that is NOT in the scene, training wording
+    seennoun: novel scenes only, names the seen object the look-alike replaced
     none    : no safety sentence"""
+    import sl_env
     import texts as T
     if mode in ("", "none") or not present and mode != "wrong":
         return [], T.NULL
     obj = present[0]
+    co = sl_env.canon(obj)  # texts are keyed by canonical type ('_small_' variants share the noun)
     if mode.startswith("true"):
         k = int(mode.split("_")[1]) if "_" in mode else 0
-        return [obj], T.train_texts(obj)[k]
+        return [obj], T.train_texts(co)[k]
+    if mode == "seennoun":   # novel scenes: name the training object the look-alike replaced ("red coffee mug")
+        from novel_objects import SEEN_OF
+        return [obj], T.train_texts(SEEN_OF.get(co, co))[0]
     if mode == "held":
-        h = T.held_texts(obj)
+        h = T.held_texts(co)
         return [obj], h[ep % len(h)]
     if mode == "wrong":
-        absent = [o for o in T.OBJ if o not in present]
+        pc = {sl_env.canon(p) for p in present}
+        absent = [o for o in T.OBJ if o not in pc]
         w = absent[ep % len(absent)]
         return [w], T.train_texts(w)[0]
     raise ValueError(mode)
@@ -46,7 +53,11 @@ def worker(args):
     import torch
     torch.set_num_threads(1)
     import sl_env
+    sl_env.set_suite(cfg.get("suite", "safelibero_spatial"))
     sl_env.ENV_SEED, sl_env.SETTLE = cfg.get("env_seed", 0), cfg.get("settle", 10)
+    if cfg.get("novel"):  # novel-obstacle envs (novel_objects.py): unseen look-alike obstacles, official init states
+        import novel_objects
+        novel_objects.enable()
     from controllers import make_controller
     ctrl = make_controller(cfg)
     out = open(os.path.join(cfg["out"], f"part_{wid}.jsonl"), "a")
@@ -62,15 +73,25 @@ def worker(args):
             lv, t = m["level"], m["task"]
             key = dict(level=lv, task=t, ep=e, scene=e, layout=m["layout"])
         try:
-            if (lv, t) not in envs:
+            gso = scenes[1][e].get("gso") if job[0] != "off" else None   # GSO scenes: one env per object
+            ekey = (lv, t, gso)
+            if ekey not in envs:
                 for v in envs.values():
                     v[0].close()
-                envs = {(lv, t): sl_env.make_env(lv, t, cfg["res"])}
-            env, lang, inits = envs[(lv, t)]
+                if gso:
+                    import gso_objects
+                    gso_objects.ensure_local()
+                    envs = {ekey: gso_objects.make_env(lv, t, gso, cfg["res"])}
+                else:
+                    envs = {ekey: sl_env.make_env(lv, t, cfg["res"])}
+            if gso:
+                import gso_objects
+                gso_objects.select(gso)     # the sentence names this object's noun
+            env, lang, inits = envs[ekey]
             init = inits[e] if job[0] == "off" else scenes[0][e]
             order = None if job[0] == "off" else scenes[1][e]["obstacles"]
             rec = run_episode(env, lang, init, ctrl, cfg, e, order)
-            rec.update(key, arm=cfg["arm"], text_mode=cfg.get("text_mode"))
+            rec.update(key, suite=sl_env.SUITE, arm=cfg["arm"], text_mode=cfg.get("text_mode"))
         except Exception as ex:  # an env crash is logged and scored as a failure, never silently dropped
             rec = dict(key, arm=cfg["arm"], error=repr(ex), tb=traceback.format_exc()[-800:], success=False, collide=None)
         out.write(json.dumps(rec) + "\n"); out.flush()
@@ -106,12 +127,15 @@ def run_episode(env, lang, init_state, ctrl, cfg, ep, order=None):
         sup = sl_env.support_of(env.sim, obs, n)
         obs_ids[n] = set(sl_env.body_tree_ids(env.sim, n)) | (set(sl_env.body_tree_ids(env.sim, sup)) if sup else set())
     m = env.sim.model
-    robot_ids = {i for i in range(m.nbody) if (m.body_id2name(i) or "").startswith(("robot0", "gripper0", "akita_black_bowl_1"))}
+    held = tuple(getattr(env, "ooi", [])[:1]) or ("akita_black_bowl_1",)  # the manipulated object counts as robot
+    robot_ids = {i for i in range(m.nbody) if (m.body_id2name(i) or "").startswith(("robot0", "gripper0") + held)}
     while t < sl_env.MAX_STEPS:
         if not queue:
             queue = list(ctrl.act_chunk(env, obs))
         a = queue.pop(0)
-        obs, _, done, _ = env.step(a.tolist())
+        if hasattr(ctrl, "step_filter"):  # per-step safety layer (safety_filter.FilterController)
+            a = ctrl.step_filter(env, obs, a)
+        obs, _, done, _ = env.step(np.asarray(a).tolist())
         if t % 5 == 0:
             path.append(np.round(obs["robot0_eef_pos"], 3).tolist())
         for n in sl_env.collided(obs, init_pos, [n for n in act if n not in hits]):
@@ -158,6 +182,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--suite", default="safelibero_spatial")
+    ap.add_argument("--base", default="flow", choices=["flow", "pi05"])
+    ap.add_argument("--pi_port", type=int, default=8000)
     ap.add_argument("--arm", default="base")
     ap.add_argument("--levels", default="I,II")
     ap.add_argument("--tasks", default="0,1,2,3")
@@ -176,6 +203,9 @@ def main():
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--scenes", default="", help="npz from scenes.py; evaluates those instead of official init states")
     ap.add_argument("--scene_ids", default="", help="lo-hi subset of scene indices")
+    ap.add_argument("--novel", action="store_true", help="swap each obstacle for an unseen look-alike (novel_objects.py)")
+    ap.add_argument("--pg_port", type=int, default=8100, help="pg_server.py port (residual_pg arm)")
+    ap.add_argument("--ex_port", type=int, default=8200, help="res_server.py port (residual_ex arm)")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     lo, hi = map(int, a.eps.split("-")) if "-" in a.eps else (int(a.eps), int(a.eps))

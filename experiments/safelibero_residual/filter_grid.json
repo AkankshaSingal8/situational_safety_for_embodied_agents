@@ -1,0 +1,101 @@
+{
+ "default": {},
+ "nodetour": {
+  "detour": false
+ },
+ "nocbf": {
+  "cbf": false
+ },
+ "m1": {
+  "margin": 0.01,
+  "cbf_margin": 0.005
+ },
+ "m4": {
+  "margin": 0.04,
+  "cbf_margin": 0.02
+ },
+ "up": {
+  "mode": "up"
+ },
+ "side": {
+  "mode": "side",
+  "w_z": 1.0
+ },
+ "zone10": {
+  "zone_r": 0.1
+ },
+ "shield": {
+  "type": "shield"
+ },
+ "shield_nohold": {
+  "type": "shield",
+  "hold": false
+ },
+ "shield_h5": {
+  "type": "shield",
+  "horizon": 5
+ },
+ "shield_wide": {
+  "type": "shield",
+  "candidates": [
+   [
+    "up",
+    0.03
+   ],
+   [
+    "side",
+    0.03
+   ],
+   [
+    "up",
+    0.06
+   ],
+   [
+    "side",
+    0.06
+   ],
+   [
+    "auto",
+    0.1
+   ],
+   [
+    "up",
+    0.12
+   ]
+  ]
+ },
+ "shield_h7": {
+  "type": "shield",
+  "horizon": 7
+ },
+ "shield_wide_h7": {
+  "type": "shield",
+  "candidates": [
+   [
+    "up",
+    0.03
+   ],
+   [
+    "side",
+    0.03
+   ],
+   [
+    "up",
+    0.06
+   ],
+   [
+    "side",
+    0.06
+   ],
+   [
+    "auto",
+    0.1
+   ],
+   [
+    "up",
+    0.12
+   ]
+  ],
+  "horizon": 7
+ }
+}

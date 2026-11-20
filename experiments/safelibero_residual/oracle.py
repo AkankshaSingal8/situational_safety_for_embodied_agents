@@ -126,11 +126,12 @@ class Oracle:
 
     def reset(self, env, named):
         """named: list of object names the sentence asks to avoid (may be absent from the scene)."""
-        self.named = [n for n in named if n in sl_env.OBSTACLES]
+        self.named = [n for n in named if n in sl_env.OBSTACLES_ALL]
         self.boxes = None
 
     def boxes_now(self, env, obs):
-        present = [n for n in self.named if n + "_pos" in obs and sl_env.on_table(obs[n + "_pos"])]
+        scene = [sl_env.scene_name(obs, n) for n in self.named]
+        present = [n for n in scene if n and sl_env.on_table(obs[n + "_pos"])]
         boxes = []
         for n in present:
             boxes.append(sl_env.object_aabb(env.sim, n))
@@ -153,8 +154,8 @@ class OracleController:
     cfg['oracle_cfg'] is a JSON string overriding DEFAULT. Use --text_mode true for the real obstacle."""
 
     def __init__(self, cfg):
-        from controllers import BaseRunner
-        self.r = BaseRunner(cfg["ckpt"], cfg["device"], cfg["flow_steps"])
+        from controllers import make_runner
+        self.r = make_runner(cfg)
         self.k = cfg["exec_steps"]
         self.o = Oracle(json.loads(cfg["oracle_cfg"]) if cfg.get("oracle_cfg") else None)
 

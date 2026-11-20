@@ -145,13 +145,13 @@ def main():
     Rg = torch.from_numpy(Rtr.astype(np.int64)).to(dev)
     tdim = 768 if use_text else 0
     if img:
-        model = ResidualFlowImg(feat_dim=F.shape[1], text_dim=tdim).to(dev)
+        model = ResidualFlowImg(feat_dim=F.shape[1], text_dim=tdim, horizon=B.shape[1]).to(dev)
         model.init_from_base(torch.load(a.base_ckpt, map_location="cpu")["model"])
         enc = set(id(p) for p in model.encoder_params())
         groups = [{"params": [p for p in model.parameters() if id(p) not in enc], "lr": a.lr},
                   {"params": model.encoder_params(), "lr": a.lr * a.enc_lr_mult}]
     else:
-        model = ResidualFlow(feat_dim=F.shape[1], text_dim=tdim).to(dev)
+        model = ResidualFlow(feat_dim=F.shape[1], text_dim=tdim, horizon=B.shape[1]).to(dev)
         groups = [{"params": list(model.parameters()), "lr": a.lr}]
     if a.eval_only:
         model.load_state_dict(torch.load(a.eval_only, map_location="cpu")["model"])
@@ -218,7 +218,8 @@ def main():
             rec = dict(step=step, loss=round(run, 5), min=round((time.time() - t0) / 60, 1))
             print(rec, flush=True); log.write(json.dumps(rec) + "\n"); log.flush()
     if not a.eval_only:
-      torch.save(dict(model=ema.state_dict(), variant=a.variant, scale=scale, feat_dim=F.shape[1]),
+      torch.save(dict(model=ema.state_dict(), variant=a.variant, scale=scale, feat_dim=F.shape[1],
+                    horizon=int(B.shape[1])),
                os.path.join(a.out, "residual.pt"))
       print("saved", flush=True)
     # fit on training rows and on held-out-layout rows

@@ -20,7 +20,10 @@ import numpy as np
 
 
 def lang_from_file(path):
+    """LIBERO-10 files carry a scene prefix (LIVING_ROOM_SCENE1_...) that the task language does not."""
+    import re
     base = os.path.basename(path).replace("_demo.hdf5", "")
+    base = re.sub(r"^[A-Z_0-9]+SCENE[0-9]+_", "", base)
     return base.replace("_", " ")
 
 
