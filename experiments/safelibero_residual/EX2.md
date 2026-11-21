@@ -89,6 +89,15 @@ python make_tables.py --ex ex2_1gpu_bs64     # prints the 4 tables below
 
 ## Running on another machine
 
+`replicate_ex2_eval.sh` does everything on a plain GPU node with no SLURM. It clones the repo, builds both envs, downloads the checkpoints and meshes, runs both arms on all 4 tables, and prints the tables:
+
+```bash
+export GH_TOKEN=...   # only if the repo is private
+bash replicate_ex2_eval.sh          # or STEPS="eval tables" to rerun only the evals
+```
+
+The details below are what the script does.
+
 What the repo has and what you need to get:
 
 | item | where |
@@ -98,8 +107,9 @@ What the repo has and what you need to get:
 | Table 3 scenes (held-out layouts) | `eval_scenes/<suite>/scenes_newlayout.npz`; copy to `data_v2/<suite>/` |
 | Table 1 episodes | the official SafeLIBERO init states (ship with the benchmark) |
 | ex2 checkpoint | release `ex2-v1`, `best.pkl` |
+| base-policy files (pi0.5 runner reads action range and features) | release `ex2-v1`, `<suite>_ema_last.pt` -> `runs_scale/<suite>/base/ema_last.pt` |
 | pi0.5 checkpoints | openpi `pi05_libero` (base policy) and `pi05_base` (frozen ex2 backbone), downloaded by openpi on first use |
-| GSO meshes for Table 2 | Google Scanned Objects (public, CC-BY 4.0), packed as a tar of `models/<name>/{model.obj,texture.png}`; set `TAR` in `gso_objects.py` |
+| GSO meshes for Table 2 | `git clone https://github.com/kevinzakka/mujoco_scanned_objects` then `tar cf gso_models.tar models` (Google Scanned Objects, CC-BY 4.0); set `TAR` in `gso_objects.py` |
 
 Paths to edit: 26 scripts hard-code `/home/asingal2/...` or `/data/asingal2/...` (envs, openpi checkout, cache, logs). Search for `asingal2` and replace those paths.
 
