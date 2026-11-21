@@ -87,6 +87,22 @@ python make_tables.py --ex ex2_1gpu_bs64     # prints the 4 tables below
 - `ARMS=true` gives the correct safety sentence. `none` and `wrong` are the control arms.
 - Outputs go to `runs_v2/<suite>/<test|scenes_newobj25|scenes_newlayout>/ex2_1gpu_bs64/true/`.
 
+## Running on another machine
+
+What the repo has and what you need to get:
+
+| item | where |
+|---|---|
+| code, configs, test object lists | this branch |
+| Table 2 scenes (25 new objects) | `eval_scenes/<suite>/scenes_newobj25.npz`; copy to `data_gso/<suite>/` |
+| Table 3 scenes (held-out layouts) | `eval_scenes/<suite>/scenes_newlayout.npz`; copy to `data_v2/<suite>/` |
+| Table 1 episodes | the official SafeLIBERO init states (ship with the benchmark) |
+| ex2 checkpoint | release `ex2-v1`, `best.pkl` |
+| pi0.5 checkpoints | openpi `pi05_libero` (base policy) and `pi05_base` (frozen ex2 backbone), downloaded by openpi on first use |
+| GSO meshes for Table 2 | Google Scanned Objects (public, CC-BY 4.0), packed as a tar of `models/<name>/{model.obj,texture.png}`; set `TAR` in `gso_objects.py` |
+
+Paths to edit: 26 scripts hard-code `/home/asingal2/...` or `/data/asingal2/...` (envs, openpi checkout, cache, logs). Search for `asingal2` and replace those paths.
+
 ## Results
 
 Each cell is **TSR / CAR / SR** in %:
