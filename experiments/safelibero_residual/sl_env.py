@@ -51,7 +51,8 @@ def make_env(level, task_id, res=128):
     for attempt in range(10):  # the constructor's random placement occasionally fails; init states override it
         try:
             env = OffScreenRenderEnv(bddl_file_name=bddl, camera_names=["agentview", "robot0_eye_in_hand"],
-                                     camera_heights=res, camera_widths=res, hard_reset=False)
+                                     camera_heights=res, camera_widths=res, hard_reset=False,
+                                     horizon=max(1000, MAX_STEPS + SETTLE + 50))   # robosuite default is 1000; longer only for --max_steps_mult
             break
         except RandomizationError:
             if attempt == 9:

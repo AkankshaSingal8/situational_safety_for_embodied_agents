@@ -1,0 +1,5942 @@
+{
+"11pro_SL_TRX_FG__rs": {
+"base": "11pro_SL_TRX_FG",
+"scale": 0.699,
+"lo": [
+-0.03432,
+-0.1017,
+-0.0
+],
+"hi": [
+0.03432,
+0.1017,
+0.08241
+],
+"size": [
+0.068,
+0.203,
+0.082
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"50_BLOCKS__rs": {
+"base": "50_BLOCKS",
+"scale": 0.6511,
+"lo": [
+-0.11576,
+-0.0472,
+0.0
+],
+"hi": [
+0.11589,
+0.04792,
+0.07201
+],
+"size": [
+0.232,
+0.095,
+0.072
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"60_CONSTRUCTION_SET__rs": {
+"base": "60_CONSTRUCTION_SET",
+"scale": 0.5244,
+"lo": [
+-0.05113,
+-0.08983,
+0.0
+],
+"hi": [
+0.03183,
+0.09036,
+0.11815
+],
+"size": [
+0.083,
+0.18,
+0.118
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ASICS_GEL1140V_WhiteBlackSilver__rs": {
+"base": "ASICS_GEL1140V_WhiteBlackSilver",
+"scale": 0.2689,
+"lo": [
+-0.01428,
+-0.03773,
+3e-05
+],
+"hi": [
+0.01428,
+0.03776,
+0.03311
+],
+"size": [
+0.029,
+0.076,
+0.033
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ASICS_GEL1140V_WhiteRoyalSilver__rs": {
+"base": "ASICS_GEL1140V_WhiteRoyalSilver",
+"scale": 0.3563,
+"lo": [
+-0.01881,
+-0.05002,
+-0.0
+],
+"hi": [
+0.01881,
+0.05002,
+0.04407
+],
+"size": [
+0.038,
+0.1,
+0.044
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ASICS_GELAce_Pro_Pearl_WhitePink__rs": {
+"base": "ASICS_GELAce_Pro_Pearl_WhitePink",
+"scale": 0.3225,
+"lo": [
+-0.01699,
+-0.04679,
+-0.0
+],
+"hi": [
+0.01699,
+0.04679,
+0.04308
+],
+"size": [
+0.034,
+0.094,
+0.043
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ASICS_GELDirt_Dog_4_SunFlameBlack__rs": {
+"base": "ASICS_GELDirt_Dog_4_SunFlameBlack",
+"scale": 0.7253,
+"lo": [
+-0.03764,
+-0.10314,
+-7e-05
+],
+"hi": [
+0.03757,
+0.10306,
+0.07949
+],
+"size": [
+0.075,
+0.206,
+0.08
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ASICS_GELLinksmaster_WhiteCoffeeSand__rs": {
+"base": "ASICS_GELLinksmaster_WhiteCoffeeSand",
+"scale": 0.832,
+"lo": [
+-0.04834,
+-0.12447,
+0.0
+],
+"hi": [
+0.04842,
+0.12447,
+0.11764
+],
+"size": [
+0.097,
+0.249,
+0.117
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ASICS_GELResolution_5_Flash_YellowBlackSilver__rs": {
+"base": "ASICS_GELResolution_5_Flash_YellowBlackSilver",
+"scale": 0.7178,
+"lo": [
+-0.04056,
+-0.10738,
+-0.0
+],
+"hi": [
+0.04048,
+0.10745,
+0.08204
+],
+"size": [
+0.081,
+0.215,
+0.082
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Adrenaline_GTS_13_Color_DrkDenimWhtBachlorBttnSlvr_Size_50_yfK40TNjq0V__rs": {
+"base": "Adrenaline_GTS_13_Color_DrkDenimWhtBachlorBttnSlvr_Size_50_yfK40TNjq0V",
+"scale": 0.2553,
+"lo": [
+-0.01427,
+-0.03677,
+-0.0
+],
+"hi": [
+0.01427,
+0.03679,
+0.03174
+],
+"size": [
+0.029,
+0.074,
+0.032
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Adrenaline_GTS_13_Color_WhtObsdianBlckOlmpcSlvr_Size_70__rs": {
+"base": "Adrenaline_GTS_13_Color_WhtObsdianBlckOlmpcSlvr_Size_70",
+"scale": 0.3707,
+"lo": [
+-0.02191,
+-0.05686,
+-0.0
+],
+"hi": [
+0.02191,
+0.05686,
+0.04841
+],
+"size": [
+0.044,
+0.114,
+0.049
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Animal_Crossing_New_Leaf_Nintendo_3DS_Game__rs": {
+"base": "Animal_Crossing_New_Leaf_Nintendo_3DS_Game",
+"scale": 2.0297,
+"lo": [
+-0.13964,
+-0.12665,
+0.0
+],
+"hi": [
+0.13883,
+0.12685,
+0.03085
+],
+"size": [
+0.278,
+0.254,
+0.03
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Animal_Planet_Foam_2Headed_Dragon__rs": {
+"base": "Animal_Planet_Foam_2Headed_Dragon",
+"scale": 0.2093,
+"lo": [
+-0.01239,
+-0.04206,
+0.0
+],
+"hi": [
+0.01237,
+0.04204,
+0.04183
+],
+"size": [
+0.025,
+0.084,
+0.042
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Asus_80211ac_DualBand_Gigabit_Wireless_Router_RTAC68R__rs": {
+"base": "Asus_80211ac_DualBand_Gigabit_Wireless_Router_RTAC68R",
+"scale": 0.8726,
+"lo": [
+-0.13909,
+-0.04319,
+-0.0
+],
+"hi": [
+0.13909,
+0.04319,
+0.20838
+],
+"size": [
+0.278,
+0.086,
+0.209
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Asus_M5A99FX_PRO_R20_Motherboard_ATX_Socket_AM3__rs": {
+"base": "Asus_M5A99FX_PRO_R20_Motherboard_ATX_Socket_AM3",
+"scale": 0.7837,
+"lo": [
+-0.1315,
+-0.02931,
+-8e-05
+],
+"hi": [
+0.13072,
+0.02876,
+0.21003
+],
+"size": [
+0.263,
+0.058,
+0.21
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Asus_Sabertooth_990FX_20_Motherboard_ATX_Socket_AM3__rs": {
+"base": "Asus_Sabertooth_990FX_20_Motherboard_ATX_Socket_AM3",
+"scale": 0.3626,
+"lo": [
+-0.06353,
+-0.01555,
+-0.0
+],
+"hi": [
+0.06345,
+0.01512,
+0.10058
+],
+"size": [
+0.127,
+0.031,
+0.1
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Asus_X99Deluxe_Motherboard_ATX_LGA2011v3_Socket__rs": {
+"base": "Asus_X99Deluxe_Motherboard_ATX_LGA2011v3_Socket",
+"scale": 0.5016,
+"lo": [
+-0.08768,
+-0.02122,
+-5e-05
+],
+"hi": [
+0.08803,
+0.02252,
+0.13849
+],
+"size": [
+0.176,
+0.044,
+0.138
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Asus_Z87PRO_Motherboard_ATX_LGA1150_Socket__rs": {
+"base": "Asus_Z87PRO_Motherboard_ATX_LGA1150_Socket",
+"scale": 0.25,
+"lo": [
+-0.0417,
+-0.00968,
+0.0
+],
+"hi": [
+0.04185,
+0.01083,
+0.06735
+],
+"size": [
+0.084,
+0.021,
+0.067
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Asus_Z97AR_LGA_1150_Intel_ATX_Motherboard__rs": {
+"base": "Asus_Z97AR_LGA_1150_Intel_ATX_Motherboard",
+"scale": 0.6502,
+"lo": [
+-0.10871,
+-0.02334,
+7e-05
+],
+"hi": [
+0.10858,
+0.02393,
+0.17412
+],
+"size": [
+0.217,
+0.047,
+0.174
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Avengers_Gamma_Green_Smash_Fists__rs": {
+"base": "Avengers_Gamma_Green_Smash_Fists",
+"scale": 0.7537,
+"lo": [
+-0.13551,
+-0.04801,
+0.0
+],
+"hi": [
+0.13581,
+0.0453,
+0.1383
+],
+"size": [
+0.271,
+0.093,
+0.139
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Avengers_Thor_PLlrpYniaeB__rs": {
+"base": "Avengers_Thor_PLlrpYniaeB",
+"scale": 0.3541,
+"lo": [
+-0.04993,
+-0.04969,
+-4e-05
+],
+"hi": [
+0.05029,
+0.04979,
+0.04692
+],
+"size": [
+0.1,
+0.1,
+0.047
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"BAKING_UTENSILS__rs": {
+"base": "BAKING_UTENSILS",
+"scale": 0.718,
+"lo": [
+-0.11654,
+-0.09112,
+-7e-05
+],
+"hi": [
+0.11754,
+0.09148,
+0.02549
+],
+"size": [
+0.234,
+0.182,
+0.026
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"BEDROOM_CLASSIC__rs": {
+"base": "BEDROOM_CLASSIC",
+"scale": 0.3312,
+"lo": [
+-0.04429,
+-0.05237,
+0.0
+],
+"hi": [
+0.04468,
+0.05194,
+0.05094
+],
+"size": [
+0.089,
+0.104,
+0.051
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"BUILD_A_ROBOT__rs": {
+"base": "BUILD_A_ROBOT",
+"scale": 0.8001,
+"lo": [
+-0.11705,
+-0.05145,
+0.0
+],
+"hi": [
+0.11697,
+0.05161,
+0.10625
+],
+"size": [
+0.234,
+0.103,
+0.106
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Black_Decker_CM2035B_12Cup_Thermal_Coffeemaker__rs": {
+"base": "Black_Decker_CM2035B_12Cup_Thermal_Coffeemaker",
+"scale": 0.4588,
+"lo": [
+-0.06841,
+-0.07066,
+-5e-05
+],
+"hi": [
+0.0357,
+0.07782,
+0.15458
+],
+"size": [
+0.104,
+0.149,
+0.155
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Black_Decker_Stainless_Steel_Toaster_4_Slice__rs": {
+"base": "Black_Decker_Stainless_Steel_Toaster_4_Slice",
+"scale": 0.3735,
+"lo": [
+-0.05311,
+-0.06013,
+0.0
+],
+"hi": [
+0.05438,
+0.05875,
+0.07055
+],
+"size": [
+0.108,
+0.119,
+0.071
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Black_and_Decker_TR3500SD_2Slice_Toaster__rs": {
+"base": "Black_and_Decker_TR3500SD_2Slice_Toaster",
+"scale": 0.2025,
+"lo": [
+-0.01681,
+-0.02993,
+-0.0
+],
+"hi": [
+0.01715,
+0.02987,
+0.03861
+],
+"size": [
+0.034,
+0.06,
+0.039
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Bradshaw_International_11642_7_Qt_MP_Plastic_Bowl__rs": {
+"base": "Bradshaw_International_11642_7_Qt_MP_Plastic_Bowl",
+"scale": 0.901,
+"lo": [
+-0.12732,
+-0.1284,
+-0.0
+],
+"hi": [
+0.12741,
+0.12849,
+0.13921
+],
+"size": [
+0.255,
+0.257,
+0.139
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Brisk_Iced_Tea_Lemon_12_12_fl_oz_355_ml_cans_144_fl_oz_426_lt__rs": {
+"base": "Brisk_Iced_Tea_Lemon_12_12_fl_oz_355_ml_cans_144_fl_oz_426_lt",
+"scale": 0.6737,
+"lo": [
+-0.13602,
+-0.04803,
+-7e-05
+],
+"hi": [
+0.13534,
+0.04702,
+0.08724
+],
+"size": [
+0.271,
+0.095,
+0.088
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"CASTLE_BLOCKS__rs": {
+"base": "CASTLE_BLOCKS",
+"scale": 0.2978,
+"lo": [
+-0.04475,
+-0.02998,
+-0.0
+],
+"hi": [
+0.04529,
+0.03019,
+0.04225
+],
+"size": [
+0.09,
+0.06,
+0.042
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"CLIMACOOL_BOAT_BREEZE_IE6CyqSaDwN__rs": {
+"base": "CLIMACOOL_BOAT_BREEZE_IE6CyqSaDwN",
+"scale": 0.3082,
+"lo": [
+-0.01615,
+-0.04519,
+-0.0
+],
+"hi": [
+0.01615,
+0.04519,
+0.03566
+],
+"size": [
+0.032,
+0.09,
+0.036
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"CONE_SORTING_kg5fbARBwts__rs": {
+"base": "CONE_SORTING_kg5fbARBwts",
+"scale": 0.2879,
+"lo": [
+-0.05629,
+-0.01944,
+3e-05
+],
+"hi": [
+0.05629,
+0.01961,
+0.03878
+],
+"size": [
+0.113,
+0.039,
+0.039
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Calphalon_Kitchen_Essentials_12_Cast_Iron_Fry_Pan_Black__rs": {
+"base": "Calphalon_Kitchen_Essentials_12_Cast_Iron_Fry_Pan_Black",
+"scale": 0.3533,
+"lo": [
+-0.05695,
+-0.05717,
+-0.0
+],
+"hi": [
+0.05692,
+0.05717,
+0.05165
+],
+"size": [
+0.114,
+0.114,
+0.052
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Chefmate_8_Frypan__rs": {
+"base": "Chefmate_8_Frypan",
+"scale": 0.724,
+"lo": [
+-0.12858,
+-0.07196,
+-7e-05
+],
+"hi": [
+0.12894,
+0.07594,
+0.03975
+],
+"size": [
+0.258,
+0.148,
+0.04
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Closetmaid_Premium_Fabric_Cube_Red__rs": {
+"base": "Closetmaid_Premium_Fabric_Cube_Red",
+"scale": 0.6791,
+"lo": [
+-0.10914,
+-0.0946,
+-7e-05
+],
+"hi": [
+0.10927,
+0.09216,
+0.19634
+],
+"size": [
+0.219,
+0.187,
+0.196
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Clue_Board_Game_Classic_Edition__rs": {
+"base": "Clue_Board_Game_Classic_Edition",
+"scale": 0.4997,
+"lo": [
+-0.12413,
+-0.01424,
+-5e-05
+],
+"hi": [
+0.12418,
+0.01489,
+0.13008
+],
+"size": [
+0.248,
+0.029,
+0.13
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Cole_Hardware_Deep_Bowl_Good_Earth_1075__rs": {
+"base": "Cole_Hardware_Deep_Bowl_Good_Earth_1075",
+"scale": 0.6901,
+"lo": [
+-0.09786,
+-0.09807,
+-7e-05
+],
+"hi": [
+0.09793,
+0.09814,
+0.09089
+],
+"size": [
+0.196,
+0.196,
+0.091
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Cole_Hardware_Hammer_Black__rs": {
+"base": "Cole_Hardware_Hammer_Black",
+"scale": 0.8174,
+"lo": [
+-0.11966,
+-0.03171,
+-0.0
+],
+"hi": [
+0.11876,
+0.01733,
+0.07855
+],
+"size": [
+0.239,
+0.049,
+0.078
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Cole_Hardware_Mini_Honey_Dipper__rs": {
+"base": "Cole_Hardware_Mini_Honey_Dipper",
+"scale": 1.2261,
+"lo": [
+-0.01275,
+-0.01275,
+-0.0
+],
+"hi": [
+0.01275,
+0.01275,
+0.13549
+],
+"size": [
+0.026,
+0.026,
+0.135
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Cole_Hardware_Plant_Saucer_Brown_125__rs": {
+"base": "Cole_Hardware_Plant_Saucer_Brown_125",
+"scale": 0.6204,
+"lo": [
+-0.09635,
+-0.09604,
+0.0
+],
+"hi": [
+0.09641,
+0.09604,
+0.02841
+],
+"size": [
+0.193,
+0.192,
+0.029
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Cootie_Game__rs": {
+"base": "Cootie_Game",
+"scale": 0.8133,
+"lo": [
+-0.13688,
+-0.1054,
+-0.0
+],
+"hi": [
+0.14062,
+0.1098,
+0.07141
+],
+"size": [
+0.277,
+0.216,
+0.072
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Corningware_CW_by_Corningware_3qt_Oblong_Casserole_Dish_Blue__rs": {
+"base": "Corningware_CW_by_Corningware_3qt_Oblong_Casserole_Dish_Blue",
+"scale": 0.4603,
+"lo": [
+-0.0847,
+-0.0516,
+-5e-05
+],
+"hi": [
+0.08493,
+0.05114,
+0.03287
+],
+"size": [
+0.169,
+0.103,
+0.033
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Court_Attitude__rs": {
+"base": "Court_Attitude",
+"scale": 0.2349,
+"lo": [
+-0.01426,
+-0.03406,
+-2e-05
+],
+"hi": [
+0.01424,
+0.03409,
+0.04114
+],
+"size": [
+0.028,
+0.068,
+0.041
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Crazy_8__rs": {
+"base": "Crazy_8",
+"scale": 0.5054,
+"lo": [
+-0.03007,
+-0.07727,
+-0.0
+],
+"hi": [
+0.03002,
+0.07727,
+0.1081
+],
+"size": [
+0.06,
+0.155,
+0.108
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Crazy_Shadow_2_oW4Jd10HFFr__rs": {
+"base": "Crazy_Shadow_2_oW4Jd10HFFr",
+"scale": 0.4225,
+"lo": [
+-0.02451,
+-0.06253,
+-0.0
+],
+"hi": [
+0.02451,
+0.06257,
+0.07229
+],
+"size": [
+0.049,
+0.125,
+0.072
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Curver_Storage_Bin_Black_Small__rs": {
+"base": "Curver_Storage_Bin_Black_Small",
+"scale": 0.5776,
+"lo": [
+-0.08259,
+-0.05579,
+-6e-05
+],
+"hi": [
+0.08254,
+0.05579,
+0.0774
+],
+"size": [
+0.165,
+0.111,
+0.077
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"DANCING_ALLIGATOR_zoWBjc0jbTs__rs": {
+"base": "DANCING_ALLIGATOR_zoWBjc0jbTs",
+"scale": 0.394,
+"lo": [
+-0.02159,
+-0.06434,
+0.0
+],
+"hi": [
+0.01607,
+0.06264,
+0.03447
+],
+"size": [
+0.038,
+0.127,
+0.035
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"DPC_Handmade_Hat_Brown__rs": {
+"base": "DPC_Handmade_Hat_Brown",
+"scale": 0.2438,
+"lo": [
+-0.03871,
+-0.04298,
+2e-05
+],
+"hi": [
+0.03888,
+0.04329,
+0.03493
+],
+"size": [
+0.078,
+0.086,
+0.035
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"DPC_Thinsulate_Isolate_Gloves_Brown__rs": {
+"base": "DPC_Thinsulate_Isolate_Gloves_Brown",
+"scale": 0.6288,
+"lo": [
+-0.09357,
+-0.07993,
+-6e-05
+],
+"hi": [
+0.09577,
+0.08112,
+0.03314
+],
+"size": [
+0.189,
+0.161,
+0.033
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"DPC_tropical_Trends_Hat__rs": {
+"base": "DPC_tropical_Trends_Hat",
+"scale": 0.6154,
+"lo": [
+-0.11625,
+-0.12444,
+-6e-05
+],
+"hi": [
+0.11533,
+0.12413,
+0.10567
+],
+"size": [
+0.231,
+0.249,
+0.106
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"D_ROSE_45__rs": {
+"base": "D_ROSE_45",
+"scale": 0.7759,
+"lo": [
+-0.04493,
+-0.11593,
+-8e-05
+],
+"hi": [
+0.04493,
+0.11585,
+0.12982
+],
+"size": [
+0.09,
+0.232,
+0.13
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"D_ROSE_773_II_Kqclsph05pE__rs": {
+"base": "D_ROSE_773_II_Kqclsph05pE",
+"scale": 0.4288,
+"lo": [
+-0.02414,
+-0.06377,
+-0.0
+],
+"hi": [
+0.0241,
+0.06377,
+0.07363
+],
+"size": [
+0.048,
+0.127,
+0.074
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"D_ROSE_773_II_hvInJwJ5HUD__rs": {
+"base": "D_ROSE_773_II_hvInJwJ5HUD",
+"scale": 0.3375,
+"lo": [
+-0.01887,
+-0.05025,
+-3e-05
+],
+"hi": [
+0.01883,
+0.05029,
+0.05805
+],
+"size": [
+0.038,
+0.101,
+0.058
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"D_ROSE_ENGLEWOOD_II__rs": {
+"base": "D_ROSE_ENGLEWOOD_II",
+"scale": 0.543,
+"lo": [
+-0.03111,
+-0.08345,
+-5e-05
+],
+"hi": [
+0.031,
+0.08345,
+0.07303
+],
+"size": [
+0.062,
+0.167,
+0.073
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Design_Ideas_Drawer_Store_Organizer__rs": {
+"base": "Design_Ideas_Drawer_Store_Organizer",
+"scale": 0.8195,
+"lo": [
+-0.12579,
+-0.06236,
+-8e-05
+],
+"hi": [
+0.12588,
+0.06179,
+0.04655
+],
+"size": [
+0.252,
+0.125,
+0.047
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Diet_Pepsi_Soda_Cola12_Pack_12_oz_Cans__rs": {
+"base": "Diet_Pepsi_Soda_Cola12_Pack_12_oz_Cans",
+"scale": 0.5399,
+"lo": [
+-0.1097,
+-0.03509,
+0.0
+],
+"hi": [
+0.1097,
+0.03455,
+0.07488
+],
+"size": [
+0.219,
+0.07,
+0.075
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Dino_3__rs": {
+"base": "Dino_3",
+"scale": 0.5074,
+"lo": [
+-0.07342,
+-0.01811,
+-0.0
+],
+"hi": [
+0.07307,
+0.01664,
+0.06454
+],
+"size": [
+0.147,
+0.035,
+0.064
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ENFR_MID_ENFORCER__rs": {
+"base": "ENFR_MID_ENFORCER",
+"scale": 0.2513,
+"lo": [
+-0.01556,
+-0.03682,
+-0.0
+],
+"hi": [
+0.01558,
+0.03684,
+0.04096
+],
+"size": [
+0.031,
+0.074,
+0.041
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Ecoforms_Plant_Container_12_Pot_Nova__rs": {
+"base": "Ecoforms_Plant_Container_12_Pot_Nova",
+"scale": 0.7065,
+"lo": [
+-0.10492,
+-0.10506,
+-0.00014
+],
+"hi": [
+0.10499,
+0.10506,
+0.20256
+],
+"size": [
+0.21,
+0.21,
+0.203
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Ecoforms_Plant_Plate_S11Turquoise__rs": {
+"base": "Ecoforms_Plant_Plate_S11Turquoise",
+"scale": 1.5463,
+"lo": [
+-0.09123,
+-0.09138,
+-0.0
+],
+"hi": [
+0.09123,
+0.09138,
+0.03541
+],
+"size": [
+0.182,
+0.182,
+0.036
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Ecoforms_Plant_Saucer_SQ1HARVEST__rs": {
+"base": "Ecoforms_Plant_Saucer_SQ1HARVEST",
+"scale": 2.7965,
+"lo": [
+-0.12081,
+-0.12109,
+-0.0
+],
+"hi": [
+0.12109,
+0.12081,
+0.05845
+],
+"size": [
+0.24,
+0.24,
+0.059
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Ecoforms_Quadra_Saucer_SQ1_Avocado__rs": {
+"base": "Ecoforms_Quadra_Saucer_SQ1_Avocado",
+"scale": 2.8193,
+"lo": [
+-0.12292,
+-0.12264,
+0.0
+],
+"hi": [
+0.12264,
+0.12236,
+0.05892
+],
+"size": [
+0.245,
+0.245,
+0.059
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Envision_Home_Dish_Drying_Mat_Red_6_x_18__rs": {
+"base": "Envision_Home_Dish_Drying_Mat_Red_6_x_18",
+"scale": 0.6788,
+"lo": [
+-0.05478,
+-0.13909,
+-0.0
+],
+"hi": [
+0.05213,
+0.13916,
+0.02532
+],
+"size": [
+0.107,
+0.278,
+0.025
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"F10_TRX_FG_ssscuo9tGxb__rs": {
+"base": "F10_TRX_FG_ssscuo9tGxb",
+"scale": 0.4646,
+"lo": [
+-0.02188,
+-0.06565,
+-0.0
+],
+"hi": [
+0.02188,
+0.06561,
+0.05018
+],
+"size": [
+0.044,
+0.131,
+0.05
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"F10_TRX_TF_rH7tmKCdUJq__rs": {
+"base": "F10_TRX_TF_rH7tmKCdUJq",
+"scale": 0.5951,
+"lo": [
+-0.0294,
+-0.08617,
+-6e-05
+],
+"hi": [
+0.0294,
+0.08617,
+0.06302
+],
+"size": [
+0.059,
+0.173,
+0.063
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"F5_TRX_FG__rs": {
+"base": "F5_TRX_FG",
+"scale": 0.3891,
+"lo": [
+-0.01976,
+-0.05505,
+-0.0
+],
+"hi": [
+0.01976,
+0.05505,
+0.04611
+],
+"size": [
+0.04,
+0.11,
+0.046
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"FISHING_GAME__rs": {
+"base": "FISHING_GAME",
+"scale": 0.6268,
+"lo": [
+-0.12397,
+-0.08806,
+0.0
+],
+"hi": [
+0.12266,
+0.0885,
+0.03836
+],
+"size": [
+0.247,
+0.177,
+0.038
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"FRUIT_VEGGIE_DOMINO_GRADIENT__rs": {
+"base": "FRUIT_VEGGIE_DOMINO_GRADIENT",
+"scale": 0.5035,
+"lo": [
+-0.08801,
+-0.06893,
+0.0
+],
+"hi": [
+0.08706,
+0.06752,
+0.02789
+],
+"size": [
+0.175,
+0.136,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"FYW_ALTERNATION__rs": {
+"base": "FYW_ALTERNATION",
+"scale": 0.4548,
+"lo": [
+-0.02742,
+-0.06972,
+-5e-05
+],
+"hi": [
+0.02742,
+0.06972,
+0.08009
+],
+"size": [
+0.055,
+0.14,
+0.08
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"FYW_DIVISION__rs": {
+"base": "FYW_DIVISION",
+"scale": 0.2611,
+"lo": [
+-0.01583,
+-0.04001,
+-0.0
+],
+"hi": [
+0.01585,
+0.03998,
+0.04552
+],
+"size": [
+0.032,
+0.08,
+0.045
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Final_Fantasy_XIV_A_Realm_Reborn_60Day_Subscription__rs": {
+"base": "Final_Fantasy_XIV_A_Realm_Reborn_60Day_Subscription",
+"scale": 1.7406,
+"lo": [
+-0.11819,
+-0.01584,
+0.0
+],
+"hi": [
+0.11853,
+0.01567,
+0.33141
+],
+"size": [
+0.237,
+0.031,
+0.331
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Firefly_Clue_Board_Game__rs": {
+"base": "Firefly_Clue_Board_Game",
+"scale": 0.3482,
+"lo": [
+-0.07037,
+-0.01215,
+-3e-05
+],
+"hi": [
+0.07034,
+0.01219,
+0.09527
+],
+"size": [
+0.141,
+0.024,
+0.095
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Focus_8643_Lime_Squeezer_10x35x188_Enamelled_Aluminum_Light__rs": {
+"base": "Focus_8643_Lime_Squeezer_10x35x188_Enamelled_Aluminum_Light",
+"scale": 0.5852,
+"lo": [
+-0.09445,
+-0.02932,
+-6e-05
+],
+"hi": [
+0.10194,
+0.04003,
+0.03698
+],
+"size": [
+0.197,
+0.069,
+0.037
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"GEOMETRIC_SORTING_BOARD_MNi4Rbuz9vj__rs": {
+"base": "GEOMETRIC_SORTING_BOARD_MNi4Rbuz9vj",
+"scale": 0.5208,
+"lo": [
+-0.09443,
+-0.04563,
+-0.0
+],
+"hi": [
+0.09422,
+0.04531,
+0.03193
+],
+"size": [
+0.189,
+0.091,
+0.032
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Ghost_6_Color_BlckWhtLavaSlvrCitrus_Size_80__rs": {
+"base": "Ghost_6_Color_BlckWhtLavaSlvrCitrus_Size_80",
+"scale": 0.4682,
+"lo": [
+-0.0272,
+-0.0698,
+-0.0
+],
+"hi": [
+0.02711,
+0.0698,
+0.05735
+],
+"size": [
+0.054,
+0.14,
+0.057
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Ghost_6_Color_MdngtDenmPomBrtePnkSlvBlk_Size_50__rs": {
+"base": "Ghost_6_Color_MdngtDenmPomBrtePnkSlvBlk_Size_50",
+"scale": 0.2645,
+"lo": [
+-0.01513,
+-0.03758,
+-0.0
+],
+"hi": [
+0.01515,
+0.03756,
+0.02806
+],
+"size": [
+0.03,
+0.075,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Ghost_6_GTX_Color_AnthBlckSlvrFernSulphSprng_Size_80__rs": {
+"base": "Ghost_6_GTX_Color_AnthBlckSlvrFernSulphSprng_Size_80",
+"scale": 0.952,
+"lo": [
+-0.05388,
+-0.13823,
+-0.0001
+],
+"hi": [
+0.05398,
+0.13823,
+0.11776
+],
+"size": [
+0.108,
+0.276,
+0.118
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Gigabyte_GA970AUD3P_10_Motherboard_ATX_Socket_AM3__rs": {
+"base": "Gigabyte_GA970AUD3P_10_Motherboard_ATX_Socket_AM3",
+"scale": 0.5057,
+"lo": [
+-0.0847,
+-0.01922,
+-0.0
+],
+"hi": [
+0.0844,
+0.01967,
+0.13436
+],
+"size": [
+0.169,
+0.039,
+0.135
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Gigabyte_GAZ97XSLI_10_motherboard_ATX_LGA1150_Socket_Z97__rs": {
+"base": "Gigabyte_GAZ97XSLI_10_motherboard_ATX_LGA1150_Socket_Z97",
+"scale": 0.7708,
+"lo": [
+-0.12873,
+-0.03153,
+-8e-05
+],
+"hi": [
+0.12927,
+0.03214,
+0.20597
+],
+"size": [
+0.258,
+0.064,
+0.206
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Glycerin_11_Color_AqrsDrsdnBluBlkSlvShckOrng_Size_50__rs": {
+"base": "Glycerin_11_Color_AqrsDrsdnBluBlkSlvShckOrng_Size_50",
+"scale": 0.3977,
+"lo": [
+-0.02243,
+-0.05727,
+-0.0
+],
+"hi": [
+0.02243,
+0.05727,
+0.05151
+],
+"size": [
+0.045,
+0.115,
+0.052
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Glycerin_11_Color_BrllntBluSkydvrSlvrBlckWht_Size_80__rs": {
+"base": "Glycerin_11_Color_BrllntBluSkydvrSlvrBlckWht_Size_80",
+"scale": 0.4315,
+"lo": [
+-0.02585,
+-0.06584,
+0.0
+],
+"hi": [
+0.02585,
+0.06576,
+0.05868
+],
+"size": [
+0.052,
+0.132,
+0.059
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Google_Cardboard_Original_package__rs": {
+"base": "Google_Cardboard_Original_package",
+"scale": 1.2582,
+"lo": [
+-0.13475,
+-0.11135,
+-0.0
+],
+"hi": [
+0.13487,
+0.10908,
+0.02869
+],
+"size": [
+0.269,
+0.22,
+0.029
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Grand_Prix__rs": {
+"base": "Grand_Prix",
+"scale": 0.818,
+"lo": [
+-0.04368,
+-0.11657,
+-0.0
+],
+"hi": [
+0.04368,
+0.11657,
+0.09849
+],
+"size": [
+0.088,
+0.233,
+0.098
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Great_Jones_Wingtip__rs": {
+"base": "Great_Jones_Wingtip",
+"scale": 0.5023,
+"lo": [
+-0.02793,
+-0.07841,
+-5e-05
+],
+"hi": [
+0.02788,
+0.07836,
+0.05681
+],
+"size": [
+0.056,
+0.157,
+0.057
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Great_Jones_Wingtip_j5NV8GRnitM__rs": {
+"base": "Great_Jones_Wingtip_j5NV8GRnitM",
+"scale": 0.2246,
+"lo": [
+-0.0126,
+-0.03557,
+-0.0
+],
+"hi": [
+0.0126,
+0.03559,
+0.02627
+],
+"size": [
+0.025,
+0.071,
+0.026
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Great_Jones_Wingtip_kAqSg6EgG0I__rs": {
+"base": "Great_Jones_Wingtip_kAqSg6EgG0I",
+"scale": 0.7534,
+"lo": [
+-0.04189,
+-0.11761,
+-0.0
+],
+"hi": [
+0.04189,
+0.11754,
+0.08567
+],
+"size": [
+0.084,
+0.235,
+0.086
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Great_Jones_Wingtip_wxH3dbtlvBC__rs": {
+"base": "Great_Jones_Wingtip_wxH3dbtlvBC",
+"scale": 0.61,
+"lo": [
+-0.03404,
+-0.09663,
+0.0
+],
+"hi": [
+0.03404,
+0.09669,
+0.07229
+],
+"size": [
+0.068,
+0.193,
+0.072
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Grreat_Choice_Dog_Double_Dish_Plastic_Blue__rs": {
+"base": "Grreat_Choice_Dog_Double_Dish_Plastic_Blue",
+"scale": 0.6572,
+"lo": [
+-0.11099,
+-0.06204,
+-7e-05
+],
+"hi": [
+0.11119,
+0.06184,
+0.055
+],
+"size": [
+0.222,
+0.124,
+0.055
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Hasbro_Dont_Wake_Daddy_Board_Game__rs": {
+"base": "Hasbro_Dont_Wake_Daddy_Board_Game",
+"scale": 0.2341,
+"lo": [
+-0.04751,
+-0.01053,
+-2e-05
+],
+"hi": [
+0.04747,
+0.01072,
+0.06385
+],
+"size": [
+0.095,
+0.021,
+0.064
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Hasbro_Dont_Wake_Daddy_Board_Game_NJnjGna4u1a__rs": {
+"base": "Hasbro_Dont_Wake_Daddy_Board_Game_NJnjGna4u1a",
+"scale": 0.3875,
+"lo": [
+-0.09711,
+-0.07704,
+0.0
+],
+"hi": [
+0.09684,
+0.07618,
+0.03774
+],
+"size": [
+0.194,
+0.153,
+0.038
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Hasbro_Life_Board_Game__rs": {
+"base": "Hasbro_Life_Board_Game",
+"scale": 0.3091,
+"lo": [
+-0.0626,
+-0.0107,
+-0.0
+],
+"hi": [
+0.06257,
+0.01073,
+0.08415
+],
+"size": [
+0.125,
+0.021,
+0.084
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Imaginext_Castle_Ogre__rs": {
+"base": "Imaginext_Castle_Ogre",
+"scale": 0.2361,
+"lo": [
+-0.04707,
+-0.02255,
+-2e-05
+],
+"hi": [
+0.04632,
+0.02328,
+0.05597
+],
+"size": [
+0.093,
+0.046,
+0.056
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"In_Green_Company_Surface_Saver_Ring_10_Terra_Cotta__rs": {
+"base": "In_Green_Company_Surface_Saver_Ring_10_Terra_Cotta",
+"scale": 1.0744,
+"lo": [
+-0.13613,
+-0.13602,
+-0.0
+],
+"hi": [
+0.13624,
+0.13602,
+0.02611
+],
+"size": [
+0.273,
+0.272,
+0.026
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"InterDesign_Over_Door__rs": {
+"base": "InterDesign_Over_Door",
+"scale": 0.3518,
+"lo": [
+-0.03838,
+-0.05063,
+4e-05
+],
+"hi": [
+0.03729,
+0.05182,
+0.03416
+],
+"size": [
+0.076,
+0.102,
+0.034
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"JS_WINGS_20_BLACK_FLAG__rs": {
+"base": "JS_WINGS_20_BLACK_FLAG",
+"scale": 0.3761,
+"lo": [
+-0.02418,
+-0.06645,
+0.0
+],
+"hi": [
+0.02414,
+0.06652,
+0.06931
+],
+"size": [
+0.048,
+0.133,
+0.069
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Jansport_School_Backpack_Blue_Streak__rs": {
+"base": "Jansport_School_Backpack_Blue_Streak",
+"scale": 0.5292,
+"lo": [
+-0.08817,
+-0.09648,
+-5e-05
+],
+"hi": [
+0.10108,
+0.09897,
+0.23286
+],
+"size": [
+0.189,
+0.195,
+0.233
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Jawbone_UP24_Wireless_Activity_Tracker_Pink_Coral_L__rs": {
+"base": "Jawbone_UP24_Wireless_Activity_Tracker_Pink_Coral_L",
+"scale": 2.2126,
+"lo": [
+-0.08983,
+-0.06461,
+-0.0
+],
+"hi": [
+0.08983,
+0.06461,
+0.03363
+],
+"size": [
+0.179,
+0.128,
+0.033
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Kingston_DT4000MR_G2_Management_Ready_USB_64GB__rs": {
+"base": "Kingston_DT4000MR_G2_Management_Ready_USB_64GB",
+"scale": 3.415,
+"lo": [
+-0.13626,
+-0.03825,
+-0.0
+],
+"hi": [
+0.13524,
+0.03688,
+0.04405
+],
+"size": [
+0.273,
+0.075,
+0.044
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"LEGO_5887_Dino_Defense_HQ__rs": {
+"base": "LEGO_5887_Dino_Defense_HQ",
+"scale": 0.1535,
+"lo": [
+-0.03371,
+-0.02879,
+-2e-05
+],
+"hi": [
+0.03565,
+0.02453,
+0.04016
+],
+"size": [
+0.069,
+0.053,
+0.04
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"LEGO_Bricks_More_Creative_Suitcase__rs": {
+"base": "LEGO_Bricks_More_Creative_Suitcase",
+"scale": 0.5147,
+"lo": [
+-0.09866,
+-0.03824,
+0.0
+],
+"hi": [
+0.09748,
+0.03742,
+0.14606
+],
+"size": [
+0.196,
+0.076,
+0.146
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"LEGO_City_Advent_Calendar__rs": {
+"base": "LEGO_City_Advent_Calendar",
+"scale": 0.5446,
+"lo": [
+-0.10434,
+-0.01977,
+-0.0
+],
+"hi": [
+0.10451,
+0.01955,
+0.14263
+],
+"size": [
+0.209,
+0.039,
+0.143
+],
+"n_coll": 1,
+"split": "train",
+"ok": true
+},
+"LEGO_Creationary_Game__rs": {
+"base": "LEGO_Creationary_Game",
+"scale": 0.4,
+"lo": [
+-0.0564,
+-0.04224,
+0.0
+],
+"hi": [
+0.0566,
+0.0422,
+0.02772
+],
+"size": [
+0.113,
+0.084,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"LEGO_Creationary_Game_ZJa163wlWp2__rs": {
+"base": "LEGO_Creationary_Game_ZJa163wlWp2",
+"scale": 0.4821,
+"lo": [
+-0.105,
+-0.01817,
+0.0
+],
+"hi": [
+0.10504,
+0.01817,
+0.13262
+],
+"size": [
+0.21,
+0.036,
+0.133
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"LEGO_Duplo_Build_and_Play_Box_4629__rs": {
+"base": "LEGO_Duplo_Build_and_Play_Box_4629",
+"scale": 0.3783,
+"lo": [
+-0.08137,
+-0.04589,
+-0.0
+],
+"hi": [
+0.08493,
+0.04638,
+0.08209
+],
+"size": [
+0.166,
+0.092,
+0.082
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"LEGO_Duplo_Creative_Animals_10573__rs": {
+"base": "LEGO_Duplo_Creative_Animals_10573",
+"scale": 0.345,
+"lo": [
+-0.06827,
+-0.0256,
+-0.0
+],
+"hi": [
+0.06603,
+0.0256,
+0.05509
+],
+"size": [
+0.134,
+0.051,
+0.055
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"LEGO_Fusion_Set_Town_Master__rs": {
+"base": "LEGO_Fusion_Set_Town_Master",
+"scale": 0.6538,
+"lo": [
+-0.11566,
+-0.02014,
+-0.0
+],
+"hi": [
+0.11553,
+0.02001,
+0.12723
+],
+"size": [
+0.231,
+0.04,
+0.127
+],
+"n_coll": 1,
+"split": "train",
+"ok": true
+},
+"Lego_Friends_Advent_Calendar__rs": {
+"base": "Lego_Friends_Advent_Calendar",
+"scale": 0.2759,
+"lo": [
+-0.05312,
+-0.01035,
+-3e-05
+],
+"hi": [
+0.05312,
+0.0104,
+0.07268
+],
+"size": [
+0.106,
+0.021,
+0.073
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Lenovo_Yoga_2_11__rs": {
+"base": "Lenovo_Yoga_2_11",
+"scale": 0.5411,
+"lo": [
+-0.08117,
+-0.08647,
+-0.0
+],
+"hi": [
+0.08095,
+0.08664,
+0.10033
+],
+"size": [
+0.162,
+0.173,
+0.1
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Little_Debbie_Chocolate_Cupcakes_8_ct__rs": {
+"base": "Little_Debbie_Chocolate_Cupcakes_8_ct",
+"scale": 0.4749,
+"lo": [
+-0.07086,
+-0.01316,
+0.0
+],
+"hi": [
+0.07086,
+0.01311,
+0.08235
+],
+"size": [
+0.142,
+0.026,
+0.082
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Little_Debbie_Donut_Sticks_6_cake_donuts_10_oz_total__rs": {
+"base": "Little_Debbie_Donut_Sticks_6_cake_donuts_10_oz_total",
+"scale": 0.7412,
+"lo": [
+-0.11578,
+-0.01386,
+-0.0
+],
+"hi": [
+0.11578,
+0.01431,
+0.08324
+],
+"size": [
+0.231,
+0.028,
+0.083
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Lovable_Huggable_Cuddly_Boutique_Teddy_Bear_Beige__rs": {
+"base": "Lovable_Huggable_Cuddly_Boutique_Teddy_Bear_Beige",
+"scale": 0.6198,
+"lo": [
+-0.08585,
+-0.11777,
+-0.0
+],
+"hi": [
+0.0807,
+0.11194,
+0.07667
+],
+"size": [
+0.167,
+0.23,
+0.077
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Luigis_Mansion_Dark_Moon_Nintendo_3DS_Game__rs": {
+"base": "Luigis_Mansion_Dark_Moon_Nintendo_3DS_Game",
+"scale": 2.0173,
+"lo": [
+-0.1392,
+-0.12629,
+-0.0
+],
+"hi": [
+0.139,
+0.12649,
+0.03248
+],
+"size": [
+0.278,
+0.252,
+0.032
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"MARTIN_WEDGE_LACE_BOOT__rs": {
+"base": "MARTIN_WEDGE_LACE_BOOT",
+"scale": 0.4039,
+"lo": [
+-0.02322,
+-0.05994,
+0.0
+],
+"hi": [
+0.02322,
+0.05998,
+0.08296
+],
+"size": [
+0.046,
+0.12,
+0.083
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"MIRACLE_POUNDING__rs": {
+"base": "MIRACLE_POUNDING",
+"scale": 0.1789,
+"lo": [
+-0.02628,
+-0.01508,
+-2e-05
+],
+"hi": [
+0.02619,
+0.01501,
+0.02999
+],
+"size": [
+0.052,
+0.03,
+0.03
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"MONKEY_BOWLING__rs": {
+"base": "MONKEY_BOWLING",
+"scale": 0.5293,
+"lo": [
+-0.08489,
+-0.05891,
+-0.0
+],
+"hi": [
+0.08669,
+0.06049,
+0.09209
+],
+"size": [
+0.171,
+0.12,
+0.092
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Magnifying_Glassassrt__rs": {
+"base": "Magnifying_Glassassrt",
+"scale": 1.6749,
+"lo": [
+-0.12729,
+-0.05343,
+-0.0
+],
+"hi": [
+0.12713,
+0.04773,
+0.02847
+],
+"size": [
+0.255,
+0.1,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Markings_Desk_Caddy__rs": {
+"base": "Markings_Desk_Caddy",
+"scale": 0.4105,
+"lo": [
+-0.02151,
+-0.06009,
+-0.0
+],
+"hi": [
+0.02167,
+0.0603,
+0.04634
+],
+"size": [
+0.043,
+0.12,
+0.046
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Melissa_Doug_Jumbo_Knob_Puzzles_Barnyard_Animals__rs": {
+"base": "Melissa_Doug_Jumbo_Knob_Puzzles_Barnyard_Animals",
+"scale": 0.6702,
+"lo": [
+-0.09785,
+-0.09759,
+-0.0
+],
+"hi": [
+0.09779,
+0.10033,
+0.03016
+],
+"size": [
+0.196,
+0.198,
+0.03
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Melissa_Doug_See_Spell__rs": {
+"base": "Melissa_Doug_See_Spell",
+"scale": 0.5111,
+"lo": [
+-0.09235,
+-0.01155,
+5e-05
+],
+"hi": [
+0.0923,
+0.01196,
+0.12286
+],
+"size": [
+0.184,
+0.024,
+0.123
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_ASV_Billfish_Boat_Shoe_in_Tan_Leather_wmUJ5PbwANc__rs": {
+"base": "Mens_ASV_Billfish_Boat_Shoe_in_Tan_Leather_wmUJ5PbwANc",
+"scale": 0.6946,
+"lo": [
+-0.03765,
+-0.09954,
+-7e-05
+],
+"hi": [
+0.03765,
+0.09961,
+0.07349
+],
+"size": [
+0.075,
+0.199,
+0.074
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_ASV_Shock_Light_Bungee_in_Light_Grey_xGCOvtLDnQJ__rs": {
+"base": "Mens_ASV_Shock_Light_Bungee_in_Light_Grey_xGCOvtLDnQJ",
+"scale": 0.4132,
+"lo": [
+-0.02219,
+-0.05934,
+-0.0
+],
+"hi": [
+0.02219,
+0.05938,
+0.04868
+],
+"size": [
+0.044,
+0.119,
+0.049
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Authentic_Original_Boat_Shoe_in_Navy_Leather_NHHQddDLQys__rs": {
+"base": "Mens_Authentic_Original_Boat_Shoe_in_Navy_Leather_NHHQddDLQys",
+"scale": 0.4108,
+"lo": [
+-0.02157,
+-0.05933,
+-4e-05
+],
+"hi": [
+0.02153,
+0.05933,
+0.03718
+],
+"size": [
+0.043,
+0.119,
+0.037
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Bahama_in_Black_b4ADzYywRHl__rs": {
+"base": "Mens_Bahama_in_Black_b4ADzYywRHl",
+"scale": 0.7368,
+"lo": [
+-0.03809,
+-0.10566,
+-0.0
+],
+"hi": [
+0.03809,
+0.10574,
+0.07494
+],
+"size": [
+0.076,
+0.211,
+0.075
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Bahama_in_Khaki_Oyster_xU2jeqYwhQJ__rs": {
+"base": "Mens_Bahama_in_Khaki_Oyster_xU2jeqYwhQJ",
+"scale": 0.3997,
+"lo": [
+-0.02066,
+-0.05736,
+-4e-05
+],
+"hi": [
+0.02066,
+0.0574,
+0.03557
+],
+"size": [
+0.041,
+0.115,
+0.036
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Bahama_in_White_vSwvGMCo32f__rs": {
+"base": "Mens_Bahama_in_White_vSwvGMCo32f",
+"scale": 0.5533,
+"lo": [
+-0.02921,
+-0.07945,
+-6e-05
+],
+"hi": [
+0.02921,
+0.07945,
+0.05301
+],
+"size": [
+0.059,
+0.159,
+0.053
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Billfish_3Eye_Boat_Shoe_in_Dark_Tan_wyns9HRcEuH__rs": {
+"base": "Mens_Billfish_3Eye_Boat_Shoe_in_Dark_Tan_wyns9HRcEuH",
+"scale": 0.3086,
+"lo": [
+-0.0171,
+-0.04512,
+-0.0
+],
+"hi": [
+0.01707,
+0.04509,
+0.03237
+],
+"size": [
+0.034,
+0.09,
+0.032
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Billfish_Slip_On_in_Coffee_e8bPKE9Lfgo__rs": {
+"base": "Mens_Billfish_Slip_On_in_Coffee_e8bPKE9Lfgo",
+"scale": 0.3708,
+"lo": [
+-0.05306,
+-0.02195,
+-0.0
+],
+"hi": [
+0.05306,
+0.02195,
+0.03971
+],
+"size": [
+0.106,
+0.044,
+0.04
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Billfish_Slip_On_in_Coffee_nK6AJJAHOae__rs": {
+"base": "Mens_Billfish_Slip_On_in_Coffee_nK6AJJAHOae",
+"scale": 0.274,
+"lo": [
+-0.01652,
+-0.0392,
+-3e-05
+],
+"hi": [
+0.01649,
+0.03923,
+0.0269
+],
+"size": [
+0.033,
+0.078,
+0.027
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Billfish_Slip_On_in_Tan_Beige_aaVUk0tNTv8__rs": {
+"base": "Mens_Billfish_Slip_On_in_Tan_Beige_aaVUk0tNTv8",
+"scale": 0.8082,
+"lo": [
+-0.04211,
+-0.11759,
+-0.0
+],
+"hi": [
+0.04219,
+0.11759,
+0.08955
+],
+"size": [
+0.084,
+0.235,
+0.09
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Billfish_Ultra_Lite_Boat_Shoe_in_Dark_Brown_Blue_c6zDZTtRJr6__rs": {
+"base": "Mens_Billfish_Ultra_Lite_Boat_Shoe_in_Dark_Brown_Blue_c6zDZTtRJr6",
+"scale": 0.2924,
+"lo": [
+-0.01541,
+-0.04266,
+-3e-05
+],
+"hi": [
+0.01541,
+0.04263,
+0.03084
+],
+"size": [
+0.031,
+0.085,
+0.031
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Gold_Cup_ASV_2Eye_Boat_Shoe_in_Cognac_Leather__rs": {
+"base": "Mens_Gold_Cup_ASV_2Eye_Boat_Shoe_in_Cognac_Leather",
+"scale": 0.2979,
+"lo": [
+-0.01656,
+-0.04367,
+-0.0
+],
+"hi": [
+0.01656,
+0.0437,
+0.02952
+],
+"size": [
+0.033,
+0.087,
+0.029
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Gold_Cup_ASV_Capetown_Penny_Loafer_in_Black_EjPnk3E8fCs__rs": {
+"base": "Mens_Gold_Cup_ASV_Capetown_Penny_Loafer_in_Black_EjPnk3E8fCs",
+"scale": 0.4859,
+"lo": [
+-0.02468,
+-0.07055,
+0.0
+],
+"hi": [
+0.02468,
+0.07055,
+0.04927
+],
+"size": [
+0.05,
+0.141,
+0.049
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Gold_Cup_ASV_Capetown_Penny_Loafer_in_Black_GkQBKqABeQN__rs": {
+"base": "Mens_Gold_Cup_ASV_Capetown_Penny_Loafer_in_Black_GkQBKqABeQN",
+"scale": 0.2754,
+"lo": [
+-0.01427,
+-0.03996,
+-0.0
+],
+"hi": [
+0.01424,
+0.03996,
+0.02812
+],
+"size": [
+0.029,
+0.08,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Gold_Cup_ASV_Dress_Casual_Venetian_in_Dark_Brown_Leather__rs": {
+"base": "Mens_Gold_Cup_ASV_Dress_Casual_Venetian_in_Dark_Brown_Leather",
+"scale": 0.4728,
+"lo": [
+-0.0253,
+-0.06964,
+0.0
+],
+"hi": [
+0.02539,
+0.06964,
+0.05035
+],
+"size": [
+0.051,
+0.139,
+0.05
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Mako_Canoe_Moc_2Eye_Boat_Shoe_in_Coffee_9d05GG33QQQ__rs": {
+"base": "Mens_Mako_Canoe_Moc_2Eye_Boat_Shoe_in_Coffee_9d05GG33QQQ",
+"scale": 0.5033,
+"lo": [
+-0.02637,
+-0.07323,
+-5e-05
+],
+"hi": [
+0.02632,
+0.07318,
+0.04972
+],
+"size": [
+0.053,
+0.146,
+0.05
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Mako_Canoe_Moc_2Eye_Boat_Shoe_in_Coffee_K9e8FoV73uZ__rs": {
+"base": "Mens_Mako_Canoe_Moc_2Eye_Boat_Shoe_in_Coffee_K9e8FoV73uZ",
+"scale": 0.3521,
+"lo": [
+-0.01961,
+-0.05056,
+-0.0
+],
+"hi": [
+0.01961,
+0.05056,
+0.03341
+],
+"size": [
+0.039,
+0.101,
+0.033
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Mako_Canoe_Moc_2Eye_Boat_Shoe_in_OysterTaupe_otyRrfvPMiA__rs": {
+"base": "Mens_Mako_Canoe_Moc_2Eye_Boat_Shoe_in_OysterTaupe_otyRrfvPMiA",
+"scale": 0.3895,
+"lo": [
+-0.02096,
+-0.05605,
+-0.0
+],
+"hi": [
+0.02092,
+0.05605,
+0.03833
+],
+"size": [
+0.042,
+0.112,
+0.038
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_RR_Moc_in_Navy_Suede_vmFfijhBzL3__rs": {
+"base": "Mens_RR_Moc_in_Navy_Suede_vmFfijhBzL3",
+"scale": 0.5521,
+"lo": [
+-0.03186,
+-0.07912,
+-6e-05
+],
+"hi": [
+0.03186,
+0.07912,
+0.05389
+],
+"size": [
+0.063,
+0.158,
+0.054
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Santa_Cruz_Thong_in_Chocolate_lvxYW7lek6B__rs": {
+"base": "Mens_Santa_Cruz_Thong_in_Chocolate_lvxYW7lek6B",
+"scale": 0.84,
+"lo": [
+-0.05637,
+-0.12265,
+-0.0
+],
+"hi": [
+0.05637,
+0.12265,
+0.07031
+],
+"size": [
+0.113,
+0.245,
+0.071
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Tremont_Kiltie_Tassel_Loafer_in_Black_Amaretto__rs": {
+"base": "Mens_Tremont_Kiltie_Tassel_Loafer_in_Black_Amaretto",
+"scale": 0.4177,
+"lo": [
+-0.02214,
+-0.06161,
+-4e-05
+],
+"hi": [
+0.02214,
+0.06161,
+0.03872
+],
+"size": [
+0.044,
+0.123,
+0.039
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Tremont_Kiltie_Tassel_Loafer_in_Black_Amaretto_FT0I9OjSA6O__rs": {
+"base": "Mens_Tremont_Kiltie_Tassel_Loafer_in_Black_Amaretto_FT0I9OjSA6O",
+"scale": 0.4449,
+"lo": [
+-0.02363,
+-0.06567,
+-4e-05
+],
+"hi": [
+0.02358,
+0.06571,
+0.04124
+],
+"size": [
+0.047,
+0.131,
+0.041
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Mens_Tremont_Kiltie_Tassel_Loafer_in_Black_Amaretto_rCdzRZqgCnI__rs": {
+"base": "Mens_Tremont_Kiltie_Tassel_Loafer_in_Black_Amaretto_rCdzRZqgCnI",
+"scale": 0.2918,
+"lo": [
+-0.01547,
+-0.04307,
+-0.0
+],
+"hi": [
+0.0155,
+0.04307,
+0.02711
+],
+"size": [
+0.031,
+0.086,
+0.027
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"My_First_Animal_Tower__rs": {
+"base": "My_First_Animal_Tower",
+"scale": 0.6123,
+"lo": [
+-0.10863,
+-0.08156,
+-6e-05
+],
+"hi": [
+0.10759,
+0.0815,
+0.05076
+],
+"size": [
+0.216,
+0.163,
+0.051
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"My_Monopoly_Board_Game__rs": {
+"base": "My_Monopoly_Board_Game",
+"scale": 0.4287,
+"lo": [
+-0.08698,
+-0.01235,
+-0.0
+],
+"hi": [
+0.08663,
+0.0129,
+0.11677
+],
+"size": [
+0.174,
+0.025,
+0.117
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Nestle_Candy_19_oz_Butterfinger_Singles_116567__rs": {
+"base": "Nestle_Candy_19_oz_Butterfinger_Singles_116567",
+"scale": 1.3591,
+"lo": [
+-0.11444,
+-0.02773,
+-0.0
+],
+"hi": [
+0.11417,
+0.02922,
+0.02528
+],
+"size": [
+0.228,
+0.057,
+0.026
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Netgear_Ac1750_Router_Wireless_Dual_Band_Gigabit_Router__rs": {
+"base": "Netgear_Ac1750_Router_Wireless_Dual_Band_Gigabit_Router",
+"scale": 0.4444,
+"lo": [
+-0.07767,
+-0.01982,
+-0.0
+],
+"hi": [
+0.07701,
+0.01969,
+0.11536
+],
+"size": [
+0.155,
+0.04,
+0.116
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Netgear_N750_Wireless_Dual_Band_Gigabit_Router__rs": {
+"base": "Netgear_N750_Wireless_Dual_Band_Gigabit_Router",
+"scale": 0.6944,
+"lo": [
+-0.10312,
+-0.02479,
+-0.0
+],
+"hi": [
+0.10257,
+0.02549,
+0.18458
+],
+"size": [
+0.206,
+0.05,
+0.185
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Netgear_Nighthawk_X6_AC3200_TriBand_Gigabit_Wireless_Router__rs": {
+"base": "Netgear_Nighthawk_X6_AC3200_TriBand_Gigabit_Wireless_Router",
+"scale": 0.5601,
+"lo": [
+-0.10485,
+-0.02728,
+-0.0
+],
+"hi": [
+0.10485,
+0.0275,
+0.16484
+],
+"size": [
+0.209,
+0.055,
+0.165
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Nightmare_Before_Christmas_Collectors_Edition_Operation__rs": {
+"base": "Nightmare_Before_Christmas_Collectors_Edition_Operation",
+"scale": 0.6234,
+"lo": [
+-0.13871,
+-0.02219,
+0.0
+],
+"hi": [
+0.1384,
+0.02257,
+0.16633
+],
+"size": [
+0.277,
+0.045,
+0.166
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Nintendo_2DS_Crimson_Red__rs": {
+"base": "Nintendo_2DS_Crimson_Red",
+"scale": 1.3533,
+"lo": [
+-0.09771,
+-0.08621,
+-0.00014
+],
+"hi": [
+0.09758,
+0.08648,
+0.03018
+],
+"size": [
+0.195,
+0.173,
+0.03
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Now_Designs_Dish_Towel_Mojave_18_x_28__rs": {
+"base": "Now_Designs_Dish_Towel_Mojave_18_x_28",
+"scale": 0.7815,
+"lo": [
+-0.06072,
+-0.13981,
+-8e-05
+],
+"hi": [
+0.05955,
+0.13966,
+0.02516
+],
+"size": [
+0.12,
+0.28,
+0.025
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Now_Designs_Snack_Bags_Bicycle_2_count__rs": {
+"base": "Now_Designs_Snack_Bags_Bicycle_2_count",
+"scale": 1.3678,
+"lo": [
+-0.13008,
+-0.13746,
+-0.0
+],
+"hi": [
+0.13049,
+0.13883,
+0.02954
+],
+"size": [
+0.26,
+0.276,
+0.03
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"OVAL_XYLOPHONE__rs": {
+"base": "OVAL_XYLOPHONE",
+"scale": 0.5473,
+"lo": [
+-0.0595,
+-0.07975,
+5e-05
+],
+"hi": [
+0.05419,
+0.07559,
+0.03903
+],
+"size": [
+0.114,
+0.155,
+0.039
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Object_REmvBDJStub__rs": {
+"base": "Object_REmvBDJStub",
+"scale": 0.4326,
+"lo": [
+-0.05113,
+-0.06139,
+-0.0
+],
+"hi": [
+0.05083,
+0.06178,
+0.10841
+],
+"size": [
+0.102,
+0.123,
+0.109
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Ocedar_Snap_On_Dust_Pan_And_Brush_1_ct__rs": {
+"base": "Ocedar_Snap_On_Dust_Pan_And_Brush_1_ct",
+"scale": 0.4146,
+"lo": [
+-0.05021,
+-0.06742,
+-4e-05
+],
+"hi": [
+0.04549,
+0.0697,
+0.03923
+],
+"size": [
+0.096,
+0.137,
+0.039
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Olive_Kids_Birdie_Pack_n_Snack__rs": {
+"base": "Olive_Kids_Birdie_Pack_n_Snack",
+"scale": 0.6959,
+"lo": [
+-0.09812,
+-0.08566,
+-0.0
+],
+"hi": [
+0.09812,
+0.08545,
+0.22316
+],
+"size": [
+0.196,
+0.171,
+0.223
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Olive_Kids_Birdie_Sidekick_Backpack__rs": {
+"base": "Olive_Kids_Birdie_Sidekick_Backpack",
+"scale": 0.2508,
+"lo": [
+-0.03867,
+-0.0319,
+-0.0
+],
+"hi": [
+0.04205,
+0.02934,
+0.09672
+],
+"size": [
+0.081,
+0.061,
+0.097
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Olive_Kids_Dinosaur_Land_Pack_n_Snack__rs": {
+"base": "Olive_Kids_Dinosaur_Land_Pack_n_Snack",
+"scale": 0.4061,
+"lo": [
+-0.05758,
+-0.04743,
+0.0
+],
+"hi": [
+0.05925,
+0.04638,
+0.12763
+],
+"size": [
+0.117,
+0.094,
+0.128
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Olive_Kids_Dinosaur_Land_Sidekick_Backpack__rs": {
+"base": "Olive_Kids_Dinosaur_Land_Sidekick_Backpack",
+"scale": 0.0897,
+"lo": [
+-0.01393,
+-0.01311,
+-0.0
+],
+"hi": [
+0.01389,
+0.01311,
+0.03409
+],
+"size": [
+0.028,
+0.026,
+0.034
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Olive_Kids_Game_On_Pack_n_Snack__rs": {
+"base": "Olive_Kids_Game_On_Pack_n_Snack",
+"scale": 0.2323,
+"lo": [
+-0.03632,
+-0.03212,
+0.0
+],
+"hi": [
+0.0403,
+0.02692,
+0.073
+],
+"size": [
+0.077,
+0.059,
+0.073
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Olive_Kids_Mermaids_Pack_n_Snack_Backpack__rs": {
+"base": "Olive_Kids_Mermaids_Pack_n_Snack_Backpack",
+"scale": 0.1109,
+"lo": [
+-0.01578,
+-0.01345,
+-0.0
+],
+"hi": [
+0.01582,
+0.01335,
+0.0356
+],
+"size": [
+0.032,
+0.027,
+0.036
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Olive_Kids_Trains_Planes_Trucks_Bogo_Backpack__rs": {
+"base": "Olive_Kids_Trains_Planes_Trucks_Bogo_Backpack",
+"scale": 0.5981,
+"lo": [
+-0.10276,
+-0.0756,
+0.0
+],
+"hi": [
+0.1027,
+0.07584,
+0.22507
+],
+"size": [
+0.206,
+0.151,
+0.225
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"PARENT_ROOM_FURNITURE_SET_1_DLKEy8H4mwK__rs": {
+"base": "PARENT_ROOM_FURNITURE_SET_1_DLKEy8H4mwK",
+"scale": 0.5793,
+"lo": [
+-0.04171,
+-0.08371,
+-0.0
+],
+"hi": [
+0.042,
+0.08377,
+0.06465
+],
+"size": [
+0.083,
+0.167,
+0.065
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"PEPSI_NEXT_CACRV__rs": {
+"base": "PEPSI_NEXT_CACRV",
+"scale": 0.458,
+"lo": [
+-0.09216,
+-0.03124,
+-0.0
+],
+"hi": [
+0.09239,
+0.03133,
+0.05918
+],
+"size": [
+0.185,
+0.063,
+0.059
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Paper_Mario_Sticker_Star_Nintendo_3DS_Game__rs": {
+"base": "Paper_Mario_Sticker_Star_Nintendo_3DS_Game",
+"scale": 1.8632,
+"lo": [
+-0.12837,
+-0.11663,
+-0.0
+],
+"hi": [
+0.128,
+0.11663,
+0.02925
+],
+"size": [
+0.257,
+0.233,
+0.03
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Pepsi_Caffeine_Free_Diet_12_CT__rs": {
+"base": "Pepsi_Caffeine_Free_Diet_12_CT",
+"scale": 0.5068,
+"lo": [
+-0.10267,
+-0.03512,
+-0.0
+],
+"hi": [
+0.10267,
+0.03481,
+0.06537
+],
+"size": [
+0.205,
+0.07,
+0.065
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Pepsi_Cola_Wild_Cherry_Diet_12_12_fl_oz_355_ml_cans_144_fl_oz_426_lt__rs": {
+"base": "Pepsi_Cola_Wild_Cherry_Diet_12_12_fl_oz_355_ml_cans_144_fl_oz_426_lt",
+"scale": 0.6046,
+"lo": [
+-0.12255,
+-0.04389,
+0.0
+],
+"hi": [
+0.12255,
+0.0419,
+0.07769
+],
+"size": [
+0.245,
+0.086,
+0.077
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Perricone_MD_Best_of_Perricone_7Piece_Collection_MEGsO6GIsyL__rs": {
+"base": "Perricone_MD_Best_of_Perricone_7Piece_Collection_MEGsO6GIsyL",
+"scale": 0.3289,
+"lo": [
+-0.04881,
+-0.0124,
+-0.0
+],
+"hi": [
+0.04881,
+0.01233,
+0.04029
+],
+"size": [
+0.098,
+0.025,
+0.04
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Poise_Ultimate_Pads_Long__rs": {
+"base": "Poise_Ultimate_Pads_Long",
+"scale": 0.2264,
+"lo": [
+-0.04214,
+-0.01617,
+-0.0
+],
+"hi": [
+0.04216,
+0.01574,
+0.05079
+],
+"size": [
+0.084,
+0.032,
+0.051
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Pokmon_Conquest_Nintendo_DS_Game__rs": {
+"base": "Pokmon_Conquest_Nintendo_DS_Game",
+"scale": 1.7015,
+"lo": [
+-0.11774,
+-0.106,
+0.0
+],
+"hi": [
+0.11672,
+0.10583,
+0.02995
+],
+"size": [
+0.235,
+0.211,
+0.031
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Pokmon_X_Nintendo_3DS_Game__rs": {
+"base": "Pokmon_X_Nintendo_3DS_Game",
+"scale": 1.7879,
+"lo": [
+-0.12265,
+-0.11175,
+-0.0
+],
+"hi": [
+0.1223,
+0.11157,
+0.027
+],
+"size": [
+0.245,
+0.223,
+0.027
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Pokmon_Y_Nintendo_3DS_Game__rs": {
+"base": "Pokmon_Y_Nintendo_3DS_Game",
+"scale": 1.6887,
+"lo": [
+-0.11618,
+-0.10588,
+-0.0
+],
+"hi": [
+0.11601,
+0.10571,
+0.02668
+],
+"size": [
+0.233,
+0.211,
+0.027
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Predator_LZ_TRX_FG__rs": {
+"base": "Predator_LZ_TRX_FG",
+"scale": 0.5167,
+"lo": [
+-0.02516,
+-0.07327,
+-0.0
+],
+"hi": [
+0.02511,
+0.07322,
+0.06242
+],
+"size": [
+0.05,
+0.147,
+0.063
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Provence_Bath_Towel_Royal_Blue__rs": {
+"base": "Provence_Bath_Towel_Royal_Blue",
+"scale": 0.4911,
+"lo": [
+-0.06478,
+-0.08732,
+-0.0
+],
+"hi": [
+0.06439,
+0.08762,
+0.04332
+],
+"size": [
+0.129,
+0.175,
+0.043
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"PureCadence_2_Color_TleBluLmePnchSlvMoodIndgWh_Size_50_EEzAfcBfHHO__rs": {
+"base": "PureCadence_2_Color_TleBluLmePnchSlvMoodIndgWh_Size_50_EEzAfcBfHHO",
+"scale": 0.3051,
+"lo": [
+-0.01696,
+-0.04375,
+-0.0
+],
+"hi": [
+0.01696,
+0.04375,
+0.03484
+],
+"size": [
+0.034,
+0.088,
+0.035
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"PureConnect_2_Color_BlckBrllntBluNghtlfeAnthrct_Size_70__rs": {
+"base": "PureConnect_2_Color_BlckBrllntBluNghtlfeAnthrct_Size_70",
+"scale": 0.321,
+"lo": [
+-0.01917,
+-0.05182,
+0.0
+],
+"hi": [
+0.01917,
+0.05182,
+0.04286
+],
+"size": [
+0.038,
+0.104,
+0.043
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"PureConnect_2_Color_FernNightlifeSilverBlack_Size_70_5w0BYsiogeV__rs": {
+"base": "PureConnect_2_Color_FernNightlifeSilverBlack_Size_70_5w0BYsiogeV",
+"scale": 0.3756,
+"lo": [
+-0.02054,
+-0.0554,
+0.0
+],
+"hi": [
+0.02051,
+0.0554,
+0.04631
+],
+"size": [
+0.041,
+0.111,
+0.046
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"PureFlow_2_Color_RylPurHibiscusBlkSlvrWht_Size_50__rs": {
+"base": "PureFlow_2_Color_RylPurHibiscusBlkSlvrWht_Size_50",
+"scale": 0.2303,
+"lo": [
+-0.01331,
+-0.03303,
+-0.0
+],
+"hi": [
+0.01331,
+0.03303,
+0.02755
+],
+"size": [
+0.027,
+0.066,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Racoon__rs": {
+"base": "Racoon",
+"scale": 0.2926,
+"lo": [
+-0.02742,
+-0.04515,
+0.0
+],
+"hi": [
+0.01721,
+0.04706,
+0.06181
+],
+"size": [
+0.044,
+0.092,
+0.062
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Ravenna_4_Color_WhtOlyBluBlkShkOrngSlvRdO_Size_70__rs": {
+"base": "Ravenna_4_Color_WhtOlyBluBlkShkOrngSlvRdO_Size_70",
+"scale": 0.5385,
+"lo": [
+-0.03263,
+-0.08653,
+-0.0
+],
+"hi": [
+0.03263,
+0.08659,
+0.0679
+],
+"size": [
+0.065,
+0.173,
+0.068
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Razer_BlackWidow_Stealth_2014_Keyboard_07VFzIVabgh__rs": {
+"base": "Razer_BlackWidow_Stealth_2014_Keyboard_07VFzIVabgh",
+"scale": 0.3453,
+"lo": [
+-0.08148,
+-0.04209,
+3e-05
+],
+"hi": [
+0.08152,
+0.04274,
+0.03232
+],
+"size": [
+0.163,
+0.085,
+0.032
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Razer_BlackWidow_Ultimate_2014_Mechanical_Gaming_Keyboard__rs": {
+"base": "Razer_BlackWidow_Ultimate_2014_Mechanical_Gaming_Keyboard",
+"scale": 0.5224,
+"lo": [
+-0.12235,
+-0.07648,
+-0.0
+],
+"hi": [
+0.12387,
+0.07993,
+0.02534
+],
+"size": [
+0.246,
+0.156,
+0.025
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Razer_Blackwidow_Tournament_Edition_Keyboard__rs": {
+"base": "Razer_Blackwidow_Tournament_Edition_Keyboard",
+"scale": 0.545,
+"lo": [
+-0.09947,
+-0.05903,
+-0.0
+],
+"hi": [
+0.10001,
+0.06077,
+0.02556
+],
+"size": [
+0.199,
+0.12,
+0.026
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Real_Deal_1nIwCHX1MTh__rs": {
+"base": "Real_Deal_1nIwCHX1MTh",
+"scale": 0.2269,
+"lo": [
+-0.013,
+-0.03433,
+-2e-05
+],
+"hi": [
+0.013,
+0.03433,
+0.03603
+],
+"size": [
+0.026,
+0.069,
+0.036
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_CLASSIC_LEGACY_II__rs": {
+"base": "Reebok_CLASSIC_LEGACY_II",
+"scale": 0.2779,
+"lo": [
+-0.01823,
+-0.04046,
+-0.0
+],
+"hi": [
+0.01823,
+0.04046,
+0.05913
+],
+"size": [
+0.036,
+0.081,
+0.059
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_CL_DIBELLO_II__rs": {
+"base": "Reebok_CL_DIBELLO_II",
+"scale": 0.6135,
+"lo": [
+-0.03454,
+-0.0876,
+-0.0
+],
+"hi": [
+0.03454,
+0.0876,
+0.10355
+],
+"size": [
+0.069,
+0.175,
+0.104
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_CL_RAYEN__rs": {
+"base": "Reebok_CL_RAYEN",
+"scale": 0.2758,
+"lo": [
+-0.01421,
+-0.04052,
+-3e-05
+],
+"hi": [
+0.01418,
+0.04049,
+0.03175
+],
+"size": [
+0.028,
+0.081,
+0.032
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_DMX_MAX_PLUS_ATHLETIC__rs": {
+"base": "Reebok_DMX_MAX_PLUS_ATHLETIC",
+"scale": 0.887,
+"lo": [
+-0.04976,
+-0.1335,
+-0.0
+],
+"hi": [
+0.04976,
+0.13359,
+0.11629
+],
+"size": [
+0.099,
+0.267,
+0.116
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_DMX_MAX_PLUS_RAINWALKER__rs": {
+"base": "Reebok_DMX_MAX_PLUS_RAINWALKER",
+"scale": 0.2886,
+"lo": [
+-0.01648,
+-0.04344,
+-0.0
+],
+"hi": [
+0.01648,
+0.04341,
+0.0394
+],
+"size": [
+0.033,
+0.087,
+0.039
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_GL_6000__rs": {
+"base": "Reebok_GL_6000",
+"scale": 0.9331,
+"lo": [
+-0.05179,
+-0.1367,
+9e-05
+],
+"hi": [
+0.05179,
+0.1367,
+0.11972
+],
+"size": [
+0.104,
+0.273,
+0.119
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_HIMARA_LTR__rs": {
+"base": "Reebok_HIMARA_LTR",
+"scale": 0.4478,
+"lo": [
+-0.02508,
+-0.06623,
+-0.0
+],
+"hi": [
+0.02508,
+0.06623,
+0.06095
+],
+"size": [
+0.05,
+0.133,
+0.061
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_KAMIKAZE_II_MID__rs": {
+"base": "Reebok_KAMIKAZE_II_MID",
+"scale": 0.591,
+"lo": [
+-0.03812,
+-0.08664,
+-6e-05
+],
+"hi": [
+0.03818,
+0.08669,
+0.11228
+],
+"size": [
+0.076,
+0.173,
+0.112
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_PUMP_OMNI_LITE_HLS__rs": {
+"base": "Reebok_PUMP_OMNI_LITE_HLS",
+"scale": 0.2223,
+"lo": [
+-0.01365,
+-0.03247,
+-2e-05
+],
+"hi": [
+0.01365,
+0.03247,
+0.03708
+],
+"size": [
+0.027,
+0.065,
+0.037
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_REALFLEX_SELECT__rs": {
+"base": "Reebok_REALFLEX_SELECT",
+"scale": 0.3308,
+"lo": [
+-0.01862,
+-0.04962,
+0.0
+],
+"hi": [
+0.01859,
+0.04965,
+0.04303
+],
+"size": [
+0.037,
+0.099,
+0.043
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_R_CROSSFIT_OLY_UFORM__rs": {
+"base": "Reebok_R_CROSSFIT_OLY_UFORM",
+"scale": 0.5441,
+"lo": [
+-0.02944,
+-0.07944,
+-0.0
+],
+"hi": [
+0.02938,
+0.07939,
+0.07025
+],
+"size": [
+0.059,
+0.159,
+0.07
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_SH_COURT_MID_II__rs": {
+"base": "Reebok_SH_COURT_MID_II",
+"scale": 0.6711,
+"lo": [
+-0.03577,
+-0.09799,
+0.0
+],
+"hi": [
+0.03577,
+0.09799,
+0.1096
+],
+"size": [
+0.072,
+0.196,
+0.109
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_SH_NEWPORT_LOW__rs": {
+"base": "Reebok_SH_NEWPORT_LOW",
+"scale": 0.9726,
+"lo": [
+-0.05077,
+-0.13937,
+-0.0
+],
+"hi": [
+0.05077,
+0.13937,
+0.11797
+],
+"size": [
+0.101,
+0.279,
+0.118
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_SOMERSET_RUN__rs": {
+"base": "Reebok_SOMERSET_RUN",
+"scale": 0.3218,
+"lo": [
+-0.01815,
+-0.04712,
+-3e-05
+],
+"hi": [
+0.01815,
+0.04709,
+0.03733
+],
+"size": [
+0.036,
+0.094,
+0.037
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_TURBO_RC__rs": {
+"base": "Reebok_TURBO_RC",
+"scale": 0.2193,
+"lo": [
+-0.0121,
+-0.0325,
+-0.0
+],
+"hi": [
+0.0121,
+0.03252,
+0.02752
+],
+"size": [
+0.024,
+0.065,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_VERSA_TRAIN__rs": {
+"base": "Reebok_VERSA_TRAIN",
+"scale": 0.3062,
+"lo": [
+-0.01687,
+-0.04578,
+-0.0
+],
+"hi": [
+0.01687,
+0.04581,
+0.03665
+],
+"size": [
+0.034,
+0.092,
+0.037
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_ZIGCOOPERSTOWN_QUAG__rs": {
+"base": "Reebok_ZIGCOOPERSTOWN_QUAG",
+"scale": 0.1894,
+"lo": [
+-0.01059,
+-0.03025,
+-0.0
+],
+"hi": [
+0.01061,
+0.03025,
+0.02737
+],
+"size": [
+0.021,
+0.06,
+0.027
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Reebok_ZIGTECH_SHARK_MAYHEM360__rs": {
+"base": "Reebok_ZIGTECH_SHARK_MAYHEM360",
+"scale": 0.2463,
+"lo": [
+-0.01377,
+-0.03666,
+-0.0
+],
+"hi": [
+0.01377,
+0.03666,
+0.02971
+],
+"size": [
+0.028,
+0.073,
+0.03
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Remington_1_12_inch_Hair_Straightener__rs": {
+"base": "Remington_1_12_inch_Hair_Straightener",
+"scale": 0.7507,
+"lo": [
+-0.02462,
+-0.13528,
+-0.0
+],
+"hi": [
+0.04339,
+0.13896,
+0.03506
+],
+"size": [
+0.068,
+0.274,
+0.035
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Remington_TStudio_Hair_Dryer__rs": {
+"base": "Remington_TStudio_Hair_Dryer",
+"scale": 0.7537,
+"lo": [
+-0.14938,
+-0.08826,
+-0.0
+],
+"hi": [
+0.09934,
+0.10114,
+0.06753
+],
+"size": [
+0.249,
+0.189,
+0.068
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Remington_TStudio_Silk_Ceramic_Hair_Straightener_2_Inch_Floating_Plates__rs": {
+"base": "Remington_TStudio_Silk_Ceramic_Hair_Straightener_2_Inch_Floating_Plates",
+"scale": 0.5029,
+"lo": [
+-0.0265,
+-0.08082,
+-5e-05
+],
+"hi": [
+0.03601,
+0.08162,
+0.03319
+],
+"size": [
+0.062,
+0.162,
+0.033
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Rexy_Glove_Heavy_Duty_Gloves_Medium__rs": {
+"base": "Rexy_Glove_Heavy_Duty_Gloves_Medium",
+"scale": 0.856,
+"lo": [
+-0.13722,
+-0.10691,
+-0.0
+],
+"hi": [
+0.13568,
+0.11248,
+0.03107
+],
+"size": [
+0.273,
+0.219,
+0.031
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Room_Essentials_Dish_Drainer_Collapsible_White__rs": {
+"base": "Room_Essentials_Dish_Drainer_Collapsible_White",
+"scale": 0.5487,
+"lo": [
+-0.08604,
+-0.10085,
+-0.0
+],
+"hi": [
+0.08708,
+0.10091,
+0.0439
+],
+"size": [
+0.173,
+0.202,
+0.044
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Room_Essentials_Fabric_Cube_Lavender__rs": {
+"base": "Room_Essentials_Fabric_Cube_Lavender",
+"scale": 0.551,
+"lo": [
+-0.07671,
+-0.0783,
+-6e-05
+],
+"hi": [
+0.07775,
+0.07913,
+0.15694
+],
+"size": [
+0.154,
+0.158,
+0.157
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Rubbermaid_Large_Drainer__rs": {
+"base": "Rubbermaid_Large_Drainer",
+"scale": 0.4884,
+"lo": [
+-0.08619,
+-0.10695,
+-0.0
+],
+"hi": [
+0.07946,
+0.10905,
+0.0589
+],
+"size": [
+0.166,
+0.216,
+0.059
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"SAMOA__rs": {
+"base": "SAMOA",
+"scale": 0.2427,
+"lo": [
+-0.01272,
+-0.0355,
+-0.0
+],
+"hi": [
+0.01272,
+0.03553,
+0.03191
+],
+"size": [
+0.025,
+0.071,
+0.032
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"SHAPE_SORTER__rs": {
+"base": "SHAPE_SORTER",
+"scale": 0.6082,
+"lo": [
+-0.10188,
+-0.05772,
+-0.0
+],
+"hi": [
+0.10267,
+0.05742,
+0.02786
+],
+"size": [
+0.204,
+0.115,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"SLACK_CRUISER__rs": {
+"base": "SLACK_CRUISER",
+"scale": 0.3556,
+"lo": [
+-0.0197,
+-0.05493,
+0.0
+],
+"hi": [
+0.0197,
+0.05493,
+0.04551
+],
+"size": [
+0.039,
+0.11,
+0.046
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"SORTING_BUS__rs": {
+"base": "SORTING_BUS",
+"scale": 0.2281,
+"lo": [
+-0.0305,
+-0.03152,
+2e-05
+],
+"hi": [
+0.03522,
+0.0347,
+0.03093
+],
+"size": [
+0.066,
+0.066,
+0.031
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"SUPERSTAR_CLR__rs": {
+"base": "SUPERSTAR_CLR",
+"scale": 0.301,
+"lo": [
+-0.01568,
+-0.04395,
+-3e-05
+],
+"hi": [
+0.01568,
+0.04398,
+0.0351
+],
+"size": [
+0.031,
+0.088,
+0.035
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Samoa_onepiece__rs": {
+"base": "Samoa_onepiece",
+"scale": 0.4225,
+"lo": [
+-0.02167,
+-0.06177,
+-4e-05
+],
+"hi": [
+0.02167,
+0.06177,
+0.04812
+],
+"size": [
+0.044,
+0.123,
+0.048
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Samsung_CLTC406S_Toner_Cartridge_Cyan_1pack__rs": {
+"base": "Samsung_CLTC406S_Toner_Cartridge_Cyan_1pack",
+"scale": 0.4831,
+"lo": [
+-0.09407,
+-0.02034,
+-5e-05
+],
+"hi": [
+0.09368,
+0.0202,
+0.08914
+],
+"size": [
+0.188,
+0.041,
+0.089
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Santa_Cruz_Mens__rs": {
+"base": "Santa_Cruz_Mens",
+"scale": 0.2721,
+"lo": [
+-0.01526,
+-0.04062,
+-3e-05
+],
+"hi": [
+0.01529,
+0.04062,
+0.02827
+],
+"size": [
+0.03,
+0.081,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Santa_Cruz_Mens_G7kQXK7cIky__rs": {
+"base": "Santa_Cruz_Mens_G7kQXK7cIky",
+"scale": 0.3783,
+"lo": [
+-0.02164,
+-0.05689,
+-4e-05
+],
+"hi": [
+0.02164,
+0.05689,
+0.03832
+],
+"size": [
+0.043,
+0.114,
+0.038
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Santa_Cruz_Mens_YmsMDkFf11Z__rs": {
+"base": "Santa_Cruz_Mens_YmsMDkFf11Z",
+"scale": 0.7095,
+"lo": [
+-0.03867,
+-0.10586,
+-7e-05
+],
+"hi": [
+0.03867,
+0.10586,
+0.07514
+],
+"size": [
+0.077,
+0.211,
+0.075
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Santa_Cruz_Mens_umxTczr1Ygg__rs": {
+"base": "Santa_Cruz_Mens_umxTczr1Ygg",
+"scale": 0.5381,
+"lo": [
+-0.03062,
+-0.08088,
+-5e-05
+],
+"hi": [
+0.03062,
+0.08093,
+0.05521
+],
+"size": [
+0.061,
+0.162,
+0.055
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Santa_Cruz_Mens_vnbiTDDt5xH__rs": {
+"base": "Santa_Cruz_Mens_vnbiTDDt5xH",
+"scale": 0.4265,
+"lo": [
+-0.02324,
+-0.06371,
+-4e-05
+],
+"hi": [
+0.02324,
+0.06371,
+0.04542
+],
+"size": [
+0.046,
+0.128,
+0.046
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Seagate_1TB_Backup_Plus_portable_drive_Blue__rs": {
+"base": "Seagate_1TB_Backup_Plus_portable_drive_Blue",
+"scale": 2.7054,
+"lo": [
+-0.02137,
+-0.11065,
+0.0
+],
+"hi": [
+0.0211,
+0.11065,
+0.33547
+],
+"size": [
+0.043,
+0.222,
+0.335
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Seagate_1TB_Backup_Plus_portable_drive_for_Mac__rs": {
+"base": "Seagate_1TB_Backup_Plus_portable_drive_for_Mac",
+"scale": 1.6805,
+"lo": [
+-0.01378,
+-0.06873,
+0.0
+],
+"hi": [
+0.01361,
+0.0689,
+0.20889
+],
+"size": [
+0.027,
+0.138,
+0.208
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Shark__rs": {
+"base": "Shark",
+"scale": 0.6951,
+"lo": [
+-0.03997,
+-0.13186,
+-7e-05
+],
+"hi": [
+0.08223,
+0.13721,
+0.11198
+],
+"size": [
+0.122,
+0.269,
+0.112
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Smith_Hawken_Woven_BasketTray_Organizer_with_3_Compartments_95_x_9_x_13__rs": {
+"base": "Smith_Hawken_Woven_BasketTray_Organizer_with_3_Compartments_95_x_9_x_13",
+"scale": 0.1865,
+"lo": [
+-0.03365,
+-0.0244,
+2e-05
+],
+"hi": [
+0.03363,
+0.02361,
+0.05014
+],
+"size": [
+0.067,
+0.048,
+0.05
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Sootheze_Toasty_Orca__rs": {
+"base": "Sootheze_Toasty_Orca",
+"scale": 0.3776,
+"lo": [
+-0.03791,
+-0.07587,
+0.0
+],
+"hi": [
+0.04301,
+0.07794,
+0.05468
+],
+"size": [
+0.081,
+0.154,
+0.055
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Sorry_Sliders_Board_Game__rs": {
+"base": "Sorry_Sliders_Board_Game",
+"scale": 0.3897,
+"lo": [
+-0.07873,
+-0.01333,
+0.0
+],
+"hi": [
+0.07892,
+0.01384,
+0.10671
+],
+"size": [
+0.157,
+0.027,
+0.107
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14__rs": {
+"base": "Sterilite_Caddy_Blue_Sky_17_58_x_12_58_x_9_14",
+"scale": 0.2296,
+"lo": [
+-0.03622,
+-0.05126,
+-2e-05
+],
+"hi": [
+0.03625,
+0.05126,
+0.05378
+],
+"size": [
+0.073,
+0.103,
+0.054
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Super_Mario_3D_World_Deluxe_Set_yThuvW9vZed__rs": {
+"base": "Super_Mario_3D_World_Deluxe_Set_yThuvW9vZed",
+"scale": 0.5539,
+"lo": [
+-0.12756,
+-0.07749,
+0.0
+],
+"hi": [
+0.12751,
+0.07295,
+0.03074
+],
+"size": [
+0.255,
+0.151,
+0.031
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Superman_Battle_of_Smallville__rs": {
+"base": "Superman_Battle_of_Smallville",
+"scale": 0.3472,
+"lo": [
+-0.06698,
+-0.04701,
+0.0
+],
+"hi": [
+0.06646,
+0.04319,
+0.0376
+],
+"size": [
+0.133,
+0.09,
+0.037
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Supernatural_Ouija_Board_Game__rs": {
+"base": "Supernatural_Ouija_Board_Game",
+"scale": 0.6836,
+"lo": [
+-0.13898,
+-0.01989,
+-0.0
+],
+"hi": [
+0.13891,
+0.01921,
+0.18793
+],
+"size": [
+0.278,
+0.039,
+0.188
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"TABLEWARE_SET__rs": {
+"base": "TABLEWARE_SET",
+"scale": 0.7949,
+"lo": [
+-0.13927,
+-0.11566,
+-0.0
+],
+"hi": [
+0.13935,
+0.11709,
+0.03227
+],
+"size": [
+0.279,
+0.233,
+0.033
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"TABLEWARE_SET_5CHkPjjxVpp__rs": {
+"base": "TABLEWARE_SET_5CHkPjjxVpp",
+"scale": 0.4513,
+"lo": [
+-0.0923,
+-0.06274,
+0.0
+],
+"hi": [
+0.09374,
+0.06256,
+0.02857
+],
+"size": [
+0.186,
+0.125,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"TABLEWARE_SET_5ww1UFLuCJG__rs": {
+"base": "TABLEWARE_SET_5ww1UFLuCJG",
+"scale": 0.5941,
+"lo": [
+-0.08792,
+-0.05638,
+-0.0
+],
+"hi": [
+0.08864,
+0.06036,
+0.03535
+],
+"size": [
+0.176,
+0.116,
+0.036
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"TERREX_FAST_X_GTX__rs": {
+"base": "TERREX_FAST_X_GTX",
+"scale": 0.6267,
+"lo": [
+-0.03648,
+-0.09633,
+-0.0
+],
+"hi": [
+0.03648,
+0.09633,
+0.09696
+],
+"size": [
+0.073,
+0.192,
+0.097
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"TOP_TEN_HI_60KlbRbdoJA__rs": {
+"base": "TOP_TEN_HI_60KlbRbdoJA",
+"scale": 0.2731,
+"lo": [
+-0.01431,
+-0.0408,
+-0.0
+],
+"hi": [
+0.01431,
+0.04083,
+0.0443
+],
+"size": [
+0.029,
+0.082,
+0.044
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"TZX_Runner__rs": {
+"base": "TZX_Runner",
+"scale": 0.2533,
+"lo": [
+-0.01358,
+-0.03705,
+-3e-05
+],
+"hi": [
+0.01358,
+0.03705,
+0.03685
+],
+"size": [
+0.027,
+0.074,
+0.037
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Tena_Pads_Heavy_Long_42_pads__rs": {
+"base": "Tena_Pads_Heavy_Long_42_pads",
+"scale": 0.336,
+"lo": [
+-0.06347,
+-0.02217,
+-0.0
+],
+"hi": [
+0.0636,
+0.02117,
+0.09814
+],
+"size": [
+0.127,
+0.043,
+0.098
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Tetris_Link_Game__rs": {
+"base": "Tetris_Link_Game",
+"scale": 0.7231,
+"lo": [
+-0.11663,
+-0.03398,
+-0.0
+],
+"hi": [
+0.11699,
+0.03225,
+0.19306
+],
+"size": [
+0.234,
+0.067,
+0.193
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Thomas_Friends_Wooden_Railway_Ascending_Track_Riser_Pack__rs": {
+"base": "Thomas_Friends_Wooden_Railway_Ascending_Track_Riser_Pack",
+"scale": 0.6491,
+"lo": [
+-0.13773,
+-0.01733,
+0.0
+],
+"hi": [
+0.13832,
+0.02025,
+0.09282
+],
+"size": [
+0.276,
+0.038,
+0.093
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Thomas_Friends_Wooden_Railway_Deluxe_Track_Accessory_Pack__rs": {
+"base": "Thomas_Friends_Wooden_Railway_Deluxe_Track_Accessory_Pack",
+"scale": 0.7225,
+"lo": [
+-0.12889,
+-0.07413,
+0.0
+],
+"hi": [
+0.12897,
+0.07384,
+0.04198
+],
+"size": [
+0.258,
+0.148,
+0.042
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Threshold_Performance_Bath_Sheet_Sandoval_Blue_33_x_63__rs": {
+"base": "Threshold_Performance_Bath_Sheet_Sandoval_Blue_33_x_63",
+"scale": 0.4825,
+"lo": [
+-0.05732,
+-0.10272,
+0.0
+],
+"hi": [
+0.05737,
+0.10268,
+0.04984
+],
+"size": [
+0.115,
+0.206,
+0.05
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Threshold_Textured_Damask_Bath_Towel_Pink__rs": {
+"base": "Threshold_Textured_Damask_Bath_Towel_Pink",
+"scale": 0.4706,
+"lo": [
+-0.08269,
+-0.08114,
+0.0
+],
+"hi": [
+0.08509,
+0.07911,
+0.02706
+],
+"size": [
+0.168,
+0.16,
+0.027
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Timberland_Mens_Classic_2Eye_Boat_Shoe__rs": {
+"base": "Timberland_Mens_Classic_2Eye_Boat_Shoe",
+"scale": 0.6948,
+"lo": [
+-0.03891,
+-0.09859,
+0.0
+],
+"hi": [
+0.03884,
+0.09859,
+0.06225
+],
+"size": [
+0.078,
+0.197,
+0.063
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Timberland_Mens_Earthkeepers_Casco_Bay_Canvas_Oxford__rs": {
+"base": "Timberland_Mens_Earthkeepers_Casco_Bay_Canvas_Oxford",
+"scale": 0.803,
+"lo": [
+-0.04417,
+-0.11748,
+-8e-05
+],
+"hi": [
+0.04417,
+0.11748,
+0.06777
+],
+"size": [
+0.088,
+0.235,
+0.067
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Timberland_Mens_Earthkeepers_Casco_Bay_Canvas_SlipOn__rs": {
+"base": "Timberland_Mens_Earthkeepers_Casco_Bay_Canvas_SlipOn",
+"scale": 0.581,
+"lo": [
+-0.0312,
+-0.08413,
+-0.0
+],
+"hi": [
+0.03114,
+0.08413,
+0.05147
+],
+"size": [
+0.062,
+0.168,
+0.052
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Timberland_Mens_Earthkeepers_Heritage_2Eye_Boat_Shoe__rs": {
+"base": "Timberland_Mens_Earthkeepers_Heritage_2Eye_Boat_Shoe",
+"scale": 0.5609,
+"lo": [
+-0.0295,
+-0.08206,
+0.0
+],
+"hi": [
+0.02945,
+0.08206,
+0.05553
+],
+"size": [
+0.059,
+0.164,
+0.056
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Timberland_Mens_Earthkeepers_Newmarket_6Inch_Cupsole_Boot__rs": {
+"base": "Timberland_Mens_Earthkeepers_Newmarket_6Inch_Cupsole_Boot",
+"scale": 0.2414,
+"lo": [
+-0.01287,
+-0.03551,
+0.0
+],
+"hi": [
+0.01287,
+0.03551,
+0.05125
+],
+"size": [
+0.026,
+0.071,
+0.051
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Timberland_Mens_Earthkeepers_Stormbuck_Chukka__rs": {
+"base": "Timberland_Mens_Earthkeepers_Stormbuck_Chukka",
+"scale": 0.7849,
+"lo": [
+-0.04434,
+-0.1204,
+-0.0
+],
+"hi": [
+0.04434,
+0.1204,
+0.09081
+],
+"size": [
+0.089,
+0.241,
+0.091
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Timberland_Mens_Earthkeepers_Stormbuck_Lite_Plain_Toe_Oxford__rs": {
+"base": "Timberland_Mens_Earthkeepers_Stormbuck_Lite_Plain_Toe_Oxford",
+"scale": 0.7353,
+"lo": [
+-0.04096,
+-0.11493,
+0.0
+],
+"hi": [
+0.04103,
+0.11493,
+0.08191
+],
+"size": [
+0.082,
+0.23,
+0.082
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Timberland_Mens_Earthkeepers_Stormbuck_Plain_Toe_Oxford__rs": {
+"base": "Timberland_Mens_Earthkeepers_Stormbuck_Plain_Toe_Oxford",
+"scale": 0.3296,
+"lo": [
+-0.01829,
+-0.05029,
+0.0
+],
+"hi": [
+0.01826,
+0.05029,
+0.04245
+],
+"size": [
+0.037,
+0.101,
+0.043
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Travel_Mate_P_series_Notebook__rs": {
+"base": "Travel_Mate_P_series_Notebook",
+"scale": 0.2945,
+"lo": [
+-0.04933,
+-0.05528,
+-0.0
+],
+"hi": [
+0.04865,
+0.05528,
+0.05711
+],
+"size": [
+0.098,
+0.11,
+0.057
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"TriStar_Products_PPC_Power_Pressure_Cooker_XL_in_Black__rs": {
+"base": "TriStar_Products_PPC_Power_Pressure_Cooker_XL_in_Black",
+"scale": 0.1859,
+"lo": [
+-0.0296,
+-0.02703,
+0.0
+],
+"hi": [
+0.02837,
+0.02759,
+0.06129
+],
+"size": [
+0.058,
+0.055,
+0.061
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"UGG_Bailey_Bow_Womens_Clogs_Black_7__rs": {
+"base": "UGG_Bailey_Bow_Womens_Clogs_Black_7",
+"scale": 0.3408,
+"lo": [
+-0.0213,
+-0.05043,
+-0.0
+],
+"hi": [
+0.0213,
+0.05043,
+0.08192
+],
+"size": [
+0.043,
+0.101,
+0.082
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"UGG_Bailey_Button_Womens_Boots_Black_7__rs": {
+"base": "UGG_Bailey_Button_Womens_Boots_Black_7",
+"scale": 0.8057,
+"lo": [
+-0.04569,
+-0.11377,
+-8e-05
+],
+"hi": [
+0.0456,
+0.11377,
+0.1912
+],
+"size": [
+0.091,
+0.227,
+0.191
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"UGG_Classic_Tall_Womens_Boots_Chestnut_7__rs": {
+"base": "UGG_Classic_Tall_Womens_Boots_Chestnut_7",
+"scale": 0.3909,
+"lo": [
+-0.02146,
+-0.05684,
+-0.0
+],
+"hi": [
+0.02146,
+0.0568,
+0.12979
+],
+"size": [
+0.043,
+0.114,
+0.13
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"UGG_Classic_Tall_Womens_Boots_Grey_7__rs": {
+"base": "UGG_Classic_Tall_Womens_Boots_Grey_7",
+"scale": 0.2076,
+"lo": [
+-0.01921,
+-0.02923,
+0.0
+],
+"hi": [
+0.01918,
+0.02923,
+0.0685
+],
+"size": [
+0.038,
+0.059,
+0.069
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"UGG_Jena_Womens_Java_7__rs": {
+"base": "UGG_Jena_Womens_Java_7",
+"scale": 0.6844,
+"lo": [
+-0.03442,
+-0.09944,
+-0.0
+],
+"hi": [
+0.03442,
+0.09937,
+0.17301
+],
+"size": [
+0.069,
+0.198,
+0.173
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Vtech_Cruise_Learn_Car_25_Years__rs": {
+"base": "Vtech_Cruise_Learn_Car_25_Years",
+"scale": 0.3805,
+"lo": [
+-0.06921,
+-0.03463,
+0.0
+],
+"hi": [
+0.06567,
+0.03158,
+0.0449
+],
+"size": [
+0.135,
+0.066,
+0.045
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"WATER_LANDING_NET__rs": {
+"base": "WATER_LANDING_NET",
+"scale": 0.3688,
+"lo": [
+-0.0689,
+-0.0454,
+-0.0
+],
+"hi": [
+0.07524,
+0.03021,
+0.02785
+],
+"size": [
+0.144,
+0.076,
+0.028
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Winning_Moves_1180_Aggravation_Board_Game__rs": {
+"base": "Winning_Moves_1180_Aggravation_Board_Game",
+"scale": 0.489,
+"lo": [
+-0.11769,
+-0.01183,
+-0.0
+],
+"hi": [
+0.1175,
+0.01105,
+0.12107
+],
+"size": [
+0.235,
+0.023,
+0.121
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Womens_Bluefish_2Eye_Boat_Shoe_in_Brown_Deerskin_JJ2pfEHTZG7__rs": {
+"base": "Womens_Bluefish_2Eye_Boat_Shoe_in_Brown_Deerskin_JJ2pfEHTZG7",
+"scale": 0.6341,
+"lo": [
+-0.03329,
+-0.09157,
+-6e-05
+],
+"hi": [
+0.03336,
+0.09151,
+0.0565
+],
+"size": [
+0.067,
+0.183,
+0.056
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Womens_Suede_Bahama_in_Graphite_Suede_p1KUwoWbw7R__rs": {
+"base": "Womens_Suede_Bahama_in_Graphite_Suede_p1KUwoWbw7R",
+"scale": 0.5603,
+"lo": [
+-0.03317,
+-0.08253,
+0.0
+],
+"hi": [
+0.03317,
+0.08259,
+0.0446
+],
+"size": [
+0.066,
+0.165,
+0.045
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Womens_Teva_Capistrano_Bootie__rs": {
+"base": "Womens_Teva_Capistrano_Bootie",
+"scale": 0.293,
+"lo": [
+-0.01485,
+-0.04254,
+-0.0
+],
+"hi": [
+0.01485,
+0.04257,
+0.05602
+],
+"size": [
+0.03,
+0.085,
+0.056
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"Womens_Teva_Capistrano_Bootie_ldjRT9yZ5Ht__rs": {
+"base": "Womens_Teva_Capistrano_Bootie_ldjRT9yZ5Ht",
+"scale": 0.4132,
+"lo": [
+-0.02049,
+-0.06045,
+-4e-05
+],
+"hi": [
+0.02045,
+0.06049,
+0.07896
+],
+"size": [
+0.041,
+0.121,
+0.079
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ZX700_lYiwcTIekXk__rs": {
+"base": "ZX700_lYiwcTIekXk",
+"scale": 0.245,
+"lo": [
+-0.01355,
+-0.03598,
+-0.0
+],
+"hi": [
+0.01355,
+0.03598,
+0.03361
+],
+"size": [
+0.027,
+0.072,
+0.034
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ZX700_mf9Pc06uL06__rs": {
+"base": "ZX700_mf9Pc06uL06",
+"scale": 0.3851,
+"lo": [
+-0.02114,
+-0.05638,
+-4e-05
+],
+"hi": [
+0.0211,
+0.05638,
+0.05079
+],
+"size": [
+0.042,
+0.113,
+0.051
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"ZX700_mzGbdP3u6JB__rs": {
+"base": "ZX700_mzGbdP3u6JB",
+"scale": 0.2872,
+"lo": [
+-0.01557,
+-0.04188,
+0.0
+],
+"hi": [
+0.01557,
+0.04191,
+0.03774
+],
+"size": [
+0.031,
+0.084,
+0.038
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"adiZero_Slide_2_SC__rs": {
+"base": "adiZero_Slide_2_SC",
+"scale": 0.9095,
+"lo": [
+-0.06958,
+-0.13243,
+-0.0
+],
+"hi": [
+0.06958,
+0.13243,
+0.0784
+],
+"size": [
+0.139,
+0.265,
+0.078
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+},
+"adizero_F50_TRX_FG_LEA__rs": {
+"base": "adizero_F50_TRX_FG_LEA",
+"scale": 0.3673,
+"lo": [
+-0.01792,
+-0.05168,
+-0.0
+],
+"hi": [
+0.01792,
+0.05171,
+0.04011
+],
+"size": [
+0.036,
+0.104,
+0.04
+],
+"n_coll": 32,
+"split": "train",
+"ok": true
+}
+}

@@ -33,6 +33,21 @@ def read_log_lines(path):
     return out
 
 
+def _with_prompt(f, lang, sentence):
+    """Reuse one ex2 websocket client with a new prompt."""
+    from residual_pg_ctrl import prompt
+    import cv2
+    from collect_v2 import state8
+    p = prompt(lang, sentence)
+
+    def g(obs, A):
+        ag = cv2.resize(obs["agentview_image"], (224, 224), interpolation=cv2.INTER_AREA)
+        wr = cv2.resize(obs["robot0_eye_in_hand_image"], (224, 224), interpolation=cv2.INTER_AREA)
+        return np.asarray(f.client.ws_call(dict(agent=ag, wrist=wr, prompt=p, state=state8(obs),
+                                                base=np.asarray(A, np.float32)))["delta"])
+    return g
+
+
 def items(levels, tasks, layouts, per_layout):
     return [(lv, t, e, k) for lv in levels for t in tasks for e in layouts for k in range(per_layout)]
 
@@ -62,6 +77,7 @@ def worker(args):
         if f.startswith("log_"):
             done |= {x["item"] for x in read_log_lines(os.path.join(cfg["log_dir"], f)) if x.get("final")}
     states, metas = [], []
+    exc = None
     for i, (lv, t, e, k), obj in todo:
         if i in done:
             continue
@@ -99,12 +115,24 @@ def worker(args):
                 names = cells.get(f"{lv}/{t}", ["default"])[: cfg["tries"]]
                 if cfg.get("retry_cfgs"):
                     names = cfg["retry_cfgs"].split(",")
+                exf = None
+                if cfg.get("ex_port"):   # DAgger: ex2 drives (shield-guarded), the shield labels
+                    import texts as TX
+                    from residual_ex_ctrl import make_exf
+                    sent = TX.T_TRAIN[rng.integers(len(TX.T_TRAIN))].format(o=idx[obj]["noun"])
+                    if exc is None:
+                        exc = make_exf(cfg["ex_port"], lang, sent)
+                    exf = _with_prompt(exc, lang, sent)
+                    line["sentence"] = sent
+                    names = names[:1]
                 for k_try, name in enumerate(names):
-                    out, rec = run_one(env, sc[0], lang, r, cfg, [G.NAME], [], grid.get(name, {}))
-                    keep = bool(out["safe_success"])
+                    out, rec = run_one(env, sc[0], lang, r, cfg, [G.NAME], [], grid.get(name, {}), exf=exf)
+                    # DAgger keeps every episode without a collision: labels are per-state, task outcome is recorded
+                    keep = bool(out["safe_success"]) if exf is None else bool(rec is not None and not out["named_hit"])
                     if keep or k_try == len(names) - 1:
                         line.update(final=True, keep=keep, cfg=name, attempt=k_try, elevated=bool(sc[2]),
-                                    **{x: out[x] for x in ("success", "named_hit", "steps", "filter")})
+                                    **{x: out.get(x) for x in ("success", "named_hit", "steps", "filter", "ex_frac")},
+                                 dagger=bool(exf))
                         if keep:
                             save(os.path.join(cfg["out"], f"ep_{i:06d}.npz"), rec,
                                  dict(line, lang=lang, drive=[G.NAME], others=[], exec_steps=cfg["exec_steps"],
@@ -147,6 +175,7 @@ def main():
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--ex_port", type=int, default=0, help="DAgger: res_server.py port; ex2 drives, the shield labels")
     ap.add_argument("--balanced", type=int, default=0, help="scenes_only: this many scenes per object and level")
     ap.add_argument("--objects_file", default="", help="json list of GSO model names to use instead of the whole split")
     ap.add_argument("--retry_from", default="", help="earlier output dir (same --seed, --per_layout, --split): rerun "

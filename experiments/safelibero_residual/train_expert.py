@@ -167,17 +167,31 @@ def load_batch(args):
     from res_expert import prompt
     rng = np.random.default_rng(seed)
     B = dict(agent=[], wrist=[], state=[], base=[], tgt=[], prompt=[], true=[], kind=[])
+    motion = bool(os.environ.get("RES_MOTION"))
+    if motion:
+        B["dstate"] = []
     for f, meta, mk in zip(files, metas, kinds):
         rows = make_rows(f, meta, rng, pool, idx, per_ep, p_nz, mk)
         with np.load(f, allow_pickle=True) as z:
             cs = [r[0] for r in rows]
             ag, wr = z["agent"][cs], z["wrist"][cs]
             st, ba, tg = z["state"][cs], z["base"][cs], z["drive_tgt"][cs]
+            if motion:   # state change since the previous chunk (0 at the first chunk)
+                ds = st - z["state"][np.maximum(np.asarray(cs) - 1, 0)]
+        bd = os.environ.get("RES_BASE_DIR")
+        bp = os.path.join(bd, f.replace("/", "__") + ".npy") if bd else ""
+        if bd and os.path.exists(bp):   # residual on a distilled base (relabel_distill.py): base = its chunk,
+            D = np.load(bp)[cs]          # same safe target action (episodes it could not read keep pi0.5's)
+            nzr = (np.abs(tg).sum((1, 2)) > 1e-6)[:, None, None]
+            tg = np.where(nzr, ba[..., :3] + tg - D[..., :3], 0.0).astype(np.float32)
+            ba = D
         for j, (c, sent, tru, kd) in enumerate(rows):
             a_im, w_im = (augment(ag[j], rng, False), augment(wr[j], rng, True)) if aug else (ag[j], wr[j])
             B["agent"].append(a_im); B["wrist"].append(w_im); B["state"].append(st[j]); B["base"].append(ba[j])
             B["tgt"].append(tg[j] if tru else np.zeros_like(tg[j])); B["prompt"].append(prompt(meta["lang"], sent))
             B["true"].append(tru); B["kind"].append(kd)
+            if motion:
+                B["dstate"].append(ds[j])
     return {k: (np.stack(v) if k != "prompt" else v) for k, v in B.items()}
 
 
@@ -268,18 +282,29 @@ def unflat(state, d):
     import jax
     import jax.numpy as jnp
     leaves = jax.tree_util.tree_flatten_with_path(state)
-    return jax.tree_util.tree_unflatten(leaves[1], [jnp.asarray(d[jax.tree_util.keystr(k)], v.dtype) for k, v in leaves[0]])
+    # LoRA adapters may be absent from a non-LoRA warm start; they keep their fresh init. Anything else must match.
+    miss = [jax.tree_util.keystr(k) for k, _ in leaves[0] if jax.tree_util.keystr(k) not in d]
+    assert all("lora" in m for m in miss), miss[:5]
+    def get(k, v):
+        x = np.asarray(d[k])
+        if x.shape != v.shape and "cond_proj" in k and x.ndim == 2 and x.shape[1] == v.shape[1] and x.shape[0] < v.shape[0]:
+            x = np.concatenate([x, np.zeros((v.shape[0] - x.shape[0], x.shape[1]), x.dtype)])   # --motion: new inputs start at 0
+        assert x.shape == v.shape, (k, x.shape, v.shape)
+        return jnp.asarray(x, v.dtype)
+    return jax.tree_util.tree_unflatten(leaves[1], [get(jax.tree_util.keystr(k), v)
+                                                    if jax.tree_util.keystr(k) in d else v for k, v in leaves[0]])
 
 
 def compute_stats(files, metas, n=400, seed=0):
     rng = np.random.default_rng(seed)
-    S, Bs, T = [], [], []
+    S, Bs, T, D = [], [], [], []
     for i in rng.choice(len(files), min(n, len(files)), replace=False):
         with np.load(files[i], allow_pickle=True) as z:
             S.append(z["state"]); Bs.append(z["base"].reshape(len(z["base"]), -1)); T.append(z["drive_tgt"])
+            D.append(np.diff(z["state"], axis=0))
     S, Bs, T = np.concatenate(S), np.concatenate(Bs), np.concatenate(T)
     nz = T[np.abs(T).sum((1, 2)) > 1e-6]
-    return dict(st_m=S.mean(0), st_s=S.std(0) + 1e-6, b_m=Bs.reshape(-1, 7).mean(0), b_s=Bs.reshape(-1, 7).std(0) + 1e-6, scale=float(1.0 / (nz.std() + 1e-6)), nz_frac=float(len(nz) / len(T)))
+    return dict(st_m=S.mean(0), st_s=S.std(0) + 1e-6, b_m=Bs.reshape(-1, 7).mean(0), b_s=Bs.reshape(-1, 7).std(0) + 1e-6, scale=float(1.0 / (nz.std() + 1e-6)), nz_frac=float(len(nz) / len(T)), ds_s=np.concatenate(D).std(0) + 1e-6)
 
 
 def to_model_inputs(b, stats, tok):
@@ -287,7 +312,10 @@ def to_model_inputs(b, stats, tok):
     st = (b["state"] - stats["st_m"]) / stats["st_s"]
     base = (b["base"] - stats["b_m"]) / stats["b_s"]
     H = base.shape[1]
-    cond = np.concatenate([base, np.repeat(st[:, None], H, 1)], -1).astype(np.float32)
+    parts = [base, np.repeat(st[:, None], H, 1)]
+    if "dstate" in b:   # --motion checkpoints
+        parts.append(np.repeat((b["dstate"] / stats["ds_s"])[:, None], H, 1))
+    cond = np.concatenate(parts, -1).astype(np.float32)
     toks, tmask = tok(b["prompt"], st)
     return dict(agent=b["agent"], wrist=b["wrist"], toks=toks, tmask=tmask, cond=cond,
                 tgt=(b["tgt"] * stats["scale"]).astype(np.float32))
@@ -324,7 +352,26 @@ def main():
     ap.add_argument("--lr_end_frac", type=float, default=0.05, help="final lr / peak lr of the cosine decay (1 = constant)")
     ap.add_argument("--ema", type=float, default=0.0, help="EMA decay of the trained weights (0 = off); "
                     "validation and saved checkpoints use the EMA weights when on")
+    ap.add_argument("--dup", default="", help="oversample episodes whose path contains a substring, e.g. 'dag=2' "
+                    "(each matching train episode is listed that many times)")
+    ap.add_argument("--gate_w", type=float, default=0.0, help="weight of the correction-needed gate BCE "
+                    "(res_expert.gate_logit; res_server --gate_thr zeroes the residual when the gate is below it)")
+    ap.add_argument("--init", default="", help="warm start: checkpoint .pkl whose train_state initialises the expert "
+                    "(e.g. ex2 best.pkl for a DAgger fine-tune); normalisation stats are taken from it too")
+    ap.add_argument("--flow_w", type=float, default=1.0, help="weight of the residual flow loss (0 = gate-only model; "
+                    "best.pkl is then picked by balanced gate accuracy)")
+    ap.add_argument("--gate_balance", action="store_true", help="class-balanced gate BCE")
+    ap.add_argument("--lora", action="store_true", help="train rank-16 LoRA adapters on the PaliGemma backbone")
+    ap.add_argument("--motion", action="store_true", help="also condition on the state change since the previous chunk "
+                    "(cond_proj gets 8 zero-initialised inputs, so a warm start begins unchanged); loader workers read RES_MOTION")
+    ap.add_argument("--lr_lora", type=float, default=1e-4, help="lr of the LoRA adapters")
+    ap.add_argument("--base_dir", default="", help="relabel_distill.py output: train the residual on that policy's "
+                    "chunks (base input and xyz target re-expressed against it); loader workers read RES_BASE_DIR")
     a = ap.parse_args()
+    if a.motion:
+        os.environ["RES_MOTION"] = "1"
+    if a.base_dir:
+        os.environ["RES_BASE_DIR"] = a.base_dir
     os.makedirs(a.out, exist_ok=True)
     files = episode_list(a.gso_root, a.rounds)
     metas = [read_meta(f) for f in files]
@@ -338,9 +385,18 @@ def main():
     n_gso = len({metas[i]["gso"] for i in tr if metas[i].get("gso")})
     print(f"episodes: train {len(tr)} ({sum(bool(metas[i].get('gso')) for i in tr)} GSO, {n_gso} GSO objects), "
           f"val {len(va)} ({len({metas[i]['gso'] for i in va})} held-out objects)", flush=True)
+    if a.dup:
+        for sub, w in (x.split("=") for x in a.dup.split(",")):
+            extra = [i for i in tr if sub in files[i]] * (int(w) - 1)
+            print(f"dup: {len(extra)} extra rows for episodes matching '{sub}'", flush=True)
+            tr = tr + extra
     trf, trm = [files[i] for i in tr], [metas[i] for i in tr]
     vaf, vam = [files[i] for i in va], [metas[i] for i in va]
     stats = compute_stats(trf, trm)
+    if a.init:   # keep the warm start's normalisation so its outputs keep their meaning
+        with open(a.init, "rb") as f:
+            init_ck = pickle.load(f)
+        stats = dict(init_ck["stats"], ds_s=init_ck["stats"].get("ds_s", stats["ds_s"]))
     print("stats: scale", round(stats["scale"], 2), "non-zero label frac", round(stats["nz_frac"], 3), flush=True)
     pool, idx = noun_pool()
     print(f"corrected episodes: train {sum(map(corrected, trm))} / {len(trm)}, val {sum(map(corrected, vam))} / {len(vam)}", flush=True)
@@ -359,12 +415,17 @@ def main():
 
     import res_expert as RE
 
-    graphdef, frozen, train_state, rest = RE.build()
+    graphdef, frozen, train_state, rest = RE.build(lora=a.lora, cond_dim=RE.COND + (RE.MOTION if a.motion else 0))
+    if a.init:
+        train_state = unflat(train_state, init_ck["train_state"])
+        print(f"warm start from {a.init}", flush=True)
     n_tr = sum(x.size for x in jax.tree.leaves(train_state))
     n_fr = sum(x.size for x in jax.tree.leaves(frozen))
-    print(f"trainable {n_tr / 1e6:.1f}M (action expert + projections + cond_proj), frozen {n_fr / 1e6:.0f}M", flush=True)
+    print(f"trainable {n_tr / 1e6:.1f}M (action expert + projections + cond_proj{' + LoRA' if a.lora else ''}), frozen {n_fr / 1e6:.0f}M", flush=True)
 
     def label(path, _):
+        if any("lora" in str(p) for p in path):
+            return "lora"
         return "new" if any("cond_proj" in str(p) for p in path) else "pre"
 
     labels = jax.tree_util.tree_map_with_path(label, train_state)
@@ -372,7 +433,8 @@ def main():
         0.0, peak, a.warmup, max(a.steps, a.warmup + 1), peak * a.lr_end_frac)
     tx = optax.chain(optax.clip_by_global_norm(1.0),
                      optax.multi_transform({"pre": optax.adamw(sched(a.lr), b2=a.b2, eps=1e-8, weight_decay=a.wd),
-                                            "new": optax.adamw(sched(a.lr_new), b2=a.b2, eps=1e-8, weight_decay=0.0)},
+                                            "new": optax.adamw(sched(a.lr_new), b2=a.b2, eps=1e-8, weight_decay=0.0),
+                                            "lora": optax.adamw(sched(a.lr_lora), b2=a.b2, eps=1e-8, weight_decay=0.0)},
                                            labels))
     opt_state = tx.init(train_state)
 
@@ -390,7 +452,8 @@ def main():
 
     def loss_fn(ts, fz, rs, x, rng):
         m = nnx.merge(graphdef, fz, ts, rs)
-        return RE.flow_loss(m, rng, x["agent"], x["wrist"], x["toks"], x["tmask"], x["cond"], x["tgt"])
+        return RE.flow_loss(m, rng, x["agent"], x["wrist"], x["toks"], x["tmask"], x["cond"], x["tgt"], gate_w=a.gate_w,
+                            flow_w=a.flow_w, gate_balance=a.gate_balance)
 
     @jax.jit
     def step(ts, os_, fz, rs, x, rng):
@@ -401,7 +464,7 @@ def main():
     @jax.jit
     def predict(ts, fz, rs, x, rng):
         m = nnx.merge(graphdef, fz, ts, rs)
-        return RE.sample(m, rng, x["agent"], x["wrist"], x["toks"], x["tmask"], x["cond"], steps=10)
+        return RE.sample(m, rng, x["agent"], x["wrist"], x["toks"], x["tmask"], x["cond"], steps=10, with_gate=True)
 
     @jax.jit
     def val_loss(ts, fz, rs, x, rng):
@@ -430,12 +493,14 @@ def main():
     def evaluate(ts, it):
         if not vb:
             return {}
-        L, cos, mag_t, mag_f, rp, rt, mag_s = [], [], [], [], [], [], []
+        L, cos, mag_t, mag_f, rp, rt, mag_s, gp = [], [], [], [], [], [], [], []
         for k, b in enumerate(vb):
             x = put(b)
             L.append(float(val_loss(ts, frozen, rest, x, jax.random.key(k))))
-            p = np.asarray(predict(ts, frozen, rest, x, jax.random.key(100 + k)))
+            p, g = predict(ts, frozen, rest, x, jax.random.key(100 + k))
+            p, g = np.asarray(p), np.asarray(g)
             t = np.asarray(x["tgt"])
+            gp += [(float(g[j]), bool(np.abs(t[j]).sum() > 1e-3)) for j in range(len(p))]
             for j in range(len(p)):
                 if b["kind"][j] == "safe":
                     mag_s.append(np.abs(p[j]).sum(-1).max())
@@ -449,7 +514,12 @@ def main():
         return dict(step=it, val_loss=round(float(np.mean(L)), 4), cos_nz=round(float(np.mean(cos)), 3) if cos else None,
                     norm_ratio=round(float(np.mean(rp) / np.mean(rt)), 3) if rt else None,
                     mag_true=round(float(np.mean(mag_t)), 3), mag_null_absent=round(float(np.mean(mag_f)), 3),
-                    mag_safe=round(float(np.mean(mag_s)), 3) if mag_s else None)
+                    mag_safe=round(float(np.mean(mag_s)), 3) if mag_s else None,
+                    gate_p_nz=round(float(np.mean([g for g, y in gp if y])), 3) if any(y for _, y in gp) else None,
+                    gate_p_zero=round(float(np.mean([g for g, y in gp if not y])), 3),
+                    gate_acc=round(float(np.mean([(g >= 0.5) == y for g, y in gp])), 3),
+                    gate_bal_acc=round(0.5 * float(np.mean([g >= 0.5 for g, y in gp if y] or [0])) +
+                                       0.5 * float(np.mean([g < 0.5 for g, y in gp if not y] or [0])), 3))
 
     def save(ts, name):
         with open(os.path.join(a.out, name + ".tmp"), "wb") as f:
@@ -479,8 +549,9 @@ def main():
         if it % a.val_every == 0 or it == a.steps:
             r = evaluate(ev, it)
             print(json.dumps(r), flush=True); log.write(json.dumps(r) + "\n"); log.flush()
-            if r.get("cos_nz") is not None and r["cos_nz"] > best:
-                best = r["cos_nz"]
+            score = r.get("gate_bal_acc") if not a.flow_w else r.get("cos_nz")
+            if score is not None and score > best:
+                best = score
                 save(ev, "best.pkl")
         if it % a.save_every == 0 or it == a.steps:
             save(ev, "last.pkl")

@@ -56,8 +56,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ex", default="ex2_1gpu_bs64")
     ap.add_argument("--arm", default="true")
+    ap.add_argument("--astra", action="store_true", help="add the Astra columns and the ASTRA.md table split")
     a = ap.parse_args()
     arms = [("pi0.5", "pi05"), ("ex2", f"{a.ex}/{a.arm}")]
+    if a.astra:  # ASTRA.md naming: 1 = all, 1a = 0-39, 1b = 40-49
+        arms += [("Astra base", "astra_base/true"), ("Astra residual", "astra_res/true")]
+        print(table("Table 1: official episodes 0-49", "test", arms))
+        print(table("Table 1a: official episodes 0-39", "test", arms, keep=lambda r: r["ep"] < 40))
+        print(table("Table 1b: official episodes 40-49", "test", arms, keep=lambda r: r["ep"] >= 40))
+        print(table("Table 2: 25 unseen objects, training layouts 0-39", "scenes_newobj25", arms, extra="25 x 4"))
+        print(table("Table 3: benchmark obstacles, held-out layouts 40-49", "scenes_newlayout", arms))
+        return
     print(table("Table 1a: official episodes 0-49", "test", arms))
     print(table("Table 1b: official episodes 0-39 (training layouts)", "test", arms, keep=lambda r: r["ep"] < 40))
     print(table("Table 2: 25 unseen objects, training layouts 0-39", "scenes_newobj25", arms, extra="25 x 4"))

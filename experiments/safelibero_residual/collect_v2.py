@@ -47,8 +47,11 @@ def state8(obs):
                            obs["robot0_gripper_qpos"])).astype(np.float32)
 
 
-def run_one(env, init, lang, r, cfg, drive, others, fcfg, res=None, temb=None):
-    """One episode. Returns (outcome dict, per-chunk record lists)."""
+def run_one(env, init, lang, r, cfg, drive, others, fcfg, res=None, temb=None, exf=None):
+    """One episode. Returns (outcome dict, per-chunk record lists).
+    exf (ex2 DAgger): callable (obs, A) -> xyz residual (H,3) from res_server.py. Each chunk, pi0.5 + residual is
+    executed if the shield's lookahead finds it collision-free, else the shield's plan is executed. The label is
+    always the shield's plan - pi0.5 (what pi0.5 + shield would do from the state ex2 led to)."""
     import cv2
     import torch  # noqa: F401
     import sl_env
@@ -68,7 +71,7 @@ def run_one(env, init, lang, r, cfg, drive, others, fcfg, res=None, temb=None):
         f.reset(env, obs, [n])
         oth[n] = f
     half = (r.amax[:3] - r.amin[:3]) / 2
-    rec = {key: [] for key in ("agent", "wrist", "state", "base", "plan", "exec", "drive_tgt", "other_tgt")}
+    rec = {key: [] for key in ("agent", "wrist", "state", "base", "plan", "exec", "drive_tgt", "other_tgt", "ex_drove")}
     hits, t, success, queue = {}, 0, False, []
     exec_buf = None
     while t < sl_env.MAX_STEPS:
@@ -83,6 +86,13 @@ def run_one(env, init, lang, r, cfg, drive, others, fcfg, res=None, temb=None):
                 d = res.sample(f, x.unsqueeze(0), temb, steps=cfg["flow_steps"])[0].cpu().numpy() / cfg["res_scale"]
                 run_A = A.copy()
                 run_A[:, :3] = np.clip(A[:, :3] + d * half, -1, 1)
+            drove = False
+            if exf is not None:
+                E = A.copy()
+                E[:, :3] = np.clip(A[:, :3] + exf(obs, A), -1, 1)
+                if filt is None or filt.rollout_ok(env, E):
+                    run_A, drove = E, True
+            rec["ex_drove"].append(drove)
             ot = []
             for n, of in oth.items():
                 ot.append(of.plan_chunk(env, obs, A)[:, :3] - A[:, :3])
@@ -113,10 +123,12 @@ def run_one(env, init, lang, r, cfg, drive, others, fcfg, res=None, temb=None):
         tgt = np.zeros((len(A), 3), np.float32)
         if drive:
             tgt[:] = P[:, :3] - A[:, :3]
-            tgt[:len(E)] = E[:, :3] - A[:len(E), :3]
+            if not rec["ex_drove"][c]:   # ex2-driven chunks keep the shield's plan as the label on every step
+                tgt[:len(E)] = E[:, :3] - A[:len(E), :3]
         rec["drive_tgt"].append(tgt)
     named_hit = any(sl_env.scene_name(obs, n) in hits for n in drive)
     out = dict(success=bool(success), hits=hits, named_hit=bool(named_hit), steps=t,
+               ex_frac=round(float(np.mean(rec["ex_drove"])), 3) if rec["ex_drove"] else 0.0,
                safe_success=bool(success and not named_hit), filter=filt.stats if filt else None)
     return out, rec
 
@@ -129,6 +141,7 @@ def save(path, rec, meta):
                         state=np.stack(rec["state"]), base=np.stack(rec["base"]), plan=np.stack(rec["plan"]),
                         exec=exec_, exec_len=np.array([len(e) for e in rec["exec"]], np.int16),
                         drive_tgt=np.stack(rec["drive_tgt"]), other_tgt=np.stack(rec["other_tgt"]),
+                        ex_drove=np.array(rec.get("ex_drove") or [False] * len(rec["base"]), bool),
                         meta=json.dumps(meta))
 
 
@@ -160,7 +173,7 @@ def worker(args):
     for f in os.listdir(cfg["out"]):
         if f.startswith("log_"):
             done |= {x["scene"] for x in read_log_lines(os.path.join(cfg["out"], f)) if x.get("final")}
-    envs = {}
+    envs, exc = {}, None
     for i in ids:
         if i in done:
             continue
@@ -190,18 +203,31 @@ def worker(args):
             temb = torch.from_numpy(bank(sent)).unsqueeze(0).to(cfg["device"])
         names = cells.get(f"{m['level']}/{m['task']}", ["default"]) if drive else ["base"]
         names = names[: cfg["tries"]]
+        exf = None
+        if cfg.get("ex_port") and drive:   # DAgger: ex2 drives (shield-guarded), the shield labels
+            import texts as TX
+            from residual_ex_ctrl import make_exf
+            from collect_gso import _with_prompt
+            words = TX.train_texts(sl_env.canon(drive[0]).replace("_small_obstacle_1", "_obstacle_1"))
+            sent = words[srng.integers(len(words))]
+            if exc is None:
+                exc = make_exf(cfg["ex_port"], lang, sent)
+            exf = _with_prompt(exc, lang, sent)
+            names = names[:1]
         if cfg.get("retry_cfgs") and drive:
             names = cfg["retry_cfgs"].split(",")
         for k_try, name in enumerate(names):
             fcfg = grid.get(name, {})
             try:
-                out, rec = run_one(env, states[i], lang, r, cfg, drive, others, fcfg, res, temb)
+                out, rec = run_one(env, states[i], lang, r, cfg, drive, others, fcfg, res, temb, exf=exf)
             except Exception as ex:
                 out, rec = dict(error=repr(ex), safe_success=False, success=False), None
             keep = rec is not None and (out["safe_success"] if (drive or res is not None) else True)
+            if exf is not None:   # DAgger keeps every episode without a collision of the named obstacle
+                keep = rec is not None and not out.get("named_hit", True)
             last = keep or k_try == len(names) - 1
             line = dict(scene=i, layout=m["layout"], level=m["level"], task=m["task"], drive=drive, others=others,
-                        cfg=name, attempt=k_try, keep=bool(keep), final=bool(last), **out)
+                        cfg=name, attempt=k_try, keep=bool(keep), final=bool(last), dagger=exf is not None, **out)
             log.write(json.dumps(line) + "\n"); log.flush()
             if keep:
                 save(os.path.join(cfg["out"], f"ep_{i:05d}.npz"), rec,
@@ -233,6 +259,7 @@ def main():
     ap.add_argument("--scene_ids", default="")
     ap.add_argument("--p_drive", type=float, default=0.8, help="chance a scene gets a driving sentence (r1: 1.0)")
     ap.add_argument("--residual", default="")
+    ap.add_argument("--ex_port", type=int, default=0, help="DAgger: res_server.py port; ex2 drives, the shield labels")
     ap.add_argument("--retry_from", default="", help="earlier output dir: rerun only its named scenes that ended "
                     "without a safe success (same seed -> same scene and driving obstacle), writing to --out")
     ap.add_argument("--retry_cfgs", default="shield_h7,shield_h5,shield_wide_h7,shield_h7",

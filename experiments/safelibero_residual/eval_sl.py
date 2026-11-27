@@ -55,6 +55,8 @@ def worker(args):
     import sl_env
     sl_env.set_suite(cfg.get("suite", "safelibero_spatial"))
     sl_env.ENV_SEED, sl_env.SETTLE = cfg.get("env_seed", 0), cfg.get("settle", 10)
+    if cfg.get("max_steps_mult", 1.0) != 1.0:   # longer horizon (timeout study); records keep steps/collide_t
+        sl_env.MAX_STEPS = int(round(sl_env.MAX_STEPS * cfg["max_steps_mult"]))
     if cfg.get("novel"):  # novel-obstacle envs (novel_objects.py): unseen look-alike obstacles, official init states
         import novel_objects
         novel_objects.enable()
@@ -91,7 +93,7 @@ def worker(args):
             init = inits[e] if job[0] == "off" else scenes[0][e]
             order = None if job[0] == "off" else scenes[1][e]["obstacles"]
             rec = run_episode(env, lang, init, ctrl, cfg, e, order)
-            rec.update(key, suite=sl_env.SUITE, arm=cfg["arm"], text_mode=cfg.get("text_mode"))
+            rec.update(key, suite=sl_env.SUITE, arm=cfg["arm"], text_mode=cfg.get("text_mode"), max_steps=sl_env.MAX_STEPS)
         except Exception as ex:  # an env crash is logged and scored as a failure, never silently dropped
             rec = dict(key, arm=cfg["arm"], error=repr(ex), tb=traceback.format_exc()[-800:], success=False, collide=None)
         out.write(json.dumps(rec) + "\n"); out.flush()
@@ -203,9 +205,16 @@ def main():
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--scenes", default="", help="npz from scenes.py; evaluates those instead of official init states")
     ap.add_argument("--scene_ids", default="", help="lo-hi subset of scene indices")
+    ap.add_argument("--scene_list_file", default="", help="file with comma/whitespace-separated scene indices to run (instead of --scene_ids)")
+    ap.add_argument("--max_steps_mult", type=float, default=1.0, help="multiply the suite step limit (300; 550 for long)")
     ap.add_argument("--novel", action="store_true", help="swap each obstacle for an unseen look-alike (novel_objects.py)")
     ap.add_argument("--pg_port", type=int, default=8100, help="pg_server.py port (residual_pg arm)")
     ap.add_argument("--ex_port", type=int, default=8200, help="res_server.py port (residual_ex arm)")
+    ap.add_argument("--episodes", default="", help='exact runs "LEVEL:TASK:EP;..." instead of --levels/--tasks/--eps')
+    ap.add_argument("--astra_effort", default="", help="reasoning_effort for the astra arms ('' = API default)")
+    ap.add_argument("--astra_detail", default="auto", help="image detail for the astra arms")
+    ap.add_argument("--ex_scale", type=float, default=1.0, help="residual_ex arm: multiply the expert's residual")
+    ap.add_argument("--ex_gate", type=float, default=0.0, help="residual_ex arm: zero a chunk's residual when its size (max over xyz of the summed |delta| over the executed steps) is below this")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     lo, hi = map(int, a.eps.split("-")) if "-" in a.eps else (int(a.eps), int(a.eps))
@@ -213,6 +222,11 @@ def main():
         n = len(load_scenes(a.scenes)[1])
         slo, shi = map(int, a.scene_ids.split("-")) if a.scene_ids else (0, n - 1)
         jobs = [("scn", i) for i in range(slo, min(shi, n - 1) + 1)]
+        if a.scene_list_file:
+            keep = {int(x) for x in open(a.scene_list_file).read().replace(",", " ").split()}
+            jobs = [j for j in jobs if j[1] in keep]
+    elif a.episodes:  # exact list "LEVEL:TASK:EP;..." (e.g. the random 5-run comparison)
+        jobs = [("off", lv, int(t), int(e)) for lv, t, e in (x.split(":") for x in a.episodes.split(";"))]
     else:
         jobs = episode_list(a.levels.split(","), [int(x) for x in a.tasks.split(",")], range(lo, hi + 1))
     done = set()
@@ -225,6 +239,9 @@ def main():
     jobs = [j for j in jobs if j not in done]
     print(f"{len(jobs)} episodes to run ({len(done)} already done)", flush=True)
     cfg = vars(a)
+    if a.arm.startswith("astra"):
+        import astra_client
+        json.dump(dict(cfg, astra_model=astra_client.MODEL), open(os.path.join(a.out, "config.json"), "w"), indent=1)
     # contiguous blocks per worker so each worker builds few envs
     per = int(np.ceil(len(jobs) / max(1, a.workers)))
     blocks = [jobs[i * per:(i + 1) * per] for i in range(a.workers)]

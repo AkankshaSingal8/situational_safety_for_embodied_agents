@@ -86,6 +86,12 @@ def make_controller(cfg):
     if cfg["arm"] == "residual_ex":
         from residual_ex_ctrl import ResidualExController
         return ResidualExController(cfg)
+    if cfg["arm"] in ("astra_base", "fable_base"):
+        from astra_ctrl import AstraBaseController
+        return AstraBaseController(cfg)
+    if cfg["arm"] in ("astra_res", "fable_res"):
+        from astra_ctrl import AstraResController
+        return AstraResController(cfg)
     if cfg["arm"] == "residual_v2":
         from residual_v2_ctrl import ResidualV2Controller
         return ResidualV2Controller(cfg)

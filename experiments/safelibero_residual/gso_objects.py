@@ -1,6 +1,7 @@
 """Google Scanned Objects (MuJoCo models, kevinzakka/mujoco_scanned_objects) as SafeLIBERO obstacles.
 
     python gso_objects.py index      # scan the tar once: sizes, nouns, train / held-out split -> gso_index.json
+    python gso_objects.py rescale    # size-rejected TRAIN models rescaled into the limits -> gso_index_rs.json
 
 Assets: /data/asingal2/assets/gso_models.tar (1030 models; git archive of the repo). Jobs unpack it once per node
 into $GSO_LOCAL (default /tmp/gso_<user>), because NFS is too slow for 36k small files.
@@ -152,7 +153,40 @@ def load_index():
         for n, d in json.load(open(NAMES)).items():
             if n in idx:
                 idx[n].update(noun=d["noun"], category=d["category"])
+    if os.environ.get("GSO_RESCALED") and os.path.exists(INDEX_RS):
+        for n, d in json.load(open(INDEX_RS)).items():
+            b = idx[d["base"]]
+            idx[n] = dict(d, noun=b["noun"], category=b["category"])
     return idx
+
+
+INDEX_RS = os.path.join(HERE, "gso_index_rs.json")
+RS = "__rs"   # name suffix of a rescaled variant
+
+
+def rescale_index():
+    """Training-split models the size filter rejected, uniformly rescaled into the limits -> gso_index_rs.json.
+    Only split == "train" models (held-out / test models are never touched) with collision meshes, and only when
+    one factor puts height, width and thickness all inside the limits. The factor is drawn log-uniformly inside
+    the feasible range from a hash of the name, so it is fixed. Used only when GSO_RESCALED=1 (load_index)."""
+    idx = json.load(open(INDEX))
+    out = {}
+    for name, d in idx.items():
+        if d["ok"] or d["split"] != "train" or d["n_coll"] == 0:
+            continue
+        x = np.array(d["size"], float)
+        w, t = max(x[0], x[1]), min(x[0], x[1])
+        lo = max(MIN_H / x[2], MIN_W / w, 0.02 / t)
+        hi = min(MAX_H / x[2], MAX_W / w)
+        if not (0 < lo <= hi):
+            continue
+        u = int(hashlib.md5(name.encode()).hexdigest(), 16) % 1000 / 999
+        f = float(np.exp(np.log(lo) + u * (np.log(hi) - np.log(lo))))
+        out[name + RS] = dict(base=name, scale=round(f, 4), lo=(np.array(d["lo"]) * f).round(5).tolist(),
+                              hi=(np.array(d["hi"]) * f).round(5).tolist(), size=(x * f).round(3).tolist(),
+                              n_coll=d["n_coll"], split="train", ok=True)
+    json.dump(out, open(INDEX_RS, "w"), indent=0)
+    print(f"{len(out)} rescaled training variants -> {INDEX_RS}")
 
 
 def objects(split):
@@ -184,20 +218,22 @@ def ensure_local():
 def libero_xml(name):
     """Write (once) a LIBERO obstacle-layout xml for one model; returns its path."""
     root = ensure_local()
-    d = os.path.join(root, "models", name)
-    path = os.path.join(d, "gso_obstacle.xml")
+    idx = load_index()[name]
+    base, f = idx.get("base", name), idx.get("scale")
+    d = os.path.join(root, "models", base)
+    path = os.path.join(d, "gso_obstacle.xml" if f is None else f"gso_obstacle_s{f}.xml")
     if os.path.exists(path):
         return path
-    idx = load_index()[name]
+    sc = "" if f is None else f' scale="{f} {f} {f}"'
     lo, hi = np.array(idx["lo"]), np.array(idx["hi"])
     cols = sorted(f for f in os.listdir(d) if f.startswith("model_collision_") and f.endswith(".obj"))
     prop = 'solimp="0.998 0.998 0.001" solref="0.001 1" density="100" friction="0.95 0.3 0.1"'
     assets = [f'<texture file="{d}/texture.png" name="tex" type="2d"/>',
               '<material name="mat" reflectance="0.3" texrepeat="1 1" texture="tex" texuniform="false"/>',
-              f'<mesh file="{d}/model.obj" name="vis"/>']
+              f'<mesh file="{d}/model.obj" name="vis"{sc}/>']
     geoms = [f'<geom {prop} type="mesh" mesh="vis" conaffinity="0" contype="0" group="1" material="mat"/>']
     for i, c in enumerate(cols):
-        assets.append(f'<mesh file="{d}/{c}" name="col{i}"/>')
+        assets.append(f'<mesh file="{d}/{c}" name="col{i}"{sc}/>')
         geoms.append(f'<geom {prop} type="mesh" mesh="col{i}" group="0" rgba="0.8 0.8 0.8 0.3"/>')
     c = (lo + hi) / 2
     r = 0.5 * max(hi[0] - lo[0], hi[1] - lo[1])
@@ -300,7 +336,8 @@ def make_env(level, task_id, name, res=128):
     for attempt in range(10):
         try:
             env = OffScreenRenderEnv(bddl_file_name=bddl, camera_names=["agentview", "robot0_eye_in_hand"],
-                                     camera_heights=res, camera_widths=res, hard_reset=False)
+                                     camera_heights=res, camera_widths=res, hard_reset=False,
+                                     horizon=max(1000, sl_env.MAX_STEPS + sl_env.SETTLE + 50))   # robosuite default is 1000; longer only for --max_steps_mult
             break
         except RandomizationError:
             if attempt == 9:
@@ -322,3 +359,5 @@ if __name__ == "__main__":
         build_index()
     elif sys.argv[1:] == ["renoun"]:
         renoun()
+    elif sys.argv[1:] == ["rescale"]:
+        rescale_index()
