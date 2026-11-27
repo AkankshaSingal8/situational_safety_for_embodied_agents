@@ -160,19 +160,107 @@ def build_observation(obs: dict, instruction: str) -> dict:
     }
 
 
+def build_droid_observation(obs: dict, instruction: str) -> dict:
+    """openpi DROID schema (examples/droid/main.py): exterior + wrist image, 7 joint positions,
+    gripper_position in [0, 1] (1 = closed). Panda finger qpos is ~[+0.04, -0.04] when open."""
+    img = image_tools.convert_to_uint8(image_tools.resize_with_pad(obs["agentview_image"], RESIZE_SIZE, RESIZE_SIZE))
+    wrist_img = image_tools.convert_to_uint8(image_tools.resize_with_pad(obs["wrist_image"], RESIZE_SIZE, RESIZE_SIZE))
+    q = np.asarray(obs["gripper_qpos"], dtype=np.float64)
+    closed = float(np.clip(1.0 - (q[0] - q[1]) / 0.08, 0.0, 1.0))
+    return {
+        "observation/exterior_image_1_left": img,
+        "observation/wrist_image_left": wrist_img,
+        "observation/joint_position": np.asarray(obs["raw"]["robot0_joint_pos"], dtype=np.float32),
+        "observation/gripper_position": np.array([closed], dtype=np.float32),
+        "prompt": str(instruction),
+    }
+
+
+def droid_to_env_action(robot, a: np.ndarray) -> np.ndarray:
+    """DROID action = 7 normalized joint velocities + absolute gripper position (1 = closed)."""
+    v = np.asarray(a[:7], dtype=np.float64)
+    m = np.abs(v).max()
+    if m > 1.0:
+        v = v / m
+    grip = 1.0 if float(a[7]) > 0.5 else -1.0  # robosuite: +1 close, -1 open
+    arm = robot.arms[0]
+    d = {arm: v, f"{arm}_gripper": np.array([grip] * robot.gripper[arm].dof)}
+    if robot.is_mobile:
+        d["base"] = np.zeros(3)
+        d["base_mode"] = np.array([-1])
+    return robot.create_action_vector(d)
+
+
+RC365_CAMERA = "robot0_agentview_left"
+
+
+def build_robocasa365_observation(obs: dict, instruction: str) -> dict:
+    """robocasa-benchmark/openpi@43fd9da examples/robocasa/main.py schema (RoboCasa365 pi0).
+    Images: robot0_agentview_left + robot0_eye_in_hand at 256x256, vertically flipped once
+    (the gym wrapper's [::-1]; DamageableEnv applies the same flip), resized-with-pad to 224.
+    State (16): base_to_eef_pos(3), base_to_eef_quat(4), base_pos(3), base_quat(4), gripper_qpos(2)."""
+    raw = obs["raw"]
+    img = image_tools.convert_to_uint8(image_tools.resize_with_pad(obs["secondary_image"], RESIZE_SIZE, RESIZE_SIZE))
+    wrist_img = image_tools.convert_to_uint8(image_tools.resize_with_pad(obs["wrist_image"], RESIZE_SIZE, RESIZE_SIZE))
+    state = np.concatenate([np.asarray(raw[k], dtype=np.float32) for k in (
+        "robot0_base_to_eef_pos", "robot0_base_to_eef_quat", "robot0_base_pos", "robot0_base_quat",
+        "robot0_gripper_qpos")])
+    out = {"observation/image": img, "observation/wrist_image": wrist_img,
+           "observation/state": state, "prompt": str(instruction)}
+    # pi0.5 (openpi@ca4c6d7) also takes robot0_agentview_right; pi0's input transform ignores it.
+    right = raw.get("robot0_agentview_right_image")
+    if right is not None:
+        out["observation/right_image"] = image_tools.convert_to_uint8(
+            image_tools.resize_with_pad(right, RESIZE_SIZE, RESIZE_SIZE))
+    return out
+
+
+def robocasa365_to_env_action(robot, a: np.ndarray) -> np.ndarray:
+    """12-D action -> robosuite vector, exactly as robocasa.utils.env_utils.convert_action +
+    gym_wrapper.PandaOmronKeyConverter.unmap_action: eef pos(3) + rot(3) to the OSC arm,
+    gripper_close>=0.5 -> +1 (close), base_motion[0:3] -> base, [3] -> torso, control_mode<0.5 -> -1."""
+    a = np.asarray(a, dtype=np.float64)
+    arm = robot.arms[0]
+    d = {arm: a[0:6], f"{arm}_gripper": np.array([1.0 if a[6] >= 0.5 else -1.0] * robot.gripper[arm].dof)}
+    if robot.is_mobile:
+        d["base"] = a[7:10]
+        d["torso"] = a[10:11]
+        d["base_mode"] = np.array([1.0 if a[11] >= 0.5 else -1.0])
+    return robot.create_action_vector(d)
+
+
+def robocasa_style_prompt(adapter: RoboCasaAdapter, instruction: str) -> str:
+    """Match stock RoboCasa's prompt style, which the RoboCasa365 pi0 was trained on.
+    OopsieVerse's prompts are lowercase without a period, and its TurnOnStove returns no ep_meta
+    when randomize_scene=True, so the adapter falls back to "turn on stove" even though success
+    requires one specific, randomly chosen knob. Stock RoboCasa (kitchen_stove.py) names it:
+    "Turn on the {knob} burner of the stove." """
+    knob = getattr(adapter.env, "knob", None)
+    if adapter.task_name == "turn_on_stove" and knob:
+        instruction = f"turn on the {knob.replace('_', ' ')} burner of the stove"
+    instruction = instruction.strip()
+    instruction = instruction[:1].upper() + instruction[1:]
+    return instruction if instruction.endswith(".") else instruction + "."
+
+
 def run_episode(
-    adapter: RoboCasaAdapter, client, replan_steps: int, save_video_path: str
+    adapter: RoboCasaAdapter, client, replan_steps: int, save_video_path: str, schema: str = "libero",
+    stop_on_success: bool = False,
 ) -> dict:
     obs = adapter.reset()
     # NOTE: get_ep_meta() must be called AFTER reset() -- RoboCasa's base
     # Kitchen.get_ep_meta() reads attributes (object_cfgs, layout_id) only
     # populated during reset()/_reset_internal().
     instruction = adapter.get_instruction()
+    if schema == "robocasa365":
+        instruction = robocasa_style_prompt(adapter, instruction)
     robot = adapter.env.robots[0]
     action_plan: collections.deque = collections.deque()
     frames = []
     success = False
     n_steps = 0
+    first_success_step = None
+    health_trace = []
 
     for _ in range(adapter.max_episode_steps):
         frame = obs.get("agentview_image")
@@ -180,15 +268,28 @@ def run_episode(
             frames.append(frame)
 
         if not action_plan:
-            element = build_observation(obs, instruction)
-            action_chunk = client.infer(element)["actions"]
+            build = {"droid": build_droid_observation, "robocasa365": build_robocasa365_observation}.get(
+                schema, build_observation)
+            action_chunk = client.infer(build(obs, instruction))["actions"]
             action_plan.extend(action_chunk[:replan_steps])
 
-        raw_action = np.asarray(action_plan.popleft(), dtype=np.float32)  # 7-dim, robosuite convention
-        env_action = build_env_action(robot, raw_action[:6], float(raw_action[6]))
+        raw_action = np.asarray(action_plan.popleft(), dtype=np.float32)
+        if schema == "droid":
+            env_action = droid_to_env_action(robot, raw_action)
+        elif schema == "robocasa365":
+            env_action = robocasa365_to_env_action(robot, raw_action)
+        else:  # 7-dim, robosuite convention
+            env_action = build_env_action(robot, raw_action[:6], float(raw_action[6]))
         obs, success, episode_done, info = adapter.step(env_action)
         n_steps += 1
-        if episode_done:
+        if success and first_success_step is None:
+            first_success_step = n_steps
+        h = obs.get("health")
+        if h is not None and len(h):
+            health_trace.append(float(np.mean(h)))  # mean normalized env health this step
+        # RoboCasa's own eval (robocasa-benchmark/openpi examples/robocasa/main.py) ends the episode
+        # at the first successful step; without this, success is only judged at the final step.
+        if episode_done or (stop_on_success and success):
             break
 
     if frames:
@@ -196,7 +297,10 @@ def run_episode(
         imageio.mimsave(save_video_path, frames, fps=10)
 
     return {
-        "success": bool(success),
+        "success": bool(success),                      # task state at the last step
+        "success_any": first_success_step is not None,  # goal reached at any step
+        "first_success_step": first_success_step,
+        "avg_env_health": float(np.mean(health_trace)) if health_trace else None,  # paper's Avg. Health
         "num_steps": n_steps,
         "instruction": instruction,
         "health_summary": adapter.get_health_summary(),
@@ -214,6 +318,11 @@ def main():
     parser.add_argument("--replan_steps", type=int, default=5)
     parser.add_argument("--results_dir", default=os.path.join(_HERE, "..", "results", "pi05_robocasa"))
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--schema", choices=["libero", "droid", "robocasa365"], default="libero",
+                        help="libero: OSC delta-EEF (pi0/pi05_libero, *_base); droid: joint velocity (pi0/pi05_droid); "
+                             "robocasa365: RoboCasa365 pi0 (16-D state, 12-D EEF+base action)")
+    parser.add_argument("--stop_on_success", action="store_true",
+                        help="end the episode at the first successful step (RoboCasa's own eval protocol)")
     args = parser.parse_args()
 
     os.makedirs(args.results_dir, exist_ok=True)
@@ -226,12 +335,19 @@ def main():
             episode_seed = args.seed + trial
             print(f"=== {task_name} trial {trial} (seed={episode_seed}) ===")
             record = {"task_name": task_name, "trial": trial, "seed": episode_seed, "error": None}
+            cams = None
+            if args.schema == "robocasa365":
+                # task camera first (video), then the two views the policy was trained on
+                from oopsiebench.envs.registry import EnvironmentRegistry
+                cams = list(dict.fromkeys(
+                    [EnvironmentRegistry.get(task_name).camera_name, RC365_CAMERA, "robot0_eye_in_hand"]))
             adapter = RoboCasaAdapter(
-                task_name=task_name, max_episode_steps=args.max_episode_steps, seed=episode_seed
+                task_name=task_name, max_episode_steps=args.max_episode_steps, seed=episode_seed,
+                arm_controller="joint_delta" if args.schema == "droid" else "osc", camera_names=cams,
             )
             try:
                 video_path = os.path.join(args.results_dir, f"{task_name}_trial{trial}.mp4")
-                record.update(run_episode(adapter, client, args.replan_steps, video_path))
+                record.update(run_episode(adapter, client, args.replan_steps, video_path, args.schema, args.stop_on_success))
             except Exception:
                 record["error"] = traceback.format_exc()
                 print(record["error"])

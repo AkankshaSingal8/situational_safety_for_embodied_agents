@@ -53,6 +53,7 @@ sys.path.insert(0, _HERE)
 from robocasa_adapter import RoboCasaAdapter  # noqa: E402
 from robocasa_action_utils import build_env_action, json_default  # noqa: E402
 from groot_zmq_client import GrootZmqClient  # noqa: E402
+from run_robocasa_pi05_eval import robocasa365_to_env_action  # noqa: E402
 from motion_stats import eef_total_displacement, mean_frame_diff  # noqa: E402
 
 # 3 cameras required (see groot_server.py docstring): agentview_right (the
@@ -72,14 +73,28 @@ ALL_TASKS = [
 def build_groot_obs(obs: dict, instruction: str) -> dict:
     """Build a `Gr00tPolicy.get_action()`-shaped observation, batch=1, time=1."""
 
-    def img(key):
-        arr = obs.get(key)
-        return None if arr is None else np.asarray(arr, dtype=np.uint8)[None, None]
+    # NVIDIA's eval env (squarefk/robocasa@d89d481, robocasa/models/robots/__init__.py
+    # PandaOmronKeyConverter + gym_utils/gymnasium_groot.py): side_0 = robot0_agentview_LEFT,
+    # side_1 = robot0_agentview_RIGHT, wrist_0 = eye_in_hand; each rendered at 512x512, flipped
+    # once (DamageableEnv applies the same [::-1]), then cv2.resize(..., (256, 256), INTER_AREA).
+    # The previous mapping had side_0/side_1 swapped and rendered at 256 directly.
+    import cv2
+
+    raw = obs["raw"]
+
+    def img(cam):
+        arr = raw.get(f"{cam}_image")
+        if arr is None:
+            return None
+        arr = np.asarray(arr, dtype=np.uint8)
+        if arr.shape[:2] != (256, 256):
+            arr = cv2.resize(arr, (256, 256))  # NVIDIA passes INTER_AREA as cv2's 3rd positional arg (dst) -> bilinear
+        return np.copy(arr)[None, None]
 
     video = {
-        "res256_image_side_0": img("agentview_image"),
-        "res256_image_side_1": img("secondary_image"),
-        "res256_image_wrist_0": img("wrist_image"),
+        "res256_image_side_0": img("robot0_agentview_left"),
+        "res256_image_side_1": img("robot0_agentview_right"),
+        "res256_image_wrist_0": img("robot0_eye_in_hand"),
     }
     missing = [k for k, v in video.items() if v is None]
     if missing:
@@ -164,22 +179,50 @@ def act(client, obs: dict, instruction: str):
     return action_chunk
 
 
-def run_episode(adapter: RoboCasaAdapter, client, save_video_path: str, n_action_steps: int = 8) -> dict:
+def groot_action_12d(action_chunk: dict, step: int) -> np.ndarray:
+    """GR00T robocasa_panda_omron action at `step` as the 12-D vector RoboCasa's gym wrapper
+    consumes (eef pos 3, eef rot 3, gripper_close 1, base_motion 4, control_mode 1)."""
+    g = lambda k: np.asarray(action_chunk[k])[0, step].reshape(-1)
+    return np.concatenate([g("end_effector_position"), g("end_effector_rotation"), g("gripper_close"),
+                           g("base_motion"), g("control_mode")]).astype(np.float64)
+
+
+def run_episode(adapter: RoboCasaAdapter, client, save_video_path: str, n_action_steps: int = 8,
+                paper_protocol: bool = False) -> dict:
     obs = adapter.reset()
     instruction = adapter.get_instruction()
+    if paper_protocol:
+        # GR00T's own RoboCasa training prompts (nvidia/PhysicalAI-Robotics-GR00T-X-Embodiment-Sim
+        # single_panda_gripper.*/meta/tasks.jsonl) are lowercase without a period, e.g.
+        # "open the microwave door", "turn on the front left burner of the stove" -- the same style
+        # as OopsieVerse's own prompts. Only fill in the stove knob OopsieVerse drops.
+        knob = getattr(adapter.env, "knob", None)
+        if adapter.task_name == "turn_on_stove" and knob:
+            instruction = f"turn on the {knob.replace('_', ' ')} burner of the stove"
     robot = adapter.env.robots[0]
     frames = []
     eef_positions = [np.asarray(obs["eef_pos"], dtype=np.float64)]
     success = False
     n_steps = 0
+    first_success_step = None
+    health_trace = []
 
     while n_steps < adapter.max_episode_steps:
         action_chunk = act(client, obs, instruction)
         for step in range(min(n_action_steps, 16)):
-            arm_delta, gripper = groot_action_to_arm_delta_and_gripper(action_chunk, step)
-            env_action = build_env_action(robot, arm_delta, gripper)
+            if paper_protocol:
+                # NVIDIA's gymnasium_groot.py -> PandaOmronKeyConverter.unmap_action (base/torso/mode passed through)
+                env_action = robocasa365_to_env_action(robot, groot_action_12d(action_chunk, step))
+            else:
+                arm_delta, gripper = groot_action_to_arm_delta_and_gripper(action_chunk, step)
+                env_action = build_env_action(robot, arm_delta, gripper)
             obs, success, episode_done, info = adapter.step(env_action)
             n_steps += 1
+            if success and first_success_step is None:
+                first_success_step = n_steps
+            h = obs.get("health")
+            if h is not None and len(h):
+                health_trace.append(float(np.mean(h)))
             eef_positions.append(np.asarray(obs["eef_pos"], dtype=np.float64))
 
             frame = obs.get("agentview_image")
@@ -196,6 +239,9 @@ def run_episode(adapter: RoboCasaAdapter, client, save_video_path: str, n_action
 
     return {
         "success": bool(success),
+        "success_any": first_success_step is not None,
+        "first_success_step": first_success_step,
+        "avg_env_health": float(np.mean(health_trace)) if health_trace else None,
         "num_steps": n_steps,
         "instruction": instruction,
         "health_summary": adapter.get_health_summary(),
@@ -212,7 +258,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--tasks", nargs="+", default=ALL_TASKS)
     parser.add_argument("--num_trials", type=int, default=3)
-    parser.add_argument("--max_episode_steps", type=int, default=400)
+    parser.add_argument("--max_episode_steps", type=int, default=720)
     parser.add_argument("--server_host", default="127.0.0.1")
     parser.add_argument("--server_port", type=int, default=5555)
     parser.add_argument("--n_action_steps", type=int, default=8)
@@ -220,6 +266,8 @@ def main():
         "--results_dir", default=os.path.join(_HERE, "..", "results", "groot_robocasa")
     )
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--paper_protocol", action="store_true",
+                        help="RoboCasa-style prompts (stove names its knob), full 12-D action, health trace")
     args = parser.parse_args()
 
     os.makedirs(args.results_dir, exist_ok=True)
@@ -245,13 +293,17 @@ def main():
             adapter = RoboCasaAdapter(
                 task_name=task_name,
                 camera_names=CAMERA_NAMES,
+                # NVIDIA's PandaOmronKeyConverter renders all three cameras at 512x512
+                camera_width=512 if args.paper_protocol else 256,
+                camera_height=512 if args.paper_protocol else 256,
                 max_episode_steps=args.max_episode_steps,
                 seed=episode_seed,
             )
             try:
                 video_path = os.path.join(args.results_dir, f"{task_name}_trial{trial}.mp4")
                 record.update(
-                    run_episode(adapter, client, video_path, n_action_steps=args.n_action_steps)
+                    run_episode(adapter, client, video_path, n_action_steps=args.n_action_steps,
+                                paper_protocol=args.paper_protocol)
                 )
             except Exception:
                 record["error"] = traceback.format_exc()

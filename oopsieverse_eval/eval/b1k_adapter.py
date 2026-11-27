@@ -321,6 +321,8 @@ class B1KAdapter:
 
     def get_health_summary(self) -> Dict[str, float]:
         """Return {obj_link_name: health_value}, or {} if unavailable."""
+        # Upstream DAMAGEABLE_OBJECTS (damagesim/omnigibson/params/damage_params.py) tracks only the
+        # robot ("agent") for add_firewood / wipe_counter, so for those tasks this IS env health.
         link_names = getattr(self._env, "health_list_link_names", None)
         if link_names is None or self._last_health is None:
             return {}

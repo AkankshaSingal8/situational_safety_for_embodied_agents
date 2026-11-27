@@ -50,6 +50,7 @@ class RoboCasaAdapter:
         camera_height: int = 256,
         max_episode_steps: int = 400,
         seed: Optional[int] = None,
+        arm_controller: str = "osc",
     ):
         # Imported here (rather than at module scope) so that importing this
         # module doesn't require the real oopsieverse_robocasa conda env to
@@ -77,6 +78,20 @@ class RoboCasaAdapter:
         self.camera_names = camera_names
 
         controller_configs = load_composite_controller_config(robot=self.env_config.robot)
+        if arm_controller == "joint_delta":
+            # DROID-style joint control for pi0_droid/pi05_droid: DROID maps a normalized joint
+            # velocity v (max|v|<=1) to a joint delta of 0.2*v rad per 15 Hz step; at RoboCasa's
+            # 20 Hz that is 0.15*v rad per step. Gripper/base/torso unchanged.
+            right = controller_configs["body_parts"]["right"]
+            controller_configs["body_parts"]["right"] = {
+                "type": "JOINT_POSITION", "input_type": "delta", "input_max": 1, "input_min": -1,
+                "output_max": 0.15, "output_min": -0.15, "kp": 150, "damping_ratio": 1,
+                "impedance_mode": "fixed", "kp_limits": [0, 300], "damping_ratio_limits": [0, 10],
+                "qpos_limits": None, "interpolation": None, "ramp_ratio": 0.2,
+                "gripper": right["gripper"],
+            }
+        elif arm_controller != "osc":
+            raise ValueError(f"unknown arm_controller {arm_controller}")
 
         self.env = self.env_config.damageable_class(
             robots=self.env_config.robot,
