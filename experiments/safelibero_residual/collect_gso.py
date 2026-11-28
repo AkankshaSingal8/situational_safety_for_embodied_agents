@@ -39,12 +39,17 @@ def _with_prompt(f, lang, sentence):
     import cv2
     from collect_v2 import state8
     p = prompt(lang, sentence)
+    prev = [None]   # one wrapper per episode: previous chunk's state for --motion experts (ignored by others)
 
     def g(obs, A):
         ag = cv2.resize(obs["agentview_image"], (224, 224), interpolation=cv2.INTER_AREA)
         wr = cv2.resize(obs["robot0_eye_in_hand_image"], (224, 224), interpolation=cv2.INTER_AREA)
-        return np.asarray(f.client.ws_call(dict(agent=ag, wrist=wr, prompt=p, state=state8(obs),
-                                                base=np.asarray(A, np.float32)))["delta"])
+        s8 = state8(obs)
+        d = np.asarray(f.client.ws_call(dict(agent=ag, wrist=wr, prompt=p, state=s8,
+                                             prev_state=s8 if prev[0] is None else prev[0],
+                                             base=np.asarray(A, np.float32)))["delta"])
+        prev[0] = s8
+        return d
     return g
 
 

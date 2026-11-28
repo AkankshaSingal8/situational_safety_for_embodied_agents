@@ -78,6 +78,18 @@ def sample_xy(rng, bowl, plate, mode, start):
     return bowl[:2] + u * d + n * rng.normal(0, 0.04)
 
 
+def _mode(rng):
+    """Placement mode. SCENE_MODES="path=0.7,near=0.2,start=0.1" reweights it (training collection only, e.g. to put
+    Object-suite obstacles on the arm's path more often); unset = the original uniform choice."""
+    w = os.environ.get("SCENE_MODES")
+    if not w:
+        return rng.choice(["near", "path", "start"])
+    kv = dict(x.split("=") for x in w.replace(";", ",").split(","))   # ";" also works (sbatch --export splits on ",")
+    ks = [k for k in ("near", "path", "start") if k in kv]
+    p = np.array([float(kv[k]) for k in ks])
+    return ks[int(rng.choice(len(ks), p=p / p.sum()))]
+
+
 def make_scene(env, init_state, rng, n_obs, types=None, p_elevated=0.0, quats=None):
     """p_elevated: chance that the first obstacle stands on the box_base platform (as in level II).
     quats: {obstacle name: wxyz} orientation to place it with (GSO models are z-up; default keeps the init's)."""
@@ -113,7 +125,7 @@ def make_scene(env, init_state, rng, n_obs, types=None, p_elevated=0.0, quats=No
     if elevated:
         ok = False
         for _ in range(40):
-            xy = sample_xy(rng, bowl, plate, rng.choice(["near", "path", "start"]), start)
+            xy = sample_xy(rng, bowl, plate, _mode(rng), start)
             if not in_ws(xy):
                 continue
             place(env, "box_base_1", xy, zt)
@@ -130,7 +142,7 @@ def make_scene(env, init_state, rng, n_obs, types=None, p_elevated=0.0, quats=No
         ok = False
         for _ in range(40):
             on_box = elevated and k == 0
-            xy = placed["box_base_1"] if on_box else sample_xy(rng, bowl, plate, rng.choice(["near", "path", "start"]), start)
+            xy = placed["box_base_1"] if on_box else sample_xy(rng, bowl, plate, _mode(rng), start)
             if not in_ws(xy):
                 continue
             place(env, name, xy, box_top if on_box else zt, quats.get(name))
